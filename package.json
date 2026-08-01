@@ -5,7 +5,9 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
-    "typecheck": "turbo typecheck"
+    "typecheck": "turbo typecheck",
+    "lint:check": "turbo lint:check",
+    "lint:fix": "turbo lint:fix"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.6",

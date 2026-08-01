@@ -4,7 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint:check": "biome check .",
+    "lint:fix": "biome check . --write"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

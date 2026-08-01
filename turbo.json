@@ -4,14 +4,16 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", ".env.local"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
-    "lint": {
-      "dependsOn": ["^lint"]
+    "lint:check": {
+      "dependsOn": ["^lint:check"],
+      "inputs": ["$TURBO_DEFAULT$", "biome.json", "biome.jsonc"]
     },
-    "format": {
-      "dependsOn": ["^format"]
+    "lint:fix": {
+      "dependsOn": ["^lint:fix"],
+      "inputs": ["$TURBO_DEFAULT$", "biome.json", "biome.jsonc"]
     },
     "typecheck": {
       "dependsOn": ["^typecheck"]
