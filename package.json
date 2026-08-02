@@ -7,10 +7,13 @@
     "dev": "turbo dev",
     "typecheck": "turbo typecheck",
     "lint:check": "turbo lint:check",
-    "lint:fix": "turbo lint:fix"
+    "lint:fix": "turbo lint:fix",
+    "commitlint": "commitlint --edit"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.6",
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.2.0",
     "@repo/typescript-config": "workspace:*",
     "turbo": "^2.9.18",
     "typescript": "^5"
