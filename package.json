@@ -24,5 +24,8 @@
   "packageManager": "pnpm@11.18.0",
   "engines": {
     "node": ">=20"
+  },
+  "volta": {
+    "node": "22.22.0"
   }
 }
