@@ -6,7 +6,9 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint:check": "biome check .",
-    "lint:fix": "biome check . --write"
+    "lint:fix": "biome check . --write",
+    "storybook:start": "storybook dev -p 6006",
+    "storybook:build": "storybook build"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -29,7 +31,14 @@
     "@types/react-dom": "^19",
     "@repo/typescript-config": "workspace:*",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "storybook": "^10.5.5",
+    "@storybook/react-vite": "^10.5.5",
+    "@chromatic-com/storybook": "^5.2.1",
+    "@storybook/addon-vitest": "^10.5.5",
+    "@storybook/addon-a11y": "^10.5.5",
+    "@storybook/addon-docs": "^10.5.5",
+    "@storybook/addon-onboarding": "^10.5.5"
   },
   "exports": {
     "./globals.css": "./src/styles/globals.css",
