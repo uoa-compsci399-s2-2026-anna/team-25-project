@@ -8,3 +8,6 @@ allowBuilds:
   msw: false
   esbuild: true
   lefthook: true
+
+minimumReleaseAgeExclude:
+  - tinyexec@1.3.0
