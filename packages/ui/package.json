@@ -8,7 +8,8 @@
     "lint:check": "biome check .",
     "lint:fix": "biome check . --write",
     "storybook:start": "storybook dev -p 6006",
-    "storybook:build": "storybook build"
+    "storybook:build": "storybook build",
+    "test": "vitest run"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -38,7 +39,11 @@
     "@storybook/addon-vitest": "^10.5.5",
     "@storybook/addon-a11y": "^10.5.5",
     "@storybook/addon-docs": "^10.5.5",
-    "@storybook/addon-onboarding": "^10.5.5"
+    "@storybook/addon-onboarding": "^10.5.5",
+    "vitest": "^4.1.10",
+    "playwright": "^1.62.1",
+    "@vitest/browser-playwright": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.10"
   },
   "exports": {
     "./globals.css": "./src/styles/globals.css",

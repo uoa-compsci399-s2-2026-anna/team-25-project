@@ -13,6 +13,7 @@
     "dev:frontend": "turbo run dev --filter=frontend",
     "dev:storybook": "turbo run storybook:start --filter=@repo/ui",
     "typecheck": "turbo typecheck",
+    "test": "turbo test",
     "lint:check": "turbo lint:check",
     "lint:fix": "turbo lint:fix",
     "commitlint": "commitlint --edit",
