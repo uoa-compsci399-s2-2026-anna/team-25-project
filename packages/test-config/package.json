@@ -1,0 +1,35 @@
+{
+  "name": "@repo/test-config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint:check": "biome check .",
+    "lint:fix": "biome check . --write",
+    "coverage:merge": "tsx src/scripts/merge-coverage.ts"
+  },
+  "exports": {
+    "./ui": "./dist/configs/ui-config.js",
+    "./backend": "./dist/configs/backend-config.js",
+    "./frontend": "./dist/configs/frontend-config.js",
+    "./setups/dom": "./dist/setups/dom-setup.js",
+    "./setups/mongodb": "./dist/setups/mongodb-setup.js"
+  },
+  "dependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@vitejs/plugin-react-swc": "^4",
+    "mongodb-memory-server": "^10"
+  },
+  "peerDependencies": {
+    "vitest": "^4"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^20",
+    "tsx": "^4.22.4",
+    "typescript": "^5",
+    "vitest": "^4.1.10"
+  }
+}

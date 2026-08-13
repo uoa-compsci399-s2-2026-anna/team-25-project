@@ -16,6 +16,7 @@
     "dev:storybook": "turbo run storybook:start --filter=@repo/ui",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
+    "test:coverage:merge": "pnpm --filter @repo/test-config coverage:merge",
     "lint:check": "turbo lint:check",
     "lint:fix": "turbo lint:fix",
     "commitlint": "commitlint --edit",

@@ -9,6 +9,8 @@ allowBuilds:
   esbuild: true
   lefthook: true
   workerd: true
+  '@swc/core': true
+  mongodb-memory-server: true
 
 minimumReleaseAgeExclude:
   - tinyexec@1.3.0
