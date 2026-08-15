@@ -1,6 +1,6 @@
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { mongooseAdapter } from "@payloadcms/db-mongodb"
+import { postgresAdapter } from "@payloadcms/db-postgres"
 import { lexicalEditor } from "@payloadcms/richtext-lexical"
 import type { Config } from "@repo/shared/payload-types"
 import { buildConfig } from "payload"
@@ -33,8 +33,12 @@ export default buildConfig({
     outputFile: path.resolve(dirname, "../../../packages/shared/src/payload-types.ts"),
     declare: false,
   },
-  db: mongooseAdapter({
-    url: process.env.DATABASE_URL || "",
+  db: postgresAdapter({
+    pool: {
+      connectionString: process.env.DATABASE_URL || "",
+    },
+    migrationDir: path.resolve(dirname, "./payload/migrations"),
+    push: true,
   }),
   sharp,
   plugins: [],

@@ -14,13 +14,11 @@
     "./ui": "./dist/configs/ui-config.js",
     "./backend": "./dist/configs/backend-config.js",
     "./frontend": "./dist/configs/frontend-config.js",
-    "./setups/dom": "./dist/setups/dom-setup.js",
-    "./setups/mongodb": "./dist/setups/mongodb-setup.js"
+    "./setups/dom": "./dist/setups/dom-setup.js"
   },
   "dependencies": {
     "@testing-library/jest-dom": "^6.9.1",
-    "@vitejs/plugin-react-swc": "^4",
-    "mongodb-memory-server": "^10"
+    "@vitejs/plugin-react-swc": "^4"
   },
   "peerDependencies": {
     "vitest": "^4"

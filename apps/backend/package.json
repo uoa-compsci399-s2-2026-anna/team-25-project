@@ -11,6 +11,9 @@
     "devsafe": "rm -rf .next && cross-env NODE_OPTIONS=--no-deprecation next dev",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
+    "migrate": "cross-env NODE_OPTIONS=--no-deprecation payload migrate",
+    "migrate:create": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:create",
+    "migrate:status": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:status",
     "typecheck": "tsc --noEmit",
     "lint:check": "biome check .",
     "lint:fix": "biome check . --write",
@@ -22,7 +25,7 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^9.1.0",
-    "@payloadcms/db-mongodb": "3.87.1",
+    "@payloadcms/db-postgres": "3.87.1",
     "@payloadcms/next": "3.87.1",
     "@payloadcms/richtext-lexical": "3.87.1",
     "@payloadcms/ui": "3.87.1",
