@@ -71,7 +71,8 @@
           "options": {
             "functions": ["cn"]
           }
-        }
+        },
+        "useReactCompiler": "error"
       },
       "complexity": {
         "noStaticOnlyClass": "off"
