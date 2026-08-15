@@ -47,6 +47,9 @@ importers:
       '@payloadcms/ui':
         specifier: 3.87.1
         version: 3.87.1(@types/react@19.2.15)(monaco-editor@0.56.0)(next@16.2.6(@babel/core@7.29.7(supports-color@7.2.0))(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.77.4))(payload@3.87.1(graphql@16.14.2)(supports-color@7.2.0)(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(supports-color@7.2.0)(typescript@5.9.3)
+      '@repo/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@scalar/nextjs-api-reference':
         specifier: ^0.11.13
         version: 0.11.13(next@16.2.6(@babel/core@7.29.7(supports-color@7.2.0))(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(babel-plugin-macros@3.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.77.4))(react@19.2.4)
@@ -160,6 +163,22 @@ importers:
       vitest:
         specifier: ^4.1.10
         version: 4.1.10(@opentelemetry/api@1.9.0)(@types/node@20.19.41)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(happy-dom@20.11.1)(jsdom@28.0.0(supports-color@7.2.0))(vite@8.2.0(@types/node@20.19.41)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.0))
+
+  packages/shared:
+    dependencies:
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/node':
+        specifier: ^20
+        version: 20.19.41
+      typescript:
+        specifier: ^5
+        version: 5.9.3
 
   packages/test-config:
     dependencies:

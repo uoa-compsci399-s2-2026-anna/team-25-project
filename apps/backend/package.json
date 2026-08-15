@@ -26,6 +26,7 @@
     "@payloadcms/next": "3.87.1",
     "@payloadcms/richtext-lexical": "3.87.1",
     "@payloadcms/ui": "3.87.1",
+    "@repo/shared": "workspace:*",
     "@scalar/nextjs-api-reference": "^0.11.13",
     "cross-env": "^7.0.3",
     "dotenv": "16.4.7",

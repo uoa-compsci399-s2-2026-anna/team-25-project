@@ -33,6 +33,9 @@
     "storybook:build": {
       "cache": true,
       "outputs": ["storybook-static/**"]
+    },
+    "generate:types": {
+      "cache": false
     }
   }
 }
