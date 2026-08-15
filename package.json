@@ -1,0 +1,42 @@
+{
+  "name": "casa",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "turbo run build storybook:build",
+    "build:app": "turbo run build --filter='./apps/*'",
+    "build:frontend": "turbo run build --filter=frontend",
+    "build:backend": "turbo run build --filter=backend",
+    "build:storybook": "turbo run storybook:build --filter=@repo/ui",
+    "dev": "turbo run dev storybook:start",
+    "dev:app": "turbo run dev --filter='./apps/*'",
+    "dev:frontend": "turbo run dev --filter=frontend",
+    "dev:backend": "turbo run dev --filter=backend",
+    "dev:storybook": "turbo run storybook:start --filter=@repo/ui",
+    "types:check": "turbo types:check",
+    "test": "turbo test",
+    "test:coverage:merge": "pnpm --filter @repo/test-config coverage:merge",
+    "types:generate": "turbo run generate:types",
+    "lint:check": "turbo lint:check",
+    "lint:fix": "turbo lint:fix",
+    "commitlint": "commitlint --edit",
+    "postinstall": "sh -c 'command -v git >/dev/null 2>&1 || exit 0; lefthook install'"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.8",
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.2.0",
+    "@repo/typescript-config": "workspace:*",
+    "lefthook": "^2.1.10",
+    "turbo": "^2.9.18",
+    "typescript": "^7"
+  },
+  "packageManager": "pnpm@11.18.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "volta": {
+    "node": "26.5.1"
+  }
+}

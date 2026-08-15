@@ -1,0 +1,28 @@
+{
+  "name": "@repo/shared",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "types:check": "tsc --noEmit",
+    "lint:check": "biome check .",
+    "lint:fix": "biome check . --write"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^20",
+    "typescript": "^7"
+  },
+  "exports": {
+    "./payload-types": "./src/payload-types.ts",
+    "./enums/*": "./src/enums/*.ts",
+    "./constants/*": "./src/constants/*.ts",
+    "./utils/*": "./src/utils/*.ts",
+    "./types/*": "./src/types/*.ts",
+    "./schemas/*": "./src/schemas/*.ts",
+    "./mocks/*": "./src/mocks/*.ts"
+  }
+}

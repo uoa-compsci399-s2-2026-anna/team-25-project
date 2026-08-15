@@ -1,0 +1,41 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", ".env.local"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "lint:check": {
+      "dependsOn": ["^lint:check"],
+      "inputs": ["$TURBO_DEFAULT$", "biome.json", "biome.jsonc"]
+    },
+    "lint:fix": {
+      "dependsOn": ["^lint:fix"],
+      "inputs": ["$TURBO_DEFAULT$", "biome.json", "biome.jsonc"]
+    },
+    "types:check": {
+      "dependsOn": ["^build", "^types:check"]
+    },
+    "test": {
+      "dependsOn": ["^build", "^test"],
+      "outputs": ["coverage/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "storybook:start": {
+      "cache": false,
+      "persistent": true
+    },
+    "storybook:build": {
+      "cache": true,
+      "outputs": ["storybook-static/**"]
+    },
+    "generate:types": {
+      "cache": false
+    }
+  }
+}
