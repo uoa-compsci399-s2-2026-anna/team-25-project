@@ -27,7 +27,7 @@
     "@types/react-dom": "^19",
     "@repo/test-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "typescript": "^5",
+    "typescript": "^7",
     "vite-tsconfig-paths": "6.0.5",
     "vitest": "^4.1.10"
   }

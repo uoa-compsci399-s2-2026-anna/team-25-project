@@ -48,7 +48,7 @@
     "@types/react-dom": "^19",
     "prettier": "^3.4.2",
     "tsx": "4.22.4",
-    "typescript": "^5",
+    "typescript": "^7",
     "vite-tsconfig-paths": "6.0.5",
     "vitest": "4.0.18"
   }

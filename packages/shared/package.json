@@ -14,7 +14,7 @@
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^20",
-    "typescript": "^5"
+    "typescript": "^7"
   },
   "exports": {
     "./payload-types": "./src/payload-types.ts",

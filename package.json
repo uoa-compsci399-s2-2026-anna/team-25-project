@@ -30,7 +30,7 @@
     "@repo/typescript-config": "workspace:*",
     "lefthook": "^2.1.10",
     "turbo": "^2.9.18",
-    "typescript": "^5"
+    "typescript": "^7"
   },
   "packageManager": "pnpm@11.18.0",
   "engines": {
