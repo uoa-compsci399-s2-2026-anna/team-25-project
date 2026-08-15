@@ -26,6 +26,6 @@ Merges per-workspace coverage reports into one. Run from the repo root via `pnpm
 | Script | Description |
 | --- | --- |
 | `pnpm build` | Compile configs with `tsc` (required before other workspaces can import them) |
-| `pnpm typecheck` | Type-check with `tsc --noEmit` |
+| `pnpm types:check` | Type-check with `tsc --noEmit` |
 | `pnpm lint:check` / `pnpm lint:fix` | Biome lint check / autofix |
 | `pnpm coverage:merge` | Merge coverage reports across workspaces |

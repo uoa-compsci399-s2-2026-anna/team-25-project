@@ -77,7 +77,7 @@ Run from the repo root; Turborepo fans each one out to the workspaces that defin
 | `pnpm dev:storybook` | Start only Storybook |
 | `pnpm build` | Build all apps and Storybook |
 | `pnpm build:app` | Build apps only (`apps/*`) |
-| `pnpm typecheck` | Type-check every workspace |
+| `pnpm types:check` | Type-check every workspace |
 | `pnpm test` | Run tests in every workspace |
 | `pnpm test:coverage:merge` | Merge per-workspace coverage reports |
 | `pnpm lint:check` | Check lint/format rules (Biome) across the repo |

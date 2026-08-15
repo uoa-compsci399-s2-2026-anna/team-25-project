@@ -51,6 +51,6 @@ See [`packages/ui/README.md`](../../packages/ui/README.md) for more.
 | `pnpm dev` | Start the dev server |
 | `pnpm build` | Production build |
 | `pnpm start` | Start the production server |
-| `pnpm typecheck` | Type-check with `tsc --noEmit` |
+| `pnpm types:check` | Type-check with `tsc --noEmit` |
 | `pnpm lint:check` / `pnpm lint:fix` | Biome lint check / autofix |
 | `pnpm test` | Run Vitest tests |

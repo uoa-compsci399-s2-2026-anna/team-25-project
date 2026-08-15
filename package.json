@@ -14,7 +14,7 @@
     "dev:frontend": "turbo run dev --filter=frontend",
     "dev:backend": "turbo run dev --filter=backend",
     "dev:storybook": "turbo run storybook:start --filter=@repo/ui",
-    "typecheck": "turbo typecheck",
+    "types:check": "turbo types:check",
     "test": "turbo test",
     "test:coverage:merge": "pnpm --filter @repo/test-config coverage:merge",
     "types:generate": "turbo run generate:types",

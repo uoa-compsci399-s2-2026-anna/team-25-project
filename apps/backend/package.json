@@ -14,7 +14,7 @@
     "migrate": "cross-env NODE_OPTIONS=--no-deprecation payload migrate",
     "migrate:create": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:create",
     "migrate:status": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:status",
-    "typecheck": "tsc --noEmit",
+    "types:check": "tsc --noEmit",
     "lint:check": "biome check .",
     "lint:fix": "biome check . --write",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",

@@ -48,6 +48,6 @@ Or from the repo root: `pnpm dev:storybook` / `pnpm build:storybook`.
 
 | Script | Description |
 | --- | --- |
-| `pnpm typecheck` | Type-check with `tsc --noEmit` |
+| `pnpm types:check` | Type-check with `tsc --noEmit` |
 | `pnpm lint:check` / `pnpm lint:fix` | Biome lint check / autofix |
 | `pnpm test` | Run Vitest tests (including Storybook interaction tests via `@storybook/addon-vitest`) |

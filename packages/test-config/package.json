@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit",
+    "types:check": "tsc --noEmit",
     "lint:check": "biome check .",
     "lint:fix": "biome check . --write",
     "coverage:merge": "tsx src/scripts/merge-coverage.ts"

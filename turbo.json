@@ -15,8 +15,8 @@
       "dependsOn": ["^lint:fix"],
       "inputs": ["$TURBO_DEFAULT$", "biome.json", "biome.jsonc"]
     },
-    "typecheck": {
-      "dependsOn": ["^build", "^typecheck"]
+    "types:check": {
+      "dependsOn": ["^build", "^types:check"]
     },
     "test": {
       "dependsOn": ["^build", "^test"],

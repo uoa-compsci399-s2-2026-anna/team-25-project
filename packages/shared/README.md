@@ -26,5 +26,5 @@ import { someSchema } from "@repo/shared/schemas"
 
 | Script | Description |
 | --- | --- |
-| `pnpm typecheck` | Type-check with `tsc --noEmit` |
+| `pnpm types:check` | Type-check with `tsc --noEmit` |
 | `pnpm lint:check` / `pnpm lint:fix` | Biome lint check / autofix |

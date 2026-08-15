@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "types:check": "tsc --noEmit",
     "lint:check": "biome check .",
     "lint:fix": "biome check . --write"
   },

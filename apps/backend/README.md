@@ -78,7 +78,7 @@ pnpm test:e2e    # Playwright end-to-end tests
 | --- | --- |
 | `pnpm build` | Production build |
 | `pnpm start` | Start the production server |
-| `pnpm typecheck` | Type-check with `tsc --noEmit` |
+| `pnpm types:check` | Type-check with `tsc --noEmit` |
 | `pnpm lint:check` / `pnpm lint:fix` | Biome lint check / autofix |
 | `pnpm generate:importmap` | Regenerate the Payload admin import map |
 | `pnpm payload` | Run arbitrary Payload CLI commands |
