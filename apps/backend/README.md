@@ -1,57 +1,89 @@
-# Payload Blank Template
+# Backend
 
-This template comes configured with the bare minimum to get started on anything you need.
+Payload CMS backend, built on Next.js 16 and Postgres. Part of the [Casa](../../README.md) monorepo.
 
-## Quick start
+## Stack
 
-This template can be deployed directly from our Cloud hosting and it will setup MongoDB and cloud S3 object storage for media.
+- [Payload 3](https://payloadcms.com/docs) with the Postgres adapter (`@payloadcms/db-postgres`)
+- Next.js 16 (App Router) hosting the Payload admin panel and REST/GraphQL API
+- Zod for schema validation
+- `@repo/shared` for generated Payload types and shared code
 
-## Quick Start - local setup
+Payload's admin panel is mounted at `/payload/admin` and its API at `/payload/api` (see `src/payload.config.ts`).
 
-To spin up this template locally, follow these steps:
+## Prerequisites
 
-### Clone
+- A Postgres database the app can connect to
+- Node.js 20+ and pnpm (see the [root README](../../README.md#prerequisites))
 
-After you click the `Deploy` button above, you'll want to have standalone copy of this repo on your machine. If you've already cloned this repo, skip to [Development](#development).
+## Environment variables
 
-### Development
+Copy `.env.example` to `.env` and fill in:
 
-1. First [clone the repo](#clone) if you have not done so already
-2. `cd my-project && cp .env.example .env` to copy the example environment variables. You'll need to add the `MONGODB_URL` from your Cloud project to your `.env` if you want to use S3 storage and the MongoDB database that was created for you.
+| Variable | Description |
+| --- | --- |
+| `DATABASE_URL` | Postgres connection string |
+| `PAYLOAD_SECRET` | Secret used by Payload to sign/encrypt data |
 
-3. `pnpm install && pnpm dev` to install dependencies and start the dev server
-4. open `http://localhost:3000` to open the app in your browser
+## Development
 
-That's it! Changes made in `./src` will be reflected in your app. Follow the on-screen instructions to login and create your first admin user. Then check out [Production](#production) once you're ready to build and serve your app, and [Deployment](#deployment) when you're ready to go live.
+From the repo root:
 
-#### Docker (Optional)
+```bash
+pnpm install
+pnpm dev:backend
+```
 
-If you prefer to use Docker for local development instead of a local MongoDB instance, the provided docker-compose.yml file can be used.
+Or from this directory:
 
-To do so, follow these steps:
+```bash
+pnpm dev
+```
 
-- Modify the `MONGODB_URL` in your `.env` file to `mongodb://127.0.0.1/<dbname>`
-- Modify the `docker-compose.yml` file's `MONGODB_URL` to match the above `<dbname>`
-- Run `docker-compose up` to start the database, optionally pass `-d` to run in the background.
+Open `http://localhost:3000/payload/admin` and follow the on-screen instructions to create your first admin user.
 
-## How it works
+If you need a clean `.next` build cache, use `pnpm devsafe` instead of `pnpm dev`.
 
-The Payload config is tailored specifically to the needs of most websites. It is pre-configured in the following ways:
+## Migrations
 
-### Collections
+This app uses Payload's Postgres migrations (stored in `src/payload/migrations`):
 
-See the [Collections](https://payloadcms.com/docs/configuration/collections) docs for details on how to extend this functionality.
+```bash
+pnpm migrate          # run pending migrations
+pnpm migrate:create   # generate a new migration
+pnpm migrate:status   # check migration status
+```
 
-- #### Users (Authentication)
+## Generated types
 
-  Users are auth-enabled collections that have access to the admin panel.
+Payload types are generated into `packages/shared/src/payload-types.ts` and exported from `@repo/shared/payload-types`. Regenerate them after changing collections or globals:
 
-  For additional help, see the official [Auth Example](https://github.com/payloadcms/payload/tree/3.x/examples/auth) or the [Authentication](https://payloadcms.com/docs/authentication/overview#authentication-overview) docs.
+```bash
+pnpm generate:types  // from the apps/backend directory
+// or
+pnpm types:generate  // from the root directory
+```
 
-- #### Media
+## Testing
 
-  This is the uploads enabled collection. It features pre-configured sizes, focal point and manual resizing to help you manage your pictures.
+```bash
+pnpm test        # runs test:int then test:e2e
+pnpm test:int    # Vitest integration tests
+pnpm test:e2e    # Playwright end-to-end tests
+```
 
-## Questions
+## Other scripts
 
-If you have any issues or questions, reach out to us on [Discord](https://discord.com/invite/payload) or start a [GitHub discussion](https://github.com/payloadcms/payload/discussions).
+| Script | Description |
+| --- | --- |
+| `pnpm build` | Production build |
+| `pnpm start` | Start the production server |
+| `pnpm typecheck` | Type-check with `tsc --noEmit` |
+| `pnpm lint:check` / `pnpm lint:fix` | Biome lint check / autofix |
+| `pnpm generate:importmap` | Regenerate the Payload admin import map |
+| `pnpm payload` | Run arbitrary Payload CLI commands |
+
+## API reference
+
+An OpenAPI/Scalar reference is wired up via `@asteasolutions/zod-to-openapi` and `@scalar/nextjs-api-reference` (see `src/lib/openapi.ts` and `src/lib/swagger.ts`).
+Ensure that all API routes are properly documented with `zod` schemas and show up in the Scalar UI.
