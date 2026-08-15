@@ -5,8 +5,8 @@ import { lexicalEditor } from "@payloadcms/richtext-lexical"
 import type { Config } from "@repo/shared/payload-types"
 import { buildConfig } from "payload"
 import sharp from "sharp"
-import { Media } from "./collections/Media"
-import { Users } from "./collections/Users"
+import { Media } from "./payload/collections/Media"
+import { Users } from "./payload/collections/Users"
 
 declare module "payload" {
   export interface GeneratedTypes extends Config {}
