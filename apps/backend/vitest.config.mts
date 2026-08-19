@@ -8,7 +8,7 @@ export default mergeConfig(
     test: {
       env: { TZ: "UTC" },
       setupFiles: ["./src/test-config/vitest.setup.ts"],
-      include: ["tests/int/**/*.int.spec.ts"],
+      include: ["src/**/*.test.ts"],
     },
   }),
 )

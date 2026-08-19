@@ -67,8 +67,7 @@ pnpm types:generate  // from the root directory
 ## Testing
 
 ```bash
-pnpm test        # runs test:int
-pnpm test:int    # Vitest integration tests
+pnpm test    # runs colocated *.test.ts files under src/ (e.g. src/app/api/health/route.test.ts)
 ```
 
 ## Other scripts
