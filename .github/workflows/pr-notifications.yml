@@ -1,0 +1,66 @@
+name: Pull Request Notifications
+
+on:
+  pull_request:
+    types: [opened, reopened, closed, review_requested]
+
+jobs:
+  pr_opened:
+    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord Webhook Action
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          embed-title: "🔵 PR Opened"
+          embed-description: "${{ github.event.pull_request.title }}"
+          embed-color: "3447003"
+          embed-url: ${{ github.event.pull_request.html_url }}
+          embed-author-name: ${{ github.event.pull_request.user.login }}
+          embed-author-icon-url: ${{ github.event.pull_request.user.avatar_url }}
+
+  pr_merged:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord Webhook Action
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          embed-title: "✅ PR Merged"
+          embed-description: "${{ github.event.pull_request.title }}"
+          embed-color: "5763719"
+          embed-url: ${{ github.event.pull_request.html_url }}
+          embed-author-name: ${{ github.event.pull_request.user.login }}
+          embed-author-icon-url: ${{ github.event.pull_request.user.avatar_url }}
+
+  pr_closed_no_merge:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord Webhook Action
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          embed-title: "❌ PR Closed without merge"
+          embed-description: "${{ github.event.pull_request.title }}"
+          embed-color: "15548997"
+          embed-url: ${{ github.event.pull_request.html_url }}
+          embed-author-name: ${{ github.event.pull_request.user.login }}
+          embed-author-icon-url: ${{ github.event.pull_request.user.avatar_url }}
+
+  pr_review_requested:
+    if: github.event_name == 'pull_request' && github.event.action == 'review_requested'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord Webhook Action
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          embed-title: "👀 Review Requested"
+          embed-description: >-
+            ${{ github.event.pull_request.title }}
+            — requested from ${{ github.event.requested_reviewer.login || github.event.requested_team.name }}
+          embed-color: "15105570"
+          embed-url: ${{ github.event.pull_request.html_url }}
