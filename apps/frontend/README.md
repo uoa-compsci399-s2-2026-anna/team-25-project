@@ -30,19 +30,11 @@ Open `http://localhost:3000`.
 
 ## Adding UI components
 
-Components live in `@repo/ui`. Add new shadcn/ui components from this app's directory so they land in the shared package:
-
-```bash
-pnpm dlx shadcn@latest add button -c apps/frontend
-```
-
-This places the component in `packages/ui/src/components`. Import it via:
+Components live in `@repo/ui`. See [`packages/ui/README.md`](../../packages/ui/README.md) for how to add one. Import via:
 
 ```tsx
-import { Button } from "@repo/ui/components/button"
+import { Button } from "@repo/ui/components/ui"
 ```
-
-See [`packages/ui/README.md`](../../packages/ui/README.md) for more.
 
 ## Scripts
 

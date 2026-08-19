@@ -19,9 +19,7 @@
     "lint:fix": "biome check . --write",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
-    "test": "pnpm run test:int && pnpm run test:e2e",
-    "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" playwright test --config=playwright.config.ts",
-    "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts"
+    "test": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^9.1.0",
@@ -42,17 +40,14 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@playwright/test": "1.58.2",
     "@repo/test-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@testing-library/react": "16.3.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "prettier": "^3.4.2",
     "tsx": "4.22.4",
     "typescript": "^7",
-    "vite-tsconfig-paths": "6.0.5",
-    "vitest": "4.0.18"
+    "vitest": "4.1.10"
   }
 }

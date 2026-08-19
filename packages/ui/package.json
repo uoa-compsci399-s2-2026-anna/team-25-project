@@ -37,20 +37,19 @@
     "storybook": "^10.5.5",
     "@storybook/react-vite": "^10.5.5",
     "@chromatic-com/storybook": "^5.2.1",
-    "@storybook/addon-vitest": "^10.5.5",
+    "@storybook/nextjs-vite": "^10.5.5",
     "@storybook/addon-a11y": "^10.5.5",
     "@storybook/addon-docs": "^10.5.5",
     "@storybook/addon-onboarding": "^10.5.5",
-    "vitest": "^4.1.10",
-    "playwright": "^1.62.1",
-    "@vitest/browser-playwright": "^4.1.10",
-    "@vitest/coverage-v8": "^4.1.10"
+    "vitest": "^4.1.10"
   },
   "exports": {
     "./globals.css": "./src/styles/globals.css",
     "./postcss.config": "./postcss.config.mjs",
+    "./components/composite": "./src/components/composite/index.ts",
+    "./components/generic": "./src/components/generic/index.ts",
+    "./components/ui": "./src/components/ui/index.ts",
     "./lib/*": "./src/lib/*.ts",
-    "./components/*": "./src/components/*.tsx",
     "./hooks/*": "./src/hooks/*.ts"
   }
 }

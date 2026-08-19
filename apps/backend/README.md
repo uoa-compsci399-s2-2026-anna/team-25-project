@@ -67,9 +67,7 @@ pnpm types:generate  // from the root directory
 ## Testing
 
 ```bash
-pnpm test        # runs test:int then test:e2e
-pnpm test:int    # Vitest integration tests
-pnpm test:e2e    # Playwright end-to-end tests
+pnpm test    # runs colocated *.test.ts files under src/ (e.g. src/app/api/health/route.test.ts)
 ```
 
 ## Other scripts
