@@ -1,0 +1,383 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Biome
+        uses: biomejs/setup-biome@v2
+
+      - name: Run Biome
+        run: biome ci . --error-on-warnings
+
+  setup:
+    name: Setup
+    needs: [lint]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check if node_modules cache exists
+        id: cache-check
+        uses: actions/cache@v6
+        with:
+          path: |
+            node_modules
+            */node_modules
+            packages/*/node_modules
+            apps/*/node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          lookup-only: true
+
+      - name: Setup Node.js
+        if: steps.cache-check.outputs.cache-hit != 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        if: steps.cache-check.outputs.cache-hit != 'true'
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - name: Install dependencies
+        if: steps.cache-check.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Save node_modules cache
+        if: steps.cache-check.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            node_modules
+            */node_modules
+            packages/*/node_modules
+            apps/*/node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+  type-check:
+    name: Type Checking
+    needs: [lint, setup]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v6
+        id: cache
+        with:
+          path: |
+            node_modules
+            */node_modules
+            packages/*/node_modules
+            apps/*/node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node_modules-
+
+      - name: Install dependencies if cache misses
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Run Type Check
+        run: pnpm types:check
+
+  codegen:
+    name: Codegen
+    needs: [setup]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v6
+        id: cache
+        with:
+          path: |
+            node_modules
+            */node_modules
+            packages/*/node_modules
+            apps/*/node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node_modules-
+
+      - name: Install dependencies if cache misses
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Generate types
+        run: pnpm types:generate
+
+      - name: Write git diff
+        run: |
+          if git diff --quiet; then
+            echo "TYPE_GEN_DIFF=0" >> $GITHUB_ENV
+          else
+            echo "TYPE_GEN_DIFF=1" >> $GITHUB_ENV
+          fi
+
+      - name: Check for differences in generated types
+        if: ${{ env.TYPE_GEN_DIFF != '0' }}
+        uses: actions/github-script@v9
+        with:
+          script: |
+            core.setFailed('Generated types are not up to date. Run pnpm types:generate')
+
+  test:
+    name: Test (${{ matrix.name }})
+    needs: [lint, setup]
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: frontend
+            filter: frontend
+            coverage-path: apps/frontend/coverage
+            artifact-name: coverage-frontend
+          - name: backend
+            filter: backend
+            coverage-path: apps/backend/coverage
+            artifact-name: coverage-backend
+          - name: ui
+            filter: '@repo/ui'
+            coverage-path: packages/ui/coverage
+            artifact-name: coverage-ui
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v6
+        id: cache
+        with:
+          path: |
+            node_modules
+            */node_modules
+            packages/*/node_modules
+            apps/*/node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node_modules-
+
+      - name: Install dependencies if cache misses
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Run tests with coverage
+        shell: bash
+        env:
+          NEXT_PUBLIC_URL: ${{ vars.NEXT_PUBLIC_URL }}
+        run: |
+          mkdir -p "${{ matrix.coverage-path }}"
+          pnpm turbo run test:coverage --continue --filter "${{ matrix.filter }}"
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: ${{ matrix.coverage-path }}
+
+  merge-coverage:
+    name: Merge Coverage
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+
+      - name: Run Merge Coverage
+        uses: ./.github/composite-actions/merge-coverage
+
+  vitest-coverage:
+    name: Vitest Coverage
+    needs: [merge-coverage]
+    if: ${{ needs.merge-coverage.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+
+      - name: Run Vitest Coverage Composite Action
+        uses: ./.github/composite-actions/vitest-coverage
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-backend:
+    name: Build Backend
+    needs: [lint, setup, type-check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v6
+        id: cache
+        with:
+          path: |
+            node_modules
+            */node_modules
+            packages/*/node_modules
+            apps/*/node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node_modules-
+
+      - name: Install dependencies if cache misses
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Build Backend
+        env:
+          PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm build:backend
+
+  build-frontend:
+    name: Build Frontend
+    needs: [lint, setup, type-check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v6
+        id: cache
+        with:
+          path: |
+            node_modules
+            */node_modules
+            packages/*/node_modules
+            apps/*/node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node_modules-
+
+      - name: Install dependencies if cache misses
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Build Frontend
+        run: pnpm build:frontend
+
+  build-storybook:
+    name: Build Storybook
+    needs: [lint, setup, type-check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v6
+        id: cache
+        with:
+          path: |
+            node_modules
+            */node_modules
+            packages/*/node_modules
+            apps/*/node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node_modules-
+
+      - name: Install dependencies if cache misses
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Build Storybook
+        run: pnpm build:storybook
+
+  verify:
+    name: Verify
+    needs: [type-check, codegen, test, build-backend, build-frontend, build-storybook, merge-coverage, vitest-coverage]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check job results
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" || "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "One or more jobs failed."
+            exit 1
+          fi
