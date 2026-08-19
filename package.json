@@ -38,6 +38,7 @@
     "@vitest/browser": "4.1.10",
     "@vitest/coverage-istanbul": "4.1.10",
     "@vitest/ui": "4.1.10",
+    "cross-env": "^7.0.3",
     "lefthook": "^2.1.10",
     "turbo": "^2.9.18",
     "typescript": "^7"

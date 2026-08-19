@@ -31,7 +31,7 @@
     },
     "test:coverage": {
       "cache": true,
-      "dependsOn": ["@repo/test-config#build"],
+      "dependsOn": ["^test:coverage", "@repo/test-config#build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["coverage/**"]
     },
