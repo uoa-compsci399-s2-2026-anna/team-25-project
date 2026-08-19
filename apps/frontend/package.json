@@ -10,7 +10,10 @@
     "types:check": "tsc --noEmit",
     "lint:check": "biome check .",
     "lint:fix": "biome check . --write",
-    "test": "vitest run"
+    "test": "cross-env NODE_ENV=test vitest run",
+    "test:watch": "cross-env NODE_ENV=test vitest",
+    "test:coverage": "cross-env NODE_ENV=test vitest run --coverage",
+    "test:coverage:watch": "cross-env NODE_ENV=test vitest --coverage"
   },
   "dependencies": {
     "@repo/ui": "workspace:*",

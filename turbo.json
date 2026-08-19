@@ -19,8 +19,28 @@
       "dependsOn": ["^build", "^types:check"]
     },
     "test": {
-      "dependsOn": ["^build", "^test"],
+      "cache": true,
+      "dependsOn": ["^test", "@repo/test-config#build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"]
+    },
+    "test:watch": {
+      "cache": false,
+      "dependsOn": ["^test:watch", "@repo/test-config#build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "persistent": true
+    },
+    "test:coverage": {
+      "cache": true,
+      "dependsOn": ["@repo/test-config#build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["coverage/**"]
+    },
+    "test:coverage:watch": {
+      "cache": false,
+      "dependsOn": ["^test:coverage:watch", "@repo/test-config#build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": ["coverage/**"],
+      "persistent": true
     },
     "dev": {
       "cache": false,
