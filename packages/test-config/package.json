@@ -17,7 +17,6 @@
     "./setups/dom": "./dist/setups/dom-setup.js"
   },
   "dependencies": {
-    "@testing-library/jest-dom": "^6.9.1",
     "@vitejs/plugin-react-swc": "^4"
   },
   "peerDependencies": {
