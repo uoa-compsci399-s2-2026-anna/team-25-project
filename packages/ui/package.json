@@ -49,8 +49,10 @@
   "exports": {
     "./globals.css": "./src/styles/globals.css",
     "./postcss.config": "./postcss.config.mjs",
+    "./components/composite": "./src/components/composite/index.ts",
+    "./components/generic": "./src/components/generic/index.ts",
+    "./components/ui": "./src/components/ui/index.ts",
     "./lib/*": "./src/lib/*.ts",
-    "./components/*": "./src/components/*.tsx",
     "./hooks/*": "./src/hooks/*.ts"
   }
 }
