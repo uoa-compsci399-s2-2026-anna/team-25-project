@@ -67,9 +67,8 @@ pnpm types:generate  // from the root directory
 ## Testing
 
 ```bash
-pnpm test        # runs test:int then test:e2e
+pnpm test        # runs test:int
 pnpm test:int    # Vitest integration tests
-pnpm test:e2e    # Playwright end-to-end tests
 ```
 
 ## Other scripts
