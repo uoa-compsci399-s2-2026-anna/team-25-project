@@ -2,7 +2,7 @@ name: Pull Request Notifications
 
 on:
   pull_request:
-    types: [opened, reopened, closed, review_requested]
+    types: [opened, reopened, closed, review_requested, ready_for_review]
 
 jobs:
   notify:
@@ -14,6 +14,13 @@ jobs:
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
           content: "🔵 **PR Opened:** ${{ github.event.pull_request.title }}\n${{ github.event.pull_request.html_url }}"
+
+      - name: PR Ready for Review
+        if: github.event.action == 'ready_for_review'
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          content: "🟣 **PR Ready for Review:** ${{ github.event.pull_request.title }}\n${{ github.event.pull_request.html_url }}"
 
       - name: PR Merged
         if: github.event.action == 'closed' && github.event.pull_request.merged == true
