@@ -1,0 +1,45 @@
+name: Pull Request Notifications
+
+on:
+  pull_request:
+    types: [opened, reopened, closed, review_requested, ready_for_review]
+
+jobs:
+  notify:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR Opened
+        if: github.event.action == 'opened' || github.event.action == 'reopened'
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          content: "🔵 **PR Opened:** ${{ github.event.pull_request.title }}\n${{ github.event.pull_request.html_url }}"
+
+      - name: PR Ready for Review
+        if: github.event.action == 'ready_for_review'
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          content: "🟣 **PR Ready for Review:** ${{ github.event.pull_request.title }}\n${{ github.event.pull_request.html_url }}"
+
+      - name: PR Merged
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          content: "✅ **PR Merged:** ${{ github.event.pull_request.title }}\n${{ github.event.pull_request.html_url }}"
+
+      - name: PR Closed without merge
+        if: github.event.action == 'closed' && github.event.pull_request.merged == false
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          content: "❌ **PR Closed without merge:** ${{ github.event.pull_request.title }}\n${{ github.event.pull_request.html_url }}"
+
+      - name: Review Requested
+        if: github.event.action == 'review_requested'
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          content: "👀 **${{ github.event.pull_request.user.login }}** requested review from **${{ github.event.requested_reviewer.login || github.event.requested_team.name }}**: ${{ github.event.pull_request.title }}\n${{ github.event.pull_request.html_url }}"
