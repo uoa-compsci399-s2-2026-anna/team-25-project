@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@custom-variant dark (&:is(.dark *));
 
 @source "../../../apps/**/*.{ts,tsx}";
 @source "../../../components/**/*.{ts,tsx}";
@@ -60,7 +61,7 @@
 }
 
 :root {
-  --radius: 9999px;
+  --radius: 0.625rem;
   --background: white;
   --foreground: var(--color-brand-charcoal);
   --card: white;
