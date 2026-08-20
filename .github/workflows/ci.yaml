@@ -242,6 +242,9 @@ jobs:
     needs: [merge-coverage]
     if: ${{ needs.merge-coverage.result == 'success' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v7
         with:
