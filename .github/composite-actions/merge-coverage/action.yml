@@ -9,6 +9,29 @@ runs:
       with:
         node-version-file: '.nvmrc'
 
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v6
+      with:
+        run_install: false
+
+    - name: Restore node_modules cache
+      uses: actions/cache/restore@v6
+      id: cache
+      with:
+        path: |
+          node_modules
+          */node_modules
+          packages/*/node_modules
+          apps/*/node_modules
+        key: ${{ runner.os }}-node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-node_modules-
+
+    - name: Install dependencies if cache misses
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: pnpm install --frozen-lockfile --ignore-scripts
+
     - name: Download Frontend Coverage
       uses: actions/download-artifact@v8
       continue-on-error: true
