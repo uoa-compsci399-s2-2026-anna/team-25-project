@@ -32,9 +32,7 @@ runs:
 
     - name: Merge Coverage Files
       shell: bash
-      run: |
-        cd packages/test-config
-        node src/scripts/merge-coverage.ts
+      run: pnpm test:coverage:merge
 
     - name: Upload Merged Coverage
       uses: actions/upload-artifact@v7
