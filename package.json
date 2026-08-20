@@ -16,6 +16,9 @@
     "dev:storybook": "turbo run storybook:start --filter=@repo/ui",
     "types:check": "turbo types:check",
     "test": "turbo test",
+    "test:watch": "turbo run test:watch",
+    "test:coverage": "turbo run test:coverage",
+    "test:coverage:watch": "turbo run test:coverage:watch",
     "test:coverage:merge": "pnpm --filter @repo/test-config coverage:merge",
     "types:generate": "turbo run generate:types",
     "lint:check": "turbo lint:check",
@@ -35,6 +38,7 @@
     "@vitest/browser": "4.1.10",
     "@vitest/coverage-istanbul": "4.1.10",
     "@vitest/ui": "4.1.10",
+    "cross-env": "^7.0.3",
     "lefthook": "^2.1.10",
     "turbo": "^2.9.18",
     "typescript": "^7"

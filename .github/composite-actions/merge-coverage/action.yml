@@ -1,0 +1,64 @@
+name: "Merge Coverage"
+description: "Download coverage artifacts from multiple test runs and merge them into a single coverage report."
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version-file: '.nvmrc'
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v6
+      with:
+        run_install: false
+
+    - name: Restore node_modules cache
+      uses: actions/cache/restore@v6
+      id: cache
+      with:
+        path: |
+          node_modules
+          */node_modules
+          packages/*/node_modules
+          apps/*/node_modules
+        key: ${{ runner.os }}-node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-node_modules-
+
+    - name: Install dependencies if cache misses
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: pnpm install --frozen-lockfile --ignore-scripts
+
+    - name: Download Frontend Coverage
+      uses: actions/download-artifact@v8
+      continue-on-error: true
+      with:
+        name: coverage-frontend
+        path: apps/frontend/coverage
+
+    - name: Download Backend Coverage
+      uses: actions/download-artifact@v8
+      continue-on-error: true
+      with:
+        name: coverage-backend
+        path: apps/backend/coverage
+
+    - name: Download UI Coverage
+      uses: actions/download-artifact@v8
+      continue-on-error: true
+      with:
+        name: coverage-ui
+        path: packages/ui/coverage
+
+    - name: Merge Coverage Files
+      shell: bash
+      run: pnpm test:coverage:merge
+
+    - name: Upload Merged Coverage
+      uses: actions/upload-artifact@v7
+      with:
+        name: local-coverage
+        path: coverage

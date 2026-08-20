@@ -19,7 +19,10 @@
     "lint:fix": "biome check . --write",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
-    "test": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts"
+    "test": "cross-env NODE_OPTIONS=--no-deprecation NODE_ENV=test vitest run --config ./vitest.config.mts",
+    "test:watch": "cross-env NODE_OPTIONS=--no-deprecation NODE_ENV=test vitest",
+    "test:coverage": "cross-env NODE_ENV=test vitest run --coverage",
+    "test:coverage:watch": "cross-env NODE_ENV=test vitest --coverage"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^9.1.0",
@@ -29,7 +32,6 @@
     "@payloadcms/ui": "3.87.1",
     "@repo/shared": "workspace:*",
     "@scalar/nextjs-api-reference": "^0.11.13",
-    "cross-env": "^7.0.3",
     "dotenv": "16.4.7",
     "graphql": "^16.8.1",
     "next": "16.3.1",

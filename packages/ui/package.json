@@ -9,7 +9,10 @@
     "lint:fix": "biome check . --write",
     "storybook:start": "storybook dev -p 6006",
     "storybook:build": "storybook build",
-    "test": "vitest run"
+    "test": "cross-env NODE_ENV=test vitest run",
+    "test:watch": "cross-env NODE_ENV=test vitest",
+    "test:coverage": "cross-env NODE_ENV=test vitest run --coverage",
+    "test:coverage:watch": "cross-env NODE_ENV=test vitest --coverage"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
