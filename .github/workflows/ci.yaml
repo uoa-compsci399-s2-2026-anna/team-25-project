@@ -377,7 +377,7 @@ jobs:
 
   verify:
     name: Verify
-    needs: [type-check, codegen, test, build-backend, build-frontend, build-storybook, merge-coverage, vitest-coverage]
+    needs: [type-check, codegen, test, build-backend, build-frontend, build-storybook, merge-coverage, vitest-coverage, lint, setup]
     runs-on: ubuntu-latest
     if: always()
     steps:
