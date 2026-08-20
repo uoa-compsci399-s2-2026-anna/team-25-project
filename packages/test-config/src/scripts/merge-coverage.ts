@@ -1,37 +1,110 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
-import { join } from "node:path"
+import fs from "node:fs"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
 
-const ROOT = process.cwd()
-const SOURCES = ["apps/frontend", "apps/backend", "packages/ui"]
-const OUT_DIR = join(ROOT, "coverage")
+const PROJECT_ROOT = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "..",
+  "..",
+)
+const COVERAGE_DIRS = ["apps/frontend/coverage", "apps/backend/coverage", "packages/ui/coverage"]
+const OUTPUT_DIR = path.resolve(PROJECT_ROOT, "coverage")
+const FINAL_FILE = "coverage-final.json"
+const SUMMARY_FILE = "coverage-summary.json"
 
-function readJson(path: string): Record<string, unknown> {
-  return JSON.parse(readFileSync(path, "utf-8"))
-}
-
-function mergeFinal(): Record<string, unknown> {
-  const merged: Record<string, unknown> = {}
-  for (const source of SOURCES) {
-    const file = join(ROOT, source, "coverage", "coverage-final.json")
-    if (!existsSync(file)) continue
-    Object.assign(merged, readJson(file))
+function readJsonIfExists<T>(filePath: string): T | null {
+  try {
+    if (fs.existsSync(filePath)) {
+      console.log(`Found: ${filePath}`)
+      return JSON.parse(fs.readFileSync(filePath, "utf-8")) as T
+    }
+    console.warn(`Not found: ${filePath}`)
+  } catch (e) {
+    console.warn(`Failed to read ${filePath}:`, e)
   }
-  return merged
+  return null
 }
 
-function mergeSummary(): Record<string, unknown> {
-  const merged: Record<string, unknown> = {}
-  for (const source of SOURCES) {
-    const file = join(ROOT, source, "coverage", "coverage-summary.json")
-    if (!existsSync(file)) continue
-    for (const [key, value] of Object.entries(readJson(file))) {
-      if (key === "total") continue
-      merged[key] = value
+function mergeCoverageFinal(files: CoverageFinal[]): CoverageFinal {
+  return Object.assign({}, ...files)
+}
+
+function mergeCoverageSummary(files: CoverageSummary[]): CoverageSummary {
+  const totalKeys: CoverageKey[] = ["lines", "statements", "functions", "branches", "branchesTrue"]
+  const overallTotal: Record<CoverageKey, CoverageMetric> = {
+    lines: { total: 0, covered: 0, skipped: 0 },
+    statements: { total: 0, covered: 0, skipped: 0 },
+    functions: { total: 0, covered: 0, skipped: 0 },
+    branches: { total: 0, covered: 0, skipped: 0 },
+    branchesTrue: { total: 0, covered: 0, skipped: 0 },
+  }
+
+  for (const file of files) {
+    if (!file.total) continue
+    for (const key of totalKeys) {
+      const t = file.total[key]
+      if (!t) continue
+      overallTotal[key].total += t.total || 0
+      overallTotal[key].covered += t.covered || 0
+      overallTotal[key].skipped += t.skipped || 0
     }
   }
-  return merged
+
+  for (const key of totalKeys) {
+    const t = overallTotal[key]
+    t.pct = t.total === 0 ? 100 : Math.round((t.covered / t.total) * 10000) / 100
+  }
+
+  const merged = Object.assign({}, ...files.map(({ total, ...rest }) => rest))
+
+  return { total: overallTotal, ...merged }
 }
 
-mkdirSync(OUT_DIR, { recursive: true })
-writeFileSync(join(OUT_DIR, "coverage-final.json"), JSON.stringify(mergeFinal(), null, 2))
-writeFileSync(join(OUT_DIR, "coverage-summary.json"), JSON.stringify(mergeSummary(), null, 2))
+function main() {
+  fs.mkdirSync(OUTPUT_DIR, { recursive: true })
+
+  const finals = COVERAGE_DIRS.map((dir) =>
+    readJsonIfExists<CoverageFinal>(path.resolve(PROJECT_ROOT, dir, FINAL_FILE)),
+  ).filter(Boolean) as CoverageFinal[]
+  const mergedFinal = mergeCoverageFinal(finals)
+  fs.writeFileSync(path.join(OUTPUT_DIR, FINAL_FILE), JSON.stringify(mergedFinal, null, 2))
+
+  const summaries = COVERAGE_DIRS.map((dir) =>
+    readJsonIfExists<CoverageSummary>(path.resolve(PROJECT_ROOT, dir, SUMMARY_FILE)),
+  ).filter(Boolean) as CoverageSummary[]
+  const mergedSummary = mergeCoverageSummary(summaries)
+  fs.writeFileSync(path.join(OUTPUT_DIR, SUMMARY_FILE), JSON.stringify(mergedSummary, null, 2))
+
+  console.log("Merged coverage written to", OUTPUT_DIR)
+}
+
+main()
+
+type CoverageMetric = {
+  total: number
+  covered: number
+  skipped: number
+  pct?: number | "Unknown"
+}
+
+type CoverageSummary = {
+  total: Record<CoverageKey, CoverageMetric>
+} & Record<string, Record<CoverageKey, CoverageMetric>>
+
+type CoverageKey = "lines" | "statements" | "functions" | "branches" | "branchesTrue"
+
+type CoverageFinal = Record<string, FileCoverageData>
+
+type FileCoverageData = {
+  path: string
+  statementMap: Record<string, unknown>
+  fnMap: Record<string, unknown>
+  branchMap: Record<string, unknown>
+  s: Record<string, number>
+  f: Record<string, number>
+  b: Record<string, number[]>
+  inputSourceMap?: object
+  hash?: string
+}
