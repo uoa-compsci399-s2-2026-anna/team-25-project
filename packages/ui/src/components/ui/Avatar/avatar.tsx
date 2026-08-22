@@ -128,6 +128,7 @@ function AvatarUpload({
       </Avatar>
       <input
         accept="image/*"
+        aria-label="Upload photo"
         className="sr-only"
         onChange={handleChange}
         ref={inputRef}
