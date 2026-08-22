@@ -15,9 +15,11 @@ const badgeVariants = cva(
         outline: "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
         ghost: "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
-        "pink-light": "bg-brand-peach text-brand-plum [a]:hover:bg-brand-peach/70",
-        "pink-dark": "bg-brand-plum text-white [a]:hover:bg-brand-plum/85",
+        salmon: "bg-brand-salmon text-brand-plum [a]:hover:bg-brand-salmon/70",
+        pink: "bg-brand-rose/35 text-brand-plum [a]:hover:bg-brand-blush/70",
         blue: "bg-brand-slate/15 text-brand-slate [a]:hover:bg-brand-slate/25",
+        active: "bg-brand-salmon text-brand-plum [a]:hover:bg-brand-salmon/70",
+        closed: "bg-neutral-100 text-neutral-400 [a]:hover:bg-neutral-100/70",
       },
     },
     defaultVariants: {
