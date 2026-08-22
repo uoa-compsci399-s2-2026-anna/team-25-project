@@ -114,18 +114,20 @@ function AvatarUpload({
   }
 
   return (
-    <button
-      className={cn("relative cursor-pointer rounded-full", className)}
-      onClick={() => inputRef.current?.click()}
-      type="button"
-    >
-      <Avatar size={size}>
-        <AvatarImage alt="" src={preview} />
-        <AvatarFallback>{fallback}</AvatarFallback>
-        <AvatarBadge>
-          <Pencil />
-        </AvatarBadge>
-      </Avatar>
+    <div className={cn("relative inline-block", className)}>
+      <button
+        className="cursor-pointer rounded-full"
+        onClick={() => inputRef.current?.click()}
+        type="button"
+      >
+        <Avatar size={size}>
+          <AvatarImage alt="" src={preview} />
+          <AvatarFallback>{fallback}</AvatarFallback>
+          <AvatarBadge>
+            <Pencil />
+          </AvatarBadge>
+        </Avatar>
+      </button>
       <input
         accept="image/*"
         aria-label="Upload photo"
@@ -134,7 +136,7 @@ function AvatarUpload({
         ref={inputRef}
         type="file"
       />
-    </button>
+    </div>
   )
 }
 
