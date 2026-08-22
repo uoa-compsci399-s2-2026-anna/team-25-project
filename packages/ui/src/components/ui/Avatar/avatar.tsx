@@ -115,17 +115,17 @@ function AvatarUpload({
 
   return (
     <button
-      className={cn("relative rounded-full", className)}
+      className={cn("relative cursor-pointer rounded-full", className)}
       onClick={() => inputRef.current?.click()}
       type="button"
     >
       <Avatar size={size}>
         <AvatarImage alt="" src={preview} />
         <AvatarFallback>{fallback}</AvatarFallback>
+        <AvatarBadge>
+          <Pencil />
+        </AvatarBadge>
       </Avatar>
-      <AvatarBadge>
-        <Pencil />
-      </AvatarBadge>
       <input
         accept="image/*"
         className="sr-only"
