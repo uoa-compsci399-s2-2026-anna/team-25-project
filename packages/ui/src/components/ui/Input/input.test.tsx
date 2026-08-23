@@ -36,7 +36,7 @@ describe("Input", () => {
   it("applies the base classes and data-slot attribute", () => {
     render(<Input placeholder="Enter text..." />)
     const input = screen.getByPlaceholderText("Enter text...")
-    expect(input).toHaveClass("h-8", "rounded-2xl", "border-input")
+    expect(input).toHaveClass("h-8", "rounded-full", "border-input")
     expect(input).toHaveAttribute("data-slot", "input")
   })
 
