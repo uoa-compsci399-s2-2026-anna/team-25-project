@@ -11,6 +11,7 @@
   --color-brand-charcoal: #474954;
   --color-brand-slate: #4b5468;
   --color-brand-rose: #b26b7d;
+  --color-brand-teal: #48a9a6;
   --color-brand-blush: #f0eae6;
   --color-brand-peach: #f7e9e6;
   --color-brand-plum: #6e4450;
@@ -79,7 +80,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: var(--color-brand-border);
   --input: var(--color-brand-border);
-  --ring: var(--color-brand-rose);
+  --ring: var(--color-brand-teal);
   --chart-1: var(--color-brand-rose);
   --chart-2: var(--color-brand-plum);
   --chart-3: var(--color-brand-slate);
@@ -92,7 +93,7 @@
   --sidebar-accent: var(--color-brand-blush);
   --sidebar-accent-foreground: var(--color-brand-charcoal);
   --sidebar-border: var(--color-brand-border);
-  --sidebar-ring: var(--color-brand-rose);
+  --sidebar-ring: var(--color-brand-teal);
 }
 
 @layer base {
