@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { Input } from "./input"
 
@@ -22,11 +23,12 @@ describe("Input", () => {
     expect(screen.getByPlaceholderText("Enter text...")).toHaveValue("hello")
   })
 
-  it("does not accept input when disabled", () => {
+  it("does not accept input when disabled", async () => {
     const onChange = vi.fn()
+    const user = userEvent.setup()
     render(<Input disabled onChange={onChange} placeholder="Enter text..." />)
     const input = screen.getByPlaceholderText("Enter text...")
-    fireEvent.change(input, { target: { value: "hello" } })
+    await user.type(input, "hello")
     expect(onChange).not.toHaveBeenCalled()
     expect(input).toBeDisabled()
   })
@@ -34,7 +36,7 @@ describe("Input", () => {
   it("applies the base classes and data-slot attribute", () => {
     render(<Input placeholder="Enter text..." />)
     const input = screen.getByPlaceholderText("Enter text...")
-    expect(input).toHaveClass("h-8", "rounded-lg", "border-input")
+    expect(input).toHaveClass("h-8", "rounded-2xl", "border-input")
     expect(input).toHaveAttribute("data-slot", "input")
   })
 
