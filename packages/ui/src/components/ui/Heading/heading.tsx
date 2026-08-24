@@ -19,11 +19,13 @@ const headingVariants = cva("font-heading text-black tracking-[-0.04em]", {
   },
 })
 
-type HeadingProps = useRender.ComponentProps<"h1"> & VariantProps<typeof headingVariants>
+type HeadingLevel = NonNullable<VariantProps<typeof headingVariants>["level"]>
+
+type HeadingProps = useRender.ComponentProps<"h1"> & { level?: HeadingLevel }
 
 function Heading({ className, level = "h1", render, ...props }: HeadingProps) {
   return useRender({
-    defaultTagName: level ?? "h1",
+    defaultTagName: level,
     props: mergeProps<"h1">(
       {
         className: cn(headingVariants({ level }), className),
