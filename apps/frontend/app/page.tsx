@@ -23,24 +23,6 @@ export default function Page() {
           <Button fontWeight="medium" size="xl" textSize="xl" variant="button-charcoal">
             Charcoal
           </Button>
-          <Button borderColor="charcoal" borderWidth="thin" size="xl" variant="button-cream">
-            Cream
-          </Button>
-          <Button
-            borderColor="white"
-            borderWidth="thin"
-            fontWeight="normal"
-            textSize="md"
-            variant="button-white"
-          >
-            White
-          </Button>
-          <Button borderColor="charcoal" borderWidth="thick" variant="button-transparent">
-            Transparent
-          </Button>
-          <Button borderColor="white" borderWidth="thick" variant="button-mauve">
-            Mauve
-          </Button>
         </div>
         <div className="font-mono text-muted-foreground text-xs">
           (Press <kbd>d</kbd> to toggle dark mode)
