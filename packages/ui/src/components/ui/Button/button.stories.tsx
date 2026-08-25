@@ -9,10 +9,7 @@ const variants = [
   "button-cream",
 ] as const
 const sizes = ["sm", "md", "lg", "xl", "icon", "icon-xs", "icon-sm", "icon-lg"] as const
-const fontWeights = ["normal", "medium"] as const
-const textSizes = ["sm", "md", "lg", "xl"] as const
 const borderColors = ["charcoal", "white"] as const
-const borderWidths = ["none", "thin", "thick"] as const
 
 const meta: Meta<typeof Button> = {
   title: "ui/Button",
@@ -21,9 +18,6 @@ const meta: Meta<typeof Button> = {
     children: "Button",
     variant: "button-charcoal",
     size: "md",
-    fontWeight: "normal",
-    textSize: "md",
-    borderWidth: "none",
     borderColor: "charcoal",
     active: false,
     disabled: false,
@@ -36,18 +30,6 @@ const meta: Meta<typeof Button> = {
     size: {
       control: { type: "select" },
       options: sizes,
-    },
-    fontWeight: {
-      control: { type: "select" },
-      options: fontWeights,
-    },
-    textSize: {
-      control: { type: "select" },
-      options: textSizes,
-    },
-    borderWidth: {
-      control: { type: "select" },
-      options: borderWidths,
     },
     borderColor: {
       control: { type: "select" },

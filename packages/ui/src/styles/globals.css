@@ -66,8 +66,6 @@
 
 :root {
   --radius: 0.625rem;
-  --border-width-thin: 1px;
-  --border-width-thick: 2px;
   --background: white;
   --foreground: var(--color-brand-charcoal);
   --card: white;

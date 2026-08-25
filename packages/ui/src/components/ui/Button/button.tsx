@@ -3,38 +3,18 @@ import { cn } from "@repo/ui/lib/utils"
 import { cva, type VariantProps } from "class-variance-authority"
 
 const buttonVariants = cva(
-  " font-[var(--font-heading)] m-1 cursor-default border border-transparent tracking-normal group/button inline-flex shrink-0 items-center justify-center rounded-[var(--radius-2xl)] bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  " font-heading m-1 cursor-pointer border border-transparent tracking-normal group/button inline-flex shrink-0 items-center justify-center rounded-full bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        "button-charcoal":
-          "bg-[var(--color-brand-charcoal)] text-white hover:bg-[var(--color-brand-charcoal)]/80",
-        "button-mauve":
-          "bg-[var(--color-brand-mauve)] text-white hover:bg-[var(--color-brand-mauve)]/80",
-        "button-transparent":
-          "bg-transparent text-[var(--color-brand-charcoal)] hover:bg-[var(--color-brand-charcoal)]/10",
-        "button-white":
-          "bg-white text-[var(--color-brand-charcoal)] hover:bg-[var(--color-brand-charcoal)]/10",
-        "button-cream":
-          "bg-[var(--color-brand-cream)] text-[var(--color-brand-charcoal)] hover:bg-[var(--color-brand-charcoal)]/10",
-      },
-      fontWeight: {
-        normal: "font-normal",
-        medium: "font-medium",
-      },
-      textSize: {
-        sm: "text-sm",
-        md: "text-base",
-        lg: "text-lg",
-        xl: "text-xl",
-      },
-      borderWidth: {
-        none: "",
-        thin: "border-[length:var(--border-width-thin)]",
-        thick: "border-[length:var(--border-width-thick)]",
+        "button-charcoal": "bg-brand-charcoal text-white hover:bg-brand-charcoal/80",
+        "button-mauve": "bg-brand-mauve text-white hover:bg-brand-mauve/80",
+        "button-transparent": "bg-transparent text-brand-charcoal hover:bg-brand-charcoal/10",
+        "button-white": "bg-white text-brand-charcoal hover:bg-brand-charcoal/10",
+        "button-cream": "bg-brand-cream text-brand-charcoal hover:bg-brand-charcoal/10",
       },
       borderColor: {
-        charcoal: "border-[var(--color-brand-charcoal)]",
+        charcoal: "border-brand-charcoal",
         white: "border-white",
       },
       active: {
@@ -55,9 +35,6 @@ const buttonVariants = cva(
     },
     defaultVariants: {
       variant: "button-charcoal",
-      fontWeight: "normal",
-      textSize: "md",
-      borderWidth: "none",
       active: false,
       size: "md",
     },
