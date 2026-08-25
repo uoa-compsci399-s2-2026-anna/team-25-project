@@ -6,23 +6,21 @@ import { Pencil } from "lucide-react"
 import * as React from "react"
 
 function AvatarUpload({
-  alt = "Profile photo",
   className,
   fallback,
+  image,
   onFileSelect,
   size = "default",
-  src,
 }: {
-  alt?: string
   className?: string
   fallback: React.ReactNode
+  image?: { alt: string; src: string }
   onFileSelect?: (file: File) => void
   size?: "default" | "sm" | "lg"
-  src?: string
 }) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [localPreview, setLocalPreview] = React.useState<string | undefined>(undefined)
-  const preview = localPreview ?? src
+  const preview = localPreview ?? image?.src
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -41,7 +39,7 @@ function AvatarUpload({
         type="button"
       >
         <Avatar size={size}>
-          <AvatarImage alt={alt} src={preview} />
+          <AvatarImage alt={image?.alt ?? "Profile photo"} src={preview} />
           <AvatarFallback>{fallback}</AvatarFallback>
           <AvatarBadge>
             <Pencil />
