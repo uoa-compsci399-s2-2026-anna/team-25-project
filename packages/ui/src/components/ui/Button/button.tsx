@@ -44,9 +44,6 @@ const buttonVariants = cva(
 function Button({
   className,
   variant = "button-charcoal",
-  fontWeight = "normal",
-  textSize = "md",
-  borderWidth = "none",
   borderColor,
   active = false,
   size = "md",
@@ -57,9 +54,6 @@ function Button({
       className={cn(
         buttonVariants({
           variant,
-          fontWeight,
-          textSize,
-          borderWidth,
           borderColor,
           active,
           size,
