@@ -1,6 +1,6 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, it, vi } from "vitest"
-import { Avatar, AvatarFallback, AvatarUpload } from "./avatar"
+import { cleanup, render, screen } from "@testing-library/react"
+import { afterEach, describe, expect, it } from "vitest"
+import { Avatar, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage } from "./avatar"
 
 describe("Avatar", () => {
   afterEach(() => {
@@ -24,34 +24,41 @@ describe("Avatar", () => {
     )
     expect(screen.getByText("JD").closest("[data-slot=avatar]")).toHaveClass("custom-class")
   })
+
+  it("shows the fallback when the image fails to load", () => {
+    render(
+      <Avatar>
+        <AvatarImage alt="User" src="/broken-image.png" />
+        <AvatarFallback>JD</AvatarFallback>
+      </Avatar>,
+    )
+    expect(screen.getByText("JD")).toBeVisible()
+    expect(screen.queryByRole("img")).not.toBeInTheDocument()
+  })
 })
 
-describe("AvatarUpload", () => {
+describe("AvatarGroup", () => {
   afterEach(() => {
     cleanup()
   })
 
-  it("opens the file picker when clicked", () => {
-    render(<AvatarUpload fallback="JD" />)
-    const input = screen.getByLabelText("Upload photo")
-    const clickSpy = vi.spyOn(input, "click")
-    fireEvent.click(screen.getByRole("button"))
-    expect(clickSpy).toHaveBeenCalledTimes(1)
+  it("renders multiple avatars inside AvatarGroup", () => {
+    render(
+      <AvatarGroup>
+        <Avatar>
+          <AvatarFallback>JD</AvatarFallback>
+        </Avatar>
+        <Avatar>
+          <AvatarFallback>AS</AvatarFallback>
+        </Avatar>
+      </AvatarGroup>,
+    )
+    expect(screen.getByText("JD")).toBeInTheDocument()
+    expect(screen.getByText("AS")).toBeInTheDocument()
   })
 
-  it("calls onFileSelect and shows a preview when a file is chosen", () => {
-    vi.stubGlobal("URL", { ...URL, createObjectURL: vi.fn(() => "blob:mock-url") })
-
-    const onFileSelect = vi.fn()
-    render(<AvatarUpload fallback="JD" onFileSelect={onFileSelect} />)
-
-    const file = new File(["photo"], "photo.png", { type: "image/png" })
-    const input = screen.getByLabelText("Upload photo")
-    fireEvent.change(input, { target: { files: [file] } })
-
-    expect(onFileSelect).toHaveBeenCalledWith(file)
-    expect(URL.createObjectURL).toHaveBeenCalledWith(file)
-
-    vi.unstubAllGlobals()
+  it("renders AvatarGroupCount", () => {
+    render(<AvatarGroupCount>+3</AvatarGroupCount>)
+    expect(screen.getByText("+3")).toBeInTheDocument()
   })
 })
