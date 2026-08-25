@@ -6,21 +6,40 @@ import {
   AvatarGroup,
   AvatarGroupCount,
   AvatarImage,
-  AvatarUpload,
 } from "./avatar"
 
 const meta: Meta<typeof Avatar> = {
   title: "ui/Avatar",
   component: Avatar,
+  args: {
+    size: "default",
+  },
+  argTypes: {
+    size: {
+      control: { type: "select" },
+      options: ["sm", "default", "lg"],
+    },
+  },
 }
 
 export default meta
 type Story = StoryObj<typeof Avatar>
 
 export const Primary: Story = {
-  render: () => (
-    <Avatar>
-      <AvatarImage alt="User" src="https://github.com/shadcn.png" />
+  args: {
+    size: "default",
+    // @ts-expect-error imageSrc is a story-only control, not a real Avatar prop
+    imageSrc: "https://github.com/shadcn.png",
+  },
+  argTypes: {
+    // @ts-expect-error imageSrc is a story-only control, not a real Avatar prop
+    imageSrc: {
+      control: { accept: "image/*", type: "file" },
+    },
+  },
+  render: (args) => (
+    <Avatar size={args.size}>
+      <AvatarImage alt="User" src={(args as { imageSrc?: string }).imageSrc} />
       <AvatarFallback>JD</AvatarFallback>
     </Avatar>
   ),
@@ -73,16 +92,5 @@ export const Group: Story = {
       </Avatar>
       <AvatarGroupCount>+3</AvatarGroupCount>
     </AvatarGroup>
-  ),
-}
-
-export const Upload: Story = {
-  render: () => (
-    <AvatarUpload
-      fallback="JD"
-      onFileSelect={(file) => {
-        console.log(file)
-      }}
-    />
   ),
 }
