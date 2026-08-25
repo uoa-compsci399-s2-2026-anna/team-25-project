@@ -1,4 +1,5 @@
 export * from "./Badge/badge"
 export * from "./Button/button"
+export * from "./Card/card"
 export * from "./Heading/heading"
 export * from "./Input/input"
