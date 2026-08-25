@@ -13,16 +13,13 @@ export default function Page() {
           <Link
             className={buttonVariants({
               variant: "button-charcoal",
-              fontWeight: "normal",
               active: true,
             })}
             href="/"
           >
             Link Example
           </Link>
-          <Button fontWeight="medium" size="xl" textSize="xl" variant="button-charcoal">
-            Charcoal
-          </Button>
+          <Button variant="button-charcoal">Charcoal</Button>
         </div>
         <div className="font-mono text-muted-foreground text-xs">
           (Press <kbd>d</kbd> to toggle dark mode)
