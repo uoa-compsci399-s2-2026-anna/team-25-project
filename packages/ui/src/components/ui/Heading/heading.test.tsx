@@ -28,8 +28,28 @@ describe("Heading", () => {
   })
 
   it("merges a custom className with variant classes", () => {
-    render(<Heading className="custom-class">Title</Heading>)
-    expect(screen.getByText("Title")).toHaveClass("custom-class")
+    render(
+      <Heading className="custom-class" level="h2">
+        Title
+      </Heading>,
+    )
+    expect(screen.getByText("Title")).toHaveClass(
+      "custom-class",
+      "text-2xl",
+      "md:text-3xl",
+      "font-semibold",
+    )
+  })
+
+  it("passes through extra props via ...props", () => {
+    render(
+      <Heading aria-label="Page title" data-testid="heading" title="Tooltip text">
+        Title
+      </Heading>,
+    )
+    const el = screen.getByTestId("heading")
+    expect(el).toHaveAttribute("aria-label", "Page title")
+    expect(el).toHaveAttribute("title", "Tooltip text")
   })
 
   it("renders as a different element when the render prop is passed, keeping level styling", () => {
