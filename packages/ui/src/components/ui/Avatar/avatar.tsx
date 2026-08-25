@@ -2,8 +2,7 @@
 
 import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar"
 import { cn } from "@repo/ui/lib/utils"
-import { Pencil } from "lucide-react"
-import * as React from "react"
+import type * as React from "react"
 
 function Avatar({
   className,
@@ -90,62 +89,4 @@ function AvatarGroupCount({ className, ...props }: React.ComponentProps<"div">) 
   )
 }
 
-function AvatarUpload({
-  className,
-  fallback,
-  onFileSelect,
-  size = "default",
-  src,
-}: {
-  className?: string
-  fallback: React.ReactNode
-  onFileSelect?: (file: File) => void
-  size?: "default" | "sm" | "lg"
-  src?: string
-}) {
-  const inputRef = React.useRef<HTMLInputElement>(null)
-  const [preview, setPreview] = React.useState(src)
-
-  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    if (!file) return
-    setPreview(URL.createObjectURL(file))
-    onFileSelect?.(file)
-  }
-
-  return (
-    <div className={cn("relative inline-block", className)}>
-      <button
-        className="cursor-pointer rounded-full"
-        onClick={() => inputRef.current?.click()}
-        type="button"
-      >
-        <Avatar size={size}>
-          <AvatarImage alt="" src={preview} />
-          <AvatarFallback>{fallback}</AvatarFallback>
-          <AvatarBadge>
-            <Pencil />
-          </AvatarBadge>
-        </Avatar>
-      </button>
-      <input
-        accept="image/*"
-        aria-label="Upload photo"
-        className="sr-only"
-        onChange={handleChange}
-        ref={inputRef}
-        type="file"
-      />
-    </div>
-  )
-}
-
-export {
-  Avatar,
-  AvatarBadge,
-  AvatarFallback,
-  AvatarGroup,
-  AvatarGroupCount,
-  AvatarImage,
-  AvatarUpload,
-}
+export { Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage }
