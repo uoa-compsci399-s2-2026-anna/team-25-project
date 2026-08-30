@@ -24,6 +24,9 @@ export default buildConfig({
   },
   collections: [Users, Media],
   editor: lexicalEditor(),
+  graphQL: {
+    disable: true,
+  },
   routes: {
     admin: "/payload/admin",
     api: "/payload/api",
