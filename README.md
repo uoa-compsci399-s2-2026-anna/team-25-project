@@ -1,12 +1,12 @@
 # Casa
 
-Team 25's project for COMPSCI 399 (University of Auckland). A Turborepo monorepo with a Next.js frontend, a Payload CMS backend on Postgres, and shared packages.
+Team 25's project for COMPSCI 399 (University of Auckland). A Turborepo monorepo with a full-stack Next.js + Payload CMS app on Postgres, and shared packages.
 
 ## Prerequisites
 
 - **Node.js** — version pinned in `.nvmrc` / `package.json`'s `volta.node`
 - **pnpm** — version pinned in `package.json`'s `packageManager`
-- **PostgreSQL** instance (local or cloud) — only needed to run the backend
+- **PostgreSQL** instance (local or cloud) — only needed to run the app
 
 ### Node.js installation
 
@@ -47,19 +47,18 @@ pnpm install
 pnpm dev
 ```
 
-This starts the frontend, the backend, and Storybook together through Turborepo.
+This starts the app and Storybook together through Turborepo.
 
-Once running with the default ports, the apps will be available at:
+Once running with the default ports:
 
-- **Frontend**: [http://localhost:3000](http://localhost:3000)
-- **Backend / Payload admin**: [http://localhost:3001/payload/admin](http://localhost:3001/payload/admin)
+- **App**: [http://localhost:3000](http://localhost:3000)
+- **Payload admin**: [http://localhost:3000/payload/admin](http://localhost:3000/payload/admin)
 
 ## Structure
 
 | Path | Description |
 | --- | --- |
-| [`apps/backend`](apps/backend/README.md) | Payload CMS backend, built on Next.js and Postgres |
-| [`apps/frontend`](apps/frontend/README.md) | Public-facing Next.js app |
+| [`apps/web`](apps/web/README.md) | Full-stack Next.js app: product UI + Payload CMS (admin, REST/GraphQL) on Postgres |
 | [`packages/ui`](packages/ui/README.md) | Shared shadcn/ui component library, with Storybook |
 | [`packages/shared`](packages/shared/README.md) | Shared types, schemas, enums, constants, and utils |
 | [`packages/test-config`](packages/test-config/README.md) | Shared Vitest configs and coverage tooling |
@@ -71,11 +70,10 @@ Run from the repo root; Turborepo fans each one out to the workspaces that defin
 
 | Command | Description |
 | --- | --- |
-| `pnpm dev` | Start every app's dev server, plus Storybook |
-| `pnpm dev:frontend` | Start only `apps/frontend` |
-| `pnpm dev:backend` | Start only `apps/backend` |
+| `pnpm dev` | Start the app's dev server, plus Storybook |
+| `pnpm dev:web` | Start only `apps/web` |
 | `pnpm dev:storybook` | Start only Storybook |
-| `pnpm build` | Build all apps and Storybook |
+| `pnpm build` | Build the app and Storybook |
 | `pnpm build:app` | Build apps only (`apps/*`) |
 | `pnpm types:check` | Type-check every workspace |
 | `pnpm test` | Run tests in every workspace |
@@ -111,7 +109,7 @@ Other IDEs work too, feel free to add relevant config to the repository.
 
 ## Type generation
 
-Payload CMS generates TypeScript types from the backend's collections/globals config. They land in `packages/shared/src/payload-types.ts` and are exported as `@repo/shared/payload-types` for use anywhere in the monorepo.
+Payload CMS generates TypeScript types from the app's collections/globals config. They land in `packages/shared/src/payload-types.ts` and are exported as `@repo/shared/payload-types` for use anywhere in the monorepo.
 
 ```bash
 pnpm types:generate
@@ -123,8 +121,7 @@ Never edit `payload-types.ts` by hand — it's regenerated automatically.
 
 | Workspace | How |
 | --- | --- |
-| `apps/backend` | `pnpm --filter backend test` — Vitest integration tests, then Playwright e2e |
-| `apps/frontend` | `pnpm --filter frontend test` — Vitest |
+| `apps/web` | `pnpm --filter web test` — Vitest (`node` project for `*.test.ts`, `jsdom` project for `*.test.tsx`) |
 | `packages/ui` | `pnpm --filter @repo/ui test` — Vitest, including Storybook interaction/a11y tests |
 
 Or run everything at once from the root with `pnpm test`.
@@ -133,13 +130,13 @@ Or run everything at once from the root with `pnpm test`.
 
 ### Core
 
-- **[Next.js](https://nextjs.org/)** 16 (App Router) — both apps, with the frontend using Cache Components
-- **[React](https://react.dev/)** 19, with the React Compiler enabled on the frontend
+- **[Next.js](https://nextjs.org/)** 16 (App Router), with Cache Components
+- **[React](https://react.dev/)** 19, with the React Compiler enabled
 - **[TypeScript](https://www.typescriptlang.org/)** 7
 
 ### Content management
 
-- **[Payload CMS](https://payloadcms.com/)** 3 — headless CMS with an admin panel, mounted in `apps/backend`
+- **[Payload CMS](https://payloadcms.com/)** 3 — headless CMS with an admin panel, mounted in `apps/web`
 - **[PostgreSQL](https://www.postgresql.org/)** via `@payloadcms/db-postgres`
 
 ### Styling & UI

@@ -1,6 +1,6 @@
 ---
 name: Full-stack feature template
-about: Features spanning both `apps/backend` and `apps/frontend`
+about: Features spanning the UI and server side of `apps/web`
 title: "[FULLSTACK] "
 type: Feature
 labels: fullstack
