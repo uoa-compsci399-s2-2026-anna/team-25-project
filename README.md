@@ -6,7 +6,8 @@ Team 25's project for COMPSCI 399 (University of Auckland). A Turborepo monorepo
 
 - **Node.js** — version pinned in `.nvmrc` / `package.json`'s `volta.node`
 - **pnpm** — version pinned in `package.json`'s `packageManager`
-- **PostgreSQL** instance (local or cloud) — only needed to run the app
+- **Docker** — runs the local Postgres database via `docker compose` (or bring your
+  own PostgreSQL instance, local or cloud)
 
 ### Node.js installation
 
@@ -38,10 +39,29 @@ pnpm install
 
 ### 2. Environment setup
 
-> [!WARNING]
-> TODO: Environmental variables have not been set up yet
+Copy the app's env template and keep the defaults — they match the local Postgres
+container:
 
-### 3. Start the development servers
+```bash
+cp apps/web/.env.example apps/web/.env
+```
+
+| Variable | Description |
+| --- | --- |
+| `DATABASE_URL` | Postgres connection string (`postgres://casa:casa@localhost:5432/casa` for the container) |
+| `PAYLOAD_SECRET` | Secret used by Payload to sign/encrypt data |
+
+### 3. Start the local database
+
+```bash
+docker compose up -d          # start Postgres, leave it running
+pnpm --filter web migrate     # apply migrations
+pnpm db:seed                  # create the first admin user
+```
+
+`docker compose down -v` wipes the database; re-run `pnpm db:seed` to rebuild it.
+
+### 4. Start the development servers
 
 ```bash
 pnpm dev
@@ -81,6 +101,7 @@ Run from the repo root; Turborepo fans each one out to the workspaces that defin
 | `pnpm lint:check` | Check lint/format rules (Biome) across the repo |
 | `pnpm lint:fix` | Auto-fix lint/format issues across the repo |
 | `pnpm types:generate` | Regenerate Payload's generated types |
+| `pnpm db:seed` | Seed a fresh database with the first admin user |
 
 Per-app scripts (migrations, Playwright, Storybook builds, etc.) are documented in each workspace's own README, linked in [Structure](#structure) above.
 

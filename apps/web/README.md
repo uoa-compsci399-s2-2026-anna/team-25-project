@@ -34,7 +34,8 @@ root.
 
 ## Prerequisites
 
-- A Postgres database the app can connect to
+- Docker (for the local Postgres container — see below), or your own Postgres
+  instance the app can connect to
 - Node.js 20+ and pnpm (see the [root README](../../README.md#prerequisites))
 
 ## Environment variables
@@ -47,6 +48,22 @@ Copy `.env.example` to `.env` and fill in:
 | `PAYLOAD_SECRET` | Secret used by Payload to sign/encrypt data |
 
 ## Development
+
+### Local database
+
+Postgres runs in a container; the app itself runs natively. From the repo root:
+
+```bash
+docker compose up -d          # start Postgres, leave it running
+pnpm --filter web migrate     # apply migrations to the fresh database
+pnpm --filter web db:seed     # create the first admin user + fixtures
+```
+
+`docker compose down -v` wipes the database; re-run `db:seed` to rebuild it.
+The seeded admin defaults to `admin@example.com` / `changeme` — override with
+`SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`.
+
+### Run the app
 
 From the repo root:
 
@@ -105,6 +122,7 @@ for `src/**/*.test.ts` (Payload, API route handlers) and a `jsdom` project for
 | `pnpm types:check` | Type-check with `tsc --noEmit` |
 | `pnpm lint:check` / `pnpm lint:fix` | Biome lint check / autofix |
 | `pnpm generate:importmap` | Regenerate the Payload admin import map |
+| `pnpm db:seed` | Seed a fresh database with the first admin user (`SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` to override) |
 | `pnpm payload` | Run arbitrary Payload CLI commands |
 
 ## API reference
