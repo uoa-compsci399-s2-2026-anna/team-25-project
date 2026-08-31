@@ -1,7 +1,7 @@
 {
   "name": "web",
   "version": "0.0.1",
-  "description": "Full-stack Next.js 16 app with Payload 3 (admin, REST/GraphQL) and the product UI in one App Router project",
+  "description": "Full-stack Next.js 16 app with Payload 3 (admin, REST API) and the product UI in one App Router project",
   "license": "MIT",
   "type": "module",
   "private": true,

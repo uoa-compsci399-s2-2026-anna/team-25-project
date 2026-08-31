@@ -58,7 +58,7 @@ Once running with the default ports:
 
 | Path | Description |
 | --- | --- |
-| [`apps/web`](apps/web/README.md) | Full-stack Next.js app: product UI + Payload CMS (admin, REST/GraphQL) on Postgres |
+| [`apps/web`](apps/web/README.md) | Full-stack Next.js app: product UI + Payload CMS (admin, REST API) on Postgres |
 | [`packages/ui`](packages/ui/README.md) | Shared shadcn/ui component library, with Storybook |
 | [`packages/shared`](packages/shared/README.md) | Shared types, schemas, enums, constants, and utils |
 | [`packages/test-config`](packages/test-config/README.md) | Shared Vitest configs and coverage tooling |

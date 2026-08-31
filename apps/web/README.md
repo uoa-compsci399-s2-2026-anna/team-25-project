@@ -1,7 +1,7 @@
 # Web
 
 The full-stack app: a single Next.js 16 App Router project that hosts both the
-product UI and Payload CMS (admin panel, REST, and GraphQL). Part of the
+product UI and Payload CMS (admin panel and REST API). Part of the
 [Casa](../../README.md) monorepo.
 
 ## Stack
@@ -22,7 +22,7 @@ product UI and Payload CMS (admin panel, REST, and GraphQL). Part of the
 | Group | Serves | Layout |
 | --- | --- | --- |
 | `src/app/(app)/` | Product UI (`/`) and the app's own route handlers (`/api/health`, `/api/openapi`, `/api/docs`) | Satoshi + Geist Mono fonts, `@repo/ui` global styles |
-| `src/app/(payload)/` | Payload admin at `/payload/admin`, Payload REST/GraphQL at `/payload/api` | Payload's `RootLayout` |
+| `src/app/(payload)/` | Payload admin at `/payload/admin`, Payload REST API at `/payload/api` | Payload's `RootLayout` |
 
 Payload's own collections, globals, and migrations live outside the route group,
 under `src/payload/`.
