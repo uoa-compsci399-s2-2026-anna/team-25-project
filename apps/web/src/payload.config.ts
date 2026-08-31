@@ -41,7 +41,7 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URL || "",
     },
     migrationDir: path.resolve(dirname, "./payload/migrations"),
-    push: true,
+    push: false,
   }),
   sharp,
   plugins: [],

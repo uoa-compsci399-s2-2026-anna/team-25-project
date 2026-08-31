@@ -94,6 +94,21 @@ pnpm migrate:create   # generate a new migration
 pnpm migrate:status   # check migration status
 ```
 
+Schema `push` is disabled (`push: false` in `payload.config.ts`), so the
+database only changes when a migration runs — locally and on the shared
+database alike. After editing a collection, global, or field:
+
+```bash
+pnpm migrate:create <name>   # diff the schema into a new migration
+pnpm migrate                 # apply it to your local database
+pnpm generate:types          # refresh the generated types
+```
+
+Commit the generated `migrations/*.ts` + `*.json` and the updated types
+together. Run `pnpm migrate` against the shared database as a release step,
+before the new app version starts. The `payload_migrations` table tracks what
+has already run, so re-runs are safe.
+
 ## Generated types
 
 `pnpm generate:types` runs both `payload generate:types` (writes
