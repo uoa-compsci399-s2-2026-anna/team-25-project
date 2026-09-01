@@ -32,19 +32,12 @@ runs:
       shell: bash
       run: pnpm install --frozen-lockfile --ignore-scripts
 
-    - name: Download Frontend Coverage
+    - name: Download Web Coverage
       uses: actions/download-artifact@v8
       continue-on-error: true
       with:
-        name: coverage-frontend
-        path: apps/frontend/coverage
-
-    - name: Download Backend Coverage
-      uses: actions/download-artifact@v8
-      continue-on-error: true
-      with:
-        name: coverage-backend
-        path: apps/backend/coverage
+        name: coverage-web
+        path: apps/web/coverage
 
     - name: Download UI Coverage
       uses: actions/download-artifact@v8

@@ -6,7 +6,7 @@ Shared types, schemas, enums, constants, and utilities used across the [Casa](..
 
 | Directory | Import path | Description |
 | --- | --- | --- |
-| `src/payload-types.ts` | `@repo/shared/payload-types` | Types generated from the backend's Payload config. Regenerate with `pnpm generate:types` at the repo root (or `pnpm --filter backend generate:types`). Do not edit by hand. |
+| `src/payload-types.ts` | `@repo/shared/payload-types` | Types generated from the app's Payload config. Regenerate with `pnpm types:generate` at the repo root (or `pnpm --filter web generate:types`). Do not edit by hand. |
 | `src/enums` | `@repo/shared/enums/*` | Shared enums |
 | `src/constants` | `@repo/shared/constants/*` | Shared constants |
 | `src/utils` | `@repo/shared/utils/*` | Shared utility functions |

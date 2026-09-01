@@ -2,6 +2,10 @@ import { withPayload } from "@payloadcms/next/withPayload"
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
+  transpilePackages: ["@repo/ui"],
+  cacheComponents: true,
+  reactCompiler: true,
+  typedRoutes: true,
   images: {
     localPatterns: [
       {
