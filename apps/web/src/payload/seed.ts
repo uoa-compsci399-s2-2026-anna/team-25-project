@@ -12,25 +12,32 @@ import { getPayload } from "payload"
 
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || "admin@example.com"
 const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || "changeme"
+const ADMIN_FIRST_NAME = process.env.SEED_ADMIN_FIRST_NAME || "Admin"
+const ADMIN_LAST_NAME = process.env.SEED_ADMIN_LAST_NAME || "User"
 
 const seed = async () => {
-  // Connecting also runs the adapter's `push`
+  // Schema is managed via migrations (push: false); this just opens a connection.
   const payload = await getPayload({ config })
 
-  // users
+  // admins
   const existing = await payload.find({
-    collection: "users",
+    collection: "admin",
     where: { email: { equals: ADMIN_EMAIL } },
     limit: 1,
   })
   if (existing.docs.length > 0) {
-    payload.logger.info(`Admin user ${ADMIN_EMAIL} already exists, skipping.`)
+    payload.logger.info(`Admin ${ADMIN_EMAIL} already exists, skipping.`)
   } else {
     await payload.create({
-      collection: "users",
-      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+      collection: "admin",
+      data: {
+        email: ADMIN_EMAIL,
+        password: ADMIN_PASSWORD,
+        firstName: ADMIN_FIRST_NAME,
+        lastName: ADMIN_LAST_NAME,
+      },
     })
-    payload.logger.info(`Created admin user ${ADMIN_EMAIL}.`)
+    payload.logger.info(`Created admin ${ADMIN_EMAIL}.`)
   }
 }
 
