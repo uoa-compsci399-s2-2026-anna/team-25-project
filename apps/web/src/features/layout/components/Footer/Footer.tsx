@@ -14,7 +14,7 @@ const links = {
 
 export const Footer = () => {
   return (
-    <footer className="flex flex-row justify-between gap-8 bg-brand-blush px-16 py-12 text-brand-charcoal">
+    <footer className="flex flex-row flex-wrap justify-between gap-8 bg-brand-blush p-8 text-brand-charcoal md:px-16 md:py-12">
       <div className="flex max-w-sm flex-col">
         <Heading className="text-black" level="h3">
           CCCA
@@ -24,7 +24,7 @@ export const Footer = () => {
           <br />A community of practice, not a publisher.
         </p>
       </div>
-      <nav aria-label="Footer" className="flex flex-row gap-10">
+      <nav aria-label="Footer" className="flex flex-wrap gap-10 sm:flex-row sm:flex-nowrap">
         {Object.entries(links).map(([category, items]) => (
           <div className="flex flex-col gap-1" key={category}>
             <Heading className="uppercase" level="h6">
