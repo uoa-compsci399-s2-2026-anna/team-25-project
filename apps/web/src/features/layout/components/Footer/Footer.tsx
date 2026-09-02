@@ -24,7 +24,7 @@ export const Footer = () => {
           <br />A community of practice, not a publisher.
         </p>
       </div>
-      <div className="flex flex-row gap-10">
+      <nav aria-label="Footer" className="flex flex-row gap-10">
         {Object.entries(links).map(([category, items]) => (
           <div className="flex flex-col gap-1" key={category}>
             <Heading className="uppercase" level="h6">
@@ -39,7 +39,7 @@ export const Footer = () => {
             </ul>
           </div>
         ))}
-      </div>
+      </nav>
     </footer>
   )
 }
