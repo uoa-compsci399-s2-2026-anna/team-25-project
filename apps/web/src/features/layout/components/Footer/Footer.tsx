@@ -2,17 +2,17 @@ import { Heading } from "@repo/ui/components/ui"
 import Link from "next/link"
 import { Routes } from "@/lib/routes"
 
-export const Footer = () => {
-  const links = {
-    Explore: [
-      { name: "Members", href: Routes.MEMBERS.ROOT },
-      { name: "Courses", href: Routes.COURSES.ROOT },
-      { name: "Proposals", href: Routes.PROPOSALS.ROOT },
-    ],
-    Community: [{ name: "About", href: Routes.ABOUT }],
-    Contact: [{ name: "Privacy", href: Routes.PRIVACY }],
-  }
+const links = {
+  Explore: [
+    { name: "Members", href: Routes.MEMBERS.ROOT },
+    { name: "Courses", href: Routes.COURSES.ROOT },
+    { name: "Proposals", href: Routes.PROPOSALS.ROOT },
+  ],
+  Community: [{ name: "About", href: Routes.ABOUT }],
+  Contact: [{ name: "Privacy", href: Routes.PRIVACY }],
+}
 
+export const Footer = () => {
   return (
     <footer className="flex flex-row justify-between gap-8 bg-brand-blush px-16 py-12 text-brand-charcoal">
       <div className="flex max-w-sm flex-col">
