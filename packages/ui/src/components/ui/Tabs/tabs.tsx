@@ -57,7 +57,7 @@ function TabsIndicator({ className, ...props }: TabsPrimitive.Indicator.Props) {
       className={cn(
         "absolute top-1/2 left-0 -z-10 h-(--active-tab-height) w-(--active-tab-width) translate-x-(--active-tab-left) -translate-y-1/2 transition-[translate,width] duration-200 ease-out motion-reduce:transition-none",
         "group-data-[variant=segmented]/tabs-list:rounded-md group-data-[variant=segmented]/tabs-list:bg-brand-salmon",
-        "group-data-[variant=pill]/tabs-list:rounded-full group-data-[variant=pill]/tabs-list:bg-background group-data-[variant=pill]/tabs-list:shadow-sm",
+        "group-data-[variant=pill]/tabs-list:rounded-full group-data-[variant=pill]/tabs-list:bg-background",
         "group-data-[variant=outline]/tabs-list:rounded-md group-data-[variant=outline]/tabs-list:border group-data-[variant=outline]/tabs-list:border-input group-data-[variant=outline]/tabs-list:bg-background",
         "group-data-[variant=ghost]/tabs-list:rounded-md group-data-[variant=ghost]/tabs-list:bg-muted",
         className,
