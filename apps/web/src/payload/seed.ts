@@ -6,6 +6,7 @@
  *
  * Add a block per collection as real collections land, keep it collection-driven.
  */
+import { Slugs } from "@/lib/payload/slugs"
 import "dotenv/config"
 import config from "@payload-config"
 import { getPayload } from "payload"
@@ -21,7 +22,7 @@ const seed = async () => {
 
   // admins
   const existing = await payload.find({
-    collection: "admin",
+    collection: Slugs.Collections.ADMIN,
     where: { email: { equals: ADMIN_EMAIL } },
     limit: 1,
   })
@@ -29,7 +30,7 @@ const seed = async () => {
     payload.logger.info(`Admin ${ADMIN_EMAIL} already exists, skipping.`)
   } else {
     await payload.create({
-      collection: "admin",
+      collection: Slugs.Collections.ADMIN,
       data: {
         email: ADMIN_EMAIL,
         password: ADMIN_PASSWORD,

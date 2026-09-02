@@ -1,8 +1,9 @@
 import type { CollectionConfig } from "payload"
+import { Slugs } from "@/lib/payload/slugs"
 import { isAdmin } from "../access"
 
 export const Admin: CollectionConfig = {
-  slug: "admin",
+  slug: Slugs.Collections.ADMIN,
   admin: {
     useAsTitle: "email",
     group: "System",

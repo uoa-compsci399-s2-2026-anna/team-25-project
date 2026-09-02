@@ -1,8 +1,9 @@
 import type { CollectionConfig } from "payload"
+import { Slugs } from "@/lib/payload/slugs"
 import { isAdmin, isAdminOrSelf } from "../access"
 
 export const Members: CollectionConfig = {
-  slug: "members",
+  slug: Slugs.Collections.MEMBERS,
   admin: {
     useAsTitle: "email",
   },
@@ -35,7 +36,7 @@ export const Members: CollectionConfig = {
     { name: "lastName", type: "text", required: true },
     { name: "position", type: "text" },
     { name: "bio", type: "textarea" },
-    { name: "avatar", type: "upload", relationTo: "media" },
+    { name: "avatar", type: "upload", relationTo: Slugs.Collections.MEDIA },
     {
       name: "showEmailPublicly",
       type: "checkbox",
