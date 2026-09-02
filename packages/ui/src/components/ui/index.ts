@@ -1,6 +1,7 @@
 export * from "./Avatar/avatar"
 export * from "./Badge/badge"
 export * from "./Button/button"
+export * from "./Eyebrow/eyebrow"
 export * from "./Heading/heading"
 export * from "./Input/input"
 export * from "./Skeleton/skeleton"
