@@ -1,6 +1,6 @@
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
-import { isAdmin, isAdminOrSelf } from "../access"
+import { canReadEmail, isAdmin, isAdminOrSelf } from "../access"
 
 export const Members: CollectionConfig = {
   slug: Slugs.Collections.MEMBERS,
@@ -29,7 +29,7 @@ export const Members: CollectionConfig = {
       name: "email",
       type: "email",
       access: {
-        read: ({ req, doc }) => Boolean(req.user) || Boolean(doc?.showEmailPublicly),
+        read: canReadEmail,
       },
     },
     { name: "firstName", type: "text", required: true },
