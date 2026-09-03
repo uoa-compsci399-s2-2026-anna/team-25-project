@@ -3,6 +3,7 @@ import localFont from "next/font/local"
 
 import "@repo/ui/globals.css"
 import { cn } from "@repo/ui/lib/utils"
+import { Footer } from "@/features/layout/components"
 
 const satoshi = localFont({
   src: [
@@ -24,7 +25,10 @@ export default function RootLayout({
 }>) {
   return (
     <html className={cn("antialiased", fontMono.variable, "font-sans", satoshi.variable)} lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Footer />
+      </body>
     </html>
   )
 }
