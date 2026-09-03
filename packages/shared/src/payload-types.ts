@@ -70,6 +70,7 @@ export interface Config {
   collections: {
     admin: Admin;
     members: Member;
+    institutions: Institution;
     media: Media;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -80,6 +81,7 @@ export interface Config {
   collectionsSelect: {
     admin: AdminSelect<false> | AdminSelect<true>;
     members: MembersSelect<false> | MembersSelect<true>;
+    institutions: InstitutionsSelect<false> | InstitutionsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -218,6 +220,24 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "institutions".
+ */
+export interface Institution {
+  id: number;
+  name: string;
+  country: 'AU' | 'NZ';
+  /**
+   * e.g. auckland.ac.nz — subdomains are accepted automatically
+   */
+  domains: {
+    domain: string;
+    id?: string | null;
+  }[];
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -247,6 +267,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'members';
         value: number | Member;
+      } | null)
+    | ({
+        relationTo: 'institutions';
+        value: number | Institution;
       } | null)
     | ({
         relationTo: 'media';
@@ -356,6 +380,22 @@ export interface MembersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "institutions_select".
+ */
+export interface InstitutionsSelect<T extends boolean = true> {
+  name?: T;
+  country?: T;
+  domains?:
+    | T
+    | {
+        domain?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
