@@ -3,6 +3,7 @@ export const Slugs = {
     ADMIN: "admin",
     MEMBERS: "members",
     MEDIA: "media",
+    INSTITUTIONS: "institutions",
   },
 } as const
 
