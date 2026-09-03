@@ -149,6 +149,52 @@ describe("Toaster", () => {
     await new Promise((resolve) => setTimeout(resolve, 150))
     expect(screen.getByText("Sticky")).toBeInTheDocument()
   })
+
+  it("swaps a promise toast from loading to success when it resolves", async () => {
+    const manager = renderToaster()
+    let resolveTask!: (value: string) => void
+    const task = new Promise<string>((resolve) => {
+      resolveTask = resolve
+    })
+    let settled!: Promise<string>
+    act(() => {
+      settled = manager.promise(task, {
+        loading: "Uploading…",
+        success: "Upload complete",
+        error: "Upload failed",
+      })
+    })
+    expect(await screen.findByText("Uploading…")).toBeInTheDocument()
+    await act(async () => {
+      resolveTask("done")
+      await settled
+    })
+    expect(await screen.findByText("Upload complete")).toBeInTheDocument()
+    expect(screen.queryByText("Uploading…")).not.toBeInTheDocument()
+  })
+
+  it("swaps a promise toast from loading to error when it rejects", async () => {
+    const manager = renderToaster()
+    let rejectTask!: (reason: Error) => void
+    const task = new Promise<string>((_, reject) => {
+      rejectTask = reject
+    })
+    let settled!: Promise<string>
+    act(() => {
+      settled = manager.promise(task, {
+        loading: "Uploading…",
+        success: "Upload complete",
+        error: "Upload failed",
+      })
+    })
+    expect(await screen.findByText("Uploading…")).toBeInTheDocument()
+    await act(async () => {
+      rejectTask(new Error("network"))
+      await settled.catch(() => {})
+    })
+    expect(await screen.findByText("Upload failed")).toBeInTheDocument()
+    expect(screen.queryByText("Uploading…")).not.toBeInTheDocument()
+  })
 })
 
 describe("Toast parts", () => {
