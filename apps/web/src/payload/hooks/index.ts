@@ -15,11 +15,15 @@ const domainMatches = (emailDomain: string, allowedDomain: string) =>
 // by email verification, which is out of scope for now.
 export const enforceInstitutionDomain: CollectionBeforeValidateHook<Member> = async ({
   data,
-  originalDoc,
   req,
 }) => {
-  const email = data?.email ?? originalDoc?.email
-  const institutionValue = data?.institution ?? originalDoc?.institution
+  // Payload's own field-level beforeValidate step already backfills any field
+  // omitted from a partial update with its value from the existing document,
+  // so data.email/data.institution are only genuinely absent here on create,
+  // or on update if the client explicitly tried to null one out - which
+  // should fail rather than be quietly validated against the old value.
+  const email = data?.email
+  const institutionValue = data?.institution
   const institutionId =
     typeof institutionValue === "object" ? institutionValue?.id : institutionValue
 
