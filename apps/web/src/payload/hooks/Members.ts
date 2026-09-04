@@ -34,6 +34,10 @@ export const enforceInstitutionDomain: CollectionBeforeValidateHook<Member> = as
   const institution = await req.payload.findByID({
     collection: Slugs.Collections.INSTITUTIONS,
     id: institutionId,
+    // findByID throws NotFound by default on a miss; we want a 400 scoped to
+    // the institution field instead of a bare 404, so disable that and
+    // handle the miss ourselves below.
+    disableErrors: true,
     req,
   })
 
