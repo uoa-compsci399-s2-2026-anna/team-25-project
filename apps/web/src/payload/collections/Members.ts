@@ -1,7 +1,7 @@
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { canReadEmail, isAdmin, isAdminOrSelf } from "../access"
-import { enforceInstitutionDomain } from "../hooks"
+import { enforceInstitutionDomain } from "../hooks/Members"
 
 export const Members: CollectionConfig = {
   slug: Slugs.Collections.MEMBERS,
