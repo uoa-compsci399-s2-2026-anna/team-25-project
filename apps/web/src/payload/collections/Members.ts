@@ -34,6 +34,12 @@ export const Members: CollectionConfig = {
     },
     { name: "firstName", type: "text", required: true },
     { name: "lastName", type: "text", required: true },
+    {
+      name: "institution",
+      type: "relationship",
+      relationTo: Slugs.Collections.INSTITUTIONS,
+      required: true,
+    },
     { name: "position", type: "text" },
     { name: "bio", type: "textarea" },
     { name: "avatar", type: "upload", relationTo: Slugs.Collections.MEDIA },

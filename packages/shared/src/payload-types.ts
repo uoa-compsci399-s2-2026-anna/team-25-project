@@ -175,6 +175,7 @@ export interface Member {
   id: number;
   firstName: string;
   lastName: string;
+  institution: number | Institution;
   position?: string | null;
   bio?: string | null;
   avatar?: (number | null) | Media;
@@ -201,6 +202,24 @@ export interface Member {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "institutions".
+ */
+export interface Institution {
+  id: number;
+  name: string;
+  country: 'AU' | 'NZ';
+  /**
+   * e.g. auckland.ac.nz — subdomains are accepted automatically
+   */
+  domains: {
+    domain: string;
+    id?: string | null;
+  }[];
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
@@ -217,24 +236,6 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "institutions".
- */
-export interface Institution {
-  id: number;
-  name: string;
-  country: 'AU' | 'NZ';
-  /**
-   * e.g. auckland.ac.nz — subdomains are accepted automatically
-   */
-  domains: {
-    domain: string;
-    id?: string | null;
-  }[];
-  updatedAt: string;
-  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -359,6 +360,7 @@ export interface AdminSelect<T extends boolean = true> {
 export interface MembersSelect<T extends boolean = true> {
   firstName?: T;
   lastName?: T;
+  institution?: T;
   position?: T;
   bio?: T;
   avatar?: T;
