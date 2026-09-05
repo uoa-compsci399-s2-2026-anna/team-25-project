@@ -3,7 +3,10 @@ import type { CollectionBeforeValidateHook } from "payload"
 import { ValidationError } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 
-const getEmailDomain = (email: string) => email.split("@").at(-1)?.toLowerCase() ?? ""
+// split() on any string, including "", always returns a non-empty array, so
+// at(-1) can never actually be undefined here - the ?? fallback TS would
+// otherwise want is dead code for an unreachable case.
+const getEmailDomain = (email: string) => email.split("@").at(-1)!.toLowerCase()
 
 // auckland.ac.nz allows student@auckland.ac.nz and student@cs.auckland.ac.nz,
 // but not student@notauckland.ac.nz - the leading dot on the suffix check matters.
