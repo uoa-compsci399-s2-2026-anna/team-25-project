@@ -9,6 +9,7 @@ import { Admin } from "./payload/collections/Admin"
 import { Institutions } from "./payload/collections/Institutions"
 import { Media } from "./payload/collections/Media"
 import { Members } from "./payload/collections/Members"
+import { Proposals } from "./payload/collections/Proposals"
 
 declare module "payload" {
   export interface GeneratedTypes extends Config {}
@@ -24,7 +25,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Admin, Members, Institutions, Media],
+  collections: [Admin, Members, Institutions, Media, Proposals],
   editor: lexicalEditor(),
   graphQL: {
     disable: true,
