@@ -72,6 +72,7 @@ export interface Config {
     members: Member;
     institutions: Institution;
     media: Media;
+    proposals: Proposal;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -83,6 +84,7 @@ export interface Config {
     members: MembersSelect<false> | MembersSelect<true>;
     institutions: InstitutionsSelect<false> | InstitutionsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    proposals: ProposalsSelect<false> | ProposalsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -239,6 +241,66 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "proposals".
+ */
+export interface Proposal {
+  id: number;
+  author: (number | Member)[];
+  title: string;
+  proposalSlug?: string | null;
+  institutions?: (number | Institution)[] | null;
+  /**
+   * Plain text. Used for cards, search results and previews.
+   */
+  summary: string;
+  /**
+   * The full proposal. Authors structure this however they like.
+   */
+  body: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  timeframe: {
+    startYear: number;
+    startPeriod: 'sem1' | 'sem2' | 'summer';
+    endYear?: number | null;
+    endPeriod?: ('early' | 'mid' | 'late') | null;
+  };
+  /**
+   * What the collaboration aims to produce, e.g. ACE 2027 paper
+   */
+  outputTarget?: string | null;
+  ethics: 'unknown' | 'notRequired' | 'approved' | 'amendmentNeeded' | 'newApplicationNeeded';
+  tags?:
+    | (
+        | 'assessment'
+        | 'quantitative'
+        | 'qualitative'
+        | 'teamwork'
+        | 'industry'
+        | 'curriculum'
+        | 'generativeAi'
+        | 'ethics'
+      )[]
+    | null;
+  status: 'active' | 'closed';
+  closedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -276,6 +338,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'proposals';
+        value: number | Proposal;
       } | null);
   globalSlug?: string | null;
   user:
@@ -416,6 +482,33 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "proposals_select".
+ */
+export interface ProposalsSelect<T extends boolean = true> {
+  author?: T;
+  title?: T;
+  proposalSlug?: T;
+  institutions?: T;
+  summary?: T;
+  body?: T;
+  timeframe?:
+    | T
+    | {
+        startYear?: T;
+        startPeriod?: T;
+        endYear?: T;
+        endPeriod?: T;
+      };
+  outputTarget?: T;
+  ethics?: T;
+  tags?: T;
+  status?: T;
+  closedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
