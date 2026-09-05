@@ -1,14 +1,13 @@
 import { headers } from "next/headers"
-import { getPayload } from "payload"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "./getCurrentUser"
+import { getPayloadClient } from "./getPayloadClient"
 
 vi.mock("next/headers", () => ({ headers: vi.fn() }))
-vi.mock("payload", () => ({ getPayload: vi.fn() }))
-vi.mock("@payload-config", () => ({ default: {} }))
+vi.mock("./getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
 
 const mockAuth = (user: unknown) => {
-  vi.mocked(getPayload).mockResolvedValue({
+  vi.mocked(getPayloadClient).mockResolvedValue({
     auth: vi.fn().mockResolvedValue({ user }),
     // biome-ignore lint/suspicious/noExplicitAny: minimal Payload mock, only .auth is used
   } as any)

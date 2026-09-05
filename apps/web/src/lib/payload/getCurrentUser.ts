@@ -1,8 +1,7 @@
-import config from "@payload-config"
 import type { Admin, Member } from "@repo/shared/payload-types"
 import { headers } from "next/headers"
-import { getPayload } from "payload"
 import { cache } from "react"
+import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
 
 type CurrentUser =
@@ -13,7 +12,7 @@ type CurrentUser =
 // Read-only session check - never redirects or throws when unauthenticated.
 // cache() dedupes repeat calls in the same request to one auth lookup.
 export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
-  const payload = await getPayload({ config })
+  const payload = await getPayloadClient()
   const { user } = await payload.auth({ headers: await headers() })
 
   if (!user) return { collection: null, user: null }
