@@ -180,6 +180,10 @@ jobs:
             filter: '@repo/ui'
             coverage-path: packages/ui/coverage
             artifact-name: coverage-ui
+          - name: shared
+            filter: '@repo/shared'
+            coverage-path: packages/shared/coverage
+            artifact-name: coverage-shared
     steps:
       - uses: actions/checkout@v7
 
