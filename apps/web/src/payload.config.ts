@@ -5,8 +5,10 @@ import { lexicalEditor } from "@payloadcms/richtext-lexical"
 import type { Config } from "@repo/shared/payload-types"
 import { buildConfig } from "payload"
 import sharp from "sharp"
+import { Admin } from "./payload/collections/Admin"
+import { Institutions } from "./payload/collections/Institutions"
 import { Media } from "./payload/collections/Media"
-import { Users } from "./payload/collections/Users"
+import { Members } from "./payload/collections/Members"
 
 declare module "payload" {
   export interface GeneratedTypes extends Config {}
@@ -17,12 +19,12 @@ const dirname = path.dirname(filename)
 
 export default buildConfig({
   admin: {
-    user: Users.slug,
+    user: Admin.slug, // members cannot reach /payload/admin
     importMap: {
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media],
+  collections: [Admin, Members, Institutions, Media],
   editor: lexicalEditor(),
   graphQL: {
     disable: true,
