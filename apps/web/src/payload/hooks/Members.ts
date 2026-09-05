@@ -6,7 +6,10 @@ import { Slugs } from "@/lib/payload/slugs"
 // split() on any string, including "", always returns a non-empty array, so
 // at(-1) can never actually be undefined here - the ?? fallback TS would
 // otherwise want is dead code for an unreachable case.
-const getEmailDomain = (email: string) => email.split("@").at(-1)!.toLowerCase()
+// Payload doesn't trim/normalise text input for us at any point in the
+// pipeline, so a stray space (copy-paste, sloppy form input) would otherwise
+// break both the exact-match and subdomain checks below.
+const getEmailDomain = (email: string) => email.split("@").at(-1)!.trim().toLowerCase()
 
 // auckland.ac.nz allows student@auckland.ac.nz and student@cs.auckland.ac.nz,
 // but not student@notauckland.ac.nz - the leading dot on the suffix check matters.
@@ -53,7 +56,7 @@ export const enforceInstitutionDomain: CollectionBeforeValidateHook<Member> = as
 
   const emailDomain = getEmailDomain(email)
   const isAllowed = institution.domains.some(({ domain }) =>
-    domainMatches(emailDomain, domain.toLowerCase()),
+    domainMatches(emailDomain, domain.trim().toLowerCase()),
   )
 
   if (!isAllowed) {

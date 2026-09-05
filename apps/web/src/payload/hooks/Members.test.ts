@@ -101,6 +101,15 @@ describe("enforceInstitutionDomain", () => {
     await expect(enforceInstitutionDomain(args)).resolves.toEqual(args.data)
   })
 
+  it("tolerates surrounding whitespace on both the email and the stored domain", async () => {
+    const institution = mockInstitution({ domains: [{ domain: "  auckland.ac.nz  " }] })
+    const { args } = makeArgs(
+      { email: "student@auckland.ac.nz  ", institution: institution.id },
+      institution,
+    )
+    await expect(enforceInstitutionDomain(args)).resolves.toEqual(args.data)
+  })
+
   it("extracts the id when institution arrives as an already-populated relationship object", async () => {
     const institution = mockInstitution()
     const { args, findByID } = makeArgs(
