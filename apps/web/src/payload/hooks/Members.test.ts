@@ -1,19 +1,10 @@
+import { mockInstitution } from "@repo/shared/mocks/institution"
 import type { Institution, Member } from "@repo/shared/payload-types"
 import { ValidationError } from "payload"
 import { describe, expect, it, vi } from "vitest"
 import { enforceInstitutionDomain } from "./Members"
 
 type HookArgs = Parameters<typeof enforceInstitutionDomain>[0]
-
-const makeInstitution = (overrides: Partial<Institution> = {}): Institution => ({
-  id: 1,
-  name: "University of Auckland",
-  country: "NZ",
-  domains: [{ domain: "auckland.ac.nz" }],
-  updatedAt: "",
-  createdAt: "",
-  ...overrides,
-})
 
 // Builds fake hook args with a stubbed req.payload.findByID, so these stay
 // unit tests of the domain-matching logic - no live Payload/Postgres needed.
@@ -56,7 +47,7 @@ describe("enforceInstitutionDomain", () => {
   })
 
   it("allows an exact domain match", async () => {
-    const institution = makeInstitution()
+    const institution = mockInstitution()
     const { args } = makeArgs(
       { email: "student@auckland.ac.nz", institution: institution.id },
       institution,
@@ -65,7 +56,7 @@ describe("enforceInstitutionDomain", () => {
   })
 
   it("allows a subdomain of a registered domain", async () => {
-    const institution = makeInstitution()
+    const institution = mockInstitution()
     const { args } = makeArgs(
       { email: "student@cs.auckland.ac.nz", institution: institution.id },
       institution,
@@ -74,7 +65,7 @@ describe("enforceInstitutionDomain", () => {
   })
 
   it("rejects a lookalike domain that merely ends with the registered domain", async () => {
-    const institution = makeInstitution()
+    const institution = mockInstitution()
     const { args } = makeArgs(
       { email: "student@notauckland.ac.nz", institution: institution.id },
       institution,
@@ -88,7 +79,7 @@ describe("enforceInstitutionDomain", () => {
   })
 
   it("rejects an email domain with no relation to any registered domain", async () => {
-    const institution = makeInstitution()
+    const institution = mockInstitution()
     const { args } = makeArgs(
       { email: "student@gmail.com", institution: institution.id },
       institution,
@@ -100,7 +91,7 @@ describe("enforceInstitutionDomain", () => {
   })
 
   it("matches domains case-insensitively", async () => {
-    const institution = makeInstitution({
+    const institution = mockInstitution({
       domains: [{ domain: "Auckland.AC.NZ" }],
     })
     const { args } = makeArgs(
@@ -111,7 +102,7 @@ describe("enforceInstitutionDomain", () => {
   })
 
   it("extracts the id when institution arrives as an already-populated relationship object", async () => {
-    const institution = makeInstitution()
+    const institution = mockInstitution()
     const { args, findByID } = makeArgs(
       { email: "student@auckland.ac.nz", institution },
       institution,
