@@ -16,7 +16,7 @@ function Checkbox({ className, indeterminate, ...props }: CheckboxPrimitive.Root
       {...props}
     >
       <CheckboxPrimitive.Indicator
-        className="flex items-center justify-center text-current transition-none"
+        className="flex items-center justify-center text-primary-foreground transition-none"
         data-slot="checkbox-indicator"
       >
         {indeterminate ? <Minus className="size-3" /> : <Check className="size-3" />}
