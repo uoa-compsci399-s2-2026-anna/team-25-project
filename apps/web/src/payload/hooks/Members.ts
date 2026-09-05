@@ -3,13 +3,8 @@ import type { CollectionBeforeValidateHook } from "payload"
 import { ValidationError } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 
-// split() on any string, including "", always returns a non-empty array, so
-// at(-1) can never actually be undefined here - the ?? fallback TS would
-// otherwise want is dead code for an unreachable case.
-// Payload doesn't trim/normalise text input for us at any point in the
-// pipeline, so a stray space (copy-paste, sloppy form input) would otherwise
-// break both the exact-match and subdomain checks below.
-// biome-ignore lint/style/noNonNullAssertion: split() is never empty, see above - ?. would reintroduce a string | undefined that fails to typecheck at the domainMatches call site
+// split() never returns [], so at(-1) is always safe; trim() guards whitespace Payload never strips for us.
+// biome-ignore lint/style/noNonNullAssertion: at(-1) is safe, see above
 const getEmailDomain = (email: string) => email.split("@").at(-1)!.trim().toLowerCase()
 
 // auckland.ac.nz allows student@auckland.ac.nz and student@cs.auckland.ac.nz,
