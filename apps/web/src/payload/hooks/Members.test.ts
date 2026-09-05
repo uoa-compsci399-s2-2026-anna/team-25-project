@@ -36,6 +36,15 @@ describe("enforceInstitutionDomain", () => {
     expect(findByID).not.toHaveBeenCalled()
   })
 
+  it("does not fall back to a stale value when email is explicitly cleared", async () => {
+    const { args, findByID } = makeArgs({
+      email: null,
+      institution: 1,
+    } as unknown as Partial<Member>)
+    await expect(enforceInstitutionDomain(args)).resolves.toEqual(args.data)
+    expect(findByID).not.toHaveBeenCalled()
+  })
+
   it("throws when the selected institution does not exist", async () => {
     const { args } = makeArgs({ email: "student@auckland.ac.nz", institution: 999 }, null)
     const result = enforceInstitutionDomain(args)
@@ -91,7 +100,9 @@ describe("enforceInstitutionDomain", () => {
   })
 
   it("matches domains case-insensitively", async () => {
-    const institution = makeInstitution({ domains: [{ domain: "Auckland.AC.NZ" }] })
+    const institution = makeInstitution({
+      domains: [{ domain: "Auckland.AC.NZ" }],
+    })
     const { args } = makeArgs(
       { email: "Student@AUCKLAND.ac.nz", institution: institution.id },
       institution,
