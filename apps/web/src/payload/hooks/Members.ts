@@ -9,6 +9,7 @@ import { Slugs } from "@/lib/payload/slugs"
 // Payload doesn't trim/normalise text input for us at any point in the
 // pipeline, so a stray space (copy-paste, sloppy form input) would otherwise
 // break both the exact-match and subdomain checks below.
+// biome-ignore lint/style/noNonNullAssertion: split() is never empty, see above - ?. would reintroduce a string | undefined that fails to typecheck at the domainMatches call site
 const getEmailDomain = (email: string) => email.split("@").at(-1)!.trim().toLowerCase()
 
 // auckland.ac.nz allows student@auckland.ac.nz and student@cs.auckland.ac.nz,
