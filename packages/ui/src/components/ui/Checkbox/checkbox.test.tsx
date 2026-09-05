@@ -73,6 +73,15 @@ describe("Checkbox", () => {
     expect(checkbox.querySelector("[data-slot=checkbox-indicator]")).toBeInTheDocument()
   })
 
+  it("keeps the indicator a fixed white instead of inheriting the root's transitioning color", () => {
+    render(<Checkbox aria-label="Accept terms" defaultChecked />)
+    const indicator = screen
+      .getByRole("checkbox", { name: "Accept terms" })
+      .querySelector("[data-slot=checkbox-indicator]")
+    expect(indicator).toHaveClass("text-primary-foreground")
+    expect(indicator).not.toHaveClass("text-current")
+  })
+
   it("does not render an indicator when unchecked", () => {
     render(<Checkbox aria-label="Accept terms" />)
     const checkbox = screen.getByRole("checkbox", { name: "Accept terms" })
