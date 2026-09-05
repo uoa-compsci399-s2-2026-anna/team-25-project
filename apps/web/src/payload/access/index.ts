@@ -9,6 +9,8 @@ export const isAdminOrSelf: Access = ({ req }) => {
   return false
 }
 
+export const isSignedIn: Access = ({ req }) => Boolean(req.user)
+
 // Visible to signed-in requesters, or to anyone if the member opted in via showEmailPublicly.
 export const canReadEmail: FieldAccess = ({ req, doc }) =>
   Boolean(req.user) || Boolean(doc?.showEmailPublicly)
