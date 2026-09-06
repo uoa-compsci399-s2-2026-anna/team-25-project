@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
-import { Separator } from "./divider"
+import { Separator } from "./separator"
 
 const meta: Meta<typeof Separator> = {
-  title: "ui/Divider",
+  title: "ui/Separator",
   component: Separator,
   args: {
     orientation: "horizontal",
@@ -18,10 +18,26 @@ const meta: Meta<typeof Separator> = {
 export default meta
 export type Story = StoryObj<typeof Separator>
 
+export const Primary: Story = {
+  render: (args) => (
+    <div
+      className={
+        args.orientation === "vertical"
+          ? "flex h-16 flex-row items-center gap-2"
+          : "flex flex-col items-center gap-2"
+      }
+    >
+      <span>Content</span>
+      <Separator {...args} />
+      <span>Content</span>
+    </div>
+  ),
+}
+
 export const Vertical: Story = {
   render: (_args) => (
     <div className="flex flex-col items-start gap-2">
-      <p>Poposals Stats</p>
+      <p>Proposals Stats</p>
       <div>
         <div className="flex flex-row gap-3">
           <span className="flex w-[20%] flex-col text-xs">
@@ -47,9 +63,9 @@ export const Vertical: Story = {
 export const Horizontal: Story = {
   render: (_args) => (
     <div className="flex flex-col items-center gap-2">
-      <span>Content above the divider</span>
+      <span>Content above the separator</span>
       <Separator orientation="horizontal" />
-      <span>Content below the divider</span>
+      <span>Content below the separator</span>
     </div>
   ),
 }
