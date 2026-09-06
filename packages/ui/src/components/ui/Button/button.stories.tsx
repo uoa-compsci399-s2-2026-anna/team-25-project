@@ -7,6 +7,7 @@ const variants = [
   "button-transparent",
   "button-white",
   "button-cream",
+  "button-unstyled",
 ] as const
 const sizes = ["sm", "md", "lg", "xl", "icon", "icon-xs", "icon-sm", "icon-lg"] as const
 const borderColors = ["charcoal", "white"] as const
