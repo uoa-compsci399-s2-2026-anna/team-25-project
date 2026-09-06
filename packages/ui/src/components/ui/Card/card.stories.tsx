@@ -103,7 +103,7 @@ export const FeatureCardsRow: Story = {
           <CardContent className="h-full w-full">
             <div className="flex justify-start gap-3">
               {feature.tags.map((tag) => (
-                <span className="rounded-lg bg-red-100 p-2 text-xs" key={tag}>
+                <span className="rounded-lg bg-brand-peach p-2 text-xs" key={tag}>
                   {tag}
                 </span>
               ))}
@@ -121,22 +121,22 @@ export const StatsCard: Story = {
       <CardHeader>
         <CardTitle className="font-normal text-lg">Log in to see proposals available</CardTitle>
         <CardDescription>
-          Poposals are shared in confidence between CCCA members, so titles and details stay private
-          until you sign in.
+          Proposals are shared in confidence between CCCA members, so titles and details stay
+          private until you sign in.
         </CardDescription>
       </CardHeader>
       <CardContent className="h-full">
-        <div className="flex items-center gap-3">
+        <div className="flex gap-3">
           <span className="flex w-[20%] flex-col text-xs">
             <span className="text-xl">27</span>
             Active proposals seeking collaborators
           </span>
-          <span>|</span>
+          <span aria-hidden="true" className="w-px self-stretch bg-border" />
           <span className="flex w-[20%] flex-col text-xs">
             <span className="text-xl">6</span>
             Posted in the last 30 days
           </span>
-          <span>|</span>
+          <span aria-hidden="true" className="w-px self-stretch bg-border" />
           <span className="flex w-[20%] flex-col text-xs">
             <span className="text-xl">8</span>
             Universities represented
@@ -157,7 +157,7 @@ export const FullWidthCallout: Story = {
       <CardHeader>
         <CardTitle className="font-bold text-2xl">Have a research idea?</CardTitle>
         <CardDescription>
-          Post is as a proposal, keep it active while you’re recruiting, and close it once your team
+          Post it as a proposal, keep it active while you’re recruiting, and close it once your team
           is formed
         </CardDescription>
       </CardHeader>
