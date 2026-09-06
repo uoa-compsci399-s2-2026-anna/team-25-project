@@ -1,6 +1,6 @@
 ---
 name: Frontend feature template
-about: Features relating to `apps/frontend` or `packages/ui`
+about: Features relating to the UI of `apps/web` or `packages/ui`
 title: "[FRONTEND] "
 type: Feature
 labels: frontend

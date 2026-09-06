@@ -1,6 +1,6 @@
 ---
 name: Backend feature template
-about: Features relating to `apps/backend`
+about: Features relating to Payload / the server side of `apps/web`
 title: "[BACKEND] "
 type: Feature
 labels: backend
