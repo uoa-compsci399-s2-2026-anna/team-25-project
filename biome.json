@@ -4,6 +4,7 @@
     "includes": [
       "**",
       "!**/payload-types.ts",
+      "!**/src/payload/migrations",
       "!pnpm-lock.yaml",
       "!**/.github/",
       "!**/.next",
