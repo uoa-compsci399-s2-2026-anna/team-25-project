@@ -7,7 +7,7 @@ Shared `tsconfig.json` bases for the [Casa](../../README.md) monorepo.
 | File | Description |
 | --- | --- |
 | `base.json` | Base TypeScript compiler options shared by every workspace |
-| `nextjs.json` | Extends `base.json` with Next.js-specific settings (used by `apps/backend`, `apps/frontend`) |
+| `nextjs.json` | Extends `base.json` with Next.js-specific settings (used by `apps/web`) |
 | `react-library.json` | Extends `base.json` for React component libraries (used by `packages/ui`) |
 
 ## Usage
