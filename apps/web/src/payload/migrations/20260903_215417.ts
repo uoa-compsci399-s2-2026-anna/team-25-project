@@ -9,8 +9,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 
 export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
   await db.execute(sql`
-   ALTER TABLE "members" DROP CONSTRAINT "members_institution_id_institutions_id_fk";
+   ALTER TABLE "members" DROP CONSTRAINT IF EXISTS "members_institution_id_institutions_id_fk";
   
-  DROP INDEX "members_institution_idx";
+  DROP INDEX IF EXISTS "members_institution_idx";
   ALTER TABLE "members" DROP COLUMN "institution_id";`)
 }

@@ -4,6 +4,10 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:coverage:watch": "vitest --coverage",
     "types:check": "tsc --noEmit",
     "lint:check": "biome check .",
     "lint:fix": "biome check . --write"
@@ -12,9 +16,11 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@repo/test-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^20",
-    "typescript": "^7"
+    "typescript": "^7",
+    "vitest": "4.1.10"
   },
   "exports": {
     "./payload-types": "./src/payload-types.ts",
