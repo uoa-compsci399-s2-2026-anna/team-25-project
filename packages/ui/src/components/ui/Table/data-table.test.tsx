@@ -153,9 +153,9 @@ describe("DataTable", () => {
   })
 
   it("forwards the table variant props to the container", () => {
-    const { container } = render(<Harness density="compact" variant="card" />)
+    const { container } = render(<Harness density="compact" striped />)
     const wrapper = container.querySelector("[data-slot=table-container]")
-    expect(wrapper).toHaveAttribute("data-variant", "card")
+    expect(wrapper).toHaveAttribute("data-striped", "true")
     expect(wrapper).toHaveAttribute("data-density", "compact")
   })
 

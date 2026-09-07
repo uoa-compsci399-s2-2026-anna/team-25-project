@@ -7,22 +7,20 @@ import { type TableVariantProps, tableVariants } from "./table.variants"
 function Table({
   className,
   containerClassName,
-  variant = "default",
   density = "comfortable",
   striped = false,
   ...props
 }: React.ComponentProps<"table"> &
   TableVariantProps & {
-    /** Classes for the scrolling wrapper, which owns the variant styling. */
+    /** Classes for the scrolling wrapper, which owns the container styling. */
     containerClassName?: string
   }) {
   return (
     <div
-      className={cn(tableVariants.container({ variant, density, striped }), containerClassName)}
+      className={cn(tableVariants.container({ density, striped }), containerClassName)}
       data-density={density}
       data-slot="table-container"
       data-striped={striped}
-      data-variant={variant}
     >
       <table
         className={cn(tableVariants.root(), className, "rounded-5")}

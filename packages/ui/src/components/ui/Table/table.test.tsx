@@ -63,21 +63,18 @@ describe("Table", () => {
     expect(screen.getByRole("cell", { name: "CS 399" })).toBeInTheDocument()
   })
 
-  it("wraps the table in a scrolling container that owns the variant data attributes", () => {
+  it("wraps the table in a container that owns the variant data attributes", () => {
     const { container } = renderTable()
     const wrapper = slot(container, "table-container")
-    expect(wrapper).toHaveAttribute("data-variant", "default")
     expect(wrapper).toHaveAttribute("data-density", "comfortable")
     expect(wrapper).toHaveAttribute("data-striped", "false")
-    expect(wrapper).toHaveClass("group/table", "overflow-x-auto")
+    expect(wrapper).toHaveClass(
+      "group/table",
+      "overflow-x-auto",
+      "rounded-4xl",
+      "bg-brand-blush/30",
+    )
     expect(wrapper).toContainElement(screen.getByRole("table"))
-  })
-
-  it("publishes the card variant so the parts can react through group-data selectors", () => {
-    const { container } = renderTable({ variant: "card" })
-    const wrapper = slot(container, "table-container")
-    expect(wrapper).toHaveAttribute("data-variant", "card")
-    expect(wrapper).toHaveClass("rounded-3xl", "bg-brand-blush/30")
   })
 
   it("publishes the compact density and the striped flag", () => {
@@ -141,9 +138,9 @@ describe("tableVariants", () => {
     expect(tableVariants.container()).toBe(tableVariants.container({}))
   })
 
-  it("keeps the density and card padding rules on the cell part", () => {
+  it("keeps the density rule and the card padding on the cell part", () => {
     expect(tableVariants.cell()).toContain("group-data-[density=compact]/table:py-1.5")
-    expect(tableVariants.cell()).toContain("group-data-[variant=card]/table:px-6")
+    expect(tableVariants.cell()).toContain("px-6")
   })
 
   it("keeps the striped rule on the row part", () => {

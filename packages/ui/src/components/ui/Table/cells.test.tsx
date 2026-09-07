@@ -187,9 +187,7 @@ describe("SortableHeader", () => {
 
 describe("cellVariants", () => {
   it("keeps the card hover rule on the sort trigger", () => {
-    expect(cellVariants.sortTrigger()).toContain(
-      "group-data-[variant=card]/table:hover:bg-brand-blush",
-    )
+    expect(cellVariants.sortTrigger()).toContain("hover:bg-brand-blush")
   })
 
   it("marks the sort icon as unsorted by default", () => {

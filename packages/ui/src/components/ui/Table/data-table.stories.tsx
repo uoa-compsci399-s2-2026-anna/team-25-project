@@ -127,13 +127,8 @@ const meta: Meta<typeof DataTable> = {
     density: "comfortable",
     emptyMessage: "No results.",
     striped: false,
-    variant: "default",
   },
   argTypes: {
-    variant: {
-      control: { type: "inline-radio" },
-      options: ["default", "card"],
-    },
     density: {
       control: { type: "inline-radio" },
       options: ["comfortable", "compact"],
@@ -155,12 +150,6 @@ export const Default: Story = (args) => {
   const table = useDataTable({ columns, data: courses })
   return <DataTable {...args} table={table} />
 }
-
-export const Card: Story = (args) => {
-  const table = useDataTable({ columns, data: courses })
-  return <DataTable {...args} table={table} />
-}
-Card.args = { density: "compact", variant: "card" } satisfies StoryArgs
 
 export const Compact: Story = (args) => {
   const table = useDataTable({ columns, data: courses })
@@ -232,4 +221,4 @@ export const WithExternalFilters: Story = (args) => {
     </div>
   )
 }
-WithExternalFilters.args = { density: "compact", variant: "card" } satisfies StoryArgs
+WithExternalFilters.args = { density: "compact" } satisfies StoryArgs

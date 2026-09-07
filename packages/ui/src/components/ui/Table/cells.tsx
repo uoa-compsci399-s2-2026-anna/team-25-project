@@ -44,7 +44,7 @@ const cellVariants = {
   stackedPrimary: cva("font-semibold text-foreground"),
   stackedSecondary: cva("text-muted-foreground"),
   sortTrigger: cva(
-    "-mx-2 inline-flex items-center [text-transform:inherit] gap-1 rounded-md px-2 py-1 transition-colors hover:bg-muted/60 focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 group-data-[variant=card]/table:hover:bg-brand-blush",
+    "-mx-2 inline-flex items-center [text-transform:inherit] gap-1 rounded-md px-2 py-1 transition-colors hover:bg-brand-blush focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
   ),
   sortIcon: cva("size-3.5 shrink-0", {
     variants: {
