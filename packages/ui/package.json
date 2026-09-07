@@ -44,14 +44,18 @@
     "@storybook/addon-a11y": "^10.5.5",
     "@storybook/addon-docs": "^10.5.5",
     "@storybook/addon-onboarding": "^10.5.5",
+    "jsdom": "^28.0.0",
     "vitest": "^4.1.10"
   },
   "exports": {
     "./globals.css": "./src/styles/globals.css",
     "./postcss.config": "./postcss.config.mjs",
     "./components/composite": "./src/components/composite/index.ts",
+    "./components/composite/*": "./src/components/composite/*",
     "./components/generic": "./src/components/generic/index.ts",
+    "./components/generic/*": "./src/components/generic/*",
     "./components/ui": "./src/components/ui/index.ts",
+    "./components/ui/*": "./src/components/ui/*",
     "./lib/*": "./src/lib/*.ts",
     "./hooks/*": "./src/hooks/*.ts"
   }

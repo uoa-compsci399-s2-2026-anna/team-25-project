@@ -172,18 +172,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: frontend
-            filter: frontend
-            coverage-path: apps/frontend/coverage
-            artifact-name: coverage-frontend
-          - name: backend
-            filter: backend
-            coverage-path: apps/backend/coverage
-            artifact-name: coverage-backend
+          - name: web
+            filter: web
+            coverage-path: apps/web/coverage
+            artifact-name: coverage-web
           - name: ui
             filter: '@repo/ui'
             coverage-path: packages/ui/coverage
             artifact-name: coverage-ui
+          - name: shared
+            filter: '@repo/shared'
+            coverage-path: packages/shared/coverage
+            artifact-name: coverage-shared
     steps:
       - uses: actions/checkout@v7
 
@@ -259,8 +259,8 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-  build-backend:
-    name: Build Backend
+  build-web:
+    name: Build Web
     needs: [lint, setup, type-check]
     runs-on: ubuntu-latest
     steps:
@@ -294,49 +294,12 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Build Backend
+      - name: Build Web
         env:
           PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: pnpm build:backend
-
-  build-frontend:
-    name: Build Frontend
-    needs: [lint, setup, type-check]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version-file: '.nvmrc'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          run_install: false
-
-      - name: Restore node_modules cache
-        uses: actions/cache/restore@v6
-        id: cache
-        with:
-          path: |
-            node_modules
-            */node_modules
-            packages/*/node_modules
-            apps/*/node_modules
-          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-node_modules-
-
-      - name: Install dependencies if cache misses
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: pnpm install --frozen-lockfile --ignore-scripts
-
-      - name: Build Frontend
-        run: pnpm build:frontend
+          NEXT_PUBLIC_URL: ${{ vars.NEXT_PUBLIC_URL }}
+        run: pnpm build:web
 
   build-storybook:
     name: Build Storybook
@@ -378,7 +341,7 @@ jobs:
 
   verify:
     name: Verify
-    needs: [type-check, codegen, test, build-backend, build-frontend, build-storybook, merge-coverage, vitest-coverage, lint, setup]
+    needs: [type-check, codegen, test, build-web, build-storybook, merge-coverage, vitest-coverage, lint, setup]
     runs-on: ubuntu-latest
     if: always()
     steps:
