@@ -1,7 +1,8 @@
 import { CourseDeliveryFormat } from "@repo/shared/enums/courses"
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
-import { isAdmin } from "../access"
+import { isSignedIn } from "../access"
+import { versionHistoryRead, versionRead, versionWrite } from "../access/Courses/CourseVersions"
 
 /**
  * One document per teaching period. Payload versions hold that period's drafts
@@ -19,11 +20,11 @@ export const CourseVersions: CollectionConfig = {
     maxPerDoc: 0,
   },
   access: {
-    create: isAdmin,
-    read: isAdmin,
-    readVersions: isAdmin,
-    update: isAdmin,
-    delete: isAdmin,
+    create: isSignedIn,
+    read: versionRead,
+    readVersions: versionHistoryRead,
+    update: versionWrite,
+    delete: versionWrite,
   },
   fields: [
     {
