@@ -34,17 +34,13 @@ describe("Button", () => {
   it("applies the default variant and size classes", () => {
     render(<Button>Click me</Button>)
     const button = screen.getByRole("button", { name: "Click me" })
-    expect(button).toHaveClass("bg-primary", "text-primary-foreground", "h-8")
+    expect(button).toHaveClass("bg-brand-charcoal text-white hover:bg-brand-charcoal/80")
   })
 
   it("applies variant and size classes", () => {
-    render(
-      <Button size="lg" variant="destructive">
-        Delete
-      </Button>,
-    )
+    render(<Button variant="button-cream">Delete</Button>)
     const button = screen.getByRole("button", { name: "Delete" })
-    expect(button).toHaveClass("bg-destructive/10", "text-destructive", "h-9")
+    expect(button).toHaveClass("bg-brand-cream text-brand-charcoal hover:bg-brand-charcoal/10")
   })
 
   it("merges a custom className with variant classes", () => {
