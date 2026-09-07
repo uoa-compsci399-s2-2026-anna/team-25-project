@@ -3,12 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 /**
  * One `cva` per visible part. Only `container` declares the variants: it sets
  * `data-density` and `data-striped` on the `group/table` wrapper, and the other
- * parts react through `group-data-*` selectors. That keeps the variant a single
- * prop on `<Table>` instead of a prop every row and cell has to forward, the
- * same approach `TabsIndicator` uses.
- *
- * The base look is a borderless card: a warm fill and a large radius carry the
- * edge, so the header band clips to the corners and no outer stroke is drawn.
+ * parts react through `group-data-*` selectors.
  */
 const tableVariants = {
   container: cva("group/table relative w-full overflow-x-auto rounded-4xl bg-brand-blush/30", {

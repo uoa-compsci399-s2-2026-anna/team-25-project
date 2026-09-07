@@ -53,8 +53,6 @@ function DataTable<TData extends RowData>({
         ) : (
           rows.map((row) => (
             <TableRow key={row.id}>
-              {/* `getAllCells`, not `getVisibleCells`: the latter needs
-                  `columnVisibilityFeature`, which this table does not register. */}
               {row.getAllCells().map((cell) => (
                 <TableCell className={cn(cell.column.columnDef.meta?.cellClassName)} key={cell.id}>
                   <table.FlexRender cell={cell} />

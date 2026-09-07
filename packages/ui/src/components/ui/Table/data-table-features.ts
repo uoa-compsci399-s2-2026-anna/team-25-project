@@ -33,9 +33,6 @@ export const features = tableFeatures({
   paginatedRowModel: createPaginatedRowModel(),
   sortedRowModel: createSortedRowModel(),
   filterFns: {
-    // Multi-select filter chips hold an array of selected values, matched
-    // against a scalar cell value. `arrIncludesSome` is the wrong one here: it
-    // requires the *cell* to be an array and drops every row otherwise.
     arrHas: filterFn_arrHas,
     equals: filterFn_equals,
     includesString: filterFn_includesString,
