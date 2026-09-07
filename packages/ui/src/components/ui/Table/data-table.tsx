@@ -1,0 +1,71 @@
+"use client"
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  type TableVariantProps,
+} from "@repo/ui/components/ui/Table/table"
+import { cn } from "@repo/ui/lib/utils"
+import type { RowData } from "@tanstack/react-table"
+import type { DataTableInstance } from "./hooks/use-data-table"
+
+interface DataTableProps<TData extends RowData>
+  extends React.ComponentProps<"table">,
+    TableVariantProps {
+  table: DataTableInstance<TData>
+  emptyMessage?: string
+}
+
+function DataTable<TData extends RowData>({
+  table,
+  emptyMessage = "No results.",
+  ...props
+}: DataTableProps<TData>) {
+  const rows = table.getRowModel().rows
+
+  return (
+    <Table {...props}>
+      <TableHeader>
+        {table.getHeaderGroups().map((headerGroup) => (
+          <TableRow key={headerGroup.id}>
+            {headerGroup.headers.map((header) => (
+              <TableHead colSpan={header.colSpan} key={header.id}>
+                {header.isPlaceholder ? null : <table.FlexRender header={header} />}
+              </TableHead>
+            ))}
+          </TableRow>
+        ))}
+      </TableHeader>
+      <TableBody>
+        {rows.length === 0 ? (
+          <TableRow>
+            <TableCell
+              className="h-24 text-center text-muted-foreground"
+              colSpan={table.getAllColumns().length}
+            >
+              {emptyMessage}
+            </TableCell>
+          </TableRow>
+        ) : (
+          rows.map((row) => (
+            <TableRow key={row.id}>
+              {/* `getAllCells`, not `getVisibleCells`: the latter needs
+                  `columnVisibilityFeature`, which this table does not register. */}
+              {row.getAllCells().map((cell) => (
+                <TableCell className={cn(cell.column.columnDef.meta?.cellClassName)} key={cell.id}>
+                  <table.FlexRender cell={cell} />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+  )
+}
+
+export { DataTable, type DataTableProps }
