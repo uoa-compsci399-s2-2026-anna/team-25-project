@@ -32,6 +32,8 @@ export const Types: Story = () => (
     <div className="flex flex-wrap gap-2">
       {types.map((type) => (
         <Button
+          borderColor="charcoal"
+          className="border"
           key={type}
           onClick={() =>
             toast.add({
@@ -41,7 +43,7 @@ export const Types: Story = () => (
               timeout: type === "loading" ? 0 : undefined,
             })
           }
-          variant="outline"
+          variant="button-transparent"
         >
           {type}
         </Button>
