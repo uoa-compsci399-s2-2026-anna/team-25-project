@@ -2,6 +2,7 @@ import { cn } from "@repo/ui/lib/utils"
 import { cva, type VariantProps } from "class-variance-authority"
 import type * as React from "react"
 import { Label } from "../Label/label"
+import { Separator } from "../Separator/separator"
 
 function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
   return (
@@ -153,10 +154,7 @@ function FieldSeparator({
       data-slot="field-separator"
       {...props}
     >
-      <div
-        aria-hidden="true"
-        className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border"
-      />
+      <Separator aria-hidden="true" className="absolute inset-x-0 top-1/2 -translate-y-1/2" />
       {children && (
         <span
           className="relative mx-auto block w-fit bg-background px-2 text-muted-foreground"
