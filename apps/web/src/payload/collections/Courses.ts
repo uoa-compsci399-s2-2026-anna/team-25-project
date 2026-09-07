@@ -2,6 +2,8 @@ import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { isAdmin, isSignedIn } from "../access"
 import { courseRead, courseWrite } from "../access/Courses/Courses"
+import { guardCourseWrite } from "../hooks"
+import { assertCourseDeletable, prepareCourse } from "../hooks/Courses"
 
 // Stable course identity and editing permissions. Teaching-period content lives
 // in courseVersions.
@@ -15,6 +17,11 @@ export const Courses: CollectionConfig = {
     delete: isAdmin,
   },
   indexes: [{ fields: ["institution", "code"], unique: true }],
+  hooks: {
+    beforeOperation: [guardCourseWrite],
+    beforeValidate: [prepareCourse],
+    beforeDelete: [assertCourseDeletable],
+  },
   fields: [
     { name: "code", type: "text", required: true },
     {

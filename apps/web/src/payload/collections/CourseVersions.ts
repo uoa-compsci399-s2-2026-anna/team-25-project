@@ -3,6 +3,7 @@ import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { isSignedIn } from "../access"
 import { versionHistoryRead, versionRead, versionWrite } from "../access/Courses/CourseVersions"
+import { guardCourseWrite } from "../hooks"
 
 /**
  * One document per teaching period. Payload versions hold that period's drafts
@@ -25,6 +26,9 @@ export const CourseVersions: CollectionConfig = {
     readVersions: versionHistoryRead,
     update: versionWrite,
     delete: versionWrite,
+  },
+  hooks: {
+    beforeOperation: [guardCourseWrite],
   },
   fields: [
     {
