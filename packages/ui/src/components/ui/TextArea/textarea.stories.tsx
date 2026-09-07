@@ -1,26 +1,37 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
-import { Textarea } from "./textarea"
+import { TextArea } from "./textarea"
 
-const meta: Meta<typeof Textarea> = {
+const meta: Meta<typeof TextArea> = {
   title: "UI/Textarea",
-  component: Textarea,
+  component: TextArea,
+  args: {
+    className: "",
+  },
+  argTypes: {
+    className: {
+      control: { type: "text" },
+    },
+  },
 }
 
 export default meta
-type Story = StoryObj<typeof Textarea>
+type Story = StoryObj<typeof TextArea>
 
 export const Primary: Story = {
-  render: () => (
+  render: (args) => (
     <div className="w-1/2">
-      <Textarea placeholder="Enter your text here..." />
+      <TextArea {...args} placeholder="Enter your text here..." />
     </div>
   ),
 }
 
 export const SingleLine: Story = {
-  render: () => (
+  args: {
+    className: "min-h-9",
+  },
+  render: (args) => (
     <div>
-      <Textarea className="min-h-9" placeholder="Single line..." rows={1} />
+      <TextArea {...args} placeholder="Single line..." rows={1} />
     </div>
   ),
 }
