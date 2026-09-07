@@ -6,6 +6,8 @@ import type { Config } from "@repo/shared/payload-types"
 import { buildConfig } from "payload"
 import sharp from "sharp"
 import { Admin } from "./payload/collections/Admin"
+import { Courses } from "./payload/collections/Courses"
+import { CourseVersions } from "./payload/collections/CourseVersions"
 import { Institutions } from "./payload/collections/Institutions"
 import { Media } from "./payload/collections/Media"
 import { Members } from "./payload/collections/Members"
@@ -25,7 +27,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Admin, Members, Institutions, Media, Proposals],
+  collections: [Admin, Members, Institutions, Media, Proposals, Courses, CourseVersions],
   editor: lexicalEditor(),
   graphQL: {
     disable: true,
