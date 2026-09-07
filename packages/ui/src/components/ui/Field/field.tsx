@@ -130,7 +130,7 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
       className={cn(
-        "font-normal text-muted-foreground text-sm leading-normal group-has-[[data-orientation=horizontal]]/field:text-balance",
+        "font-normal text-muted-foreground text-sm leading-normal group-data-[orientation=horizontal]/field:text-balance",
         "nth-last-2:-mt-1 last:mt-0 [[data-variant=legend]+&]:-mt-1.5",
         "[&>a:hover]:text-primary [&>a]:underline [&>a]:underline-offset-4",
         className,
@@ -177,19 +177,21 @@ function getFieldErrorContent(
     return children
   }
 
-  if (!errors?.length) {
+  const messages = [...new Set(errors?.flatMap((error) => (error?.message ? [error.message] : [])))]
+
+  if (messages.length === 0) {
     return null
   }
 
-  const uniqueErrors = [...new Map(errors.map((error) => [error?.message, error])).values()]
-
-  if (uniqueErrors.length === 1) {
-    return uniqueErrors[0]?.message
+  if (messages.length === 1) {
+    return messages[0]
   }
 
   return (
     <ul className="ml-4 flex list-disc flex-col gap-1">
-      {uniqueErrors.map((error) => error?.message && <li key={error.message}>{error.message}</li>)}
+      {messages.map((message) => (
+        <li key={message}>{message}</li>
+      ))}
     </ul>
   )
 }
