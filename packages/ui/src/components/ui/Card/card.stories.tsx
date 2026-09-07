@@ -50,7 +50,7 @@ export const WithFooter: Story = {
         <CardTitle>Create project</CardTitle>
         <CardDescription>Deploy your new project in one click.</CardDescription>
         <CardAction>
-          <Button size="sm" variant="outline">
+          <Button borderColor="charcoal" className="border" size="sm" variant="button-transparent">
             Settings
           </Button>
         </CardAction>
@@ -59,8 +59,12 @@ export const WithFooter: Story = {
         <p>Project details and configuration.</p>
       </CardContent>
       <CardFooter>
-        <Button>Cancel</Button>
-        <Button>Deploy</Button>
+        <Button borderColor="charcoal" className="border" variant="button-transparent">
+          Cancel
+        </Button>
+        <Button borderColor="charcoal" className="border" variant="button-transparent">
+          Deploy
+        </Button>
       </CardFooter>
     </Card>
   ),
@@ -144,8 +148,10 @@ export const StatsCard: Story = {
         </div>
       </CardContent>
       <CardFooter className="border-none bg-brand-cream">
-        <Button>Log In</Button>
-        <Button variant="outline">Register with your uni email</Button>
+        <Button variant="button-mauve">Log In</Button>
+        <Button borderColor="charcoal" className="border" variant="button-transparent">
+          Register with your uni email
+        </Button>
       </CardFooter>
     </Card>
   ),
@@ -162,7 +168,7 @@ export const FullWidthCallout: Story = {
         </CardDescription>
       </CardHeader>
       <CardContent className="h-full">
-        <Button className="text-black" variant="outline">
+        <Button size="lg" variant="button-white">
           Post a proposal
         </Button>
       </CardContent>
