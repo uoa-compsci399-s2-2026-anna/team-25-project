@@ -7,8 +7,8 @@ Shared Vitest configuration and coverage tooling for the [Casa](../../README.md)
 | Export | Description |
 | --- | --- |
 | `@repo/test-config/ui` | Vitest config preset for `packages/ui` |
-| `@repo/test-config/backend` | Vitest config preset for `apps/backend` |
-| `@repo/test-config/frontend` | Vitest config preset for `apps/frontend` |
+| `@repo/test-config/backend` | Vitest config preset (Node env) — `apps/web` `node` project, server-side code |
+| `@repo/test-config/frontend` | Vitest config preset (jsdom env) — `apps/web` `dom` project, components/hooks |
 | `@repo/test-config/setups/dom` | Shared DOM test setup (`@testing-library/jest-dom`, etc.) |
 
 Consuming workspaces import the relevant preset in their own `vitest.config.ts`/`vitest.config.mts` rather than duplicating Vitest setup.

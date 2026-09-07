@@ -9,7 +9,7 @@ const PROJECT_ROOT = path.resolve(
   "..",
   "..",
 )
-const COVERAGE_DIRS = ["apps/frontend/coverage", "apps/backend/coverage", "packages/ui/coverage"]
+const COVERAGE_DIRS = ["apps/web/coverage", "packages/ui/coverage"]
 const OUTPUT_DIR = path.resolve(PROJECT_ROOT, "coverage")
 const FINAL_FILE = "coverage-final.json"
 const SUMMARY_FILE = "coverage-summary.json"
