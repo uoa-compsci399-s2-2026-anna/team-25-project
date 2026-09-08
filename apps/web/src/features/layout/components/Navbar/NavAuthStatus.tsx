@@ -32,11 +32,14 @@ export const NavAuthStatus = async () => {
 
   return (
     <Link
-      className="flex items-center gap-2 transition-opacity hover:opacity-70"
+      className="flex min-w-0 items-center gap-2 transition-opacity hover:opacity-70"
       // TODO: point to the real profile page once #89 lands
       href={Routes.HOME}
     >
-      <span className="text-base">{`${user.firstName} ${user.lastName}`}</span>
+      {/* Capped so a long name can't outgrow the logo side and shift the
+          nav links off-center (Navbar's flex-1/flex-1 layout only keeps
+          them centered as long as neither outer side dominates). */}
+      <span className="max-w-32 truncate text-base">{`${user.firstName} ${user.lastName}`}</span>
       <Avatar>
         {collection === Slugs.Collections.MEMBERS &&
           typeof user.avatar === "object" &&

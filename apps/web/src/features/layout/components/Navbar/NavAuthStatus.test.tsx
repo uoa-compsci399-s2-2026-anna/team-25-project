@@ -10,13 +10,15 @@ const signOut = () => {
   vi.mocked(getCurrentUser).mockResolvedValue({ collection: null, user: null })
 }
 
-const signInAsMember = (overrides: { avatar?: { url: string } | null } = {}) => {
+const signInAsMember = (
+  overrides: { avatar?: { url: string } | null; firstName?: string; lastName?: string } = {},
+) => {
   vi.mocked(getCurrentUser).mockResolvedValue({
     collection: "members",
     user: {
       id: 1,
-      firstName: "Anna",
-      lastName: "Tui",
+      firstName: overrides.firstName ?? "Anna",
+      lastName: overrides.lastName ?? "Tui",
       avatar: overrides.avatar,
       // biome-ignore lint/suspicious/noExplicitAny: minimal Member mock, only the fields NavAuthStatus reads are relevant
     } as any,
@@ -87,6 +89,17 @@ describe("NavAuthStatus", () => {
       await renderNavAuthStatus()
       expect(screen.getByText("Ada Lovelace")).toBeInTheDocument()
       expect(screen.getByText("AL")).toBeInTheDocument()
+    })
+
+    it("caps and truncates a long name instead of letting it grow unbounded", async () => {
+      // Navbar centers the middle nav links by giving the logo and this
+      // section equal flex-1 shares - that only holds if neither side's
+      // content can grow past roughly half the header, so a long name has
+      // to be capped rather than rendered at its natural width.
+      signInAsMember({ firstName: "Christopher", lastName: "Featherstonehaugh" })
+      await renderNavAuthStatus()
+      const name = screen.getByText("Christopher Featherstonehaugh")
+      expect(name).toHaveClass("max-w-32", "truncate")
     })
   })
 })
