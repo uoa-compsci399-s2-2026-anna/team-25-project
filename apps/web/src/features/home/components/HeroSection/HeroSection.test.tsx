@@ -39,7 +39,7 @@ describe("HeroSection", () => {
 
   it("links Browse proposals to the real proposals route", () => {
     render(<HeroSection />)
-    expect(screen.getByRole("link", { name: "Browse proposals" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Browse proposals" })).toHaveAttribute(
       "href",
       Routes.PROPOSALS.ROOT,
     )
@@ -47,7 +47,7 @@ describe("HeroSection", () => {
 
   it("renders Register with your uni email as a link", () => {
     render(<HeroSection />)
-    expect(screen.getByRole("link", { name: "Register with your uni email" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Register with your uni email" })).toHaveAttribute(
       "href",
       Routes.HOME,
     )

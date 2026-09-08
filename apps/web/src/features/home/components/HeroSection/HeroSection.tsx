@@ -19,11 +19,17 @@ export const HeroSection = () => {
 
         <div className="flex flex-wrap items-center gap-4">
           {/* TODO: point to a real registration flow once it exists */}
-          <Button className="rounded-full" render={<Link href={Routes.HOME} />} size="lg">
+          <Button
+            className="rounded-full"
+            nativeButton={false}
+            render={<Link href={Routes.HOME} />}
+            size="lg"
+          >
             Register with your uni email
           </Button>
           <Button
             className="rounded-full"
+            nativeButton={false}
             render={<Link href={Routes.PROPOSALS.ROOT} />}
             size="lg"
             variant="outline"
