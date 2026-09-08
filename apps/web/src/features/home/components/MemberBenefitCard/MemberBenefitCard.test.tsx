@@ -7,7 +7,7 @@ describe("MemberBenefitCard", () => {
     cleanup()
   })
 
-  it("renders the title as an h4", () => {
+  it("renders the title as an h3", () => {
     render(
       <MemberBenefitCard
         description="Find academics by university, role and research interest."
@@ -15,7 +15,7 @@ describe("MemberBenefitCard", () => {
         title="Member directory"
       />,
     )
-    expect(screen.getByRole("heading", { level: 4, name: "Member directory" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { level: 3, name: "Member directory" })).toBeInTheDocument()
   })
 
   it("renders the description", () => {
@@ -47,7 +47,7 @@ describe("MemberBenefitCard", () => {
       <MemberBenefitCard
         description="Post a research idea, mark it active or closed, and gather interest from other institutions."
         membersOnly
-        swatchClassName="bg-violet-200"
+        swatchClassName="bg-brand-teal/30"
         title="Research proposals"
       />,
     )

@@ -16,7 +16,7 @@ describe("MembersSection", () => {
     "renders the %s card",
     (title) => {
       render(<MembersSection />)
-      expect(screen.getByRole("heading", { level: 4, name: title })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 3, name: title })).toBeInTheDocument()
     },
   )
 
