@@ -13,7 +13,7 @@ export const MemberBenefitCard = ({
   title: string
 }) => {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl bg-brand-blush p-6">
+    <div className="flex flex-col gap-4 rounded-2xl bg-brand-blush/60 p-6">
       <div className={cn("size-12 rounded-lg", swatchClassName)} />
       <div className="flex items-center gap-2">
         <Heading level="h4">{title}</Heading>
