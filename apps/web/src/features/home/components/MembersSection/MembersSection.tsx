@@ -11,13 +11,13 @@ const benefits = [
     description:
       "Post a research idea, mark it active or closed, and gather interest from other institutions.",
     membersOnly: true,
-    swatchClassName: "bg-violet-200",
+    swatchClassName: "bg-brand-teal/30",
     title: "Research proposals",
   },
   {
     description: "Compare structure, assessment and industry involvement course by course.",
     membersOnly: true,
-    swatchClassName: "bg-blue-100",
+    swatchClassName: "bg-brand-plum/30",
     title: "Capstone course data",
   },
 ]
