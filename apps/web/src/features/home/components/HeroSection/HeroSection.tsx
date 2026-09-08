@@ -1,4 +1,4 @@
-import { buttonVariants, Eyebrow, Heading } from "@repo/ui/components/ui"
+import { Button, Eyebrow, Heading } from "@repo/ui/components/ui"
 import Link from "next/link"
 import { Routes } from "@/lib/routes"
 
@@ -18,23 +18,18 @@ export const HeroSection = () => {
         </p>
 
         <div className="flex flex-wrap items-center gap-4">
-          {/* to do: point to a real registration flow once it exists */}
-          <Link
-            className={buttonVariants({ className: "rounded-full", size: "lg" })}
-            href={Routes.HOME}
-          >
+          {/* TODO: point to a real registration flow once it exists */}
+          <Button className="rounded-full" render={<Link href={Routes.HOME} />} size="lg">
             Register with your uni email
-          </Link>
-          <Link
-            className={buttonVariants({
-              className: "rounded-full",
-              size: "lg",
-              variant: "outline",
-            })}
-            href={Routes.PROPOSALS.ROOT}
+          </Button>
+          <Button
+            className="rounded-full"
+            render={<Link href={Routes.PROPOSALS.ROOT} />}
+            size="lg"
+            variant="outline"
           >
             Browse proposals
-          </Link>
+          </Button>
         </div>
       </div>
 
