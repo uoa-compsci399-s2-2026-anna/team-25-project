@@ -24,9 +24,11 @@ const meta: Meta<typeof ProposalCard> = {
       options: ["active", "closed"],
     },
   },
+  // The card takes its width from whatever lays it out, so the stories give it
+  // roughly the column width the proposals listing does rather than pinning it.
   decorators: [
     (Story) => (
-      <div className="w-[26rem]">
+      <div className="w-full max-w-[52rem]">
         <Story />
       </div>
     ),
@@ -77,20 +79,32 @@ export const LongContent: Story = {
   },
 }
 
+/** How the proposals listing lays them out: two columns that drop to one when narrow. */
 export const ProposalGrid: Story = {
   decorators: [
     (Story) => (
-      <div className="w-[56rem]">
+      <div className="w-full">
         <Story />
       </div>
     ),
   ],
   render: (args) => (
-    <div className="grid grid-cols-2 gap-6">
+    <div className="grid gap-6 md:grid-cols-2">
       <ProposalCard {...args} />
       <ProposalCard {...args} />
       <ProposalCard {...args} />
       <ProposalCard {...args} status="closed" />
     </div>
   ),
+}
+
+/** Squeezed into a phone-width column, where the header and byline have to wrap. */
+export const Narrow: Story = {
+  decorators: [
+    (Story) => (
+      <div className="w-[22rem]">
+        <Story />
+      </div>
+    ),
+  ],
 }
