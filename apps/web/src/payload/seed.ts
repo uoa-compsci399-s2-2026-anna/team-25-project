@@ -6,10 +6,9 @@
  *
  * Add a block per collection as real collections land, keep it collection-driven.
  */
+import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
 import "dotenv/config"
-import config from "@payload-config"
-import { getPayload } from "payload"
 
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || "admin@example.com"
 const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || "changeme"
@@ -18,7 +17,7 @@ const ADMIN_LAST_NAME = process.env.SEED_ADMIN_LAST_NAME || "User"
 
 const seed = async () => {
   // Schema is managed via migrations (push: false); this just opens a connection.
-  const payload = await getPayload({ config })
+  const payload = await getPayloadClient()
 
   // admins
   const existing = await payload.find({
