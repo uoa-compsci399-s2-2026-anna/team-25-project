@@ -1,6 +1,8 @@
-import { Avatar, AvatarFallback, buttonVariants } from "@repo/ui/components/ui"
+import { Avatar, AvatarFallback, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
+import { Suspense } from "react"
 import { Routes } from "@/lib/routes"
+import { NavAuthStatus } from "./NavAuthStatus"
 
 const links = [
   { name: "About", href: Routes.ABOUT },
@@ -34,18 +36,16 @@ export const Navbar = () => {
         ))}
       </nav>
 
-      <div className="flex items-center gap-4">
-        {/* TODO: point to a real login page once #70 (session helper) lands */}
-        <Link className="text-base transition-opacity hover:opacity-70" href={Routes.HOME}>
-          Log in
-        </Link>
-        <Link
-          className={buttonVariants({ className: "rounded-full", size: "sm" })}
-          href={Routes.HOME}
-        >
-          Join CCCA
-        </Link>
-      </div>
+      <Suspense
+        fallback={
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-6 w-20 rounded-full" />
+          </div>
+        }
+      >
+        <NavAuthStatus />
+      </Suspense>
     </header>
   )
 }
