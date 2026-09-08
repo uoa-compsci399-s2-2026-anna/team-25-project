@@ -24,7 +24,11 @@ export const Navbar = () => {
 
       <nav aria-label="Main" className="flex items-center gap-5">
         {links.map((link) => (
-          <Link className="text-base" href={link.href} key={link.name}>
+          <Link
+            className="text-base transition-opacity hover:opacity-70"
+            href={link.href}
+            key={link.name}
+          >
             {link.name}
           </Link>
         ))}
@@ -32,7 +36,7 @@ export const Navbar = () => {
 
       <div className="flex items-center gap-4">
         {/* TODO: point to a real login page once #70 (session helper) lands */}
-        <Link className="text-base" href={Routes.HOME}>
+        <Link className="text-base transition-opacity hover:opacity-70" href={Routes.HOME}>
           Log in
         </Link>
         <Link
