@@ -14,7 +14,7 @@ const links = [
 
 export const Navbar = () => {
   return (
-    <header className="flex items-center justify-between gap-4 border-border border-b bg-brand-blush/60 px-4 py-4 md:px-8">
+    <header className="sticky top-0 z-50 flex items-center justify-between gap-4 border-border border-b bg-brand-blush/60 px-4 py-4 backdrop-blur-sm md:px-8">
       <Link className="flex items-center gap-2" href={Routes.HOME}>
         <Avatar>
           <AvatarFallback />
