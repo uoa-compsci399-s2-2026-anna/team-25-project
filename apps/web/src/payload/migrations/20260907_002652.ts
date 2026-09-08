@@ -204,26 +204,26 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   ALTER TABLE "_course_versions_v_version_teaching_team" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_course_versions_v" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_course_versions_v_rels" DISABLE ROW LEVEL SECURITY;
-  DROP TABLE "courses" CASCADE;
-  DROP TABLE "courses_rels" CASCADE;
-  DROP TABLE "course_versions_display_snapshot_teaching_team" CASCADE;
-  DROP TABLE "course_versions_teaching_team" CASCADE;
-  DROP TABLE "course_versions" CASCADE;
-  DROP TABLE "course_versions_rels" CASCADE;
-  DROP TABLE "_course_versions_v_version_display_snapshot_teaching_team" CASCADE;
-  DROP TABLE "_course_versions_v_version_teaching_team" CASCADE;
-  DROP TABLE "_course_versions_v" CASCADE;
-  DROP TABLE "_course_versions_v_rels" CASCADE;
-  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_courses_fk";
+  DROP TABLE IF EXISTS "courses" CASCADE;
+  DROP TABLE IF EXISTS "courses_rels" CASCADE;
+  DROP TABLE IF EXISTS "course_versions_display_snapshot_teaching_team" CASCADE;
+  DROP TABLE IF EXISTS "course_versions_teaching_team" CASCADE;
+  DROP TABLE IF EXISTS "course_versions" CASCADE;
+  DROP TABLE IF EXISTS "course_versions_rels" CASCADE;
+  DROP TABLE IF EXISTS "_course_versions_v_version_display_snapshot_teaching_team" CASCADE;
+  DROP TABLE IF EXISTS "_course_versions_v_version_teaching_team" CASCADE;
+  DROP TABLE IF EXISTS "_course_versions_v" CASCADE;
+  DROP TABLE IF EXISTS "_course_versions_v_rels" CASCADE;
+  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_courses_fk";
   
-  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_course_versions_fk";
+  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_course_versions_fk";
   
-  DROP INDEX "payload_locked_documents_rels_courses_id_idx";
-  DROP INDEX "payload_locked_documents_rels_course_versions_id_idx";
-  ALTER TABLE "payload_locked_documents_rels" DROP COLUMN "courses_id";
-  ALTER TABLE "payload_locked_documents_rels" DROP COLUMN "course_versions_id";
-  DROP TYPE "public"."enum_course_versions_delivery_format";
-  DROP TYPE "public"."enum_course_versions_status";
-  DROP TYPE "public"."enum__course_versions_v_version_delivery_format";
-  DROP TYPE "public"."enum__course_versions_v_version_status";`)
+  DROP INDEX IF EXISTS "payload_locked_documents_rels_courses_id_idx";
+  DROP INDEX IF EXISTS "payload_locked_documents_rels_course_versions_id_idx";
+  ALTER TABLE "payload_locked_documents_rels" DROP COLUMN IF EXISTS "courses_id";
+  ALTER TABLE "payload_locked_documents_rels" DROP COLUMN IF EXISTS "course_versions_id";
+  DROP TYPE IF EXISTS "public"."enum_course_versions_delivery_format";
+  DROP TYPE IF EXISTS "public"."enum_course_versions_status";
+  DROP TYPE IF EXISTS "public"."enum__course_versions_v_version_delivery_format";
+  DROP TYPE IF EXISTS "public"."enum__course_versions_v_version_status";`)
 }
