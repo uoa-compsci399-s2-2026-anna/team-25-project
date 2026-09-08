@@ -1,6 +1,7 @@
 /**
  * Rewrites unguarded drops in the generated migrations to `DROP ... IF EXISTS`,
  * so `pnpm migrate:down` never fails on an object a `CASCADE` already removed.
+ * Only the `down` block is rewritten; see `harden-migration.ts` for why.
  *
  * `pnpm migrate:create` runs this straight after Payload writes the migration.
  * Running it by hand over the whole directory is safe: it is idempotent and
