@@ -8,7 +8,7 @@ export const HeroSection = () => {
       <div className="flex max-w-2xl flex-col gap-8">
         <Eyebrow>Computing Capstone Community Australasia</Eyebrow>
 
-        <Heading className="text-6xl text-black md:text-7xl" level="h1">
+        <Heading className="text-6xl md:text-7xl" level="h1">
           Find collaborators for your next capstone project.
         </Heading>
 
