@@ -1,6 +1,7 @@
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
-import { isAdmin } from "../access"
+import { isAdmin, isSignedIn } from "../access"
+import { courseRead, courseWrite } from "../access/Courses/Courses"
 
 // Stable course identity and editing permissions. Teaching-period content lives
 // in courseVersions.
@@ -8,9 +9,9 @@ export const Courses: CollectionConfig = {
   slug: Slugs.Collections.COURSES,
   admin: { useAsTitle: "code", defaultColumns: ["code", "institution", "owner"] },
   access: {
-    create: isAdmin,
-    read: isAdmin,
-    update: isAdmin,
+    create: isSignedIn,
+    read: courseRead,
+    update: courseWrite,
     delete: isAdmin,
   },
   indexes: [{ fields: ["institution", "code"], unique: true }],
