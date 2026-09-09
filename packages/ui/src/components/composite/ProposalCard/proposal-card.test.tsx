@@ -78,6 +78,11 @@ describe("ProposalCard", () => {
     expect(screen.getByText("Multi-institution")).toHaveClass("bg-neutral-100", "text-neutral-400")
   })
 
+  it("drops a repeated tag rather than rendering it twice", () => {
+    render(<ProposalCard {...props} tags={[{ label: "Assessment" }, { label: "Assessment" }]} />)
+    expect(screen.getAllByText("Assessment")).toHaveLength(1)
+  })
+
   it("renders no tags when none are passed", () => {
     render(<ProposalCard {...props} />)
     expect(screen.queryByText("Assessment")).not.toBeInTheDocument()
@@ -86,6 +91,11 @@ describe("ProposalCard", () => {
   it("falls back to the author's initials, skipping any title in their name", () => {
     render(<ProposalCard {...props} />)
     expect(screen.getByText("AT")).toBeInTheDocument()
+  })
+
+  it("falls back to a placeholder rather than an empty avatar for a blank name", () => {
+    render(<ProposalCard {...props} author={{ name: "   " }} />)
+    expect(screen.getByText("?")).toBeInTheDocument()
   })
 
   // Base UI only swaps the fallback out once the browser reports the image as

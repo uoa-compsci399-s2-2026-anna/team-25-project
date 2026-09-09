@@ -35,10 +35,7 @@ type ProposalCardTag = {
 type ProposalCardAuthor = {
   name: string
   institution?: string
-  /**
-   * Photo of the author, labelled with their name. Omit it to fall back to
-   * their initials.
-   */
+  /** Omit to fall back to the author's initials. */
   avatarSrc?: string
 }
 
@@ -68,15 +65,17 @@ const postedFormatter = new Intl.DateTimeFormat("en-NZ", {
 /**
  * Academic names here usually carry a title ("Dr Anna Tui"), so the last two
  * words are the given and family name far more often than the first two are.
+ * Spread so an astral-plane initial survives, and "?" so a blank name shows something.
  */
 const initials = (name: string) =>
   name
     .trim()
     .split(/\s+/)
+    .filter(Boolean)
     .slice(-2)
-    .map((part) => part.charAt(0))
+    .map((part) => [...part].slice(0, 1).join(""))
     .join("")
-    .toUpperCase()
+    .toUpperCase() || "?"
 
 function ProposalCard({
   author,
@@ -133,7 +132,8 @@ function ProposalCard({
 
       {tags && tags.length > 0 && (
         <CardContent className="flex-row flex-wrap gap-2">
-          {tags.map((tag) => (
+          {/* Deduped by label: a repeat renders nothing useful and collides as a React key. */}
+          {[...new Map(tags.map((tag) => [tag.label, tag])).values()].map((tag) => (
             <Badge key={tag.label} variant={isClosed ? "closed" : (tag.variant ?? "blue")}>
               {tag.label}
             </Badge>
@@ -144,8 +144,9 @@ function ProposalCard({
       <CardFooter className="flex-col items-stretch gap-3 border-t-0 bg-transparent pt-0">
         <Separator />
         <div className="flex min-w-0 items-center gap-2">
-          <Avatar>
-            {author.avatarSrc && <AvatarImage alt={author.name} src={author.avatarSrc} />}
+          {/* The name sits right beside it, so the photo itself is decorative. */}
+          <Avatar className="group-data-[status=closed]/card:opacity-60">
+            {author.avatarSrc && <AvatarImage alt="" src={author.avatarSrc} />}
             <AvatarFallback>{initials(author.name)}</AvatarFallback>
           </Avatar>
           <p className="truncate text-muted-foreground text-sm group-data-[status=closed]/card:text-neutral-400">
