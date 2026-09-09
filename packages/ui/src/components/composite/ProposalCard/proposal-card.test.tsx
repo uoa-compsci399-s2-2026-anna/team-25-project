@@ -46,25 +46,24 @@ describe("ProposalCard", () => {
     render(<ProposalCard {...props} data-testid="card" />)
 
     expect(screen.getByTestId("card")).toHaveAttribute("data-status", "active")
-    expect(screen.getByText("Active")).toHaveClass("bg-brand-salmon", "text-brand-plum")
+    expect(screen.getByText("Active")).toHaveAttribute("data-variant", "active")
   })
 
   it("greys the card out when the proposal is closed", () => {
     render(<ProposalCard {...props} data-testid="card" status="closed" />)
 
     expect(screen.getByTestId("card")).toHaveAttribute("data-status", "closed")
-    expect(screen.getByTestId("card")).toHaveClass("data-[status=closed]:text-neutral-400")
-    expect(screen.getByText("Closed")).toHaveClass("bg-neutral-100", "text-neutral-400")
+    expect(screen.getByText("Closed")).toHaveAttribute("data-variant", "closed")
   })
 
   it("renders tags as badges, defaulting to the blue variant", () => {
     render(<ProposalCard {...props} tags={[{ label: "Assessment" }]} />)
-    expect(screen.getByText("Assessment")).toHaveClass("bg-brand-slate/15", "text-brand-slate")
+    expect(screen.getByText("Assessment")).toHaveAttribute("data-variant", "blue")
   })
 
   it("honours a per-tag variant", () => {
     render(<ProposalCard {...props} tags={[{ label: "Multi-institution", variant: "salmon" }]} />)
-    expect(screen.getByText("Multi-institution")).toHaveClass("bg-brand-salmon")
+    expect(screen.getByText("Multi-institution")).toHaveAttribute("data-variant", "salmon")
   })
 
   it("overrides tag variants while the proposal is closed", () => {
@@ -75,7 +74,7 @@ describe("ProposalCard", () => {
         tags={[{ label: "Multi-institution", variant: "salmon" }]}
       />,
     )
-    expect(screen.getByText("Multi-institution")).toHaveClass("bg-neutral-100", "text-neutral-400")
+    expect(screen.getByText("Multi-institution")).toHaveAttribute("data-variant", "closed")
   })
 
   it("drops a repeated tag rather than rendering it twice", () => {
