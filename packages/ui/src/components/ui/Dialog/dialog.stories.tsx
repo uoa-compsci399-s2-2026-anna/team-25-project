@@ -21,6 +21,10 @@ import {
 const textareaClassName =
   "min-h-32 w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground placeholder:italic focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
 
+// Button has no destructive variant, so this matches Badge's destructive treatment
+// (bg-destructive/10 text-destructive) layered onto the unstyled base instead.
+const destructiveButtonClassName = "bg-destructive/10 text-destructive hover:bg-destructive/20"
+
 const meta: Meta<typeof Dialog> = {
   title: "ui/Dialog",
   component: Dialog,
@@ -39,7 +43,9 @@ export const Default: Story = {
           <DialogDescription>Update your name and email, then save changes.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+          <DialogClose render={<Button borderColor="charcoal" variant="button-transparent" />}>
+            Cancel
+          </DialogClose>
           <Button>Save changes</Button>
         </DialogFooter>
       </DialogContent>
@@ -50,7 +56,13 @@ export const Default: Story = {
 export const Destructive: Story = {
   render: () => (
     <Dialog>
-      <DialogTrigger render={<Button variant="destructive">Delete project</Button>} />
+      <DialogTrigger
+        render={
+          <Button className={destructiveButtonClassName} variant="button-unstyled">
+            Delete project
+          </Button>
+        }
+      />
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete project</DialogTitle>
@@ -60,8 +72,12 @@ export const Destructive: Story = {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-          <Button variant="destructive">Delete</Button>
+          <DialogClose render={<Button borderColor="charcoal" variant="button-transparent" />}>
+            Cancel
+          </DialogClose>
+          <Button className={destructiveButtonClassName} variant="button-unstyled">
+            Delete
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -71,7 +87,13 @@ export const Destructive: Story = {
 export const WithoutCloseButton: Story = {
   render: () => (
     <Dialog>
-      <DialogTrigger render={<Button variant="outline">Open dialog</Button>} />
+      <DialogTrigger
+        render={
+          <Button borderColor="charcoal" variant="button-transparent">
+            Open dialog
+          </Button>
+        }
+      />
       <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>No dismiss icon</DialogTitle>
@@ -90,7 +112,13 @@ export const WithoutCloseButton: Story = {
 export const NoFooter: Story = {
   render: () => (
     <Dialog>
-      <DialogTrigger render={<Button variant="outline">View details</Button>} />
+      <DialogTrigger
+        render={
+          <Button borderColor="charcoal" variant="button-transparent">
+            View details
+          </Button>
+        }
+      />
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Payment received</DialogTitle>
@@ -109,7 +137,13 @@ export const Larger: Story = {
     const roleId = React.useId()
     return (
       <Dialog>
-        <DialogTrigger render={<Button variant="outline">Invite teammate</Button>} />
+        <DialogTrigger
+          render={
+            <Button borderColor="charcoal" variant="button-transparent">
+              Invite teammate
+            </Button>
+          }
+        />
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Invite a teammate</DialogTitle>
@@ -129,7 +163,9 @@ export const Larger: Story = {
             </Field>
           </FieldGroup>
           <DialogFooter>
-            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+            <DialogClose render={<Button borderColor="charcoal" variant="button-transparent" />}>
+              Cancel
+            </DialogClose>
             <Button>Send invite</Button>
           </DialogFooter>
         </DialogContent>
@@ -153,11 +189,19 @@ export const LargeForm: Story = {
     const assessmentsId = React.useId()
     return (
       <Dialog>
-        <DialogTrigger render={<Button variant="outline">Add a capstone course</Button>} />
+        <DialogTrigger
+          render={
+            <Button borderColor="charcoal" variant="button-transparent">
+              Add a capstone course
+            </Button>
+          }
+        />
         <DialogContent className="sm:max-w-3xl" showCloseButton={false}>
           <div className="flex items-start justify-between gap-4">
             <DialogTitle className="font-bold text-2xl">Add a capstone course</DialogTitle>
-            <DialogClose render={<Button size="sm" variant="ghost" />}>Cancel</DialogClose>
+            <DialogClose render={<Button size="sm" variant="button-transparent" />}>
+              Cancel
+            </DialogClose>
           </div>
           <div className="grid gap-6 sm:grid-cols-2">
             <FieldGroup>
@@ -194,7 +238,9 @@ export const LargeForm: Story = {
             </FieldGroup>
           </div>
           <DialogFooter>
-            <Button variant="outline">Save draft</Button>
+            <Button borderColor="charcoal" variant="button-transparent">
+              Save draft
+            </Button>
             <Button>Publish proposal</Button>
           </DialogFooter>
         </DialogContent>

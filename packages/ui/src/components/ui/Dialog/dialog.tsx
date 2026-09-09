@@ -62,7 +62,7 @@ function DialogContent({
                 className="absolute top-2 right-2"
                 size="icon-sm"
                 type="button"
-                variant="ghost"
+                variant="button-transparent"
               />
             }
           >
@@ -100,7 +100,11 @@ function DialogFooter({
     >
       {children}
       {showCloseButton && (
-        <DialogClose render={<Button type="button" variant="outline" />}>Close</DialogClose>
+        <DialogClose
+          render={<Button borderColor="charcoal" type="button" variant="button-transparent" />}
+        >
+          Close
+        </DialogClose>
       )}
     </div>
   )
