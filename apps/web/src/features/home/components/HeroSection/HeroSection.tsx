@@ -4,7 +4,7 @@ import { Routes } from "@/lib/routes"
 
 export const HeroSection = () => {
   return (
-    <section className="flex flex-col items-center gap-16 px-8 pt-20 pb-32 md:flex-row md:items-center md:justify-between md:px-16 md:pt-37 md:pb-37">
+    <section className="flex flex-col items-center gap-16 px-8 pt-20 pb-32 md:flex-row md:items-center md:justify-between md:px-16 md:pt-25 md:pb-25">
       <div className="flex max-w-2xl flex-col gap-8">
         <Eyebrow>Computing Capstone Community Australasia</Eyebrow>
 
