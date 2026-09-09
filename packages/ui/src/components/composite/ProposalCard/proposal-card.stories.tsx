@@ -28,7 +28,7 @@ const meta: Meta<typeof ProposalCard> = {
   // a story needing the whole canvas opts out here instead of wrapping out.
   decorators: [
     (Story, context) => (
-      <div className={context.parameters.fullWidth ? "w-full" : "w-full max-w-[52rem]"}>
+      <div className={context.parameters.fullWidth ? "w-full" : "w-full max-w-208"}>
         <Story />
       </div>
     ),
@@ -96,7 +96,7 @@ export const ProposalGrid: Story = {
 export const Narrow: Story = {
   decorators: [
     (Story) => (
-      <div className="w-[22rem]">
+      <div className="w-88">
         <Story />
       </div>
     ),
