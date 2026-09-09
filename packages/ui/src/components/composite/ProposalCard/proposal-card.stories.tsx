@@ -24,11 +24,11 @@ const meta: Meta<typeof ProposalCard> = {
       options: ["active", "closed"],
     },
   },
-  // The card takes its width from whatever lays it out, so the stories give it
-  // roughly the column width the proposals listing does rather than pinning it.
+  // Roughly the listing's column width. Decorators nest rather than replace, so
+  // a story needing the whole canvas opts out here instead of wrapping out.
   decorators: [
-    (Story) => (
-      <div className="w-full max-w-[52rem]">
+    (Story, context) => (
+      <div className={context.parameters.fullWidth ? "w-full" : "w-full max-w-[52rem]"}>
         <Story />
       </div>
     ),
@@ -81,13 +81,7 @@ export const LongContent: Story = {
 
 /** How the proposals listing lays them out: two columns that drop to one when narrow. */
 export const ProposalGrid: Story = {
-  decorators: [
-    (Story) => (
-      <div className="w-full">
-        <Story />
-      </div>
-    ),
-  ],
+  parameters: { fullWidth: true },
   render: (args) => (
     <div className="grid gap-6 md:grid-cols-2">
       <ProposalCard {...args} />
