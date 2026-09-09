@@ -97,9 +97,8 @@ describe("ProposalCard", () => {
     expect(screen.getByText("?")).toBeInTheDocument()
   })
 
-  // Base UI only swaps the fallback out once the browser reports the image as
-  // loaded, which jsdom never does, so the loaded avatar itself cannot be
-  // asserted here. See avatar.test.tsx for the same limitation.
+  // Base UI only swaps the fallback out once the image loads, which jsdom never
+  // reports, so the loaded avatar cannot be asserted. Same as avatar.test.tsx.
   it("keeps the initials showing until the author's avatar loads", () => {
     render(<ProposalCard {...props} author={{ ...props.author, avatarSrc: "/anna.png" }} />)
     expect(screen.getByText("AT")).toBeVisible()

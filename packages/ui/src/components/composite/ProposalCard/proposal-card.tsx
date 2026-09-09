@@ -16,19 +16,12 @@ import {
 import { cn } from "@repo/ui/lib/utils"
 import type * as React from "react"
 
-/**
- * Kept as a plain union rather than importing the `ProposalStatus` enum so the
- * design system stays free of domain packages. The values match it exactly, so
- * a Payload `proposal.status` still assigns straight into this prop.
- */
+/** Matches `ProposalStatus` by value, without coupling the design system to it. */
 type ProposalCardStatus = "active" | "closed"
 
 type ProposalCardTag = {
   label: string
-  /**
-   * Defaults to `blue`. Ignored while the proposal is closed, where every tag
-   * greys out along with the rest of the card.
-   */
+  /** Defaults to `blue`. Ignored once closed, where every tag greys out. */
   variant?: BadgeProps["variant"]
 }
 
@@ -51,9 +44,8 @@ type ProposalCardProps = Omit<React.ComponentProps<"div">, "title"> & {
 }
 
 /**
- * Pinned to one locale and time zone so the server and the browser always agree
- * on the rendered string. Left to the runtime, a reader outside NZ could format
- * the same timestamp a day earlier and trip a hydration mismatch.
+ * Pinned so the server and browser agree; a reader's own zone could otherwise
+ * format the same timestamp a day earlier and trip a hydration mismatch.
  */
 const postedFormatter = new Intl.DateTimeFormat("en-NZ", {
   day: "numeric",
@@ -63,8 +55,7 @@ const postedFormatter = new Intl.DateTimeFormat("en-NZ", {
 })
 
 /**
- * Academic names here usually carry a title ("Dr Anna Tui"), so the last two
- * words are the given and family name far more often than the first two are.
+ * Last two words, since these names usually carry a title ("Dr Anna Tui").
  * Spread so an astral-plane initial survives, and "?" so a blank name shows something.
  */
 const initials = (name: string) =>
@@ -123,7 +114,7 @@ function ProposalCard({
           </CardAction>
         )}
 
-        {/* Grouped so the title and summary sit closer together than the header's own gap. */}
+        {/* Grouped so these two sit closer than the header's own gap. */}
         <div className="col-span-full flex flex-col gap-1.5">
           <CardTitle>{title}</CardTitle>
           <CardDescription>{summary}</CardDescription>
