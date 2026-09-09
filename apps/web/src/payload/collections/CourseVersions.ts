@@ -4,6 +4,7 @@ import { Slugs } from "@/lib/payload/slugs"
 import { isSignedIn } from "../access"
 import { versionHistoryRead, versionRead, versionWrite } from "../access/Courses/CourseVersions"
 import { guardCourseWrite } from "../hooks"
+import { assertVersionDeletable, prepareVersion } from "../hooks/CourseVersions"
 
 /**
  * One document per teaching period. Payload versions hold that period's drafts
@@ -29,6 +30,8 @@ export const CourseVersions: CollectionConfig = {
   },
   hooks: {
     beforeOperation: [guardCourseWrite],
+    beforeValidate: [prepareVersion],
+    beforeDelete: [assertVersionDeletable],
   },
   fields: [
     {
