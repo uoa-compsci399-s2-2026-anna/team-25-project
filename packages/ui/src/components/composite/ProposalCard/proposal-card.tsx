@@ -97,7 +97,7 @@ function ProposalCard({
 
   return (
     <Card
-      className={cn("gap-4 data-[status=closed]:text-neutral-400", className)}
+      className={cn("data-[status=closed]:text-neutral-400", className)}
       data-status={status}
       size={size}
       {...props}
@@ -112,7 +112,9 @@ function ProposalCard({
         </Badge>
 
         {postedLabel && (
-          <CardAction>
+          // row-span-1 keeps the date out of row two, so the title and summary
+          // run the full width instead of wrapping against a reserved gutter.
+          <CardAction className="row-span-1">
             <time
               className="text-muted-foreground text-xs group-data-[status=closed]/card:text-neutral-400"
               dateTime={posted.toISOString()}
@@ -123,7 +125,7 @@ function ProposalCard({
         )}
 
         {/* Grouped so the title and summary sit closer together than the header's own gap. */}
-        <div className="flex flex-col gap-1.5">
+        <div className="col-span-full flex flex-col gap-1.5">
           <CardTitle>{title}</CardTitle>
           <CardDescription>{summary}</CardDescription>
         </div>
