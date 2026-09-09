@@ -90,6 +90,10 @@ function ProposalCard({
   ...props
 }: ProposalCardProps) {
   const isClosed = status === "closed"
+  // Intl throws on an invalid date rather than formatting one, so drop the
+  // line instead of taking the whole page down with it.
+  const posted = new Date(postedAt)
+  const postedLabel = Number.isNaN(posted.getTime()) ? null : postedFormatter.format(posted)
 
   return (
     <Card
@@ -107,11 +111,16 @@ function ProposalCard({
           {isClosed ? "Closed" : "Active"}
         </Badge>
 
-        <CardAction>
-          <span className="text-muted-foreground text-xs group-data-[status=closed]/card:text-neutral-400">
-            Posted {postedFormatter.format(new Date(postedAt))}
-          </span>
-        </CardAction>
+        {postedLabel && (
+          <CardAction>
+            <time
+              className="text-muted-foreground text-xs group-data-[status=closed]/card:text-neutral-400"
+              dateTime={posted.toISOString()}
+            >
+              Posted {postedLabel}
+            </time>
+          </CardAction>
+        )}
 
         {/* Grouped so the title and summary sit closer together than the header's own gap. */}
         <div className="flex flex-col gap-1.5">

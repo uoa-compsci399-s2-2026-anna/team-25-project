@@ -35,6 +35,13 @@ describe("ProposalCard", () => {
     },
   )
 
+  it("drops the posted date rather than throwing on an unparseable one", () => {
+    render(<ProposalCard {...props} postedAt="not a date" />)
+
+    expect(screen.queryByText(/^Posted/)).not.toBeInTheDocument()
+    expect(screen.getByText(props.title)).toBeInTheDocument()
+  })
+
   it("defaults to the active status", () => {
     render(<ProposalCard {...props} data-testid="card" />)
 
