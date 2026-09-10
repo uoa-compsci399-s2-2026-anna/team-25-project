@@ -43,9 +43,7 @@ export const NavAuthStatus = async () => {
       <Avatar>
         {collection === Slugs.Collections.MEMBERS &&
           typeof user.avatar === "object" &&
-          user.avatar?.url && (
-            <AvatarImage alt={`${user.firstName} ${user.lastName}`} src={user.avatar.url} />
-          )}
+          user.avatar?.url && <AvatarImage alt="" src={user.avatar.url} />}
         <AvatarFallback>{initials(user.firstName, user.lastName)}</AvatarFallback>
       </Avatar>
     </Link>
