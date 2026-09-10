@@ -1,7 +1,5 @@
-import { cn } from "@repo/ui/lib/utils"
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 import * as React from "react"
-import { buttonVariants } from "../Button/button"
 import { Label } from "../Label/label"
 import {
   Select,
@@ -37,39 +35,19 @@ export const Primary: Story = {
   ),
 }
 
-function rowItemClassName(active: boolean) {
-  return cn(
-    buttonVariants({ variant: "button-cream" }),
-    "w-fit [&_svg]:hidden",
-    active && "bg-brand-salmon/40",
-  )
-}
-
-export const Row: Story = {
-  render: () => {
-    function ToggleRow() {
-      const [value, setValue] = React.useState<string | null>("")
-      return (
-        <Select modal={false} onValueChange={setValue} open value={value}>
-          <div className="inline-flex items-center gap-1">
-            <SelectItem className={rowItemClassName(value === "University")} value="University">
-              University
-            </SelectItem>
-            <SelectItem className={rowItemClassName(value === "Country")} value="Country">
-              Country
-            </SelectItem>
-            <SelectItem
-              className={rowItemClassName(value === "Research Interest")}
-              value="Research Interest"
-            >
-              Research Interest
-            </SelectItem>
-          </div>
-        </Select>
-      )
-    }
-    return <ToggleRow />
-  },
+export const Filter: Story = {
+  render: () => (
+    <div className="inline-flex items-center gap-1">
+      <Select>
+        <SelectTrigger className="w-fit" variant="filter">
+          <SelectValue placeholder="Select a fruit" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="Apple">Apple</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  ),
 }
 
 export const Groups: Story = {
