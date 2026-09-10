@@ -22,6 +22,7 @@ import {
 const fruits = ["Apple", "Banana", "Cherry"]
 
 function renderCombobox(props?: {
+  ariaInvalid?: boolean
   defaultValue?: string
   disabled?: boolean
   showClear?: boolean
@@ -36,6 +37,7 @@ function renderCombobox(props?: {
       onValueChange={props?.onValueChange}
     >
       <ComboboxInput
+        aria-invalid={props?.ariaInvalid}
         placeholder="Pick a fruit..."
         showClear={props?.showClear}
         variant={props?.variant}
@@ -87,7 +89,8 @@ describe("Combobox", () => {
     const user = userEvent.setup()
     renderCombobox()
     await user.type(screen.getByPlaceholderText("Pick a fruit..."), "zzz")
-    expect(await screen.findByText("No fruit found.")).toBeInTheDocument()
+    // findByText matches hidden nodes; this live region must be shown to announce.
+    expect(await screen.findByText("No fruit found.")).toBeVisible()
   })
 
   it("calls onValueChange when an item is selected", async () => {
@@ -103,9 +106,68 @@ describe("Combobox", () => {
     const user = userEvent.setup()
     renderCombobox({ disabled: true })
     const input = screen.getByPlaceholderText("Pick a fruit...")
+    // Natively disabled, not merely styled that way: `data-disabled` alone still leaves
+    // the input focusable, typeable and unannounced to assistive tech.
+    expect(input).toBeDisabled()
     expect(input).toHaveAttribute("data-disabled")
     await user.click(input)
     expect(screen.queryByRole("option")).not.toBeInTheDocument()
+  })
+
+  it("opens, moves through the list and selects with the keyboard", async () => {
+    const user = userEvent.setup()
+    renderCombobox()
+    const input = screen.getByPlaceholderText("Pick a fruit...")
+    await user.click(input)
+    await user.clear(input)
+
+    // The first ArrowDown opens the list and highlights the first item, so the second
+    // moves the highlight on — landing on Banana proves the arrow key travels.
+    await user.keyboard("{ArrowDown}")
+    expect(await screen.findByRole("option", { name: "Apple" })).toBeInTheDocument()
+
+    await user.keyboard("{ArrowDown}{Enter}")
+    expect(input).toHaveValue("Banana")
+  })
+
+  it("closes the list on Escape", async () => {
+    const user = userEvent.setup()
+    renderCombobox()
+    await user.click(screen.getByRole("combobox"))
+    expect(await screen.findByRole("option", { name: "Apple" })).toBeInTheDocument()
+
+    await user.keyboard("{Escape}")
+    expect(screen.queryByRole("option")).not.toBeInTheDocument()
+  })
+
+  it("clears the selected value when the clear button is clicked", async () => {
+    const user = userEvent.setup()
+    renderCombobox({ defaultValue: "Cherry", showClear: true })
+    const input = screen.getByPlaceholderText("Pick a fruit...")
+    expect(input).toHaveValue("Cherry")
+
+    await user.click(screen.getByRole("button", { name: "Clear selection" }))
+    expect(input).toHaveValue("")
+  })
+
+  it("keeps the invalid input matchable by the shell's error selector", () => {
+    // Both attributes must survive the render prop, or the shell's error selector misses.
+    renderCombobox({ ariaInvalid: true })
+    const input = screen.getByPlaceholderText("Pick a fruit...")
+    expect(input).toHaveAttribute("aria-invalid", "true")
+    expect(input).toHaveAttribute("data-slot", "input-group-control")
+  })
+
+  it("omits the addon entirely when neither the trigger nor the clear button is shown", () => {
+    // An addon rendered empty is still a `cursor-text` click-to-focus target, so the
+    // whole slot has to go, not just its contents.
+    const { container } = render(
+      <Combobox items={fruits}>
+        <ComboboxInput placeholder="Pick a fruit..." showTrigger={false} />
+      </Combobox>,
+    )
+    expect(screen.queryByRole("button", { name: "Open list" })).not.toBeInTheDocument()
+    expect(container.querySelector("[data-slot=input-group-addon]")).not.toBeInTheDocument()
   })
 
   it("applies the data-slot attributes", async () => {
@@ -142,7 +204,9 @@ describe("Combobox", () => {
     expect(group).toHaveClass("rounded-full", "bg-transparent")
   })
 
-  it("lets a chip inherit the round radius from a pill chips container", () => {
+  it("wires the pill variant so a chip can key its radius off the container", () => {
+    // No stylesheet in jsdom, so assert the contract rather than the radius:
+    // container publishes data-variant, chip carries the selector that reads it.
     const { container } = render(
       <Combobox defaultValue={["Apple"]} items={fruits} multiple>
         <ComboboxChips variant="pill">
@@ -150,12 +214,27 @@ describe("Combobox", () => {
         </ComboboxChips>
       </Combobox>,
     )
-    expect(container.querySelector("[data-slot=combobox-chips]")).toHaveAttribute(
-      "data-variant",
-      "pill",
+    const chips = container.querySelector("[data-slot=combobox-chips]")
+    expect(chips).toHaveAttribute("data-variant", "pill")
+    expect(chips).toHaveClass("rounded-full", "bg-transparent")
+    expect(
+      container.querySelector("[data-slot=combobox-chip]")?.closest("[data-variant=pill]"),
+    ).toBe(chips)
+  })
+
+  it("dresses the chips shell from the shared input-group variant", () => {
+    // Guards against the shell forking its own field/pill mapping.
+    const { container } = render(
+      <Combobox defaultValue={["Apple"]} items={fruits} multiple>
+        <ComboboxChips variant="field">
+          <ComboboxChip>Apple</ComboboxChip>
+        </ComboboxChips>
+      </Combobox>,
     )
-    expect(container.querySelector("[data-slot=combobox-chip]")).toHaveClass(
-      "in-data-[variant=pill]:rounded-full",
+    expect(container.querySelector("[data-slot=combobox-chips]")).toHaveClass(
+      "rounded-lg",
+      "border-brand-border",
+      "bg-brand-cream/60",
     )
   })
 
@@ -238,6 +317,48 @@ describe("Combobox", () => {
 
     await user.click(container.querySelector("[data-slot=combobox-chip-remove]") as HTMLElement)
     expect(container.querySelector("[data-slot=combobox-chip]")).not.toBeInTheDocument()
+  })
+
+  it("accumulates chips as items are selected", async () => {
+    const onValueChange = vi.fn()
+    const user = userEvent.setup()
+    const { container } = render(
+      <Combobox items={fruits} multiple onValueChange={onValueChange}>
+        <ComboboxChips>
+          <ComboboxValue>
+            {(values: string[]) => (
+              <>
+                {values.map((value) => (
+                  <ComboboxChip key={value}>{value}</ComboboxChip>
+                ))}
+                <ComboboxChipsInput placeholder="Pick fruits..." />
+              </>
+            )}
+          </ComboboxValue>
+        </ComboboxChips>
+        <ComboboxContent>
+          <ComboboxList>
+            <ComboboxCollection>
+              {(fruit: string) => (
+                <ComboboxItem key={fruit} value={fruit}>
+                  {fruit}
+                </ComboboxItem>
+              )}
+            </ComboboxCollection>
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>,
+    )
+
+    const input = screen.getByPlaceholderText("Pick fruits...")
+    await user.click(input)
+    await user.click(await screen.findByRole("option", { name: "Apple" }))
+    expect(container.querySelectorAll("[data-slot=combobox-chip]")).toHaveLength(1)
+
+    await user.click(input)
+    await user.click(await screen.findByRole("option", { name: "Cherry" }))
+    expect(container.querySelectorAll("[data-slot=combobox-chip]")).toHaveLength(2)
+    expect(onValueChange).toHaveBeenLastCalledWith(["Apple", "Cherry"], expect.anything())
   })
 
   it("can hide a chip remove control", () => {
