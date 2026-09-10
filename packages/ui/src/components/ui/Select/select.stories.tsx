@@ -13,16 +13,17 @@ import {
   SelectValue,
 } from "./select"
 
-const variants = ["filter", "input"] as const
+const variants = ["pill", "box"] as const
 
 type StoryArgs = ComponentProps<typeof Select<string>> & {
   variant?: (typeof variants)[number]
 }
 
 const meta: Meta<typeof Select> = {
-  title: "ui/Select",
+  title: "ui/Forms/Select",
   component: Select,
   argTypes: {
+    // @ts-expect-error variant is a story-only control, forwarded to SelectTrigger
     variant: {
       control: { type: "select" },
       options: variants,
@@ -58,7 +59,7 @@ export const Filter: Story = ({ variant, ...args }) => (
     </Select>
   </div>
 )
-Filter.args = { variant: "filter" }
+Filter.args = { variant: "pill" }
 
 export const Groups: Story = ({ variant, ...args }) => (
   <Select {...args}>

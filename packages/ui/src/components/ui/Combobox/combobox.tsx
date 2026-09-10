@@ -54,7 +54,7 @@ function ComboboxInput({
   disabled,
   showTrigger = true,
   showClear = false,
-  variant = "field",
+  variant = "box",
   ...props
 }: Omit<ComboboxPrimitive.Input.Props, "className"> &
   VariantProps<typeof inputGroupVariants> & {
@@ -210,7 +210,7 @@ function ComboboxSeparator({ className, ...props }: ComboboxPrimitive.Separator.
 
 function ComboboxChips({
   className,
-  variant = "field",
+  variant = "box",
   ...props
 }: ComboboxPrimitive.Chips.Props & VariantProps<typeof inputGroupVariants>) {
   return (

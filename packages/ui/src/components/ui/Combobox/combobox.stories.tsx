@@ -17,19 +17,19 @@ import {
 
 const fruits = ["Apple", "Banana", "Blueberry", "Cherry", "Grape", "Mango", "Peach"]
 
-const variants = ["field", "pill"] as const
+const variants = ["pill", "box"] as const
 
 type StoryArgs = ComponentProps<typeof Combobox> & {
   variant?: (typeof variants)[number]
 }
 
 const meta: Meta<typeof Combobox> = {
-  title: "ui/Combobox",
+  title: "ui/Forms/Combobox",
   component: Combobox,
   args: {
     items: fruits,
     // @ts-expect-error variant is a story-only control, forwarded to ComboboxInput
-    variant: "field",
+    variant: "box",
   },
   argTypes: {
     // @ts-expect-error variant is a story-only control, forwarded to ComboboxInput
@@ -74,13 +74,13 @@ export const Clearable: Story = ({ variant, ...args }) => (
   </Combobox>
 )
 
-export const Pill: Story = ({ variant, ...args }) => (
+export const Filter: Story = ({ variant, ...args }) => (
   <Combobox {...args}>
     <ComboboxInput className="w-fit" placeholder="University" variant={variant} />
     <FruitList />
   </Combobox>
 )
-Pill.args = { variant: "pill" }
+Filter.args = { variant: "pill" }
 
 export const Disabled: Story = ({ variant, ...args }) => (
   <Combobox {...args} disabled>

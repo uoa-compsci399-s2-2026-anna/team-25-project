@@ -148,6 +148,33 @@ describe("Select", () => {
     )
   })
 
+  it.each([
+    { size: "default", variant: "box", radius: "rounded-md" },
+    { size: "default", variant: "pill", radius: "rounded-full" },
+    { size: "sm", variant: "box", radius: "rounded-md" },
+    { size: "sm", variant: "pill", radius: "rounded-full" },
+  ] as const)(
+    "takes its radius from the variant alone at size=$size, variant=$variant",
+    ({ size, variant, radius }) => {
+      // Size used to set a radius of its own, which left `sm` + `pill` resolving to
+      // whichever of the two rules Tailwind emitted last. Radius now lives on the
+      // variant only, so the small trigger keeps its variant's shape.
+      render(
+        <Select>
+          <SelectTrigger size={size} variant={variant}>
+            <SelectValue placeholder="Pick a fruit" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Apple">Apple</SelectItem>
+          </SelectContent>
+        </Select>,
+      )
+      const trigger = screen.getByRole("combobox")
+      expect(trigger).toHaveClass(radius)
+      expect(trigger.className).not.toMatch(/data-\[size=sm\]:rounded-/)
+    },
+  )
+
   it("merges a custom className onto the trigger", () => {
     render(
       <Select>

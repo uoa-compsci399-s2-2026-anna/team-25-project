@@ -40,6 +40,21 @@ describe("TextArea", () => {
     expect(textarea).toHaveAttribute("data-slot", "textarea")
   })
 
+  it("defaults to the box variant and publishes it", () => {
+    render(<TextArea placeholder="Enter text..." />)
+    const textarea = screen.getByPlaceholderText("Enter text...")
+    expect(textarea).toHaveAttribute("data-variant", "box")
+    expect(textarea).toHaveClass("rounded-md", "bg-brand-cream/60")
+  })
+
+  it("softens the pill radius so a grown textarea keeps its corners off the text", () => {
+    render(<TextArea placeholder="Enter text..." variant="pill" />)
+    const textarea = screen.getByPlaceholderText("Enter text...")
+    expect(textarea).toHaveAttribute("data-variant", "pill")
+    expect(textarea).toHaveClass("rounded-2xl", "bg-transparent")
+    expect(textarea).not.toHaveClass("rounded-full")
+  })
+
   it("applies aria-invalid destructive classes when invalid", () => {
     render(<TextArea aria-invalid placeholder="Enter text..." />)
     expect(screen.getByPlaceholderText("Enter text...")).toHaveClass(

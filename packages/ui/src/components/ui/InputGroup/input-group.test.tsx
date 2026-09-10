@@ -257,15 +257,20 @@ describe("InputGroup", () => {
     expect(screen.getByRole("button", { name: "Clear" })).toHaveClass("size-6")
   })
 
-  it("defaults to the field variant", () => {
+  it("defaults to the input variant", () => {
     render(
       <InputGroup>
         <InputGroupInput placeholder="Search..." />
       </InputGroup>,
     )
     const group = screen.getByRole("group")
-    expect(group).toHaveAttribute("data-variant", "field")
-    expect(group).toHaveClass("rounded-lg", "border-brand-border", "bg-brand-cream/60")
+    expect(group).toHaveAttribute("data-variant", "box")
+    expect(group).toHaveClass(
+      "rounded-md",
+      "border-input",
+      "bg-brand-cream/60",
+      "hover:bg-brand-cream",
+    )
   })
 
   it("renders the pill variant with a full radius and no fill", () => {
@@ -276,7 +281,12 @@ describe("InputGroup", () => {
     )
     const group = screen.getByRole("group")
     expect(group).toHaveAttribute("data-variant", "pill")
-    expect(group).toHaveClass("rounded-full", "border-foreground/15", "bg-transparent")
+    expect(group).toHaveClass(
+      "rounded-full",
+      "border-input",
+      "bg-transparent",
+      "hover:bg-brand-charcoal/10",
+    )
   })
 
   it("merges a custom className with the base classes", () => {
@@ -285,6 +295,6 @@ describe("InputGroup", () => {
         <InputGroupInput placeholder="Search..." />
       </InputGroup>,
     )
-    expect(screen.getByRole("group")).toHaveClass("custom-class", "rounded-lg")
+    expect(screen.getByRole("group")).toHaveClass("custom-class", "rounded-md")
   })
 })

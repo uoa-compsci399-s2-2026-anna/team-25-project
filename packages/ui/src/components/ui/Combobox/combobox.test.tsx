@@ -26,7 +26,7 @@ function renderCombobox(props?: {
   defaultValue?: string
   disabled?: boolean
   showClear?: boolean
-  variant?: "field" | "pill"
+  variant?: "pill" | "box"
   onValueChange?: (value: string | null) => void
 }) {
   return render(
@@ -190,18 +190,23 @@ describe("Combobox", () => {
     expect(withClear.container.querySelector("[data-slot=combobox-clear]")).toBeInTheDocument()
   })
 
-  it("applies the field variant shell by default", () => {
+  it("applies the box variant shell by default", () => {
     const { container } = renderCombobox()
     const group = container.querySelector("[data-slot=input-group]")
-    expect(group).toHaveAttribute("data-variant", "field")
-    expect(group).toHaveClass("rounded-lg", "bg-brand-cream/60")
+    expect(group).toHaveAttribute("data-variant", "box")
+    expect(group).toHaveClass(
+      "rounded-md",
+      "border-input",
+      "bg-brand-cream/60",
+      "hover:bg-brand-cream",
+    )
   })
 
   it("applies the pill variant shell when requested", () => {
     const { container } = renderCombobox({ variant: "pill" })
     const group = container.querySelector("[data-slot=input-group]")
     expect(group).toHaveAttribute("data-variant", "pill")
-    expect(group).toHaveClass("rounded-full", "bg-transparent")
+    expect(group).toHaveClass("rounded-full", "bg-transparent", "hover:bg-brand-charcoal/10")
   })
 
   it("wires the pill variant so a chip can key its radius off the container", () => {
@@ -223,17 +228,17 @@ describe("Combobox", () => {
   })
 
   it("dresses the chips shell from the shared input-group variant", () => {
-    // Guards against the shell forking its own field/pill mapping.
+    // Guards against the shell forking its own box/pill mapping.
     const { container } = render(
       <Combobox defaultValue={["Apple"]} items={fruits} multiple>
-        <ComboboxChips variant="field">
+        <ComboboxChips variant="box">
           <ComboboxChip>Apple</ComboboxChip>
         </ComboboxChips>
       </Combobox>,
     )
     expect(container.querySelector("[data-slot=combobox-chips]")).toHaveClass(
-      "rounded-lg",
-      "border-brand-border",
+      "rounded-md",
+      "border-input",
       "bg-brand-cream/60",
     )
   })
@@ -311,8 +316,8 @@ describe("Combobox", () => {
     )
 
     const chips = container.querySelector("[data-slot=combobox-chips]")
-    expect(chips).toHaveAttribute("data-variant", "field")
-    expect(chips).toHaveClass("fruit-chips", "rounded-lg", "bg-brand-cream/60")
+    expect(chips).toHaveAttribute("data-variant", "box")
+    expect(chips).toHaveClass("fruit-chips", "rounded-md", "bg-brand-cream/60")
     expect(screen.getByPlaceholderText("Pick fruits...")).toHaveClass("fruit-input")
     expect(container.querySelector("[data-slot=combobox-chip]")).toHaveTextContent("Apple")
 
