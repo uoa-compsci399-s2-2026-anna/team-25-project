@@ -12,9 +12,6 @@ import {
   SelectValue,
 } from "./select"
 
-// SelectValue displays the raw selected value unless an `items` map or a render
-// function is supplied, so item values match their visible label here to keep
-// assertions on the trigger text meaningful.
 function renderSelect(props?: {
   defaultValue?: string
   value?: string
@@ -113,7 +110,6 @@ describe("Select", () => {
     await openSelect(user)
     await user.click(screen.getByRole("option", { name: "Cherry" }))
     expect(onValueChange).toHaveBeenCalledWith("Cherry", expect.anything())
-    // Controlled: displayed value only changes once the `value` prop is updated.
     expect(screen.getByRole("combobox")).toHaveTextContent("Apple")
 
     rerender(
