@@ -62,6 +62,65 @@ describe("InputGroup", () => {
     expect(screen.getByPlaceholderText("Search...")).toHaveFocus()
   })
 
+  it("focuses the textarea when the addon is clicked", async () => {
+    const user = userEvent.setup()
+    render(
+      <InputGroup>
+        <InputGroupTextarea placeholder="Write a note..." />
+        <InputGroupAddon align="block-end">
+          <InputGroupText>@</InputGroupText>
+        </InputGroupAddon>
+      </InputGroup>,
+    )
+    await user.click(screen.getByText("@"))
+    expect(screen.getByPlaceholderText("Write a note...")).toHaveFocus()
+  })
+
+  it("focuses the control when the addon is not a direct child of the group", async () => {
+    const user = userEvent.setup()
+    render(
+      <InputGroup>
+        <InputGroupInput placeholder="Search..." />
+        <div>
+          <InputGroupAddon>
+            <InputGroupText>@</InputGroupText>
+          </InputGroupAddon>
+        </div>
+      </InputGroup>,
+    )
+    await user.click(screen.getByText("@"))
+    expect(screen.getByPlaceholderText("Search...")).toHaveFocus()
+  })
+
+  it("focuses the group control, not an input living inside the addon", async () => {
+    const user = userEvent.setup()
+    render(
+      <InputGroup>
+        <InputGroupAddon>
+          <InputGroupText>@</InputGroupText>
+          <input aria-label="Unit" />
+        </InputGroupAddon>
+        <InputGroupInput placeholder="Search..." />
+      </InputGroup>,
+    )
+    await user.click(screen.getByText("@"))
+    expect(screen.getByPlaceholderText("Search...")).toHaveFocus()
+  })
+
+  it("does not steal focus when a link inside the addon is clicked", async () => {
+    const user = userEvent.setup()
+    render(
+      <InputGroup>
+        <InputGroupInput placeholder="Search..." />
+        <InputGroupAddon>
+          <a href="#help">Help</a>
+        </InputGroupAddon>
+      </InputGroup>,
+    )
+    await user.click(screen.getByRole("link", { name: "Help" }))
+    expect(screen.getByPlaceholderText("Search...")).not.toHaveFocus()
+  })
+
   it("does not steal focus when a button inside the addon is clicked", async () => {
     const onClick = vi.fn()
     const user = userEvent.setup()
@@ -120,7 +179,7 @@ describe("InputGroup", () => {
         </InputGroupAddon>
       </InputGroup>,
     )
-    const addon = screen.getByText("@").parentElement
+    const addon = screen.getByText("@").closest("[data-slot=input-group-addon]")
     expect(addon).toHaveAttribute("data-align", "inline-start")
     expect(addon).toHaveClass("order-first")
   })
@@ -133,9 +192,23 @@ describe("InputGroup", () => {
         </InputGroupAddon>
       </InputGroup>,
     )
-    const addon = screen.getByText("@").parentElement
+    const addon = screen.getByText("@").closest("[data-slot=input-group-addon]")
     expect(addon).toHaveAttribute("data-align", "block-end")
     expect(addon).toHaveClass("order-last")
+  })
+
+  it("keeps the invalid control matchable by the shell's error selector", () => {
+    // Shell keys off `has-[[data-slot][aria-invalid=true]]`. That class is unconditional,
+    // so asserting it proves nothing; dropping either attribute kills the styling.
+    render(
+      <InputGroup>
+        <InputGroupInput aria-invalid placeholder="Search..." />
+      </InputGroup>,
+    )
+    const input = screen.getByPlaceholderText("Search...")
+    expect(input).toHaveAttribute("aria-invalid", "true")
+    expect(input).toHaveAttribute("data-slot", "input-group-control")
+    expect(input.closest("[data-slot=input-group]")).toBe(screen.getByRole("group"))
   })
 
   it("renders the button as a non-submitting button by default", () => {
@@ -149,6 +222,22 @@ describe("InputGroup", () => {
     const button = screen.getByRole("button", { name: "Go" })
     expect(button).toHaveAttribute("type", "button")
     expect(button).toHaveAttribute("data-size", "xs")
+  })
+
+  it("forwards each group size to the Button it is built on", () => {
+    // The group runs its own size scale, so the geometry has to come from a real Button
+    // size rather than from class-merge ordering beating Button's `md` default.
+    render(
+      <InputGroup>
+        <InputGroupInput placeholder="Search..." />
+        <InputGroupAddon align="inline-end">
+          <InputGroupButton size="sm">Go</InputGroupButton>
+          <InputGroupButton aria-label="Clear" size="icon-xs" />
+        </InputGroupAddon>
+      </InputGroup>,
+    )
+    expect(screen.getByRole("button", { name: "Go" })).toHaveClass("h-7")
+    expect(screen.getByRole("button", { name: "Clear" })).toHaveClass("size-6")
   })
 
   it("defaults to the field variant", () => {
