@@ -121,13 +121,13 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 
 export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
   await db.execute(sql`
-   DROP TABLE "users_sessions" CASCADE;
-  DROP TABLE "users" CASCADE;
-  DROP TABLE "media" CASCADE;
-  DROP TABLE "payload_kv" CASCADE;
-  DROP TABLE "payload_locked_documents" CASCADE;
-  DROP TABLE "payload_locked_documents_rels" CASCADE;
-  DROP TABLE "payload_preferences" CASCADE;
-  DROP TABLE "payload_preferences_rels" CASCADE;
-  DROP TABLE "payload_migrations" CASCADE;`)
+   DROP TABLE IF EXISTS "users_sessions" CASCADE;
+  DROP TABLE IF EXISTS "users" CASCADE;
+  DROP TABLE IF EXISTS "media" CASCADE;
+  DROP TABLE IF EXISTS "payload_kv" CASCADE;
+  DROP TABLE IF EXISTS "payload_locked_documents" CASCADE;
+  DROP TABLE IF EXISTS "payload_locked_documents_rels" CASCADE;
+  DROP TABLE IF EXISTS "payload_preferences" CASCADE;
+  DROP TABLE IF EXISTS "payload_preferences_rels" CASCADE;
+  DROP TABLE IF EXISTS "payload_migrations" CASCADE;`)
 }

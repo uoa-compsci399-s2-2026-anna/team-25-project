@@ -73,6 +73,8 @@ export interface Config {
     institutions: Institution;
     media: Media;
     proposals: Proposal;
+    courses: Course;
+    courseVersions: CourseVersion;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -85,6 +87,8 @@ export interface Config {
     institutions: InstitutionsSelect<false> | InstitutionsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     proposals: ProposalsSelect<false> | ProposalsSelect<true>;
+    courses: CoursesSelect<false> | CoursesSelect<true>;
+    courseVersions: CourseVersionsSelect<false> | CourseVersionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -301,6 +305,100 @@ export interface Proposal {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "courses".
+ */
+export interface Course {
+  id: number;
+  code: string;
+  institution: number | Institution;
+  owner: number | Member;
+  editors?: (number | Member)[] | null;
+  hasPublishedVersion?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "courseVersions".
+ */
+export interface CourseVersion {
+  id: number;
+  course: number | Course;
+  period: string;
+  startDate: string;
+  endDate: string;
+  /**
+   * Required when publishing changes to a published offering.
+   */
+  changeSummary?: string | null;
+  publishedAt?: string | null;
+  publishedBy?:
+    | ({
+        relationTo: 'members';
+        value: number | Member;
+      } | null)
+    | ({
+        relationTo: 'admin';
+        value: number | Admin;
+      } | null);
+  name?: string | null;
+  programme?: string | null;
+  deliveryFormat?: ('inPerson' | 'online' | 'hybrid') | null;
+  projectType?: string | null;
+  learningOutcomes?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  assessments?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  teachingTeam?:
+    | {
+        member?: (number | null) | Member;
+        role?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  displaySnapshot?: {
+    courseCode?: string | null;
+    institutionName?: string | null;
+    teachingTeam?:
+      | {
+          name?: string | null;
+          role?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -342,6 +440,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'proposals';
         value: number | Proposal;
+      } | null)
+    | ({
+        relationTo: 'courses';
+        value: number | Course;
+      } | null)
+    | ({
+        relationTo: 'courseVersions';
+        value: number | CourseVersion;
       } | null);
   globalSlug?: string | null;
   user:
@@ -509,6 +615,61 @@ export interface ProposalsSelect<T extends boolean = true> {
   closedAt?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "courses_select".
+ */
+export interface CoursesSelect<T extends boolean = true> {
+  code?: T;
+  institution?: T;
+  owner?: T;
+  editors?: T;
+  hasPublishedVersion?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "courseVersions_select".
+ */
+export interface CourseVersionsSelect<T extends boolean = true> {
+  course?: T;
+  period?: T;
+  startDate?: T;
+  endDate?: T;
+  changeSummary?: T;
+  publishedAt?: T;
+  publishedBy?: T;
+  name?: T;
+  programme?: T;
+  deliveryFormat?: T;
+  projectType?: T;
+  learningOutcomes?: T;
+  assessments?: T;
+  teachingTeam?:
+    | T
+    | {
+        member?: T;
+        role?: T;
+        id?: T;
+      };
+  displaySnapshot?:
+    | T
+    | {
+        courseCode?: T;
+        institutionName?: T;
+        teachingTeam?:
+          | T
+          | {
+              name?: T;
+              role?: T;
+              id?: T;
+            };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

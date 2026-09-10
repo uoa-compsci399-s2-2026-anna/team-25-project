@@ -51,4 +51,13 @@ describe("Input", () => {
     render(<Input className="custom-class" placeholder="Enter text..." />)
     expect(screen.getByPlaceholderText("Enter text...")).toHaveClass("custom-class")
   })
+
+  it("applies muted, lighter-weight, italic styling to the placeholder", () => {
+    render(<Input placeholder="Enter text..." />)
+    expect(screen.getByPlaceholderText("Enter text...")).toHaveClass(
+      "placeholder:text-muted-foreground/70",
+      "placeholder:font-light",
+      "placeholder:italic",
+    )
+  })
 })
