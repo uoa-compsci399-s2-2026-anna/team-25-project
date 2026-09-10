@@ -23,6 +23,7 @@ const meta: Meta<typeof Select> = {
   title: "ui/Select",
   component: Select,
   argTypes: {
+    // @ts-expect-error - Storybook types are wrong
     variant: {
       control: { type: "select" },
       options: variants,
