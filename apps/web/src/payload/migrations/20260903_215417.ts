@@ -12,5 +12,5 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
    ALTER TABLE "members" DROP CONSTRAINT IF EXISTS "members_institution_id_institutions_id_fk";
   
   DROP INDEX IF EXISTS "members_institution_idx";
-  ALTER TABLE "members" DROP COLUMN "institution_id";`)
+  ALTER TABLE "members" DROP COLUMN IF EXISTS "institution_id";`)
 }
