@@ -4,7 +4,7 @@ import { Routes } from "@/lib/routes"
 
 export const HeroSection = () => {
   return (
-    <section className="flex flex-col items-center gap-16 px-8 pt-20 pb-32 md:flex-row md:items-center md:justify-between md:px-16 md:pt-37 md:pb-37">
+    <section className="flex flex-col items-center gap-16 px-8 pt-20 pb-32 md:flex-row md:items-center md:justify-between md:px-16 md:pt-25 md:pb-25">
       <div className="flex max-w-2xl flex-col gap-8">
         <Eyebrow>Computing Capstone Community Australasia</Eyebrow>
 
@@ -19,12 +19,16 @@ export const HeroSection = () => {
 
         <div className="flex flex-wrap items-center gap-4">
           {/* TODO: point to a real registration flow once it exists */}
-          <Button nativeButton={false} render={<Link href={Routes.HOME} />} size="lg">
+          <Button
+            nativeButton={false}
+            render={<Link href={Routes.HOME} />}
+            size="lg"
+            variant="button-mauve"
+          >
             Register with your uni email
           </Button>
           <Button
-            borderColor="charcoal"
-            className="border"
+            className="border-brand-charcoal/30"
             nativeButton={false}
             render={<Link href={Routes.PROPOSALS.ROOT} />}
             size="lg"
