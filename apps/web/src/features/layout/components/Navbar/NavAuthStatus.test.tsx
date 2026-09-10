@@ -91,6 +91,13 @@ describe("NavAuthStatus", () => {
       expect(screen.getByText("AL")).toBeInTheDocument()
     })
 
+    it("falls back to an empty initial rather than throwing on a blank name", async () => {
+      signInAsMember({ firstName: "", lastName: "" })
+      await renderNavAuthStatus()
+      const fallback = screen.getByText("", { selector: "[data-slot=avatar-fallback]" })
+      expect(fallback).toBeInTheDocument()
+    })
+
     it("caps and truncates a long name instead of letting it grow unbounded", async () => {
       // Navbar centers the middle nav links by giving the logo and this
       // section equal flex-1 shares - that only holds if neither side's
