@@ -238,10 +238,11 @@ describe("Combobox", () => {
     )
   })
 
-  it("gives the trigger an accessible name and its own data-slot", async () => {
+  it("keeps the trigger out of the tab order", async () => {
     renderCombobox()
     const trigger = await screen.findByRole("button", { name: "Open list" })
     expect(trigger).toHaveAttribute("data-slot", "combobox-trigger")
+    expect(trigger).toHaveAttribute("tabindex", "-1")
   })
 
   it("gives the clear button an accessible name", () => {
