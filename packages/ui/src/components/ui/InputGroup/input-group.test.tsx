@@ -92,6 +92,23 @@ describe("InputGroup", () => {
     expect(screen.getByPlaceholderText("Search...")).toHaveFocus()
   })
 
+  it("focuses the control when the group has an interactive ancestor", async () => {
+    const user = userEvent.setup()
+    render(
+      // biome-ignore lint/a11y/useSemanticElements: reproduces a composite card whose role previously escaped the addon's closest() boundary
+      <div role="button" tabIndex={0}>
+        <InputGroup>
+          <InputGroupInput placeholder="Search..." />
+          <InputGroupAddon>
+            <InputGroupText>@</InputGroupText>
+          </InputGroupAddon>
+        </InputGroup>
+      </div>,
+    )
+    await user.click(screen.getByText("@"))
+    expect(screen.getByPlaceholderText("Search...")).toHaveFocus()
+  })
+
   it("focuses the group control, not an input living inside the addon", async () => {
     const user = userEvent.setup()
     render(

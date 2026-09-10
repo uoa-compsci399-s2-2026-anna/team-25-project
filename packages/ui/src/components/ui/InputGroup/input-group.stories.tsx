@@ -55,8 +55,6 @@ export const WithButton: Story = (args) => {
     <InputGroup {...args}>
       <InputGroupInput onChange={(e) => setValue(e.target.value)} value={value} />
       <InputGroupAddon align="inline-end">
-        {/* Hidden rather than disabled: inputGroupVariants fades the whole group
-            via has-disabled: whenever any descendant is disabled. */}
         {value !== "" && (
           <InputGroupButton aria-label="Clear" onClick={() => setValue("")} size="icon-xs">
             <XIcon />
