@@ -20,7 +20,7 @@ type StoryArgs = ComponentProps<typeof Select<string>> & {
 }
 
 const meta: Meta<typeof Select> = {
-  title: "ui/Select",
+  title: "ui/Forms/Select",
   component: Select,
   argTypes: {
     // @ts-expect-error variant is a story-only control, forwarded to SelectTrigger

@@ -5,7 +5,7 @@ const types = ["text", "email", "password", "number", "file"] as const
 const variants = ["pill", "box"] as const
 
 const meta: Meta<typeof Input> = {
-  title: "ui/Input",
+  title: "ui/Forms/Input",
   component: Input,
   args: {
     placeholder: "Enter text...",

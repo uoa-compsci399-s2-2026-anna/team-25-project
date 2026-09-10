@@ -13,7 +13,7 @@ import {
 } from "./field"
 
 const meta: Meta<typeof Field> = {
-  title: "ui/Field",
+  title: "ui/Forms/Field",
   component: Field,
 }
 

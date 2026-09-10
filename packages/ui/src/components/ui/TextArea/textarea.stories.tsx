@@ -4,7 +4,7 @@ import { TextArea } from "./textarea"
 const variants = ["pill", "box"] as const
 
 const meta: Meta<typeof TextArea> = {
-  title: "UI/Textarea",
+  title: "ui/Forms/TextArea",
   component: TextArea,
   args: {
     className: "",

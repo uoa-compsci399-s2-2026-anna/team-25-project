@@ -24,7 +24,7 @@ type StoryArgs = ComponentProps<typeof Combobox> & {
 }
 
 const meta: Meta<typeof Combobox> = {
-  title: "ui/Combobox",
+  title: "ui/Forms/Combobox",
   component: Combobox,
   args: {
     items: fruits,

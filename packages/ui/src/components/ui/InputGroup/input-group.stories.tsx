@@ -13,7 +13,7 @@ import {
 const variants = ["pill", "box"] as const
 
 const meta: Meta<typeof InputGroup> = {
-  title: "ui/InputGroup",
+  title: "ui/Forms/InputGroup",
   component: InputGroup,
   args: {
     variant: "box",
