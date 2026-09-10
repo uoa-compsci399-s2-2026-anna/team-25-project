@@ -1,0 +1,103 @@
+import type { Meta, StoryObj } from "@storybook/nextjs-vite"
+import * as React from "react"
+import { Label } from "../Label/label"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "./select"
+
+const meta: Meta<typeof Select> = {
+  title: "ui/Select",
+  component: Select,
+}
+
+export default meta
+type Story = StoryObj<typeof Select>
+
+export const Primary: Story = {
+  render: () => (
+    <Select>
+      <SelectTrigger>
+        <SelectValue placeholder="Select a fruit" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="Apple">Apple</SelectItem>
+        <SelectItem value="Banana">Banana</SelectItem>
+        <SelectItem value="Cherry">Cherry</SelectItem>
+      </SelectContent>
+    </Select>
+  ),
+}
+
+export const Groups: Story = {
+  render: () => (
+    <Select>
+      <SelectTrigger>
+        <SelectValue placeholder="Select a food" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectLabel>Fruits</SelectLabel>
+          <SelectItem value="Apple">Apple</SelectItem>
+          <SelectItem value="Banana">Banana</SelectItem>
+        </SelectGroup>
+        <SelectSeparator />
+        <SelectGroup>
+          <SelectLabel>Vegetables</SelectLabel>
+          <SelectItem value="Carrot">Carrot</SelectItem>
+          <SelectItem value="Potato">Potato</SelectItem>
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  ),
+}
+
+export const Disabled: Story = {
+  render: () => {
+    const id = React.useId()
+    return (
+      <div className="flex flex-col gap-2">
+        <Label htmlFor={id}>Fruit</Label>
+        <Select disabled>
+          <SelectTrigger id={id}>
+            <SelectValue placeholder="Select a fruit" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Apple">Apple</SelectItem>
+            <SelectItem value="Banana">Banana</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    )
+  },
+}
+
+export const Controlled: Story = {
+  render: () => {
+    function ControlledSelect() {
+      const [value, setValue] = React.useState<string | null>(null)
+      return (
+        <div className="flex flex-col gap-2">
+          <Select onValueChange={setValue} value={value}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a fruit" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Apple">Apple</SelectItem>
+              <SelectItem value="Banana">Banana</SelectItem>
+              <SelectItem value="Cherry">Cherry</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-muted-foreground text-sm">Selected: {value ?? "none"}</p>
+        </div>
+      )
+    }
+    return <ControlledSelect />
+  },
+}
