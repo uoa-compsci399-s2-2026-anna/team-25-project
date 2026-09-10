@@ -8,12 +8,12 @@ import type * as React from "react"
 const selectTriggerVariants = cva("", {
   variants: {
     variant: {
-      filter: "rounded-full bg-transparent hover:bg-brand-charcoal/10",
-      input: "rounded-sm bg-brand-cream hover:bg-brand-cream/40",
+      pill: "rounded-full bg-transparent hover:bg-brand-charcoal/10",
+      box: "rounded-md bg-brand-cream/60 hover:bg-brand-cream",
     },
   },
   defaultVariants: {
-    variant: "input",
+    variant: "box",
   },
 })
 const Select = SelectPrimitive.Root
@@ -41,7 +41,7 @@ function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
 function SelectTrigger({
   className,
   size = "default",
-  variant = "input",
+  variant = "box",
   children,
   ...props
 }: SelectPrimitive.Trigger.Props &

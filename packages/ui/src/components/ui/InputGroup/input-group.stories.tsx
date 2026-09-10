@@ -10,13 +10,13 @@ import {
   InputGroupTextarea,
 } from "./input-group"
 
-const variants = ["field", "pill"] as const
+const variants = ["pill", "box"] as const
 
 const meta: Meta<typeof InputGroup> = {
   title: "ui/InputGroup",
   component: InputGroup,
   args: {
-    variant: "field",
+    variant: "box",
   },
   argTypes: {
     variant: {
@@ -38,7 +38,7 @@ export const Default: Story = (args) => (
   </InputGroup>
 )
 
-export const Pill: Story = (args) => (
+export const Filter: Story = (args) => (
   <InputGroup {...args} className="w-fit">
     <InputGroupInput placeholder="University" />
     <InputGroupAddon align="inline-end">
@@ -46,7 +46,7 @@ export const Pill: Story = (args) => (
     </InputGroupAddon>
   </InputGroup>
 )
-Pill.args = { variant: "pill" }
+Filter.args = { variant: "pill" }
 
 export const WithButton: Story = (args) => {
   const [value, setValue] = useState("Clear me")
