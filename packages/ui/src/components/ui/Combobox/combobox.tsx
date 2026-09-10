@@ -1,17 +1,16 @@
 "use client"
 
-import { Combobox as ComboboxPrimitive } from "@base-ui/react"
+import { Combobox as ComboboxPrimitive } from "@base-ui/react/combobox"
 import { cn } from "@repo/ui/lib/utils"
 import type { VariantProps } from "class-variance-authority"
 import { CheckIcon, ChevronDownIcon, XIcon } from "lucide-react"
-import type * as React from "react"
 import { Button } from "../Button/button"
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-  type inputGroupVariants,
+  inputGroupVariants,
 } from "../InputGroup/input-group"
 
 const Combobox = ComboboxPrimitive.Root
@@ -50,33 +49,47 @@ function ComboboxClear({ className, ...props }: ComboboxPrimitive.Clear.Props) {
 
 function ComboboxInput({
   className,
+  inputClassName,
   children,
-  disabled = false,
+  disabled,
   showTrigger = true,
   showClear = false,
   variant = "field",
   ...props
-}: ComboboxPrimitive.Input.Props &
+}: Omit<ComboboxPrimitive.Input.Props, "className"> &
   VariantProps<typeof inputGroupVariants> & {
+    /** Styles the input group shell that wraps the control and its addons. */
+    className?: string
+    /** Styles the text input itself. */
+    inputClassName?: string
     showTrigger?: boolean
     showClear?: boolean
   }) {
   return (
     <InputGroup className={cn("w-auto", className)} variant={variant}>
-      <ComboboxPrimitive.Input render={<InputGroupInput disabled={disabled} />} {...props} />
-      <InputGroupAddon align="inline-end">
-        {showTrigger && (
-          <InputGroupButton
-            className="group-has-data-[slot=combobox-clear]/input-group:hidden data-pressed:bg-transparent"
-            data-slot="combobox-trigger"
-            disabled={disabled}
-            render={<ComboboxTrigger />}
-            size="icon-xs"
-            variant="button-transparent"
-          />
-        )}
-        {showClear && <ComboboxClear disabled={disabled} />}
-      </InputGroupAddon>
+      {/* `disabled` goes to the primitive, never to the render element: Base UI merges
+          render props over its own, so setting it there would overwrite the disabled
+          state the root computes from `<Combobox disabled>` or from a Field. */}
+      <ComboboxPrimitive.Input
+        disabled={disabled}
+        render={<InputGroupInput className={inputClassName} />}
+        {...props}
+      />
+      {(showTrigger || showClear) && (
+        <InputGroupAddon align="inline-end">
+          {showTrigger && (
+            <InputGroupButton
+              className="group-has-data-[slot=combobox-clear]/input-group:hidden data-pressed:bg-transparent"
+              data-slot="combobox-trigger"
+              disabled={disabled}
+              render={<ComboboxTrigger />}
+              size="icon-xs"
+              variant="button-transparent"
+            />
+          )}
+          {showClear && <ComboboxClear disabled={disabled} />}
+        </InputGroupAddon>
+      )}
       {children}
     </InputGroup>
   )
@@ -175,8 +188,11 @@ function ComboboxCollection({ ...props }: ComboboxPrimitive.Collection.Props) {
 function ComboboxEmpty({ className, ...props }: ComboboxPrimitive.Empty.Props) {
   return (
     <ComboboxPrimitive.Empty
+      // The primitive is a `role="status"` live region and only renders children when the
+      // list is empty, so it must stay mounted and visible to announce. `empty:` collapses
+      // the padding instead of hiding the element.
       className={cn(
-        "hidden w-full justify-center py-2 text-center text-muted-foreground text-sm group-data-empty/combobox-content:flex",
+        "flex w-full justify-center py-2 text-center text-muted-foreground text-sm empty:py-0",
         className,
       )}
       data-slot="combobox-empty"
@@ -199,16 +215,15 @@ function ComboboxChips({
   className,
   variant = "field",
   ...props
-}: React.ComponentPropsWithRef<typeof ComboboxPrimitive.Chips> &
-  ComboboxPrimitive.Chips.Props &
-  VariantProps<typeof inputGroupVariants>) {
+}: ComboboxPrimitive.Chips.Props & VariantProps<typeof inputGroupVariants>) {
   return (
     <ComboboxPrimitive.Chips
+      // Radius, fill and hairline come from the shared input-group variant so the chips
+      // shell cannot drift from an InputGroup of the same variant; only the chip-specific
+      // wrapping and focus rules are layered on top.
       className={cn(
-        "flex min-h-8 flex-wrap items-center gap-1 border bg-clip-padding px-2.5 py-1 text-sm transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 has-aria-invalid:border-destructive has-data-[slot=combobox-chip]:px-1 has-aria-invalid:ring-3 has-aria-invalid:ring-destructive/20",
-        variant === "pill"
-          ? "rounded-full border-foreground/15 bg-transparent"
-          : "rounded-lg border-brand-border bg-brand-cream/60",
+        inputGroupVariants({ variant }),
+        "h-auto min-h-8 flex-wrap gap-1 px-2.5 py-1 text-sm focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 has-aria-invalid:border-destructive has-data-[slot=combobox-chip]:px-1 has-aria-invalid:ring-3 has-aria-invalid:ring-destructive/20",
         className,
       )}
       data-slot="combobox-chips"
