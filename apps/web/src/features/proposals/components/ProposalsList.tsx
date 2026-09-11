@@ -22,12 +22,7 @@ export const ProposalsList = async () => {
               institution: institution?.name,
               name: author ? `${author.firstName} ${author.lastName}` : "Unknown author",
             }}
-            // The page resolves on the leading id; the slug is only for readability.
-            href={Routes.PROPOSALS.PROPOSAL(
-              proposal.proposalSlug
-                ? `${proposal.id}-${proposal.proposalSlug}`
-                : String(proposal.id),
-            )}
+            href={Routes.PROPOSALS.PROPOSAL(proposal.id, proposal.proposalSlug)}
             key={proposal.id}
             linkComponent={Link}
             postedAt={proposal.createdAt}
