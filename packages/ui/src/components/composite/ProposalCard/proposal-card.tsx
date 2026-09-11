@@ -128,12 +128,7 @@ function ProposalCard({
         <div className="col-span-full flex flex-col gap-1.5">
           <CardTitle>
             {href ? (
-              // The ::after overlay stretches the hit area over the whole card,
-              // so the card acts as one link while only the title names it.
-              <LinkComponent
-                className="outline-none after:absolute after:inset-0 after:rounded-lg hover:underline focus-visible:after:ring-2 focus-visible:after:ring-ring"
-                href={href}
-              >
+              <LinkComponent className="hover:underline" href={href}>
                 {title}
               </LinkComponent>
             ) : (
