@@ -15,6 +15,22 @@ const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || "changeme"
 const ADMIN_FIRST_NAME = process.env.SEED_ADMIN_FIRST_NAME || "Admin"
 const ADMIN_LAST_NAME = process.env.SEED_ADMIN_LAST_NAME || "User"
 
+// `example.ac.nz` matches the placeholder in the register design, so the
+// sign-up form can be walked end to end against a freshly seeded database.
+const INSTITUTIONS = [
+  { country: "NZ" as const, domains: [{ domain: "example.ac.nz" }], name: "University of Example" },
+  {
+    country: "NZ" as const,
+    domains: [{ domain: "auckland.ac.nz" }],
+    name: "University of Auckland",
+  },
+  {
+    country: "AU" as const,
+    domains: [{ domain: "unimelb.edu.au" }],
+    name: "University of Melbourne",
+  },
+]
+
 const seed = async () => {
   // Schema is managed via migrations (push: false); this just opens a connection.
   const payload = await getPayloadClient()
@@ -38,6 +54,23 @@ const seed = async () => {
       },
     })
     payload.logger.info(`Created admin ${ADMIN_EMAIL}.`)
+  }
+
+  // institutions - registration cannot be exercised at all without at least one,
+  // since the sign-up form's dropdown is sourced from this collection and the
+  // email domain is checked against it.
+  for (const institution of INSTITUTIONS) {
+    const existingInstitution = await payload.find({
+      collection: Slugs.Collections.INSTITUTIONS,
+      where: { name: { equals: institution.name } },
+      limit: 1,
+    })
+    if (existingInstitution.docs.length > 0) {
+      payload.logger.info(`Institution ${institution.name} already exists, skipping.`)
+      continue
+    }
+    await payload.create({ collection: Slugs.Collections.INSTITUTIONS, data: institution })
+    payload.logger.info(`Created institution ${institution.name}.`)
   }
 }
 
