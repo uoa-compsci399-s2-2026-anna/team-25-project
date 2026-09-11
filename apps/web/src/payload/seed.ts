@@ -83,19 +83,19 @@ const proposals = [
 
 const courses = [
   [
-    "COMPSCI 101",
+    "COMPSCI 399",
     "University of Auckland",
     "arohan.patel@auckland.ac.nz",
     ["maya.chen@auckland.ac.nz"],
   ],
   [
-    "SOFTENG 701",
+    "SOFTENG 770",
     "University of Auckland",
     "maya.chen@auckland.ac.nz",
     ["arohan.patel@auckland.ac.nz"],
   ],
-  ["COSC 241", "University of Otago", "liam.wilson@otago.ac.nz", ["hana.rangi@otago.ac.nz"]],
-  ["COMP30023", "University of Melbourne", "priya.nair@unimelb.edu.au", []],
+  ["COSC 345", "University of Otago", "liam.wilson@otago.ac.nz", ["hana.rangi@otago.ac.nz"]],
+  ["COMP30022", "University of Melbourne", "priya.nair@unimelb.edu.au", []],
   ["COMP3900", "UNSW Sydney", "noah.taylor@unsw.edu.au", []],
 ] as const
 
@@ -103,34 +103,36 @@ const courses = [
 // publisher, as they would for a real publication.
 const offerings = [
   {
-    course: "COMPSCI 101",
+    course: "COMPSCI 399",
     status: "published",
     period: "2026 Semester 2",
     startDate: "2026-07-20T00:00:00.000Z",
     endDate: "2026-11-06T00:00:00.000Z",
-    name: "Principles of Programming",
+    name: "Capstone: Computer Science",
     programme: "Bachelor of Science",
     deliveryFormat: CourseDeliveryFormat.IN_PERSON,
-    projectType: "Individual programming assignments",
-    learningOutcomes: "Write, test and debug small Python programs that solve practical problems.",
-    assessments: "Weekly labs (20%), four assignments (40%), test (10%) and final exam (30%).",
+    projectType: "Team capstone project",
+    learningOutcomes:
+      "Work in a small team to analyse a substantial problem, design a solution, build an artefact and present it.",
+    assessments: "Team project milestones, final artefact, presentation and individual reflection.",
     teachingTeam: [
       ["arohan.patel@auckland.ac.nz", "Course coordinator"],
       ["maya.chen@auckland.ac.nz", "Lecturer"],
     ],
   },
   {
-    course: "COSC 241",
+    course: "COSC 345",
     status: "draft",
-    period: "2027 Semester 1",
+    period: "2027 Full Year",
     startDate: "2027-02-22T00:00:00.000Z",
-    endDate: "2027-06-11T00:00:00.000Z",
-    name: "Programming and Problem Solving",
+    endDate: "2027-10-15T00:00:00.000Z",
+    name: "Software Engineering",
     programme: "Bachelor of Science",
-    deliveryFormat: CourseDeliveryFormat.HYBRID,
-    projectType: "Team software project",
-    learningOutcomes: "Design and implement data structures and algorithms in Java.",
-    assessments: "Labs (20%), team project (30%) and final exam (50%).",
+    deliveryFormat: CourseDeliveryFormat.IN_PERSON,
+    projectType: "Year-long team software project",
+    learningOutcomes:
+      "Develop large-scale, reliable and maintainable software in a team of three or four.",
+    assessments: "Four team project milestones (40%) and final exam (60%).",
     teachingTeam: [["liam.wilson@otago.ac.nz", "Course coordinator"]],
   },
 ] as const
