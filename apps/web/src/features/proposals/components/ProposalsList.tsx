@@ -1,14 +1,33 @@
 import { ProposalTagLabels } from "@repo/shared/enums/proposals"
 import { ProposalCard } from "@repo/ui/components/composite"
 import Link from "next/link"
+import type { SearchParams } from "nuqs/server"
 import { Routes } from "@/lib/routes"
-import { getProposals } from "../proposals.queries"
+import { loadProposalsPage } from "../proposals.queries"
+import { loadProposalSearchParams, toProposalFilters } from "../proposals.search-params"
 
-export const ProposalsList = async () => {
-  const proposals = await getProposals({}, { page: 1, limit: 10 })
+const PAGE_SIZE = 10
+
+export const ProposalsList = async ({ searchParams }: { searchParams: Promise<SearchParams> }) => {
+  const params = await loadProposalSearchParams(searchParams)
+  const { docs: proposals, totalDocs } = await loadProposalsPage(toProposalFilters(params), {
+    limit: PAGE_SIZE,
+    page: params.page,
+  })
+
+  if (proposals.length === 0) {
+    return (
+      <p className="p-10 text-center text-muted-foreground md:p-12">
+        {totalDocs > 0
+          ? "This page is past the end of the results."
+          : "No proposals match these filters."}
+      </p>
+    )
+  }
+
   return (
     <div className="grid w-full gap-8 p-10 md:p-12 lg:grid-cols-2 lg:gap-10">
-      {proposals.docs.map((proposal) => {
+      {proposals.map((proposal) => {
         const author = proposal.author.find((author) => typeof author !== "number")
         const institution =
           author && typeof author.institution !== "number" ? author.institution : undefined
