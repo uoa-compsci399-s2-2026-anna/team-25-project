@@ -1,4 +1,5 @@
 /** Seeds the local database with an admin account and development fixtures. */
+import { CourseDeliveryFormat } from "@repo/shared/enums/courses"
 import {
   ProposalEthicsStatus,
   ProposalStatus,
@@ -96,6 +97,42 @@ const courses = [
   ["COSC 241", "University of Otago", "liam.wilson@otago.ac.nz", ["hana.rangi@otago.ac.nz"]],
   ["COMP30023", "University of Melbourne", "priya.nair@unimelb.edu.au", []],
   ["COMP3900", "UNSW Sydney", "noah.taylor@unsw.edu.au", []],
+] as const
+
+// Created as the course owner so the publication hooks write the snapshot and
+// publisher, as they would for a real publication.
+const offerings = [
+  {
+    course: "COMPSCI 101",
+    status: "published",
+    period: "2026 Semester 2",
+    startDate: "2026-07-20T00:00:00.000Z",
+    endDate: "2026-11-06T00:00:00.000Z",
+    name: "Principles of Programming",
+    programme: "Bachelor of Science",
+    deliveryFormat: CourseDeliveryFormat.IN_PERSON,
+    projectType: "Individual programming assignments",
+    learningOutcomes: "Write, test and debug small Python programs that solve practical problems.",
+    assessments: "Weekly labs (20%), four assignments (40%), test (10%) and final exam (30%).",
+    teachingTeam: [
+      ["arohan.patel@auckland.ac.nz", "Course coordinator"],
+      ["maya.chen@auckland.ac.nz", "Lecturer"],
+    ],
+  },
+  {
+    course: "COSC 241",
+    status: "draft",
+    period: "2027 Semester 1",
+    startDate: "2027-02-22T00:00:00.000Z",
+    endDate: "2027-06-11T00:00:00.000Z",
+    name: "Programming and Problem Solving",
+    programme: "Bachelor of Science",
+    deliveryFormat: CourseDeliveryFormat.HYBRID,
+    projectType: "Team software project",
+    learningOutcomes: "Design and implement data structures and algorithms in Java.",
+    assessments: "Labs (20%), team project (30%) and final exam (50%).",
+    teachingTeam: [["liam.wilson@otago.ac.nz", "Course coordinator"]],
+  },
 ] as const
 
 const richText = (text: string): Proposal["body"] => ({
@@ -221,6 +258,8 @@ export const seed = async () => {
     }
   }
 
+  const courseIds = new Map<string, number>()
+  const courseOwners = new Map<string, number>()
   for (const [code, institutionName, owner, editors] of courses) {
     const institution = requiredID(institutionIds, institutionName)
     const existing = await payload.find({
@@ -229,8 +268,9 @@ export const seed = async () => {
       depth: 0,
       limit: 1,
     })
-    if (existing.docs.length === 0) {
-      await internal.run(true, () =>
+    const course =
+      existing.docs[0] ??
+      (await internal.run(true, () =>
         payload.create({
           collection: Slugs.Collections.COURSES,
           data: {
@@ -240,12 +280,53 @@ export const seed = async () => {
             editors: editors.map((email) => requiredID(memberIds, email)),
           },
         }),
-      )
+      ))
+    courseIds.set(code, course.id)
+    courseOwners.set(code, requiredID(memberIds, owner))
+  }
+
+  for (const {
+    course: code,
+    status,
+    learningOutcomes,
+    assessments,
+    teachingTeam,
+    ...fixture
+  } of offerings) {
+    const course = requiredID(courseIds, code)
+    const existing = await payload.find({
+      collection: Slugs.Collections.COURSE_VERSIONS,
+      where: { and: [{ course: { equals: course } }, { period: { equals: fixture.period } }] },
+      depth: 0,
+      limit: 1,
+    })
+    if (existing.docs.length === 0) {
+      const owner = await payload.findByID({
+        collection: Slugs.Collections.MEMBERS,
+        id: requiredID(courseOwners, code),
+        depth: 0,
+      })
+      await payload.create({
+        collection: Slugs.Collections.COURSE_VERSIONS,
+        data: {
+          ...fixture,
+          course,
+          _status: status,
+          learningOutcomes: richText(learningOutcomes),
+          assessments: richText(assessments),
+          teachingTeam: teachingTeam.map(([email, role]) => ({
+            member: requiredID(memberIds, email),
+            role,
+          })),
+        },
+        draft: status === "draft",
+        user: { ...owner, collection: Slugs.Collections.MEMBERS },
+      })
     }
   }
 
   payload.logger.info(
-    `Seed complete: ${institutions.length} institutions, ${members.length} members, ${proposals.length} proposals and ${courses.length} courses. Mock member password: ${MEMBER_PASSWORD}.`,
+    `Seed complete: ${institutions.length} institutions, ${members.length} members, ${proposals.length} proposals, ${courses.length} courses and ${offerings.length} course offerings. Mock member password: ${MEMBER_PASSWORD}.`,
   )
 }
 
