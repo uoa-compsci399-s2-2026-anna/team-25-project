@@ -1,8 +1,17 @@
 import { ProposalStatus } from "@repo/shared/enums/proposals"
+import { revalidateTag } from "next/cache"
 import type { FieldHook, PayloadRequest } from "payload"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { Slugs } from "@/lib/payload/slugs"
-import { defaultProposalAuthor, generateProposalSlug, setProposalClosedAt } from "./Proposals"
+import {
+  defaultProposalAuthor,
+  generateProposalSlug,
+  revalidateDeletedProposal,
+  revalidateProposals,
+  setProposalClosedAt,
+} from "./Proposals"
+
+vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }))
 
 const args: Parameters<FieldHook>[0] = {
   blockData: undefined,
@@ -18,6 +27,38 @@ const args: Parameters<FieldHook>[0] = {
   siblingData: {},
   siblingFields: [],
 }
+
+describe("proposal cache revalidation", () => {
+  beforeEach(() => {
+    vi.mocked(revalidateTag).mockReset()
+  })
+
+  it.each([revalidateProposals, revalidateDeletedProposal])(
+    "marks proposal queries stale after a write",
+    async (hook) => {
+      const doc = { id: 1 }
+      const result = await hook({
+        doc,
+        req: { context: {} },
+      } as never)
+
+      expect(revalidateTag).toHaveBeenCalledWith("proposals", "max")
+      expect(result).toBe(doc)
+    },
+  )
+
+  it.each([revalidateProposals, revalidateDeletedProposal])(
+    "can skip revalidation through request context",
+    async (hook) => {
+      await hook({
+        doc: { id: 1 },
+        req: { context: { disableRevalidate: true } },
+      } as never)
+
+      expect(revalidateTag).not.toHaveBeenCalled()
+    },
+  )
+})
 
 describe("generateProposalSlug", () => {
   it.each([
