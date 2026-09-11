@@ -13,6 +13,11 @@ import { cn } from "@repo/ui/lib/utils"
 import type { RowData } from "@tanstack/react-table"
 import type { DataTableInstance } from "./hooks/use-data-table"
 
+const ariaSort = {
+  asc: "ascending",
+  desc: "descending",
+} as const
+
 interface DataTableProps<TData extends RowData>
   extends React.ComponentProps<"table">,
     TableVariantProps {
@@ -32,11 +37,20 @@ function DataTable<TData extends RowData>({
       <TableHeader>
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id}>
-            {headerGroup.headers.map((header) => (
-              <TableHead colSpan={header.colSpan} key={header.id}>
-                {header.isPlaceholder ? null : <table.FlexRender header={header} />}
-              </TableHead>
-            ))}
+            {headerGroup.headers.map((header) => {
+              // A placeholder shares its leaf column, so only the real header
+              // reports the sort.
+              const direction = header.isPlaceholder ? false : header.column.getIsSorted()
+              return (
+                <TableHead
+                  aria-sort={direction ? ariaSort[direction] : undefined}
+                  colSpan={header.colSpan}
+                  key={header.id}
+                >
+                  {header.isPlaceholder ? null : <table.FlexRender header={header} />}
+                </TableHead>
+              )
+            })}
           </TableRow>
         ))}
       </TableHeader>
@@ -45,7 +59,7 @@ function DataTable<TData extends RowData>({
           <TableRow>
             <TableCell
               className="h-24 text-center text-muted-foreground"
-              colSpan={table.getAllColumns().length}
+              colSpan={table.getAllLeafColumns().length}
             >
               {emptyMessage}
             </TableCell>

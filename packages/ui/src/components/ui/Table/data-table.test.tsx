@@ -80,8 +80,8 @@ function Harness({
   )
 }
 
-function GroupedHarness() {
-  const table = useDataTable({ columns: groupedColumns, data: courses })
+function GroupedHarness({ data = courses }: { data?: Array<Course> }) {
+  const table = useDataTable({ columns: groupedColumns, data })
   return <DataTable table={table} />
 }
 
@@ -135,6 +135,17 @@ describe("DataTable", () => {
     expect(columnText(2)).toEqual(["64", "96", "128", "180"])
   })
 
+  it("reports the sort direction on the header cell", () => {
+    render(<Harness />)
+    const trigger = screen.getByRole("button", { name: "Sort by Students" })
+    const cell = trigger.closest("th")
+    expect(cell).not.toHaveAttribute("aria-sort")
+    fireEvent.click(trigger)
+    expect(cell).toHaveAttribute("aria-sort", "descending")
+    fireEvent.click(trigger)
+    expect(cell).toHaveAttribute("aria-sort", "ascending")
+  })
+
   it("uses a custom empty message", () => {
     render(<Harness data={[]} emptyMessage="No courses yet." />)
     expect(screen.getByText("No courses yet.")).toBeInTheDocument()
@@ -143,6 +154,11 @@ describe("DataTable", () => {
   it("spans the empty row across every column", () => {
     render(<Harness data={[]} />)
     expect(screen.getByRole("cell")).toHaveAttribute("colspan", String(columns.length))
+  })
+
+  it("spans the empty row across every leaf column when columns are grouped", () => {
+    render(<GroupedHarness data={[]} />)
+    expect(screen.getByRole("cell")).toHaveAttribute("colspan", "3")
   })
 
   it("applies the column meta className to every cell in the column", () => {
