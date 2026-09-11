@@ -1,7 +1,11 @@
-import { Heading, Skeleton } from "@repo/ui/components/ui"
+import { Heading } from "@repo/ui/components/ui"
 import { redirect } from "next/navigation"
 import { Suspense } from "react"
-import { RegisterProfileForm, RegisterStepper } from "@/features/auth/components"
+import {
+  RegisterProfileForm,
+  RegisterProfileSkeleton,
+  RegisterStepper,
+} from "@/features/auth/components"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
 import { Routes } from "@/lib/routes"
@@ -36,7 +40,7 @@ export default function Page() {
         </p>
       </div>
 
-      <Suspense fallback={<Skeleton className="h-96 w-full rounded-lg" />}>
+      <Suspense fallback={<RegisterProfileSkeleton />}>
         <ProfileFormSection />
       </Suspense>
     </main>

@@ -1,8 +1,12 @@
-import { Heading, Skeleton } from "@repo/ui/components/ui"
+import { Heading } from "@repo/ui/components/ui"
 import { connection } from "next/server"
 import { Suspense } from "react"
 import type { InstitutionOption } from "@/features/auth/components"
-import { RegisterDetailsForm, RegisterStepper } from "@/features/auth/components"
+import {
+  RegisterDetailsForm,
+  RegisterDetailsSkeleton,
+  RegisterStepper,
+} from "@/features/auth/components"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
 
@@ -46,7 +50,7 @@ export default function Page() {
         </p>
       </div>
 
-      <Suspense fallback={<Skeleton className="h-[32rem] w-full rounded-lg" />}>
+      <Suspense fallback={<RegisterDetailsSkeleton />}>
         <RegisterFormSection />
       </Suspense>
     </main>
