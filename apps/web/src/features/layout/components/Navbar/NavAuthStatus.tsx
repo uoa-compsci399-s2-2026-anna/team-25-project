@@ -20,7 +20,7 @@ export const NavAuthStatus = async () => {
         <Link className="text-base transition-opacity hover:opacity-70" href={Routes.HOME}>
           Log in
         </Link>
-        <Link className={buttonVariants({ size: "sm" })} href={Routes.HOME}>
+        <Link className={buttonVariants({ size: "sm" })} href={Routes.REGISTER}>
           Join CCCA
         </Link>
       </div>
