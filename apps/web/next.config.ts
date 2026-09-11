@@ -4,7 +4,6 @@ import type { NextConfig } from "next"
 const nextConfig: NextConfig = {
   transpilePackages: ["@repo/ui"],
   cacheComponents: true,
-  partialPrefetching: true,
   reactCompiler: true,
   partialPrefetching: true,
   typedRoutes: true,
