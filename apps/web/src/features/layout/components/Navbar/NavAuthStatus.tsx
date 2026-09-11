@@ -1,11 +1,9 @@
 import { Avatar, AvatarFallback, AvatarImage, buttonVariants } from "@repo/ui/components/ui"
 import Link from "next/link"
+import { initials } from "@/lib/initials"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
 import { Routes } from "@/lib/routes"
-
-const initials = (firstName: string, lastName: string) =>
-  `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase()
 
 // Isolated from Navbar so only this reads headers() (via getCurrentUser) -
 // keeps the static shell (logo, nav links) prerenderable, with just this

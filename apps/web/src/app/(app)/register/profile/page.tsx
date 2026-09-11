@@ -6,12 +6,10 @@ import {
   RegisterProfileSkeleton,
   RegisterStepper,
 } from "@/features/auth/components"
+import { initials } from "@/lib/initials"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
 import { Routes } from "@/lib/routes"
-
-const initials = (firstName: string, lastName: string) =>
-  `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase()
 
 /**
  * Isolated so only this reads headers() (via getCurrentUser) - the heading and
