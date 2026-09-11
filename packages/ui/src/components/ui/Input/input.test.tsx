@@ -36,8 +36,22 @@ describe("Input", () => {
   it("applies the base classes and data-slot attribute", () => {
     render(<Input placeholder="Enter text..." />)
     const input = screen.getByPlaceholderText("Enter text...")
-    expect(input).toHaveClass("h-8", "rounded-full", "border-input")
+    expect(input).toHaveClass("h-8", "rounded-md", "border-input")
     expect(input).toHaveAttribute("data-slot", "input")
+  })
+
+  it("defaults to the box variant and publishes it", () => {
+    render(<Input placeholder="Enter text..." />)
+    const input = screen.getByPlaceholderText("Enter text...")
+    expect(input).toHaveAttribute("data-variant", "box")
+    expect(input).toHaveClass("rounded-md", "bg-brand-cream/60", "px-3")
+  })
+
+  it("renders the pill variant with a full radius and no fill", () => {
+    render(<Input placeholder="Enter text..." variant="pill" />)
+    const input = screen.getByPlaceholderText("Enter text...")
+    expect(input).toHaveAttribute("data-variant", "pill")
+    expect(input).toHaveClass("rounded-full", "bg-transparent", "px-5")
   })
 
   it("applies aria-invalid destructive classes when invalid", () => {
