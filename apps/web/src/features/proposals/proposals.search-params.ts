@@ -3,6 +3,7 @@ import { ProposalStatus, ProposalTag } from "@repo/shared/enums/proposals"
 import {
   createLoader,
   createParser,
+  createSerializer,
   type inferParserType,
   parseAsString,
   parseAsStringLiteral,
@@ -36,6 +37,9 @@ export const proposalSearchParams = {
 export type ProposalSearchParams = inferParserType<typeof proposalSearchParams>
 
 export const loadProposalSearchParams = createLoader(proposalSearchParams)
+
+/** Builds a proposals URL; values equal to their defaults, such as page 1, stay out of it. */
+export const serializeProposalSearchParams = createSerializer(proposalSearchParams)
 
 export const toProposalFilters = ({
   institution,
