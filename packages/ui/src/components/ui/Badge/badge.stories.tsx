@@ -13,6 +13,7 @@ const variants = [
   "salmon",
   "pink",
   "blue",
+  "charcoal",
 ] as const
 
 const meta: Meta<typeof Badge> = {

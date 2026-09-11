@@ -3,7 +3,7 @@ import { useId, useState } from "react"
 import { Checkbox } from "./checkbox"
 
 const meta: Meta<typeof Checkbox> = {
-  title: "ui/Checkbox",
+  title: "ui/Forms/Checkbox",
   component: Checkbox,
   args: {
     "aria-label": "Accept terms",

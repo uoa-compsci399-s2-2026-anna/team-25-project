@@ -1,2 +1,5 @@
 export * from "./ProposalsPreviewPlaceholder/ProposalsPreviewPlaceholder"
 export * from "./ProposalsSection/ProposalsSection"
+export * from "./HeroSection/HeroSection"
+export * from "./MemberBenefitCard/MemberBenefitCard"
+export * from "./MembersSection/MembersSection"

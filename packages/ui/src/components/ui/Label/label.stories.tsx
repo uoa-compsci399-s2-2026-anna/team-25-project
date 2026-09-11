@@ -4,7 +4,7 @@ import { Input } from "../Input/input"
 import { Label } from "./label"
 
 const meta: Meta<typeof Label> = {
-  title: "ui/Label",
+  title: "ui/Forms/Label",
   component: Label,
 }
 

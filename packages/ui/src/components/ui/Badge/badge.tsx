@@ -20,6 +20,7 @@ const badgeVariants = cva(
         blue: "bg-brand-slate/15 text-brand-slate [a]:hover:bg-brand-slate/25",
         active: "bg-brand-salmon text-brand-plum [a]:hover:bg-brand-salmon/70",
         closed: "bg-neutral-100 text-neutral-400 [a]:hover:bg-neutral-100/70",
+        charcoal: "bg-brand-charcoal text-white [a]:hover:bg-brand-charcoal/80",
       },
     },
     defaultVariants: {

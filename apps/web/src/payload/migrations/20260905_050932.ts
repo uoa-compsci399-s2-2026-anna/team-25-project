@@ -61,15 +61,15 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
    ALTER TABLE "proposals_tags" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "proposals" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "proposals_rels" DISABLE ROW LEVEL SECURITY;
-  DROP TABLE "proposals_tags" CASCADE;
-  DROP TABLE "proposals" CASCADE;
-  DROP TABLE "proposals_rels" CASCADE;
+  DROP TABLE IF EXISTS "proposals_tags" CASCADE;
+  DROP TABLE IF EXISTS "proposals" CASCADE;
+  DROP TABLE IF EXISTS "proposals_rels" CASCADE;
   
-  DROP INDEX "payload_locked_documents_rels_proposals_id_idx";
-  ALTER TABLE "payload_locked_documents_rels" DROP COLUMN "proposals_id";
-  DROP TYPE "public"."enum_proposals_tags";
-  DROP TYPE "public"."enum_proposals_timeframe_start_period";
-  DROP TYPE "public"."enum_proposals_timeframe_end_period";
-  DROP TYPE "public"."enum_proposals_ethics";
-  DROP TYPE "public"."enum_proposals_status";`)
+  DROP INDEX IF EXISTS "payload_locked_documents_rels_proposals_id_idx";
+  ALTER TABLE "payload_locked_documents_rels" DROP COLUMN IF EXISTS "proposals_id";
+  DROP TYPE IF EXISTS "public"."enum_proposals_tags";
+  DROP TYPE IF EXISTS "public"."enum_proposals_timeframe_start_period";
+  DROP TYPE IF EXISTS "public"."enum_proposals_timeframe_end_period";
+  DROP TYPE IF EXISTS "public"."enum_proposals_ethics";
+  DROP TYPE IF EXISTS "public"."enum_proposals_status";`)
 }

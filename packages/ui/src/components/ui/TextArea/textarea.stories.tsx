@@ -1,15 +1,22 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 import { TextArea } from "./textarea"
 
+const variants = ["pill", "box"] as const
+
 const meta: Meta<typeof TextArea> = {
-  title: "UI/Textarea",
+  title: "ui/Forms/TextArea",
   component: TextArea,
   args: {
     className: "",
+    variant: "box",
   },
   argTypes: {
     className: {
       control: { type: "text" },
+    },
+    variant: {
+      control: { type: "select" },
+      options: variants,
     },
   },
 }
@@ -34,6 +41,13 @@ export const SingleLine: Story = {
       <TextArea {...args} placeholder="Single line..." rows={1} />
     </div>
   ),
+}
+
+export const Pill: Story = {
+  args: {
+    variant: "pill",
+    placeholder: "A sentence or two on what you teach...",
+  },
 }
 
 export const Disabled: Story = {
