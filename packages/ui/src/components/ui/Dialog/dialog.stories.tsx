@@ -3,6 +3,7 @@ import * as React from "react"
 import { Button } from "../Button/button"
 import { Field, FieldGroup, FieldLabel } from "../Field/field"
 import { Input } from "../Input/input"
+import { TextArea } from "../TextArea/textarea"
 import {
   Dialog,
   DialogClose,
@@ -13,13 +14,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./dialog"
-
-// TODO: swap for the real TextArea component (packages/ui/src/components/ui/TextArea)
-// once this branch is rebased onto main — it merged there after this branch was cut,
-// so it isn't available here yet. Story-only, not used by dialog.tsx itself.
-// Note in the PR description that this story ships with the ad-hoc textarea below.
-const textareaClassName =
-  "min-h-32 w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground placeholder:italic focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
 
 // Button has no destructive variant, so this matches Badge's destructive treatment
 // (bg-destructive/10 text-destructive) layered onto the unstyled base instead.
@@ -229,11 +223,11 @@ export const LargeForm: Story = {
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor={learningOutcomesId}>Learning outcomes</FieldLabel>
-                <textarea className={textareaClassName} id={learningOutcomesId} />
+                <TextArea className="min-h-32" id={learningOutcomesId} />
               </Field>
               <Field>
                 <FieldLabel htmlFor={assessmentsId}>Assessments</FieldLabel>
-                <textarea className={textareaClassName} id={assessmentsId} />
+                <TextArea className="min-h-32" id={assessmentsId} />
               </Field>
             </FieldGroup>
           </div>
