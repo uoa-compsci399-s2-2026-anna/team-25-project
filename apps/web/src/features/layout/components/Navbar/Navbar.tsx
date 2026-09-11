@@ -16,7 +16,7 @@ const links = [
 
 export const Navbar = () => {
   return (
-    <header className="sticky top-0 z-50 flex items-center gap-4 border-border border-b bg-brand-blush/60 px-4 py-4 backdrop-blur-sm md:px-8">
+    <header className="sticky top-0 z-50 flex w-full items-center gap-4 border-border border-b bg-brand-blush/60 px-4 py-4 backdrop-blur-sm md:px-8">
       {/* flex-1 on both this and the auth-status slot keeps nav mathematically
           centered regardless of either side's content width - signed-in,
           signed-out and the skeleton are all different widths, and none of

@@ -25,9 +25,9 @@ export default function RootLayout({
 }>) {
   return (
     <html className={cn("antialiased", fontMono.variable, "font-sans", satoshi.variable)} lang="en">
-      <body>
+      <body className="flex min-h-dvh flex-col items-center">
         <Navbar />
-        {children}
+        <div className="w-full max-w-[1512px] flex-1">{children}</div>
         <Footer />
       </body>
     </html>
