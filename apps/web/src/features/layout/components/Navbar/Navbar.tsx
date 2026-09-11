@@ -1,6 +1,8 @@
-import { Avatar, AvatarFallback, buttonVariants } from "@repo/ui/components/ui"
+import { Avatar, AvatarFallback, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
+import { Suspense } from "react"
 import { Routes } from "@/lib/routes"
+import { NavAuthStatus } from "./NavAuthStatus"
 
 const links = [
   { name: "About", href: Routes.ABOUT },
@@ -14,8 +16,12 @@ const links = [
 
 export const Navbar = () => {
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between gap-4 border-border border-b bg-brand-blush/60 px-4 py-4 backdrop-blur-sm md:px-8">
-      <Link className="flex items-center gap-2" href={Routes.HOME}>
+    <header className="sticky top-0 z-50 flex items-center gap-4 border-border border-b bg-brand-blush/60 px-4 py-4 backdrop-blur-sm md:px-8">
+      {/* flex-1 on both this and the auth-status slot keeps nav mathematically
+          centered regardless of either side's content width - signed-in,
+          signed-out and the skeleton are all different widths, and none of
+          them should be able to nudge the links left or right. */}
+      <Link className="flex flex-1 items-center gap-2" href={Routes.HOME}>
         <Avatar>
           <AvatarFallback />
         </Avatar>
@@ -34,17 +40,21 @@ export const Navbar = () => {
         ))}
       </nav>
 
-      <div className="flex items-center gap-4">
-        {/* TODO: point to a real login page once #70 (session helper) lands */}
-        <Link className="text-base transition-opacity hover:opacity-70" href={Routes.HOME}>
-          Log in
-        </Link>
-        <Link
-          className={buttonVariants({ className: "rounded-full", size: "sm" })}
-          href={Routes.HOME}
+      <div className="flex flex-1 justify-end">
+        <Suspense
+          fallback={
+            // Matches NavAuthStatus's signed-out layout exactly (same
+            // container, same gap-4) so nothing shifts vertically once the
+            // real content streams in - both bars share the real Join CCCA
+            // button's h-6 height for a uniform placeholder.
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-6 w-12 rounded-full" />
+              <Skeleton className="h-6 w-20 rounded-full" />
+            </div>
+          }
         >
-          Join CCCA
-        </Link>
+          <NavAuthStatus />
+        </Suspense>
       </div>
     </header>
   )

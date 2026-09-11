@@ -5,15 +5,19 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 import type * as React from "react"
 
+// The variant is the trigger's only radius source. Size must not set one of its own: a
+// `data-[size=sm]:rounded-*` and a plain `rounded-*` carry different modifiers, so
+// tailwind-merge keeps both and, at equal specificity, the winner comes down to whichever
+// rule Tailwind happens to emit last.
 const selectTriggerVariants = cva("", {
   variants: {
     variant: {
-      filter: "rounded-full bg-transparent hover:bg-brand-charcoal/10",
-      input: "rounded-sm bg-brand-cream hover:bg-brand-cream/40",
+      pill: "rounded-full bg-transparent hover:bg-brand-charcoal/10",
+      box: "rounded-md bg-brand-cream/60 hover:bg-brand-cream",
     },
   },
   defaultVariants: {
-    variant: "input",
+    variant: "box",
   },
 })
 const Select = SelectPrimitive.Root
@@ -41,7 +45,7 @@ function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
 function SelectTrigger({
   className,
   size = "default",
-  variant = "input",
+  variant = "box",
   children,
   ...props
 }: SelectPrimitive.Trigger.Props &
@@ -51,7 +55,7 @@ function SelectTrigger({
   return (
     <SelectPrimitive.Trigger
       className={cn(
-        "flex w-fit select-none items-center justify-between gap-1.5 whitespace-nowrap border border-input py-2 pr-2 pl-2.5 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] data-placeholder:text-muted-foreground *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 md:text-sm dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 dark:disabled:bg-input/80 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "flex w-fit select-none items-center justify-between gap-1.5 whitespace-nowrap border border-input py-2 pr-2 pl-2.5 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-[size=default]:h-8 data-[size=sm]:h-7 data-placeholder:text-muted-foreground *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 md:text-sm dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 dark:disabled:bg-input/80 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
         selectTriggerVariants({ variant }),
         className,
       )}
