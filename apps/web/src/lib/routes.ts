@@ -20,6 +20,8 @@ export const Routes = {
   },
   ABOUT: route("/about"),
   PRIVACY: route("/privacy"),
+  REGISTER: route("/register"),
+  REGISTER_PROFILE: route("/register/profile"),
 } as const
 
 type DeepValues<T> = T extends (...args: never[]) => infer R
