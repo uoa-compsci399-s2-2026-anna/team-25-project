@@ -32,8 +32,16 @@ type ProposalCardAuthor = {
   avatarSrc?: string
 }
 
+type ProposalCardLinkProps = {
+  href: string
+  className?: string
+  children?: React.ReactNode
+}
+
 type ProposalCardProps = Omit<React.ComponentProps<"div">, "title"> & {
   title: string
+  href?: string
+  linkComponent?: React.ElementType<ProposalCardLinkProps>
   summary: string
   author: ProposalCardAuthor
   /** A `Date`, or any string `Date` can parse (an ISO timestamp from Payload). */
@@ -71,6 +79,8 @@ const initials = (name: string) =>
 function ProposalCard({
   author,
   className,
+  href,
+  linkComponent: LinkComponent = "a",
   postedAt,
   size = "default",
   status = "active",
@@ -87,7 +97,7 @@ function ProposalCard({
 
   return (
     <Card
-      className={cn("data-[status=closed]:text-neutral-400", className)}
+      className={cn("relative data-[status=closed]:text-neutral-400", className)}
       data-status={status}
       size={size}
       {...props}
@@ -116,7 +126,20 @@ function ProposalCard({
 
         {/* Grouped so these two sit closer than the header's own gap. */}
         <div className="col-span-full flex flex-col gap-1.5">
-          <CardTitle>{title}</CardTitle>
+          <CardTitle>
+            {href ? (
+              // The ::after overlay stretches the hit area over the whole card,
+              // so the card acts as one link while only the title names it.
+              <LinkComponent
+                className="outline-none after:absolute after:inset-0 after:rounded-lg hover:underline focus-visible:after:ring-2 focus-visible:after:ring-ring"
+                href={href}
+              >
+                {title}
+              </LinkComponent>
+            ) : (
+              title
+            )}
+          </CardTitle>
           <CardDescription>{summary}</CardDescription>
         </div>
       </CardHeader>
