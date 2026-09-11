@@ -61,7 +61,6 @@ const getProposalsCached = async (filters: ProposalFilters, pagination: Paginati
   cacheTag(QueryKeys.PROPOSALS)
   return getProposals(filters, pagination)
 }
-
 /** Filters relevant to status counts: `status` is overwritten per tab and `sort` never affects a count. */
 type ProposalStatusCountFilters = Omit<ProposalFilters, "status" | "sort">
 
