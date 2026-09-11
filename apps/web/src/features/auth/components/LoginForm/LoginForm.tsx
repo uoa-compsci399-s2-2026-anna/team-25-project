@@ -11,8 +11,8 @@ import {
   toast,
 } from "@repo/ui/components/ui"
 import { useForm } from "@tanstack/react-form"
-import { redirect } from "next/dist/client/components/redirect"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import * as React from "react"
 import z from "zod"
 import { loginAction } from "./actions/auth"
@@ -23,6 +23,7 @@ const formSchema = z.object({
 })
 
 export function LoginForm() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = React.useState(false)
   const form = useForm({
     defaultValues: {
@@ -36,7 +37,7 @@ export function LoginForm() {
     onSubmit: async (values) => {
       const result = await loginAction(values.value.email, values.value.password)
       if (result.success) {
-        redirect("/")
+        router.push("/")
       } else {
         toast.add({
           title: "Login failed",
@@ -48,7 +49,7 @@ export function LoginForm() {
 
   return (
     <Toaster>
-      <div className="my-[10vh] flex h-[60vh] w-[70vw] flex-col align-center">
+      <div className="my-[10vh] flex h-[60vh] w-[70vw] flex-col">
         <div className="mx-auto flex w-fit flex-col text-center">
           <h1 className="font-extrabold text-6xl">Welcome Back</h1>
           <h6 className="text-lg text-muted-foreground">
@@ -75,9 +76,7 @@ export function LoginForm() {
                           onChange={(e) => field.handleChange(e.target.value)}
                           value={field.state.value}
                         />
-                        {isInvalid && field.state.meta.isTouched && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
+                        {isInvalid && <FieldError errors={field.state.meta.errors} />}
                       </Field>
                     )
                   }}
@@ -102,6 +101,7 @@ export function LoginForm() {
                             className="h-13 w-full gap-1.5 rounded-md px-3.5"
                             id={field.name}
                             name={field.name}
+                            onBlur={field.handleBlur}
                             onChange={(e) => field.handleChange(e.target.value)}
                             type={showPassword ? "text" : "password"}
                             value={field.state.value}
@@ -114,33 +114,30 @@ export function LoginForm() {
                             {showPassword ? "Hide" : "Show"}
                           </button>
                         </div>
-                        {isInvalid && field.state.meta.isTouched && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
+                        {isInvalid && <FieldError errors={field.state.meta.errors} />}
                       </Field>
                     )
                   }}
                 </form.Field>
               </FieldGroup>
-            </form>
 
-            <div className="my-8">
-              <Button
-                className="w-full"
-                onClick={form.handleSubmit}
-                size="xxl"
-                type="submit"
-                variant="button-mauve"
-              >
-                Log in
-              </Button>
-              <div className="mt-4">
-                <Link className="text-muted-foreground text-sm" href="/">
-                  New here?{" "}
-                  <span className="text-brand-mauve underline">Register with your uni email</span>
-                </Link>
+              <div className="my-8">
+                <Button
+                  className="w-full"
+                  onClick={form.handleSubmit}
+                  size="xxl"
+                  variant="button-mauve"
+                >
+                  Log in
+                </Button>
+                <div className="mt-4">
+                  <Link className="text-muted-foreground text-sm" href="/">
+                    New here?{" "}
+                    <span className="text-brand-mauve underline">Register with your uni email</span>
+                  </Link>
+                </div>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       </div>
