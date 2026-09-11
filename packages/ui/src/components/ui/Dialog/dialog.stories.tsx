@@ -204,7 +204,7 @@ export const LargeForm: Story = {
             </DialogClose>
           </div>
           <div className="grid gap-6 sm:grid-cols-2">
-            <FieldGroup>
+            <FieldGroup className="gap-4">
               <Field>
                 <FieldLabel htmlFor={courseCodeId}>Course code</FieldLabel>
                 <Input id={courseCodeId} placeholder="e.g. CS399" />
