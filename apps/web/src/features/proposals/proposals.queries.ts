@@ -6,12 +6,13 @@ import { cacheLife, cacheTag } from "next/cache"
 import type { Where } from "payload"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
+import type { ProposalSort } from "./proposals.search-params"
 
 export type ProposalFilters = {
   institutionId?: Institution["id"]
   tag?: ProposalTag
   search?: string
-  sort?: "newest" | "oldest"
+  sort?: ProposalSort
   status?: ProposalStatus
 }
 
