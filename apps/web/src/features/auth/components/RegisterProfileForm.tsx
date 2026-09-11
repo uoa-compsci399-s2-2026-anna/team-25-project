@@ -113,13 +113,9 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
         <p className="max-w-48 text-muted-foreground text-sm">
           You can finish this later from your profile.
         </p>
-        <form.Subscribe selector={(state) => state.isSubmitting}>
-          {(isSubmitting) => (
-            <Button disabled={isSubmitting} size="lg" type="submit" variant="button-mauve">
-              {isSubmitting ? "Saving..." : "Finish & enter CCCA"}
-            </Button>
-          )}
-        </form.Subscribe>
+        <Button size="lg" type="submit" variant="button-mauve">
+          Finish & enter CCCA
+        </Button>
       </div>
     </form>
   )
