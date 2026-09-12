@@ -22,12 +22,14 @@ const ariaSort = {
 /**
  * True when the event originated on, or inside, a real interactive element -
  * a link, button, input, select, or textarea. Pair with `getRowProps` to
- * avoid double-handling a row's own click/keydown when the event already
- * landed on a real interactive descendant (e.g. a `Link` rendered inside a
- * cell for accessibility/middle-click) that handles itself.
+ * avoid double-handling a row's own click when it already landed on a real
+ * interactive descendant (e.g. a `Link` rendered inside a cell) that handles
+ * itself.
  */
 function isInteractiveDescendant(event: { target: EventTarget | null }): boolean {
-  return (event.target as HTMLElement | null)?.closest("a, button, input, select, textarea") != null
+  return event.target instanceof Element
+    ? event.target.closest("a, button, input, select, textarea") != null
+    : false
 }
 
 interface DataTableProps<TData extends RowData>
@@ -35,11 +37,8 @@ interface DataTableProps<TData extends RowData>
     TableVariantProps {
   table: DataTableInstance<TData>
   emptyMessage?: string
-  /**
-   * Extra DOM props for each body row, e.g. `onClick` and `className` to make
-   * a row navigate. `DataTable` only forwards them - it has no notion of
-   * navigation itself, so the consumer supplies real anchors/routing.
-   */
+  /** Extra DOM props for each body row, e.g. `onClick` and `className` to
+   * make a row navigate. `DataTable` only forwards them. */
   getRowProps?: (row: Row<DataTableFeatures, TData>) => React.ComponentPropsWithRef<"tr">
 }
 
