@@ -15,6 +15,9 @@ import { Proposals } from "./payload/collections/Proposals"
 
 declare module "payload" {
   export interface GeneratedTypes extends Config {}
+  export interface RequestContext {
+    disableRevalidate?: boolean
+  }
 }
 
 const filename = fileURLToPath(import.meta.url)

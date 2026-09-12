@@ -1,6 +1,7 @@
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { isAdmin } from "../access"
+import { revalidateDeletedInstitution, revalidateInstitutions } from "../hooks/Institutions"
 
 export const Institutions: CollectionConfig = {
   slug: Slugs.Collections.INSTITUTIONS,
@@ -13,6 +14,10 @@ export const Institutions: CollectionConfig = {
     create: isAdmin,
     update: isAdmin,
     delete: isAdmin,
+  },
+  hooks: {
+    afterChange: [revalidateInstitutions],
+    afterDelete: [revalidateDeletedInstitution],
   },
   fields: [
     { name: "name", type: "text", required: true, unique: true }, // this is what the dropdown will show
