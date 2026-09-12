@@ -2,6 +2,7 @@ import { Geist_Mono } from "next/font/google"
 import localFont from "next/font/local"
 import { NuqsAdapter } from "nuqs/adapters/next/app"
 import "@repo/ui/globals.css"
+import { Toaster } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import { Footer, Navbar } from "@/features/layout/components"
 
@@ -26,11 +27,13 @@ export default function RootLayout({
   return (
     <html className={cn("antialiased", fontMono.variable, "font-sans", satoshi.variable)} lang="en">
       <body className="flex min-h-dvh flex-col items-center">
-        <Navbar />
-        <div className="w-full max-w-[1512px] flex-1">
-          <NuqsAdapter>{children}</NuqsAdapter>
-        </div>
-        <Footer />
+        <Toaster>
+          <Navbar />
+          <div className="w-full max-w-[1512px] flex-1">
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </div>
+          <Footer />
+        </Toaster>
       </body>
     </html>
   )
