@@ -67,15 +67,8 @@ export const PostProposalForm = () => {
 
         setFieldErrors(result.fieldErrors ?? {})
         setFormError(result.formError)
-        toast.add({
-          type: "error",
-          title: "Could not post your proposal",
-          description: result.formError,
-        })
       } catch {
-        const message = "Could not post your proposal. Try again."
-        setFormError(message)
-        toast.add({ type: "error", title: message })
+        setFormError("Could not post your proposal. Try again.")
       }
     },
   })
@@ -272,7 +265,7 @@ export const PostProposalForm = () => {
         </FieldGroup>
       </div>
 
-      {formError && <FieldError>{formError}</FieldError>}
+      {formError && <FieldError className="mb-4">{formError}</FieldError>}
 
       <DialogFooter>
         <form.Subscribe selector={(state) => state.isSubmitting}>
