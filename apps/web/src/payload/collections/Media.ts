@@ -13,5 +13,8 @@ export const Media: CollectionConfig = {
       required: true,
     },
   ],
-  upload: true,
+  upload: {
+    // Excludes image/svg+xml deliberately - an SVG can carry an embedded <script>.
+    mimeTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"],
+  },
 }

@@ -17,7 +17,7 @@ const meta: Meta<typeof Avatar> = {
   argTypes: {
     size: {
       control: { type: "select" },
-      options: ["sm", "default", "lg"],
+      options: ["sm", "default", "lg", "xl"],
     },
   },
 }

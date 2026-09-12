@@ -1,8 +1,25 @@
+import { QueryKeys } from "@repo/shared/constants/query-keys"
 import { ProposalStatus } from "@repo/shared/enums/proposals"
-import type { FieldHook } from "payload"
+import type { Proposal } from "@repo/shared/payload-types"
+import { revalidateTag } from "next/cache"
+import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, FieldHook } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 
 const MAX_SLUG_LENGTH = 80
+
+export const revalidateProposals: CollectionAfterChangeHook<Proposal> = ({ doc, req }) => {
+  if (!req.context.disableRevalidate) {
+    revalidateTag(QueryKeys.PROPOSALS, "max")
+  }
+  return doc
+}
+
+export const revalidateDeletedProposal: CollectionAfterDeleteHook<Proposal> = ({ doc, req }) => {
+  if (!req.context.disableRevalidate) {
+    revalidateTag(QueryKeys.PROPOSALS, "max")
+  }
+  return doc
+}
 
 /**
  * NFKD splits accented characters into a base letter plus a combining mark, so

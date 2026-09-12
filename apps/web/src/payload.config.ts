@@ -15,6 +15,12 @@ import { Proposals } from "./payload/collections/Proposals"
 
 declare module "payload" {
   export interface GeneratedTypes extends Config {}
+  export interface RequestContext {
+    /** Lets completeProfile stamp registrationCompletedAt; see Members.ts. */
+    completingRegistration?: boolean
+    /** Skips cache revalidation hooks - set by seed.ts, which runs outside a request. */
+    disableRevalidate?: boolean
+  }
 }
 
 const filename = fileURLToPath(import.meta.url)

@@ -1,7 +1,31 @@
+import { QueryKeys } from "@repo/shared/constants/query-keys"
 import type { Member } from "@repo/shared/payload-types"
-import type { CollectionBeforeValidateHook } from "payload"
+import { revalidateTag } from "next/cache"
+import type {
+  CollectionAfterChangeHook,
+  CollectionAfterDeleteHook,
+  CollectionBeforeValidateHook,
+} from "payload"
 import { ValidationError } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
+
+// Cached proposals show each author's name, avatar and institution, and filter on the institution.
+export const revalidateMemberProposals: CollectionAfterChangeHook<Member> = ({ doc, req }) => {
+  if (!req.context.disableRevalidate) {
+    revalidateTag(QueryKeys.PROPOSALS, "max")
+  }
+  return doc
+}
+
+export const revalidateDeletedMemberProposals: CollectionAfterDeleteHook<Member> = ({
+  doc,
+  req,
+}) => {
+  if (!req.context.disableRevalidate) {
+    revalidateTag(QueryKeys.PROPOSALS, "max")
+  }
+  return doc
+}
 
 // split() never returns [], so at(-1) is always safe; trim() guards whitespace Payload never strips for us.
 // biome-ignore lint/style/noNonNullAssertion: at(-1) is safe, see above

@@ -56,7 +56,7 @@ cp apps/web/.env.example apps/web/.env
 ```bash
 docker compose up -d          # start Postgres, leave it running
 pnpm --filter web migrate     # apply migrations
-pnpm db:seed                  # create the first admin user
+pnpm db:seed                  # create the admin user and development fixtures
 ```
 
 `docker compose down -v` wipes the database; re-run `pnpm db:seed` to rebuild it.
@@ -101,7 +101,7 @@ Run from the repo root; Turborepo fans each one out to the workspaces that defin
 | `pnpm lint:check` | Check lint/format rules (Biome) across the repo |
 | `pnpm lint:fix` | Auto-fix lint/format issues across the repo |
 | `pnpm types:generate` | Regenerate Payload's generated types |
-| `pnpm db:seed` | Seed a fresh database with the first admin user |
+| `pnpm db:seed` | Seed a fresh database with the admin user and development fixtures |
 
 Per-app scripts (migrations, Playwright, Storybook builds, etc.) are documented in each workspace's own README, linked in [Structure](#structure) above.
 

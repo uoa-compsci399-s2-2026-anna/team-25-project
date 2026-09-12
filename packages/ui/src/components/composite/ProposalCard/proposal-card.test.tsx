@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react"
+import type * as React from "react"
 import { afterEach, describe, expect, it } from "vitest"
 import { ProposalCard, type ProposalCardProps } from "./proposal-card"
 
@@ -111,6 +112,29 @@ describe("ProposalCard", () => {
 
     expect(screen.getByTestId("card")).toHaveClass("custom-class")
     expect(screen.getByTestId("card")).toHaveAttribute("aria-label", "Proposal")
+  })
+
+  it("renders the title as plain text when there is no href", () => {
+    render(<ProposalCard {...props} />)
+    expect(screen.queryByRole("link")).not.toBeInTheDocument()
+  })
+
+  it("links the title to the href, named by the title alone", () => {
+    render(<ProposalCard {...props} href="/proposals/fairness" />)
+    expect(screen.getByRole("link", { name: props.title })).toHaveAttribute(
+      "href",
+      "/proposals/fairness",
+    )
+  })
+
+  it("renders the link through a custom link component", () => {
+    const CustomLink = ({ children, ...linkProps }: React.ComponentProps<"a">) => (
+      <a data-testid="custom-link" {...linkProps}>
+        {children}
+      </a>
+    )
+    render(<ProposalCard {...props} href="/proposals/fairness" linkComponent={CustomLink} />)
+    expect(screen.getByTestId("custom-link")).toHaveAttribute("href", "/proposals/fairness")
   })
 
   it("passes the size through to the card", () => {
