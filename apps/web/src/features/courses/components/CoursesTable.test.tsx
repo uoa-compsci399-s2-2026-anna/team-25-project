@@ -64,6 +64,9 @@ function Harness({
       <button onClick={() => table.getColumn("course")?.setFilterValue("softeng")} type="button">
         Search softeng
       </button>
+      <button onClick={() => table.getColumn("year")?.setFilterValue(["2026"])} type="button">
+        Filter year 2026
+      </button>
       <CoursesTable isLoading={isLoading} table={table} />
     </div>
   )
@@ -162,29 +165,16 @@ describe("CoursesTable", () => {
     }
   })
 
-  it("makes every row keyboard-focusable", () => {
+  it("does not navigate when the course link itself is clicked", () => {
     render(<Harness />)
-    for (const row of bodyRows()) {
-      expect(row).toHaveAttribute("tabindex", "0")
-    }
-  })
-
-  it("navigates when Enter is pressed while a row is focused", () => {
-    render(<Harness />)
-    fireEvent.keyDown(bodyRows()[0], { key: "Enter" })
-    expect(push).toHaveBeenCalledWith("/courses/1")
-  })
-
-  it("navigates when Space is pressed while a row is focused", () => {
-    render(<Harness />)
-    fireEvent.keyDown(bodyRows()[0], { key: " " })
-    expect(push).toHaveBeenCalledWith("/courses/1")
-  })
-
-  it("does not double-navigate when Enter is pressed on the real course link", () => {
-    render(<Harness />)
-    const link = screen.getByRole("link", { name: "COMP 693 Capstone ProjectA. Tui" })
-    fireEvent.keyDown(link, { key: "Enter" })
+    fireEvent.click(screen.getByRole("link", { name: "COMP 693 Capstone ProjectA. Tui" }))
     expect(push).not.toHaveBeenCalled()
+  })
+
+  it("narrows rows when the year filter is applied with string values", () => {
+    render(<Harness />)
+    fireEvent.click(screen.getByRole("button", { name: "Filter year 2026" }))
+    expect(bodyRows()).toHaveLength(1)
+    expect(screen.getByText("COMP 693 Capstone Project")).toBeInTheDocument()
   })
 })

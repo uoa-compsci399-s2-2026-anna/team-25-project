@@ -20,45 +20,40 @@ import {
   type UseDataTableOptions,
   useDataTable,
 } from "@repo/ui/components/ui"
-import { createColumnHelper } from "@tanstack/react-table"
+import { constructFilterFn, createColumnHelper, filterFn_arrHas } from "@tanstack/react-table"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Routes } from "@/lib/routes"
 
 /**
- * The row shape `CoursesTable` renders. `Course` and `CourseVersion` are
- * separate Payload collections with no join between them yet - producing
- * this shape (and pagination) is issue #106's job, not this component's.
- *
- * `duration`, `students`, `teamSize`, and `industry` (involvement) were
- * dropped from the Figma-derived column set: none of them have a backing
- * field anywhere in `Course`/`CourseVersion` (verified against
- * `packages/shared/src/payload-types.ts` and the collection configs - the
- * only "industry" in the schema is an unrelated `Proposal` tag). Re-add
- * them once a backend field exists for each; see the PR description.
+ * `duration`, `students`, `teamSize`, and `industry` were dropped: none have
+ * a backing field in `Course`/`CourseVersion` (see PR description).
  *
  * `semester`/`year` are derived by splitting `CourseVersion.period` (e.g.
- * "2026 Semester 2"), which no other part of the app does - everywhere
- * else (`courses.format.ts`, `CourseOfferingMeta`) treats `period` as one
- * opaque display string. This split is a `CoursesTable`-only convenience
- * for sorting/filtering by year; whoever wires the real join (#106) will
- * need to derive it from `period` the same way, since Payload does not
- * store them as separate fields.
+ * "2026 Semester 2") - no other part of the app does this split, so whoever
+ * wires the real Course/CourseVersion join (#106) will need to derive them
+ * from `period` the same way.
  */
 export interface CourseTableRow {
   id: string
   code: string
   title: string
-  /** A single display name, e.g. the course coordinator - not the full
-   * teaching team (`CourseVersion.displaySnapshot.teachingTeam` is a list
-   * of `{ name, role }`). A table cell needs one line; whoever produces
-   * this row picks which name represents the course. */
+  /** Single display name (e.g. course coordinator), not the full teaching
+   * team - a table cell needs one line. */
   lecturer: string
   university: string
   semester: string
   year: number
   status: "draft" | "published"
 }
+
+// `arrHas` compares with `===`, so a numeric column needs both sides coerced
+// to the same type to match string filter values (e.g. from a URL/filter UI).
+const arrHasNumeric = constructFilterFn({
+  ...filterFn_arrHas,
+  resolveDataValue: (value: unknown) => String(value),
+  resolveFilterValue: (value: unknown) => (Array.isArray(value) ? value.map(String) : value),
+})
 
 const statusLabels = {
   draft: "Draft",
@@ -93,11 +88,12 @@ export const courseColumns = helper.columns([
   }),
   helper.accessor("semester", {
     header: ({ column }) => <SortableHeader column={column}>Semester</SortableHeader>,
+    filterFn: "arrHas",
     cell: ({ getValue }) => <TextCell tone="muted">{getValue()}</TextCell>,
   }),
   helper.accessor("year", {
     header: ({ column }) => <SortableHeader column={column}>Year</SortableHeader>,
-    filterFn: "arrHas",
+    filterFn: arrHasNumeric,
     cell: ({ getValue }) => <TextCell tone="muted">{getValue()}</TextCell>,
   }),
   helper.accessor("status", {
@@ -110,25 +106,17 @@ export const courseColumns = helper.columns([
   }),
 ])
 
-// Plain-text mirror of each column's header label, in the same order as
-// `courseColumns`, for the loading skeleton below - the column labels are
-// static and known immediately, so there's no reason to skeleton-ize them
-// along with the data. Kept as a plain array rather than keyed by column id:
-// TanStack only resolves `id` from `accessorKey` on runtime `Column`
-// instances, not on the static `ColumnDef`s in `courseColumns` itself.
+// Mirrors `courseColumns`' header labels for the loading skeleton. Kept as a
+// plain array rather than keyed by column id: TanStack only resolves `id`
+// from `accessorKey` on runtime `Column` instances, not on the static
+// `ColumnDef`s in `courseColumns` itself.
 const courseColumnLabels = ["Course", "University", "Semester", "Year", "Status"] as const
 
 type UseCoursesTableOptions = Omit<UseDataTableOptions<CourseTableRow>, "columns">
 
-/**
- * Thin preset over `useDataTable` pinned to the course columns above, kept
- * separate from `CoursesTable` for the same reason `useDataTable`/`DataTable`
- * are split: a future filter bar can share this table instance and drive it
- * via `table.getColumn(id).setFilterValue(...)`, without `CoursesTable`
- * needing to know about that UI.
- */
+/** Thin preset over `useDataTable` pinned to the course columns above. */
 export function useCoursesTable(options: UseCoursesTableOptions) {
-  return useDataTable({ columns: courseColumns, ...options })
+  return useDataTable({ ...options, columns: courseColumns })
 }
 
 export type CoursesTableInstance = DataTableInstance<CourseTableRow>
@@ -171,18 +159,15 @@ export interface CoursesTableProps extends TableVariantProps {
 
 /**
  * Renders the capstone courses list on top of the reusable `DataTable`.
- * Presentation-only: it does not fetch data, own filter/sort/search state,
- * or paginate - the page composing this component (issue #106) owns all of
- * that and drives this table through the shared instance from
- * `useCoursesTable`.
+ * Presentation-only - the page composing this component (issue #106) owns
+ * fetching, filter/sort/search state, and pagination.
  *
- * Rows navigate to the course's individual page (`/courses/[courseId]`,
- * still a placeholder pending issue #108). The course cell renders a real
- * `Link` for accessibility/middle-click; `getRowProps` makes the rest of the
- * row clickable too (mouse click, and keyboard Enter/Space once the row is
- * focused via `tabIndex`), skipping the programmatic navigation when the
- * event already landed on that real link (`isInteractiveDescendant`) to
- * avoid a double navigation.
+ * Rows navigate to the course's page (`/courses/[courseId]`, still a
+ * placeholder pending issue #108) via `getRowProps`'s `onClick`, skipping the
+ * programmatic push when the click already landed on the course cell's real
+ * `Link` (`isInteractiveDescendant`) to avoid a double navigation. Keyboard
+ * users navigate through that link directly, so the row itself isn't made
+ * focusable.
  */
 export function CoursesTable({
   table,
@@ -201,24 +186,13 @@ export function CoursesTable({
     <DataTable
       density={density}
       emptyMessage={emptyMessage}
-      getRowProps={(row) => {
-        const navigate = () => router.push(Routes.COURSES.COURSE(row.original.id))
-        return {
-          className: "cursor-pointer",
-          onClick: (event) => {
-            if (isInteractiveDescendant(event)) return
-            navigate()
-          },
-          onKeyDown: (event) => {
-            if (isInteractiveDescendant(event)) return
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault()
-              navigate()
-            }
-          },
-          tabIndex: 0,
-        }
-      }}
+      getRowProps={(row) => ({
+        className: "cursor-pointer",
+        onClick: (event) => {
+          if (isInteractiveDescendant(event)) return
+          router.push(Routes.COURSES.COURSE(row.original.id))
+        },
+      })}
       striped={striped}
       table={table}
     />
