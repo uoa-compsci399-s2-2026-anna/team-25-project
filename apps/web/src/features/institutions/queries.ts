@@ -14,6 +14,7 @@ export const getInstitutions = async (): Promise<InstitutionOption[]> => {
   const { docs } = await payload.find({
     collection: Slugs.Collections.INSTITUTIONS,
     limit: 500,
+    select: { domains: true, name: true },
     sort: "name",
   })
 
