@@ -45,15 +45,19 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
       setFieldErrors({})
       setFormError(undefined)
 
-      const result = await registerMember(value)
+      try {
+        const result = await registerMember(value)
 
-      if (result.ok) {
-        router.push(Routes.REGISTER.PROFILE)
-        return
+        if (result.ok) {
+          router.push(Routes.REGISTER.PROFILE)
+          return
+        }
+
+        setFieldErrors(result.fieldErrors ?? {})
+        setFormError(result.formError)
+      } catch {
+        setFormError("Could not create your account. Try again.")
       }
-
-      setFieldErrors(result.fieldErrors ?? {})
-      setFormError(result.formError)
     },
     validators: { onSubmit: registerDetailsSchema },
   })

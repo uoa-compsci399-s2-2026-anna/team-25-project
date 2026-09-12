@@ -20,6 +20,10 @@ import { useState } from "react"
 import { Routes } from "@/lib/routes"
 import { completeProfile } from "../actions/register"
 
+// Matches next.config.ts's serverActions.bodySizeLimit - checked here too so a
+// large photo gets a clear message instead of the request failing silently.
+const MAX_AVATAR_BYTES = 4 * 1024 * 1024
+
 export const RegisterProfileForm = ({ initials }: { initials: string }) => {
   const router = useRouter()
   const [avatar, setAvatar] = useState<File | undefined>(undefined)
@@ -32,20 +36,29 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
       setFieldErrors({})
       setFormError(undefined)
 
+      if (avatar && avatar.size > MAX_AVATAR_BYTES) {
+        setFormError("Your photo must be 4 MB or smaller.")
+        return
+      }
+
       const formData = new FormData()
       formData.set("bio", value.bio)
       formData.set("position", value.position)
       if (avatar) formData.set("avatar", avatar)
 
-      const result = await completeProfile(formData)
+      try {
+        const result = await completeProfile(formData)
 
-      if (result.ok) {
-        router.push(Routes.HOME)
-        return
+        if (result.ok) {
+          router.push(Routes.HOME)
+          return
+        }
+
+        setFieldErrors(result.fieldErrors ?? {})
+        setFormError(result.formError)
+      } catch {
+        setFormError("Could not save your profile. Try again.")
       }
-
-      setFieldErrors(result.fieldErrors ?? {})
-      setFormError(result.formError)
     },
     validators: { onSubmit: registerProfileSchema },
   })
