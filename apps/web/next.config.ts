@@ -9,9 +9,8 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   experimental: {
     serverActions: {
-      // Default is 1 MB; a normal phone photo is 2-5 MB and completeProfile
-      // uploads one via FormData. Matches RegisterProfileForm's own client-side
-      // MAX_AVATAR_BYTES check.
+      // Default is 1 MB; a normal phone photo is 2-5 MB. Matches
+      // RegisterProfileForm's own MAX_AVATAR_BYTES check.
       bodySizeLimit: "4mb",
     },
   },
