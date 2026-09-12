@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@repo/ui"],
   cacheComponents: true,
   reactCompiler: true,
+  partialPrefetching: true,
   typedRoutes: true,
   images: {
     localPatterns: [
