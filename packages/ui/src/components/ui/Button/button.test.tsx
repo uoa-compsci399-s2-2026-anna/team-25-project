@@ -53,4 +53,15 @@ describe("Button", () => {
     render(<Button className="custom-class">Click me</Button>)
     expect(screen.getByRole("button", { name: "Click me" })).toHaveClass("custom-class")
   })
+
+  it("shows a pointer cursor by default and not-allowed when disabled", () => {
+    const { rerender } = render(<Button>Click me</Button>)
+    expect(screen.getByRole("button", { name: "Click me" })).toHaveClass("cursor-pointer")
+
+    rerender(<Button disabled>Click me</Button>)
+    expect(screen.getByRole("button", { name: "Click me" })).toHaveClass(
+      "cursor-pointer",
+      "disabled:cursor-not-allowed",
+    )
+  })
 })

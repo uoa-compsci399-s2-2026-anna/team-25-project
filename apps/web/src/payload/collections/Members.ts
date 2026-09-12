@@ -1,7 +1,12 @@
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { canReadEmail, isAdmin, isAdminOrSelf } from "../access"
-import { enforceInstitutionDomain } from "../hooks/Members"
+import { admin } from "../access/helpers"
+import {
+  enforceInstitutionDomain,
+  revalidateDeletedMemberProposals,
+  revalidateMemberProposals,
+} from "../hooks/Members"
 
 export const Members: CollectionConfig = {
   slug: Slugs.Collections.MEMBERS,
@@ -10,6 +15,8 @@ export const Members: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [enforceInstitutionDomain],
+    afterChange: [revalidateMemberProposals],
+    afterDelete: [revalidateDeletedMemberProposals],
   },
   auth: {
     maxLoginAttempts: 5,
@@ -56,6 +63,17 @@ export const Members: CollectionConfig = {
     {
       name: "lastReviewedAt",
       type: "date",
+      admin: { readOnly: true, position: "sidebar" },
+    },
+    {
+      // Set once completeProfile succeeds - access below stops a member
+      // setting this themselves through a direct API write.
+      name: "registrationCompletedAt",
+      type: "date",
+      access: {
+        create: () => false,
+        update: ({ req }) => Boolean(req.context.completingRegistration) || admin(req),
+      },
       admin: { readOnly: true, position: "sidebar" },
     },
   ],

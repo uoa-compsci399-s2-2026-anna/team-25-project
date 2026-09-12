@@ -137,7 +137,7 @@ for `src/**/*.test.ts` (Payload, API route handlers) and a `jsdom` project for
 | `pnpm types:check` | Type-check with `tsc --noEmit` |
 | `pnpm lint:check` / `pnpm lint:fix` | Biome lint check / autofix |
 | `pnpm generate:importmap` | Regenerate the Payload admin import map |
-| `pnpm db:seed` | Seed a fresh database with the first admin user (`SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` to override) |
+| `pnpm db:seed` | Seed the admin user and development fixtures (`SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` to override) |
 | `pnpm payload` | Run arbitrary Payload CLI commands |
 
 ## API reference
