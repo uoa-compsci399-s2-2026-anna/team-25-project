@@ -17,7 +17,7 @@ import type { ReactNode } from "react"
 import { Routes } from "@/lib/routes"
 import { periodRange } from "../courses.format"
 import { type CourseRouteParams, parseCourseId } from "../courses.params"
-import { getPublishedOfferingsCached, getSelectedOffering } from "../courses.queries"
+import { getPublishedOfferingsCached } from "../courses.queries"
 
 /**
  * Last two words, since these names usually carry a title ("Dr Anna Tui").
@@ -101,10 +101,7 @@ const richTextClassName =
 export const CourseOffering = async ({ params }: { params: CourseRouteParams }) => {
   const courseId = await parseCourseId(params)
 
-  const [offering, offerings] = await Promise.all([
-    getSelectedOffering(courseId),
-    getPublishedOfferingsCached(courseId),
-  ])
+  const [offering, ...earlier] = await getPublishedOfferingsCached(courseId)
 
   // The header 404s a course with nothing published, so this is only reachable
   // mid-publication. Render nothing rather than taking down the header beside it.
@@ -115,8 +112,6 @@ export const CourseOffering = async ({ params }: { params: CourseRouteParams }) 
   // course's current identity, so the two can differ on an old period.
   const snapshot = offering.displaySnapshot
   const teachingTeam = (snapshot?.teachingTeam ?? []).filter((member) => member.name)
-  const earlier = offerings.filter((other) => other.id !== offering.id)
-
   return (
     <>
       <div className="mt-4 flex min-w-0 flex-col gap-8 lg:col-start-1 lg:row-start-3">
