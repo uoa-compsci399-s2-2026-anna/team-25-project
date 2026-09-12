@@ -158,7 +158,7 @@ export function LoginForm() {
                 )}
               </form.Subscribe>
               <div className="mt-4">
-                <Link className="text-muted-foreground text-sm" href="/">
+                <Link className="text-muted-foreground text-sm" href={Routes.REGISTER.ROOT}>
                   New here?{" "}
                   <span className="text-brand-mauve underline">Register with your uni email</span>
                 </Link>
