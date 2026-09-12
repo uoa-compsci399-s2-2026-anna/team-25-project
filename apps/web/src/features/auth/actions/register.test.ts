@@ -145,6 +145,18 @@ describe("registerMember", () => {
       ok: false,
     })
   })
+
+  it("says the account exists when Payload logs in with no token", async () => {
+    mockPayload({ login: vi.fn().mockResolvedValue({}) })
+
+    const result = await registerMember(validDetails)
+
+    expect(result).toEqual({
+      formError: "Account created, but signing you in failed. Try logging in.",
+      ok: false,
+    })
+    expect(setCookie).not.toHaveBeenCalled()
+  })
 })
 
 describe("completeProfile", () => {

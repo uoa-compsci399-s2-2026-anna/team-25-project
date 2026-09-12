@@ -68,7 +68,9 @@ const signIn = async (email: string, password: string) => {
     data: { email, password },
   })
 
-  if (!token) return
+  // registerMember's catch turns this into "signing you in failed" - silently
+  // returning here instead would report { ok: true } with no cookie set.
+  if (!token) throw new Error("Payload login returned no token")
 
   const cookie = generatePayloadCookie({
     collectionAuthConfig: payload.collections[Slugs.Collections.MEMBERS].config.auth,
