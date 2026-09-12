@@ -18,6 +18,8 @@ declare module "payload" {
   export interface RequestContext {
     /** Lets completeProfile stamp registrationCompletedAt; see Members.ts. */
     completingRegistration?: boolean
+    /** Skips cache revalidation hooks - set by seed.ts, which runs outside a request. */
+    disableRevalidate?: boolean
   }
 }
 

@@ -5,12 +5,12 @@ import type { CollectionAfterChangeHook, CollectionAfterDeleteHook } from "paylo
 // profile, so an edited institution doesn't wait out the cache on its own.
 const revalidateInstitutions = () => revalidateTag("institutions", "default")
 
-export const revalidateInstitutionsAfterChange: CollectionAfterChangeHook = ({ doc }) => {
-  revalidateInstitutions()
+export const revalidateInstitutionsAfterChange: CollectionAfterChangeHook = ({ doc, req }) => {
+  if (!req.context.disableRevalidate) revalidateInstitutions()
   return doc
 }
 
-export const revalidateInstitutionsAfterDelete: CollectionAfterDeleteHook = ({ doc }) => {
-  revalidateInstitutions()
+export const revalidateInstitutionsAfterDelete: CollectionAfterDeleteHook = ({ doc, req }) => {
+  if (!req.context.disableRevalidate) revalidateInstitutions()
   return doc
 }
