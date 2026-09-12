@@ -15,6 +15,8 @@ import { isAdminOrAuthors } from "../access/Proposals"
 import {
   defaultProposalAuthor,
   generateProposalSlug,
+  revalidateDeletedProposal,
+  revalidateProposals,
   setProposalClosedAt,
 } from "../hooks/Proposals"
 import { validateProposalEndPeriod, validateProposalEndYear } from "../validation/Proposals"
@@ -30,6 +32,10 @@ export const Proposals: CollectionConfig = {
     create: isSignedIn,
     update: isAdminOrAuthors,
     delete: isAdmin,
+  },
+  hooks: {
+    afterChange: [revalidateProposals],
+    afterDelete: [revalidateDeletedProposal],
   },
   fields: [
     {
