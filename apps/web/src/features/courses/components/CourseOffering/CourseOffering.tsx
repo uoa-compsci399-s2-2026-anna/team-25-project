@@ -1,23 +1,17 @@
 import { RichText } from "@payloadcms/richtext-lexical/react"
 import { CourseDeliveryFormatLabels } from "@repo/shared/enums/courses"
 import type { CourseVersion } from "@repo/shared/payload-types"
-import {
-  Avatar,
-  AvatarFallback,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Heading,
-  Separator,
-  Skeleton,
-} from "@repo/ui/components/ui"
+import { Avatar, AvatarFallback, Heading, Separator, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
-import type { ReactNode } from "react"
 import { Routes } from "@/lib/routes"
-import { periodRange } from "../courses.format"
-import { type CourseRouteParams, parseCourseId } from "../courses.params"
-import { getPublishedOfferingsCached } from "../courses.queries"
+import { periodRange } from "../../courses.format"
+import { type CourseRouteParams, parseCourseId } from "../../courses.params"
+import { getPublishedOfferingsCached } from "../../courses.queries"
+import {
+  CourseOfferingDetail,
+  CourseOfferingSection,
+  CourseOfferingSidebarCard,
+} from "./CourseOfferingPrimitives"
 
 /**
  * Last two words, since these names usually carry a title ("Dr Anna Tui").
@@ -32,31 +26,6 @@ const initials = (name: string) =>
     .map((part) => [...part].slice(0, 1).join(""))
     .join("")
     .toUpperCase() || "?"
-
-const labelClassName = "font-semibold text-muted-foreground text-xs uppercase tracking-widest"
-
-const Section = ({ children, title }: { children: ReactNode; title: string }) => (
-  <section className="flex flex-col gap-2">
-    <h3 className={labelClassName}>{title}</h3>
-    {children}
-  </section>
-)
-
-const Detail = ({ label, value }: { label: string; value: ReactNode }) => (
-  <div className="flex flex-col gap-1">
-    <p className={labelClassName}>{label}</p>
-    <p className="text-sm">{value}</p>
-  </div>
-)
-
-const SidebarCard = ({ children, title }: { children: ReactNode; title: string }) => (
-  <Card>
-    <CardHeader>
-      <CardTitle className={labelClassName}>{title}</CardTitle>
-    </CardHeader>
-    <CardContent className="gap-3 self-stretch">{children}</CardContent>
-  </Card>
-)
 
 // Aliased as the React compiler rule reads a capitalized call inside a component as
 // a component rendered the wrong way.
@@ -120,34 +89,44 @@ export const CourseOffering = async ({ params }: { params: CourseRouteParams }) 
         <Separator />
 
         {offering.learningOutcomes && (
-          <Section title="Learning outcomes">
+          <CourseOfferingSection title="Learning outcomes">
             <RichText className={richTextClassName} data={offering.learningOutcomes} />
-          </Section>
+          </CourseOfferingSection>
         )}
 
         {offering.assessments && (
-          <Section title="Assessment">
+          <CourseOfferingSection title="Assessment">
             <RichText className={richTextClassName} data={offering.assessments} />
-          </Section>
+          </CourseOfferingSection>
         )}
 
         <Separator />
 
         <div className="grid gap-6 sm:grid-cols-3">
-          <Detail label="Teaching period" value={periodRange(offering) ?? offering.period} />
+          <CourseOfferingDetail
+            label="Teaching period"
+            value={periodRange(offering) ?? offering.period}
+          />
           {offering.deliveryFormat && (
-            <Detail label="Delivery" value={CourseDeliveryFormatLabels[offering.deliveryFormat]} />
+            <CourseOfferingDetail
+              label="Delivery"
+              value={CourseDeliveryFormatLabels[offering.deliveryFormat]}
+            />
           )}
-          {offering.projectType && <Detail label="Project type" value={offering.projectType} />}
+          {offering.projectType && (
+            <CourseOfferingDetail label="Project type" value={offering.projectType} />
+          )}
         </div>
       </div>
 
       <aside className="flex flex-col gap-4 lg:col-start-2 lg:row-span-3 lg:row-start-1">
-        <SidebarCard title="Offering">
-          <Detail label="Period" value={offering.period} />
-          {offering.programme && <Detail label="Programme" value={offering.programme} />}
+        <CourseOfferingSidebarCard title="Offering">
+          <CourseOfferingDetail label="Period" value={offering.period} />
+          {offering.programme && (
+            <CourseOfferingDetail label="Programme" value={offering.programme} />
+          )}
           {snapshot?.courseCode && (
-            <Detail
+            <CourseOfferingDetail
               label="Published as"
               value={
                 snapshot.institutionName
@@ -156,18 +135,18 @@ export const CourseOffering = async ({ params }: { params: CourseRouteParams }) 
               }
             />
           )}
-        </SidebarCard>
+        </CourseOfferingSidebarCard>
 
         {teachingTeam.length > 0 && (
-          <SidebarCard title={`Teaching team - ${teachingTeam.length}`}>
+          <CourseOfferingSidebarCard title={`Teaching team - ${teachingTeam.length}`}>
             {teachingTeam.map((member) => (
               <TeamMember key={member.id ?? member.name} member={member} />
             ))}
-          </SidebarCard>
+          </CourseOfferingSidebarCard>
         )}
 
         {earlier.length > 0 && (
-          <SidebarCard title="Earlier offerings">
+          <CourseOfferingSidebarCard title="Earlier offerings">
             {earlier.map((past) => (
               <div className="flex flex-col" key={past.id}>
                 <p className="font-medium text-sm">{past.name ?? past.period}</p>
@@ -177,7 +156,7 @@ export const CourseOffering = async ({ params }: { params: CourseRouteParams }) 
                 </p>
               </div>
             ))}
-          </SidebarCard>
+          </CourseOfferingSidebarCard>
         )}
       </aside>
     </>
