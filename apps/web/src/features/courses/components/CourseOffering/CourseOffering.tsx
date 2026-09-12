@@ -3,6 +3,7 @@ import { CourseDeliveryFormatLabels } from "@repo/shared/enums/courses"
 import type { CourseVersion } from "@repo/shared/payload-types"
 import { Avatar, AvatarFallback, Heading, Separator, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
+import { initialsFromName } from "@/lib/initials"
 import { Routes } from "@/lib/routes"
 import { periodRange } from "../../courses.format"
 import { type CourseRouteParams, parseCourseId } from "../../courses.params"
@@ -12,20 +13,6 @@ import {
   CourseOfferingSection,
   CourseOfferingSidebarCard,
 } from "./CourseOfferingPrimitives"
-
-/**
- * Last two words, since these names usually carry a title ("Dr Anna Tui").
- * Spread so an astral-plane initial survives, and "?" so a blank name shows something.
- */
-const initials = (name: string) =>
-  name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(-2)
-    .map((part) => [...part].slice(0, 1).join(""))
-    .join("")
-    .toUpperCase() || "?"
 
 // Aliased as the React compiler rule reads a capitalized call inside a component as
 // a component rendered the wrong way.
@@ -44,7 +31,7 @@ const TeamMember = ({ member }: { member: SnapshotMember }) => {
   const body = (
     <>
       <Avatar>
-        <AvatarFallback>{initials(member.name ?? "")}</AvatarFallback>
+        <AvatarFallback>{initialsFromName(member.name ?? "")}</AvatarFallback>
       </Avatar>
       <div className="min-w-0">
         <p className="truncate font-medium text-sm group-hover:underline">{member.name}</p>
