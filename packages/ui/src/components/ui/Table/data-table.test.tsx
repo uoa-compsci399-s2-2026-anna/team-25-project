@@ -1,8 +1,8 @@
-import { createColumnHelper } from "@tanstack/react-table"
+import { createColumnHelper, type Row } from "@tanstack/react-table"
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { SortableHeader } from "./cells"
-import { DataTable } from "./data-table"
+import { DataTable, isInteractiveDescendant } from "./data-table"
 import type { DataTableFeatures } from "./data-table-features"
 import { useDataTable } from "./hooks/use-data-table"
 import type { TableVariantProps } from "./table"
@@ -47,8 +47,14 @@ const groupedColumns = helper.columns([
 function Harness({
   data = courses,
   pageSize,
+  getRowProps,
   ...props
-}: { data?: Array<Course>; pageSize?: number; emptyMessage?: string } & TableVariantProps) {
+}: {
+  data?: Array<Course>
+  pageSize?: number
+  emptyMessage?: string
+  getRowProps?: (row: Row<DataTableFeatures, Course>) => React.ComponentPropsWithRef<"tr">
+} & TableVariantProps) {
   const table = useDataTable({
     columns,
     data,
@@ -75,7 +81,7 @@ function Harness({
       >
         Clear
       </button>
-      <DataTable table={table} {...props} />
+      <DataTable getRowProps={getRowProps} table={table} {...props} />
     </div>
   )
 }
@@ -190,5 +196,53 @@ describe("DataTable", () => {
     render(<Harness pageSize={2} />)
     expect(bodyRows()).toHaveLength(2)
     expect(columnText(0)).toEqual(["COMP 693", "ENGR 302"])
+  })
+
+  it("applies getRowProps to each body row and passes the matching row", () => {
+    const onClick = vi.fn()
+    render(
+      <Harness
+        getRowProps={(row) => ({
+          className: "cursor-pointer",
+          onClick: () => onClick(row.original.title),
+        })}
+      />,
+    )
+    const rows = bodyRows()
+    for (const row of rows) {
+      expect(row).toHaveClass("cursor-pointer")
+    }
+    fireEvent.click(rows[1])
+    expect(onClick).toHaveBeenCalledWith("ENGR 302")
+  })
+
+  it("does not add row props when getRowProps is not provided", () => {
+    render(<Harness />)
+    expect(bodyRows()[0]).not.toHaveClass("cursor-pointer")
+  })
+})
+
+describe("isInteractiveDescendant", () => {
+  it.each(["a", "button", "input", "select", "textarea"])(
+    "is true when the event target is, or is inside, a %s",
+    (tagName) => {
+      const wrapper = document.createElement("div")
+      const interactive = document.createElement(tagName)
+      const inner = document.createElement("span")
+      interactive.appendChild(inner)
+      wrapper.appendChild(interactive)
+
+      expect(isInteractiveDescendant({ target: interactive })).toBe(true)
+      expect(isInteractiveDescendant({ target: inner })).toBe(true)
+    },
+  )
+
+  it("is false when the event target is outside any interactive element", () => {
+    const span = document.createElement("span")
+    expect(isInteractiveDescendant({ target: span })).toBe(false)
+  })
+
+  it("is false when the event has no target", () => {
+    expect(isInteractiveDescendant({ target: null })).toBe(false)
   })
 })
