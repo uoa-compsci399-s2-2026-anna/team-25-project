@@ -62,7 +62,15 @@ export function LoginForm() {
         </div>
 
         <div className="my-8">
-          <form className="w-full" noValidate onSubmit={form.handleSubmit}>
+          <form
+            className="w-full"
+            noValidate
+            onSubmit={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              form.handleSubmit()
+            }}
+          >
             <FieldGroup>
               <form.Field
                 name="email"
