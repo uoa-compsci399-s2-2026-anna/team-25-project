@@ -241,7 +241,7 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
             type="submit"
             variant="button-mauve"
           >
-            {isSubmitting ? "Creating your account..." : "Send verification email"}
+            {isSubmitting ? "Creating your account..." : "Register & continue"}
           </Button>
         )}
       </form.Subscribe>
