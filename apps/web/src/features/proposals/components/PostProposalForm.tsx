@@ -22,8 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
   TextArea,
+  toast,
 } from "@repo/ui/components/ui"
 import { useForm } from "@tanstack/react-form"
+import { useState } from "react"
+import { postProposal } from "../actions/postProposal"
 
 const startPeriodOptions = toSelectOptions(ProposalTimeframeStartPeriodLabels)
 const ethicsOptions = toSelectOptions(ProposalEthicsStatusLabels)
@@ -35,6 +38,9 @@ const RequiredAsterisk = () => (
 )
 
 export const PostProposalForm = () => {
+  const [formError, setFormError] = useState<string | undefined>(undefined)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+
   const form = useForm({
     defaultValues: {
       title: "",
@@ -48,8 +54,29 @@ export const PostProposalForm = () => {
       body: "",
     },
     validators: { onChange: postProposalFormSchema },
-    onSubmit: async () => {
-      console.log("submitted")
+    onSubmit: async ({ value }) => {
+      setFieldErrors({})
+      setFormError(undefined)
+
+      try {
+        const result = await postProposal(value)
+        if (result.ok) {
+          toast.add({ type: "success", title: "Proposal posted" })
+          return
+        }
+
+        setFieldErrors(result.fieldErrors ?? {})
+        setFormError(result.formError)
+        toast.add({
+          type: "error",
+          title: "Could not post your proposal",
+          description: result.formError,
+        })
+      } catch {
+        const message = "Could not post your proposal. Try again."
+        setFormError(message)
+        toast.add({ type: "error", title: message })
+      }
     },
   })
 
@@ -58,7 +85,7 @@ export const PostProposalForm = () => {
       onSubmit={(event) => {
         event.preventDefault()
         event.stopPropagation()
-        form.handleSubmit()
+        void form.handleSubmit()
       }}
     >
       <div className="grid gap-8 py-4 sm:grid-cols-2">
@@ -79,6 +106,7 @@ export const PostProposalForm = () => {
                   value={field.state.value}
                 />
                 <FieldError errors={field.state.meta.errors} />
+                {fieldErrors.title && <FieldError>{fieldErrors.title}</FieldError>}
               </Field>
             )}
           </form.Field>
@@ -116,6 +144,9 @@ export const PostProposalForm = () => {
                   value={field.state.value}
                 />
                 <FieldError errors={field.state.meta.errors} />
+                {fieldErrors["timeframe.startYear"] && (
+                  <FieldError>{fieldErrors["timeframe.startYear"]}</FieldError>
+                )}
               </Field>
             )}
           </form.Field>
@@ -151,6 +182,9 @@ export const PostProposalForm = () => {
                   </SelectContent>
                 </Select>
                 <FieldError errors={field.state.meta.errors} />
+                {fieldErrors["timeframe.startPeriod"] && (
+                  <FieldError>{fieldErrors["timeframe.startPeriod"]}</FieldError>
+                )}
               </Field>
             )}
           </form.Field>
@@ -184,6 +218,7 @@ export const PostProposalForm = () => {
                   </SelectContent>
                 </Select>
                 <FieldError errors={field.state.meta.errors} />
+                {fieldErrors.ethics && <FieldError>{fieldErrors.ethics}</FieldError>}
               </Field>
             )}
           </form.Field>
@@ -208,6 +243,7 @@ export const PostProposalForm = () => {
                   value={field.state.value}
                 />
                 <FieldError errors={field.state.meta.errors} />
+                {fieldErrors.summary && <FieldError>{fieldErrors.summary}</FieldError>}
               </Field>
             )}
           </form.Field>
@@ -229,16 +265,23 @@ export const PostProposalForm = () => {
                   value={field.state.value}
                 />
                 <FieldError errors={field.state.meta.errors} />
+                {fieldErrors.body && <FieldError>{fieldErrors.body}</FieldError>}
               </Field>
             )}
           </form.Field>
         </FieldGroup>
       </div>
 
+      {formError && <FieldError>{formError}</FieldError>}
+
       <DialogFooter>
-        <Button type="submit" variant="button-mauve">
-          Publish proposal
-        </Button>
+        <form.Subscribe selector={(state) => state.isSubmitting}>
+          {(isSubmitting) => (
+            <Button disabled={isSubmitting} type="submit" variant="button-mauve">
+              {isSubmitting ? "Publishing..." : "Publish proposal"}
+            </Button>
+          )}
+        </form.Subscribe>
       </DialogFooter>
     </form>
   )
