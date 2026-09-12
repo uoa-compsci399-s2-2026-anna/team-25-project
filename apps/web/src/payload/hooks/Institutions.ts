@@ -1,10 +1,8 @@
 import { revalidateTag } from "next/cache"
 import type { CollectionAfterChangeHook, CollectionAfterDeleteHook } from "payload"
 
-// getInstitutions caches its result under this tag; without invalidating it,
-// an institution added or edited here would not show up in the registration
-// dropdown until the cache next expires on its own. "default" matches the
-// cacheLife profile getInstitutions gets by not calling cacheLife() itself.
+// Matches getInstitutionsCached's tag and its implicit "default" cacheLife
+// profile, so an edited institution doesn't wait out the cache on its own.
 const revalidateInstitutions = () => revalidateTag("institutions", "default")
 
 export const revalidateInstitutionsAfterChange: CollectionAfterChangeHook = ({ doc }) => {

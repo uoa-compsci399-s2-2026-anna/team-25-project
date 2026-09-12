@@ -3,11 +3,12 @@ import type { InstitutionOption } from "@/features/auth/components"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
 
-export const getInstitutions = async (): Promise<InstitutionOption[]> => {
+/**
+ * Cached list of every institution, for the registration dropdown - public
+ * and rarely changes. payload/hooks/Institutions.ts revalidates it on change.
+ */
+export const getInstitutionsCached = async (): Promise<InstitutionOption[]> => {
   "use cache"
-  // Public, shared across every visitor, and rarely changes - ideal for the
-  // build-time cache rather than a per-request read. revalidateTag("institutions")
-  // in payload/hooks/Institutions.ts invalidates this the moment one changes.
   cacheTag("institutions")
 
   const payload = await getPayloadClient()

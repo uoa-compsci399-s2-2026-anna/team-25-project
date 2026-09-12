@@ -1,9 +1,9 @@
 import { Heading } from "@repo/ui/components/ui"
 import { RegisterDetailsForm, RegisterStepper } from "@/features/auth/components"
-import { getInstitutions } from "@/features/institutions/queries"
+import { getInstitutionsCached } from "@/features/institutions/queries"
 
 export default async function Page() {
-  const institutions = await getInstitutions()
+  const institutions = await getInstitutionsCached()
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-8 px-4 py-16">
