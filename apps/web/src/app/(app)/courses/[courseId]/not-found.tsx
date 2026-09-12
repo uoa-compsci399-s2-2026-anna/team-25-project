@@ -9,7 +9,12 @@ export default function NotFound() {
       <p className="max-w-prose text-muted-foreground">
         The course was removed, or it has no published offering yet.
       </p>
-      <Button render={<Link href={Routes.COURSES.ROOT} />} size="lg" variant="button-charcoal">
+      <Button
+        nativeButton={false}
+        render={<Link href={Routes.COURSES.ROOT} />}
+        size="lg"
+        variant="button-charcoal"
+      >
         Browse courses
       </Button>
     </div>
