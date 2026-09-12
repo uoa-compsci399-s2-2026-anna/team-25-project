@@ -1,17 +1,18 @@
 import { QueryKeys } from "@repo/shared/constants/query-keys"
-import type { ProposalStatus, ProposalTag } from "@repo/shared/enums/proposals"
+import { ProposalStatus, type ProposalTag } from "@repo/shared/enums/proposals"
 import type { Institution } from "@repo/shared/payload-types"
 import type { Pagination } from "@repo/shared/types/pagination"
 import { cacheLife, cacheTag } from "next/cache"
 import type { Where } from "payload"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
+import type { ProposalSort } from "./proposals.search-params"
 
 export type ProposalFilters = {
   institutionId?: Institution["id"]
   tag?: ProposalTag
   search?: string
-  sort?: "newest" | "oldest"
+  sort?: ProposalSort
   status?: ProposalStatus
 }
 
@@ -54,9 +55,47 @@ export const getProposals = async (filters: ProposalFilters, pagination: Paginat
   })
 }
 
-export const getProposalsCached = async (filters: ProposalFilters, pagination: Pagination) => {
+const getProposalsCached = async (filters: ProposalFilters, pagination: Pagination) => {
   "use cache"
   cacheLife("max")
   cacheTag(QueryKeys.PROPOSALS)
   return getProposals(filters, pagination)
 }
+
+/** Filters relevant to status counts: `status` is overwritten per tab and `sort` never affects a count. */
+type ProposalStatusCountFilters = Omit<ProposalFilters, "status" | "sort">
+
+/** Counts per status under the other filters, so each status tab shows what it would list. */
+export const getProposalStatusCounts = async (
+  filters: ProposalStatusCountFilters,
+): Promise<Record<ProposalStatus, number>> => {
+  const payload = await getPayloadClient()
+  const entries = await Promise.all(
+    Object.values(ProposalStatus).map(async (status) => {
+      const { totalDocs } = await payload.count({
+        collection: Slugs.Collections.PROPOSALS,
+        where: proposalFiltersToWhere({ ...filters, status }),
+      })
+      return [status, totalDocs] as const
+    }),
+  )
+  return Object.fromEntries(entries) as Record<ProposalStatus, number>
+}
+
+const getProposalStatusCountsCached = async (filters: ProposalStatusCountFilters) => {
+  "use cache"
+  cacheLife("max")
+  cacheTag(QueryKeys.PROPOSALS)
+  return getProposalStatusCounts(filters)
+}
+
+// Free-text search has unbounded keys and few repeat hits, so only non-search views are cached.
+const hasSearch = (filters: Pick<ProposalFilters, "search">) => Boolean(filters.search?.trim())
+
+/** Loads one page of proposals, cached unless the filters include a search. */
+export const loadProposalsPage = (filters: ProposalFilters, pagination: Pagination) =>
+  hasSearch(filters) ? getProposals(filters, pagination) : getProposalsCached(filters, pagination)
+
+/** Loads the status counts, cached unless the filters include a search. */
+export const loadProposalStatusCounts = (filters: ProposalStatusCountFilters) =>
+  hasSearch(filters) ? getProposalStatusCounts(filters) : getProposalStatusCountsCached(filters)
