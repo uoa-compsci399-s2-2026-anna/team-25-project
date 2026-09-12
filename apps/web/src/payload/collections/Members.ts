@@ -58,5 +58,11 @@ export const Members: CollectionConfig = {
       type: "date",
       admin: { readOnly: true, position: "sidebar" },
     },
+    {
+      // Set once completeProfile succeeds
+      name: "registrationCompletedAt",
+      type: "date",
+      admin: { readOnly: true, position: "sidebar" },
+    },
   ],
 }
