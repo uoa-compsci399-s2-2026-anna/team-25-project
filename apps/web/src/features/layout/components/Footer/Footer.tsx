@@ -14,7 +14,7 @@ const links = {
 
 export const Footer = () => {
   return (
-    <footer className="flex flex-row flex-wrap justify-between gap-8 bg-brand-blush p-8 text-brand-charcoal md:px-16 md:py-12">
+    <footer className="flex w-full flex-row flex-wrap justify-between gap-8 bg-brand-blush p-8 text-brand-charcoal md:px-16 md:py-12">
       <div className="flex max-w-sm flex-col">
         <Heading className="text-black" level="h3">
           CCCA

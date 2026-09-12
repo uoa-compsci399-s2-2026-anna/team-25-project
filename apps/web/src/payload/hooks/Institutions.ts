@@ -1,16 +1,23 @@
+import { QueryKeys } from "@repo/shared/constants/query-keys"
+import type { Institution } from "@repo/shared/payload-types"
 import { revalidateTag } from "next/cache"
 import type { CollectionAfterChangeHook, CollectionAfterDeleteHook } from "payload"
 
-// Matches getInstitutionsCached's tag and its implicit "default" cacheLife
-// profile, so an edited institution doesn't wait out the cache on its own.
-const revalidateInstitutions = () => revalidateTag("institutions", "default")
+// Cached proposals carry each author's institution and filter on it, so they go stale too.
+const revalidate = () => {
+  revalidateTag(QueryKeys.INSTITUTIONS, "max")
+  revalidateTag(QueryKeys.PROPOSALS, "max")
+}
 
-export const revalidateInstitutionsAfterChange: CollectionAfterChangeHook = ({ doc, req }) => {
-  if (!req.context.disableRevalidate) revalidateInstitutions()
+export const revalidateInstitutions: CollectionAfterChangeHook<Institution> = ({ doc, req }) => {
+  if (!req.context.disableRevalidate) revalidate()
   return doc
 }
 
-export const revalidateInstitutionsAfterDelete: CollectionAfterDeleteHook = ({ doc, req }) => {
-  if (!req.context.disableRevalidate) revalidateInstitutions()
+export const revalidateDeletedInstitution: CollectionAfterDeleteHook<Institution> = ({
+  doc,
+  req,
+}) => {
+  if (!req.context.disableRevalidate) revalidate()
   return doc
 }

@@ -16,7 +16,9 @@ export const Routes = {
   },
   PROPOSALS: {
     ROOT: route("/proposals"),
-    PROPOSAL: (proposalId: string) => route(`/proposals/${proposalId}`),
+    // The page resolves on the leading id; the slug is only for readability.
+    PROPOSAL: (proposalId: number, proposalSlug?: string | null) =>
+      route(`/proposals/${proposalSlug ? `${proposalId}-${proposalSlug}` : String(proposalId)}`),
   },
   ABOUT: route("/about"),
   PRIVACY: route("/privacy"),

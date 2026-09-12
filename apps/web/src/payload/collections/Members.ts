@@ -2,7 +2,11 @@ import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { canReadEmail, isAdmin, isAdminOrSelf } from "../access"
 import { admin } from "../access/helpers"
-import { enforceInstitutionDomain } from "../hooks/Members"
+import {
+  enforceInstitutionDomain,
+  revalidateDeletedMemberProposals,
+  revalidateMemberProposals,
+} from "../hooks/Members"
 
 export const Members: CollectionConfig = {
   slug: Slugs.Collections.MEMBERS,
@@ -11,6 +15,8 @@ export const Members: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [enforceInstitutionDomain],
+    afterChange: [revalidateMemberProposals],
+    afterDelete: [revalidateDeletedMemberProposals],
   },
   auth: {
     maxLoginAttempts: 5,

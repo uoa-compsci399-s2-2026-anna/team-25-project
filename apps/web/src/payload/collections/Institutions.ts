@@ -1,10 +1,7 @@
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { isAdmin } from "../access"
-import {
-  revalidateInstitutionsAfterChange,
-  revalidateInstitutionsAfterDelete,
-} from "../hooks/Institutions"
+import { revalidateDeletedInstitution, revalidateInstitutions } from "../hooks/Institutions"
 
 export const Institutions: CollectionConfig = {
   slug: Slugs.Collections.INSTITUTIONS,
@@ -13,8 +10,8 @@ export const Institutions: CollectionConfig = {
     defaultColumns: ["name", "country"],
   },
   hooks: {
-    afterChange: [revalidateInstitutionsAfterChange],
-    afterDelete: [revalidateInstitutionsAfterDelete],
+    afterChange: [revalidateInstitutions],
+    afterDelete: [revalidateDeletedInstitution],
   },
   access: {
     read: () => true, // registration dropdown needs this before anyone is logged in
