@@ -1,6 +1,10 @@
 import { ProposalStatus, ProposalTag } from "@repo/shared/enums/proposals"
 import { describe, expect, it } from "vitest"
-import { loadProposalSearchParams, toProposalFilters } from "./proposals.search-params"
+import {
+  loadProposalSearchParams,
+  serializeProposalSearchParams,
+  toProposalFilters,
+} from "./proposals.search-params"
 
 describe("loadProposalSearchParams", () => {
   it("falls back to defaults when the URL has no params", () => {
@@ -45,6 +49,34 @@ describe("loadProposalSearchParams", () => {
       institution: null,
       page: 1,
     })
+  })
+})
+
+describe("serializeProposalSearchParams", () => {
+  it("keeps every filter in the URL", () => {
+    expect(
+      serializeProposalSearchParams("/proposals", {
+        institution: 12,
+        page: 3,
+        q: "peer",
+        sort: "oldest",
+        status: ProposalStatus.CLOSED,
+        tag: ProposalTag.ASSESSMENT,
+      }),
+    ).toBe("/proposals?status=closed&q=peer&institution=12&tag=assessment&sort=oldest&page=3")
+  })
+
+  it("leaves out default values, such as page 1", () => {
+    expect(
+      serializeProposalSearchParams("/proposals", {
+        institution: null,
+        page: 1,
+        q: "",
+        sort: "newest",
+        status: ProposalStatus.ACTIVE,
+        tag: null,
+      }),
+    ).toBe("/proposals")
   })
 })
 
