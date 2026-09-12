@@ -208,7 +208,7 @@ export const WithExternalFilters: Story = (args) => {
             key={university}
             onClick={() => toggle(university)}
             size="sm"
-            variant={selected.includes(university) ? "default" : "outline"}
+            variant={selected.includes(university) ? "button-charcoal" : "button-transparent"}
           >
             {university}
           </Button>
