@@ -1,7 +1,6 @@
 export * from "./InstitutionSelect"
 export * from "./PasswordField"
 export * from "./RegisterDetailsForm"
-export * from "./RegisterDetailsSkeleton"
 export * from "./RegisterProfileForm"
 export * from "./RegisterProfileSkeleton"
 export * from "./RegisterStepper"

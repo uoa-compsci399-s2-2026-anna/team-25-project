@@ -1,19 +1,10 @@
 import { Heading } from "@repo/ui/components/ui"
-import { Suspense } from "react"
-import {
-  RegisterDetailsForm,
-  RegisterDetailsSkeleton,
-  RegisterStepper,
-} from "@/features/auth/components"
+import { RegisterDetailsForm, RegisterStepper } from "@/features/auth/components"
 import { getInstitutions } from "@/features/institutions/queries"
 
-const RegisterFormSection = async () => {
+export default async function Page() {
   const institutions = await getInstitutions()
 
-  return <RegisterDetailsForm institutions={institutions} />
-}
-
-export default function Page() {
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-8 px-4 py-16">
       <RegisterStepper current={1} />
@@ -26,9 +17,7 @@ export default function Page() {
         </p>
       </div>
 
-      <Suspense fallback={<RegisterDetailsSkeleton />}>
-        <RegisterFormSection />
-      </Suspense>
+      <RegisterDetailsForm institutions={institutions} />
     </main>
   )
 }
