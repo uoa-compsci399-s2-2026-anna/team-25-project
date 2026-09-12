@@ -23,6 +23,11 @@ const ProfileFormSection = async () => {
     redirect(Routes.REGISTER)
   }
 
+  // Already finished the profile step
+  if (user.registrationCompletedAt) {
+    redirect(Routes.HOME)
+  }
+
   return <RegisterProfileForm initials={initials(user.firstName, user.lastName)} />
 }
 

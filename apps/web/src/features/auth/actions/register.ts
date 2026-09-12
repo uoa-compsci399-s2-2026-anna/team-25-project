@@ -154,7 +154,12 @@ export const completeProfile = async (formData: FormData): Promise<ActionResult>
 
     await payload.update({
       collection: Slugs.Collections.MEMBERS,
-      data: { avatar: avatarId, bio: parsed.data.bio, position: parsed.data.position },
+      data: {
+        avatar: avatarId,
+        bio: parsed.data.bio,
+        position: parsed.data.position,
+        registrationCompletedAt: new Date().toISOString(),
+      },
       id: user.id,
       overrideAccess: false,
       user,
