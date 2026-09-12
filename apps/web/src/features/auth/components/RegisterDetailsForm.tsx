@@ -48,7 +48,7 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
       const result = await registerMember(value)
 
       if (result.ok) {
-        router.push(Routes.REGISTER_PROFILE)
+        router.push(Routes.REGISTER.PROFILE)
         return
       }
 

@@ -51,7 +51,7 @@ describe("NavAuthStatus", () => {
       expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", Routes.HOME)
       expect(screen.getByRole("link", { name: "Join CCCA" })).toHaveAttribute(
         "href",
-        Routes.REGISTER,
+        Routes.REGISTER.ROOT,
       )
     })
 

@@ -20,7 +20,7 @@ const ProfileFormSection = async () => {
 
   // Reaching step two without an account means step one never completed.
   if (collection !== Slugs.Collections.MEMBERS) {
-    redirect(Routes.REGISTER)
+    redirect(Routes.REGISTER.ROOT)
   }
 
   // Already finished the profile step
