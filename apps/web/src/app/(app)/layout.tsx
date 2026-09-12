@@ -2,6 +2,7 @@ import { Geist_Mono } from "next/font/google"
 import localFont from "next/font/local"
 
 import "@repo/ui/globals.css"
+import { Toaster } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import { Footer, Navbar } from "@/features/layout/components"
 
@@ -26,9 +27,11 @@ export default function RootLayout({
   return (
     <html className={cn("antialiased", fontMono.variable, "font-sans", satoshi.variable)} lang="en">
       <body>
-        <Navbar />
-        {children}
-        <Footer />
+        <Toaster>
+          <Navbar />
+          {children}
+          <Footer />
+        </Toaster>
       </body>
     </html>
   )

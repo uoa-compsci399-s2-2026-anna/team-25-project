@@ -48,7 +48,7 @@ describe("NavAuthStatus", () => {
     it("renders Log in and Join CCCA as links", async () => {
       signOut()
       await renderNavAuthStatus()
-      expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", Routes.HOME)
+      expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", Routes.LOGIN)
       expect(screen.getByRole("link", { name: "Join CCCA" })).toHaveAttribute("href", Routes.HOME)
     })
 

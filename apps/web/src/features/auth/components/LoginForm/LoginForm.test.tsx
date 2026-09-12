@@ -1,11 +1,11 @@
-import { toast } from "@repo/ui/components/ui"
+import { Toaster, toast } from "@repo/ui/components/ui"
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { useRouter } from "next/navigation"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { loginAction } from "./actions/auth"
+import { loginAction } from "@/features/auth/actions/auth"
 import { LoginForm } from "./LoginForm"
 
-vi.mock("./actions/auth", () => ({ loginAction: vi.fn() }))
+vi.mock("@/features/auth/actions/auth", () => ({ loginAction: vi.fn() }))
 vi.mock("next/navigation", () => ({ useRouter: vi.fn() }))
 
 function fillValidCredentials() {
@@ -19,7 +19,8 @@ function fillValidCredentials() {
 
 describe("LoginForm", () => {
   beforeEach(() => {
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as any)
+    // biome-ignore lint/suspicious/noExplicitAny: minimal useRouter mock, only .push/.refresh are used
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn(), refresh: vi.fn() } as any)
   })
 
   afterEach(() => {
@@ -57,7 +58,27 @@ describe("LoginForm", () => {
 
     const router = useRouter()
     await waitFor(() => expect(router.push).toHaveBeenCalledWith("/"))
+    expect(router.refresh).toHaveBeenCalled()
     expect(loginAction).toHaveBeenCalledWith("member@uni.edu", "password123")
+  })
+
+  it("does not show a validation error when blurring an empty field", async () => {
+    render(<LoginForm />)
+    const emailInput = screen.getByLabelText("University Email")
+    fireEvent.focus(emailInput)
+    fireEvent.blur(emailInput)
+
+    expect(screen.queryByText("Enter a valid email address")).not.toBeInTheDocument()
+  })
+
+  it("shows a validation error on blur for a non-empty invalid email", async () => {
+    render(<LoginForm />)
+    fireEvent.change(screen.getByLabelText("University Email"), {
+      target: { value: "not-an-email" },
+    })
+    fireEvent.blur(screen.getByLabelText("University Email"))
+
+    expect(await screen.findByText("Enter a valid email address")).toBeInTheDocument()
   })
 
   it("shows a failure toast with the server's message when login fails", async () => {
@@ -65,7 +86,11 @@ describe("LoginForm", () => {
       success: false,
       message: "Invalid email or password",
     })
-    render(<LoginForm />)
+    render(
+      <Toaster>
+        <LoginForm />
+      </Toaster>,
+    )
     fillValidCredentials()
     fireEvent.click(screen.getByRole("button", { name: "Log in" }))
 
