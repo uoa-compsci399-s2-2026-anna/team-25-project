@@ -49,7 +49,10 @@ describe("NavAuthStatus", () => {
       signOut()
       await renderNavAuthStatus()
       expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", Routes.HOME)
-      expect(screen.getByRole("link", { name: "Join CCCA" })).toHaveAttribute("href", Routes.HOME)
+      expect(screen.getByRole("link", { name: "Join CCCA" })).toHaveAttribute(
+        "href",
+        Routes.REGISTER.ROOT,
+      )
     })
 
     it("does not render a signed-in name", async () => {

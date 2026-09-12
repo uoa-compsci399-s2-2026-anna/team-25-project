@@ -9,15 +9,15 @@ export const Institutions: CollectionConfig = {
     useAsTitle: "name",
     defaultColumns: ["name", "country"],
   },
+  hooks: {
+    afterChange: [revalidateInstitutions],
+    afterDelete: [revalidateDeletedInstitution],
+  },
   access: {
     read: () => true, // registration dropdown needs this before anyone is logged in
     create: isAdmin,
     update: isAdmin,
     delete: isAdmin,
-  },
-  hooks: {
-    afterChange: [revalidateInstitutions],
-    afterDelete: [revalidateDeletedInstitution],
   },
   fields: [
     { name: "name", type: "text", required: true, unique: true }, // this is what the dropdown will show

@@ -187,6 +187,7 @@ export interface Member {
   avatar?: (number | null) | Media;
   showEmailPublicly?: boolean | null;
   lastReviewedAt?: string | null;
+  registrationCompletedAt?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -539,6 +540,7 @@ export interface MembersSelect<T extends boolean = true> {
   avatar?: T;
   showEmailPublicly?: T;
   lastReviewedAt?: T;
+  registrationCompletedAt?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

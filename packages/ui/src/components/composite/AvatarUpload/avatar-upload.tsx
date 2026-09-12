@@ -6,17 +6,19 @@ import { Pencil } from "lucide-react"
 import * as React from "react"
 
 function AvatarUpload({
+  accept = "image/*",
   className,
   fallback,
   image,
   onFileSelect,
   size = "default",
 }: {
+  accept?: string
   className?: string
   fallback: React.ReactNode
   image?: { alt: string; src: string }
   onFileSelect?: (file: File) => void
-  size?: "default" | "sm" | "lg"
+  size?: "default" | "sm" | "lg" | "xl"
 }) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [localPreview, setLocalPreview] = React.useState<string | undefined>(undefined)
@@ -47,7 +49,7 @@ function AvatarUpload({
         </Avatar>
       </button>
       <input
-        accept="image/*"
+        accept={accept}
         aria-hidden="true"
         className="sr-only"
         onChange={handleChange}

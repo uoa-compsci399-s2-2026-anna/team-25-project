@@ -1,6 +1,7 @@
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { canReadEmail, isAdmin, isAdminOrSelf } from "../access"
+import { admin } from "../access/helpers"
 import {
   enforceInstitutionDomain,
   revalidateDeletedMemberProposals,
@@ -62,6 +63,17 @@ export const Members: CollectionConfig = {
     {
       name: "lastReviewedAt",
       type: "date",
+      admin: { readOnly: true, position: "sidebar" },
+    },
+    {
+      // Set once completeProfile succeeds - access below stops a member
+      // setting this themselves through a direct API write.
+      name: "registrationCompletedAt",
+      type: "date",
+      access: {
+        create: () => false,
+        update: ({ req }) => Boolean(req.context.completingRegistration) || admin(req),
+      },
       admin: { readOnly: true, position: "sidebar" },
     },
   ],

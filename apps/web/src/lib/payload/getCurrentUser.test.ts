@@ -4,6 +4,9 @@ import { getCurrentUser } from "./getCurrentUser"
 import { getPayloadClient } from "./getPayloadClient"
 
 vi.mock("next/headers", () => ({ headers: vi.fn() }))
+// connection() throws outside a request scope, and these tests call the helper
+// directly rather than through a render.
+vi.mock("next/server", () => ({ connection: vi.fn() }))
 vi.mock("./getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
 
 const mockAuth = (user: unknown) => {

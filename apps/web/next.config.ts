@@ -7,6 +7,13 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   partialPrefetching: true,
   typedRoutes: true,
+  experimental: {
+    serverActions: {
+      // Default is 1 MB; a normal phone photo is 2-5 MB. Matches
+      // RegisterProfileForm's own MAX_AVATAR_BYTES check.
+      bodySizeLimit: "4mb",
+    },
+  },
   images: {
     localPatterns: [
       {
