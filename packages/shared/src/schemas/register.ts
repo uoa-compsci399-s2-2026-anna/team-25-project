@@ -7,6 +7,10 @@ import { z } from "zod"
 
 export const PASSWORD_MIN_LENGTH = 8
 
+// Matches Media's own mimeTypes restriction. Excludes image/svg+xml
+// deliberately - an SVG can carry an embedded <script>.
+export const ALLOWED_AVATAR_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+
 export const registerDetailsSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
   lastName: z.string().trim().min(1, "Surname is required"),

@@ -1,6 +1,6 @@
 "use client"
 
-import { registerProfileSchema } from "@repo/shared/schemas/register"
+import { ALLOWED_AVATAR_MIME_TYPES, registerProfileSchema } from "@repo/shared/schemas/register"
 import { AvatarUpload } from "@repo/ui/components/composite"
 import {
   Button,
@@ -73,7 +73,12 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
       }}
     >
       <div className="flex flex-col items-center gap-2">
-        <AvatarUpload fallback={initials} onFileSelect={setAvatar} size="xl" />
+        <AvatarUpload
+          accept={ALLOWED_AVATAR_MIME_TYPES.join(",")}
+          fallback={initials}
+          onFileSelect={setAvatar}
+          size="xl"
+        />
         <p className="font-medium text-sm">Photo</p>
         <p className="text-muted-foreground text-xs">
           {avatar ? avatar.name : "Optional - you can add one later"}

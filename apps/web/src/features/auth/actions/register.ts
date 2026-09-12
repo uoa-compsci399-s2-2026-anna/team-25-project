@@ -1,6 +1,7 @@
 "use server"
 
 import {
+  ALLOWED_AVATAR_MIME_TYPES,
   type RegisterDetails,
   registerDetailsSchema,
   registerProfileSchema,
@@ -150,6 +151,10 @@ export const completeProfile = async (formData: FormData): Promise<ActionResult>
   let avatarId: number | undefined
 
   if (avatar instanceof File && avatar.size > 0) {
+    if (!ALLOWED_AVATAR_MIME_TYPES.includes(avatar.type)) {
+      return { formError: "Please upload a JPG, PNG, GIF or WEBP image.", ok: false }
+    }
+
     try {
       const media = await payload.create({
         collection: Slugs.Collections.MEDIA,
