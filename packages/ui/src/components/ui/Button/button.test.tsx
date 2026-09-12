@@ -43,6 +43,12 @@ describe("Button", () => {
     expect(button).toHaveClass("bg-brand-cream text-brand-charcoal hover:bg-brand-charcoal/10")
   })
 
+  it("applies xxl size classes", () => {
+    render(<Button size="xxl">Click me</Button>)
+    const button = screen.getByRole("button", { name: "Click me" })
+    expect(button).toHaveClass("h-13 gap-1.5 px-3.5 text-base")
+  })
+
   it("merges a custom className with variant classes", () => {
     render(<Button className="custom-class">Click me</Button>)
     expect(screen.getByRole("button", { name: "Click me" })).toHaveClass("custom-class")

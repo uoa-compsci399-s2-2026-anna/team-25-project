@@ -9,7 +9,7 @@ const variants = [
   "button-cream",
   "button-unstyled",
 ] as const
-const sizes = ["sm", "md", "lg", "xl", "icon", "icon-xs", "icon-sm", "icon-lg"] as const
+const sizes = ["sm", "md", "lg", "xl", "xxl", "icon", "icon-xs", "icon-sm", "icon-lg"] as const
 const borderColors = ["charcoal", "white"] as const
 
 const meta: Meta<typeof Button> = {
