@@ -17,9 +17,35 @@ export const getInstitutionOptions = async (): Promise<InstitutionOption[]> => {
   return docs.map(({ id, name }) => ({ label: name, value: id }))
 }
 
+export type InstitutionName = Pick<Institution, "id" | "name">
+
+// Only the name is read, so the result is the pair the page renders rather than
+// a partly-empty `Institution`.
+export const getInstitutionName = async (
+  institutionId: number,
+): Promise<InstitutionName | null> => {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: Slugs.Collections.INSTITUTIONS,
+    where: { id: { equals: institutionId } },
+    depth: 0,
+    limit: 1,
+    pagination: false,
+    select: { name: true },
+  })
+  return docs[0] ?? null
+}
+
 export const getInstitutionOptionsCached = async () => {
   "use cache"
   cacheLife("max")
   cacheTag(QueryKeys.INSTITUTIONS)
   return getInstitutionOptions()
+}
+
+export const getInstitutionNameCached = async (institutionId: number) => {
+  "use cache"
+  cacheLife("max")
+  cacheTag(QueryKeys.INSTITUTIONS)
+  return getInstitutionName(institutionId)
 }

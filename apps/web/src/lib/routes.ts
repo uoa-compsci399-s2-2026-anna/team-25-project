@@ -12,7 +12,7 @@ export const Routes = {
   },
   MEMBERS: {
     ROOT: route("/members"),
-    MEMBER: (memberId: string) => route(`/members/${memberId}`),
+    MEMBER: (memberId: number | string) => route(`/members/${memberId}`),
   },
   PROPOSALS: {
     ROOT: route("/proposals"),

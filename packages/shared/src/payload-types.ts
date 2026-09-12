@@ -389,6 +389,7 @@ export interface CourseVersion {
       | {
           name?: string | null;
           role?: string | null;
+          memberId?: number | null;
           id?: string | null;
         }[]
       | null;
@@ -664,6 +665,7 @@ export interface CourseVersionsSelect<T extends boolean = true> {
           | {
               name?: T;
               role?: T;
+              memberId?: T;
               id?: T;
             };
       };
