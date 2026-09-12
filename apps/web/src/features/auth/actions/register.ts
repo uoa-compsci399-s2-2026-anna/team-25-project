@@ -43,6 +43,18 @@ const fieldErrorsFromPayload = (error: ValidationError): Record<string, string> 
   return fieldErrors
 }
 
+// A path-less or empty errors list produces {} - fall back to a form-level
+// message rather than silently returning nothing to show.
+const resultFromValidationError = (
+  error: ValidationError,
+  fallbackFormError: string,
+): ActionResult => {
+  const fieldErrors = fieldErrorsFromPayload(error)
+  return Object.keys(fieldErrors).length > 0
+    ? { fieldErrors, ok: false }
+    : { formError: fallbackFormError, ok: false }
+}
+
 /**
  * Signs the new member in straight after creating them. Email verification is
  * not set up yet, so there is no intermediate "check your inbox" state - the
@@ -101,7 +113,7 @@ export const registerMember = async (input: RegisterDetails): Promise<ActionResu
     })
   } catch (error) {
     if (error instanceof ValidationError) {
-      return { fieldErrors: fieldErrorsFromPayload(error), ok: false }
+      return resultFromValidationError(error, "Could not create your account. Try again.")
     }
     return { formError: "Could not create your account. Try again.", ok: false }
   }
@@ -135,8 +147,8 @@ export const completeProfile = async (formData: FormData): Promise<ActionResult>
   const avatar = formData.get("avatar")
   let avatarId: number | undefined
 
-  try {
-    if (avatar instanceof File && avatar.size > 0) {
+  if (avatar instanceof File && avatar.size > 0) {
+    try {
       const media = await payload.create({
         collection: Slugs.Collections.MEDIA,
         data: { alt: `${user.firstName} ${user.lastName}` },
@@ -150,8 +162,15 @@ export const completeProfile = async (formData: FormData): Promise<ActionResult>
         user,
       })
       avatarId = media.id
+    } catch (error) {
+      // Errors here are about the file, not a Member field - never route
+      // through fieldErrorsFromPayload.
+      payload.logger.error({ err: error }, "avatar upload failed")
+      return { formError: "Could not upload your photo. Try again.", ok: false }
     }
+  }
 
+  try {
     await payload.update({
       collection: Slugs.Collections.MEMBERS,
       data: {
@@ -166,7 +185,7 @@ export const completeProfile = async (formData: FormData): Promise<ActionResult>
     })
   } catch (error) {
     if (error instanceof ValidationError) {
-      return { fieldErrors: fieldErrorsFromPayload(error), ok: false }
+      return resultFromValidationError(error, "Could not save your profile. Try again.")
     }
     // Anything else is a real failure rather than bad input, so surface it in
     // the server log instead of only showing the user a generic message.

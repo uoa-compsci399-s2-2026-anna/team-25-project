@@ -49,6 +49,7 @@ const mockPayload = (overrides: Record<string, unknown> = {}) => {
     collections: { members: { config: { auth: {} } } },
     config: { cookiePrefix: "payload" },
     create: vi.fn().mockResolvedValue({ id: 1 }),
+    logger: { error: vi.fn() },
     login: vi.fn().mockResolvedValue({ token: "signed-token" }),
     update: vi.fn().mockResolvedValue({ id: 1 }),
     ...overrides,
@@ -126,6 +127,14 @@ describe("registerMember", () => {
     expect(result).toEqual({ formError: "Could not create your account. Try again.", ok: false })
   })
 
+  it("falls back to a form error when a validation error has no usable field path", async () => {
+    mockPayload({ create: vi.fn().mockRejectedValue(new ValidationError([])) })
+
+    const result = await registerMember(validDetails)
+
+    expect(result).toEqual({ formError: "Could not create your account. Try again.", ok: false })
+  })
+
   it("says the account exists when sign-in fails after creation", async () => {
     mockPayload({ login: vi.fn().mockRejectedValue(new Error("nope")) })
 
@@ -178,5 +187,46 @@ describe("completeProfile", () => {
         overrideAccess: false,
       }),
     )
+  })
+
+  it("reports a form error when the avatar upload itself fails validation", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      // biome-ignore lint/suspicious/noExplicitAny: only the fields the action reads
+      user: { firstName: "Anna", id: 7, lastName: "Tui" } as any,
+    })
+    // The Media collection's own paths (file, filename, alt) mean nothing to a
+    // form that only renders position/bio, so this must never surface as fieldErrors.
+    mockPayload({
+      create: vi
+        .fn()
+        .mockRejectedValue(new ValidationError([{ message: "Invalid file type.", path: "file" }])),
+    })
+
+    const formData = new FormData()
+    formData.set("position", "")
+    formData.set("bio", "")
+    formData.set("avatar", new File(["data"], "photo.png", { type: "image/png" }))
+
+    const result = await completeProfile(formData)
+
+    expect(result).toEqual({ formError: "Could not upload your photo. Try again.", ok: false })
+  })
+
+  it("falls back to a form error when the profile update's validation error has no usable field path", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      // biome-ignore lint/suspicious/noExplicitAny: only the fields the action reads
+      user: { firstName: "Anna", id: 7, lastName: "Tui" } as any,
+    })
+    mockPayload({ update: vi.fn().mockRejectedValue(new ValidationError([])) })
+
+    const formData = new FormData()
+    formData.set("position", "")
+    formData.set("bio", "")
+
+    const result = await completeProfile(formData)
+
+    expect(result).toEqual({ formError: "Could not save your profile. Try again.", ok: false })
   })
 })
