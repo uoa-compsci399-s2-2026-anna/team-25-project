@@ -175,6 +175,7 @@ export const completeProfile = async (formData: FormData): Promise<ActionResult>
   try {
     await payload.update({
       collection: Slugs.Collections.MEMBERS,
+      context: { completingRegistration: true },
       data: {
         avatar: avatarId,
         bio: parsed.data.bio,

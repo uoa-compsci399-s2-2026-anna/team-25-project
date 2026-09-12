@@ -15,6 +15,10 @@ import { Proposals } from "./payload/collections/Proposals"
 
 declare module "payload" {
   export interface GeneratedTypes extends Config {}
+  export interface RequestContext {
+    /** Lets completeProfile stamp registrationCompletedAt; see Members.ts. */
+    completingRegistration?: boolean
+  }
 }
 
 const filename = fileURLToPath(import.meta.url)
