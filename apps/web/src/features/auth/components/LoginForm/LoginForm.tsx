@@ -8,6 +8,10 @@ import {
   FieldLabel,
   Heading,
   Input,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
   toast,
 } from "@repo/ui/components/ui"
 import { useForm } from "@tanstack/react-form"
@@ -111,11 +115,10 @@ export function LoginForm() {
                       Forgot password?
                     </Link>
                   </div>
-                  <div className="relative w-full">
-                    <Input
+                  <InputGroup className="h-10">
+                    <InputGroupInput
                       aria-invalid={isInvalid}
                       autoComplete="current-password"
-                      className="h-10 w-full pr-16"
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
@@ -123,14 +126,16 @@ export function LoginForm() {
                       type={showPassword ? "text" : "password"}
                       value={field.state.value}
                     />
-                    <button
-                      className="absolute top-1/2 right-3 -translate-y-1/2 text-sm hover:text-primary"
-                      onClick={() => setShowPassword((value) => !value)}
-                      type="button"
-                    >
-                      {showPassword ? "Hide" : "Show"}
-                    </button>
-                  </div>
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupButton
+                        onClick={() => setShowPassword((value) => !value)}
+                        type="button"
+                        variant="button-transparent"
+                      >
+                        {showPassword ? "Hide" : "Show"}
+                      </InputGroupButton>
+                    </InputGroupAddon>
+                  </InputGroup>
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               )
