@@ -185,11 +185,13 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
                 Password <RequiredMark />
               </FieldLabel>
               <PasswordField
+                autoComplete="new-password"
                 id={field.name}
                 invalid={field.state.meta.errors.length > 0 || undefined}
                 name={field.name}
                 onBlur={field.handleBlur}
                 onValueChange={field.handleChange}
+                showStrength
                 value={field.state.value}
               />
               <FieldError errors={field.state.meta.errors} />
