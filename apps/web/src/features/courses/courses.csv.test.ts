@@ -43,4 +43,22 @@ describe("coursesToCsv", () => {
     const csv = coursesToCsv([row({ title: "Line one\nLine two" })])
     expect(csv).toContain('"Line one\nLine two"')
   })
+
+  it("quotes a field containing a bare carriage return", () => {
+    const csv = coursesToCsv([row({ title: "Line one\rLine two" })])
+    expect(csv).toContain('"Line one\rLine two"')
+  })
+
+  it.each(["=1+1", "+1+1", "-1+1", "@TODAY()"])(
+    "neutralizes a formula-triggering field %s with a leading apostrophe",
+    (formula) => {
+      const csv = coursesToCsv([row({ title: formula })])
+      expect(csv).toContain(`'${formula}`)
+    },
+  )
+
+  it("still quotes a neutralized formula field that also needs RFC 4180 escaping", () => {
+    const csv = coursesToCsv([row({ title: '=HYPERLINK("https://evil.example","Click")' })])
+    expect(csv).toContain('"\'=HYPERLINK(""https://evil.example"",""Click"")"')
+  })
 })

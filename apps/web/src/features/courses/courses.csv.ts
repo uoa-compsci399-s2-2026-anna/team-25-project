@@ -10,11 +10,15 @@ const CSV_COLUMNS: { key: keyof CourseTableRow; header: string }[] = [
   { key: "status", header: "Status" },
 ]
 
-// RFC 4180: a field containing a comma, quote or newline is wrapped in
-// quotes, with any quote inside it doubled.
+// Spreadsheet apps treat a field starting with =, +, -, or @ as a formula
+// when they open a CSV, and every field here is convenor-controlled free
+// text, so a leading one gets neutralized with a `'`. After that, RFC 4180
+// quoting wraps anything containing a comma, quote, or line break (\n or a
+// bare \r), doubling up any quotes inside.
 const escapeCsvField = (value: string | number): string => {
-  const text = String(value)
-  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+  const raw = String(value)
+  const text = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw
+  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
 }
 
 export const coursesToCsv = (rows: CourseTableRow[]): string => {
