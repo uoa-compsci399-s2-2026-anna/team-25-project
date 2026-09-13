@@ -4,7 +4,7 @@ import { ResearchIdeaCta } from "../ResearchIdeaCta/ResearchIdeaCta"
 
 export const ProposalsSection = () => {
   return (
-    <section className="px-8 py-10 md:px-16">
+    <section className="px-8 pt-10 pb-20 md:px-16">
       <Heading className="mb-8" level="h2">
         Research proposals
       </Heading>
