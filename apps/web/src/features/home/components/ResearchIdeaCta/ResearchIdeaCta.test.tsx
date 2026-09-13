@@ -16,11 +16,11 @@ describe("ResearchIdeaCta", () => {
     expect(screen.getByText(/Post it as a proposal/)).toBeInTheDocument()
   })
 
-  it("links Post a proposal to the homepage placeholder", () => {
+  it("links Post a proposal to the proposals list as the closest existing page", () => {
     render(<ResearchIdeaCta />)
     expect(screen.getByRole("button", { name: "Post a proposal" })).toHaveAttribute(
       "href",
-      Routes.HOME,
+      Routes.PROPOSALS.ROOT,
     )
   })
 })

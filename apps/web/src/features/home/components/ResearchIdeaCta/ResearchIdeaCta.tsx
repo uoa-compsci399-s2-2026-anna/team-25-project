@@ -30,11 +30,11 @@ export const ResearchIdeaCta = () => {
         </ul>
       </div>
 
-      {/* TODO: point to a real post-a-proposal flow once it exists */}
+      {/* TODO: point to a real post-a-proposal flow once it exists - proposals list is the closest thing for now */}
       <Button
         className="w-fit"
         nativeButton={false}
-        render={<Link href={Routes.HOME} />}
+        render={<Link href={Routes.PROPOSALS.ROOT} />}
         variant="button-white"
       >
         Post a proposal
