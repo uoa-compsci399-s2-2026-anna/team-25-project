@@ -1,4 +1,5 @@
-import { Button, Heading } from "@repo/ui/components/ui"
+import { Heading } from "@repo/ui/components/ui"
+import { AddCourseTrigger } from "./AddCourseTrigger"
 import { CoursesExportButton } from "./CoursesExportButton"
 import type { CourseTableRow } from "./CoursesTable"
 
@@ -6,7 +7,6 @@ export interface CoursesPageHeaderProps {
   rows: CourseTableRow[]
 }
 
-// "Add your course" doesn't do anything yet - the pop-up flow for it is #105.
 export function CoursesPageHeader({ rows }: CoursesPageHeaderProps) {
   return (
     <div className="flex flex-col gap-4 px-10 pt-12 pb-8 md:px-12">
@@ -18,9 +18,7 @@ export function CoursesPageHeader({ rows }: CoursesPageHeaderProps) {
         </p>
         <div className="flex shrink-0 items-center gap-3">
           <CoursesExportButton rows={rows} />
-          <Button size="xl" type="button" variant="button-mauve">
-            + Add your course
-          </Button>
+          <AddCourseTrigger />
         </div>
       </div>
     </div>

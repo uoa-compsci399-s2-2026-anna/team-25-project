@@ -412,6 +412,22 @@ describe("prepareVersion guards", () => {
 })
 
 describe("prepareVersion drafts", () => {
+  it("creates a draft with no period or dates yet - a draft only needs a course", async () => {
+    const { req } = request({ write: { draft: true, sentMetadataKeys: new Set() } })
+
+    await expect(prepare(req, { course: 5, name: "Working title" })).resolves.toMatchObject({
+      name: "Working title",
+    })
+  })
+
+  it("still refuses a plain (non-draft) create with no period or dates", async () => {
+    const { req } = request()
+
+    await expect(prepare(req, { course: 5, name: "Working title" })).rejects.toThrow(
+      "A period label and valid start and end dates are required.",
+    )
+  })
+
   it("drops the metadata keys a draft write carries", async () => {
     const { req } = request()
     const data = {
