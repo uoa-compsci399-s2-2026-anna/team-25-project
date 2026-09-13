@@ -1,6 +1,6 @@
+import { initials } from "@repo/shared/utils/initials"
 import { Avatar, AvatarFallback, AvatarImage, buttonVariants } from "@repo/ui/components/ui"
 import Link from "next/link"
-import { initials } from "@/lib/initials"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
 import { Routes } from "@/lib/routes"

@@ -281,6 +281,7 @@ export const seed = async () => {
             owner: requiredID(memberIds, owner),
             editors: editors.map((email) => requiredID(memberIds, email)),
           },
+          context: SEED_CONTEXT,
         }),
       ))
     courseIds.set(code, course.id)
@@ -323,6 +324,7 @@ export const seed = async () => {
         },
         draft: status === "draft",
         user: { ...owner, collection: Slugs.Collections.MEMBERS },
+        context: SEED_CONTEXT,
       })
     }
   }
