@@ -1,5 +1,6 @@
 "use client"
 
+import { validateField } from "@repo/shared/utils/validate-field"
 import {
   Button,
   Field,
@@ -13,19 +14,10 @@ import {
 import { useForm } from "@tanstack/react-form"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import type { z } from "zod"
 import { loginAction } from "@/features/auth/actions/auth"
 import { loginFormSchema } from "@/features/auth/zod/loginFormSchema"
 import { Routes } from "@/lib/routes"
 import { PasswordField } from "../PasswordField"
-
-function validateOnBlur(schema: z.ZodType<string>) {
-  return ({ value }: { value: string }) => {
-    if (!value) return undefined
-    const result = schema.safeParse(value)
-    return result.success ? undefined : { message: result.error.issues[0]?.message }
-  }
-}
 
 export function LoginForm() {
   const router = useRouter()
@@ -72,7 +64,7 @@ export function LoginForm() {
         <FieldGroup>
           <form.Field
             name="email"
-            validators={{ onBlur: validateOnBlur(loginFormSchema.shape.email) }}
+            validators={{ onBlur: validateField(loginFormSchema.shape.email) }}
           >
             {(field) => {
               const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
@@ -98,7 +90,7 @@ export function LoginForm() {
 
           <form.Field
             name="password"
-            validators={{ onBlur: validateOnBlur(loginFormSchema.shape.password) }}
+            validators={{ onBlur: validateField(loginFormSchema.shape.password) }}
           >
             {(field) => {
               const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
