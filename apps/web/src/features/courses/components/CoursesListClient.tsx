@@ -7,16 +7,10 @@ export interface CoursesListClientProps {
   rows: CourseTableRow[]
 }
 
-/**
- * Owns the table instance so the toolbar's filter/sort/search controls and
- * the table itself share one piece of state, per `CoursesTable`'s own docs
- * (presentation-only there; this - issue #106 - is "the page composing it").
- *
- * All rows load up front and are filtered/sorted in the browser: `pageSize`
- * is set to `Infinity` to opt out of `useDataTable`'s row-pagination feature,
- * since there's no pagination control in the design and a capstone course
- * directory is small enough to not need one.
- */
+// Owns the table instance so the toolbar and the table share the same state.
+// All rows load up front and get filtered/sorted in the browser -
+// `pageSize: Infinity` opts out of pagination, since the design doesn't have
+// any and the directory is small enough not to need it.
 export function CoursesListClient({ rows }: CoursesListClientProps) {
   const table = useCoursesTable({
     data: rows,

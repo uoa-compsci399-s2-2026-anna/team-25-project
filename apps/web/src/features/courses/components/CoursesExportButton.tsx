@@ -10,12 +10,8 @@ export interface CoursesExportButtonProps {
   rows: CourseTableRow[]
 }
 
-/**
- * Exports the full directory, not just what the toolbar's filters currently
- * narrow the table to - it lives in the page header (`CoursesPageHeader`),
- * alongside "Add your course", separate from the table's own live filter
- * state.
- */
+// Exports the whole directory rather than the toolbar's current filtered
+// view - it lives in the header, separate from the table's own filter state.
 export function CoursesExportButton({ rows }: CoursesExportButtonProps) {
   const handleExport = () => {
     const blob = new Blob([coursesToCsv(rows)], { type: "text/csv;charset=utf-8;" })
