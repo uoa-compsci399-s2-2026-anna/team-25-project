@@ -131,7 +131,7 @@ export const createCourse = async (input: unknown): Promise<ActionResult> => {
     const versionData = {
       assessments: assessments ? toLexicalRichText(assessments) : undefined,
       course: course.id,
-      deliveryFormat,
+      deliveryFormat: deliveryFormat ? deliveryFormat : undefined,
       endDate: blankToUndefined(endDate),
       learningOutcomes: learningOutcomes ? toLexicalRichText(learningOutcomes) : undefined,
       name,

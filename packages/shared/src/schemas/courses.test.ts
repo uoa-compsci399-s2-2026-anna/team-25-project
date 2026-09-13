@@ -46,6 +46,10 @@ describe("addCourseFormSchema (draft)", () => {
     const result = addCourseFormSchema.safeParse({
       ...draftInput,
       assessments: "",
+      // The dialog's Select sends "" until an option is picked - a plain
+      // z.enum(...).optional() only lets undefined through, not "", so this
+      // one guards against that regressing.
+      deliveryFormat: "",
       endDate: "",
       learningOutcomes: "",
       period: "",

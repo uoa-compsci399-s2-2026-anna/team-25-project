@@ -159,6 +159,7 @@ describe("createCourse", () => {
 
       await createCourse({
         ...draftInput,
+        deliveryFormat: "",
         endDate: "",
         period: "",
         programme: "",
@@ -170,6 +171,7 @@ describe("createCourse", () => {
         2,
         expect.objectContaining({
           data: expect.objectContaining({
+            deliveryFormat: undefined,
             endDate: undefined,
             period: undefined,
             programme: undefined,

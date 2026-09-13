@@ -20,7 +20,10 @@ export type CreateCourseInput = z.infer<typeof createCourseSchema>
  */
 const draftOfferingFields = {
   assessments: z.string().trim().optional(),
-  deliveryFormat: z.enum(CourseDeliveryFormat).optional(),
+  // The dialog's Select always sends "" until a real option is picked - plain
+  // `.optional()` only lets `undefined` through, so a untouched draft would
+  // fail here with "Invalid option" instead of just leaving it unset.
+  deliveryFormat: z.union([z.enum(CourseDeliveryFormat), z.literal("")]).optional(),
   endDate: z.string().optional(),
   learningOutcomes: z.string().trim().optional(),
   name: z.string().trim().min(1, "Course name is required"),
