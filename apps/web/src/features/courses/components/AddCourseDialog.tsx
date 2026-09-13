@@ -7,6 +7,7 @@ import {
 } from "@repo/ui/components/composite"
 import { Button, toast } from "@repo/ui/components/ui"
 import { useRouter } from "next/navigation"
+import type { ComponentProps } from "react"
 import { useState } from "react"
 import { createCourse } from "../actions/createCourse"
 
@@ -33,15 +34,34 @@ type FieldErrors = Partial<Record<keyof AddCapstoneCourseDialogValues, string>>
 type Intent = "draft" | "publish"
 
 export interface AddCourseDialogProps {
-  /** Pre-fills "Your role" from the signed-in member's profile position - still editable. */
-  defaultRole: string
+  /**
+   * Pre-fills "Your role" from the signed-in member's profile position - still
+   * editable. A promise rather than a value so the server can stream it in
+   * without this dialog having to wait for it: the trigger is usable at once,
+   * and the role lands in the field whenever it arrives.
+   */
+  defaultRole: Promise<string>
+}
+
+/**
+ * The button that opens the dialog - also what stands in for it before it has
+ * loaded. `DialogTrigger` clones its own click handling and a ref onto
+ * whatever element is passed as its `trigger`, so every prop here has to
+ * reach the real `<Button>` underneath rather than being swallowed by this
+ * wrapper.
+ */
+export function AddCourseTriggerButton(props: ComponentProps<typeof Button>) {
+  return (
+    <Button size="xl" type="button" variant="button-mauve" {...props}>
+      + Add your course
+    </Button>
+  )
 }
 
 export function AddCourseDialog({ defaultRole }: AddCourseDialogProps) {
   const router = useRouter()
-  const emptyValues: AddCapstoneCourseDialogValues = { ...baseValues, role: defaultRole }
   const [open, setOpen] = useState(false)
-  const [values, setValues] = useState(emptyValues)
+  const [values, setValues] = useState(baseValues)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [formError, setFormError] = useState<string | undefined>(undefined)
   const [submitting, setSubmitting] = useState<Intent | undefined>(undefined)
@@ -50,11 +70,18 @@ export function AddCourseDialog({ defaultRole }: AddCourseDialogProps) {
   // editing a draft" mode, only "start a new one".
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen)
-    if (nextOpen) {
-      setValues(emptyValues)
-      setFieldErrors({})
-      setFormError(undefined)
-    }
+    if (!nextOpen) return
+
+    setValues(baseValues)
+    setFieldErrors({})
+    setFormError(undefined)
+    // Seed "Your role" from the profile once that's known - but only into a
+    // still-blank field, so a role the user has already typed while it was on
+    // its way is never overwritten. A failed lookup just leaves it blank.
+    void defaultRole.then(
+      (role) => setValues((current) => (current.role ? current : { ...current, role })),
+      () => undefined,
+    )
   }
 
   const submit = async (intent: Intent) => {
@@ -101,11 +128,7 @@ export function AddCourseDialog({ defaultRole }: AddCourseDialogProps) {
       onValueChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
       open={open}
       submitting={submitting}
-      trigger={
-        <Button size="xl" type="button" variant="button-mauve">
-          + Add your course
-        </Button>
-      }
+      trigger={<AddCourseTriggerButton />}
       values={values}
     />
   )

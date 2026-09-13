@@ -8,8 +8,16 @@ import { AddCourseDialog } from "./AddCourseDialog"
 vi.mock("../actions/createCourse", () => ({ createCourse: vi.fn() }))
 vi.mock("next/navigation", () => ({ useRouter: vi.fn() }))
 
-function openDialog(defaultRole = "") {
-  render(<AddCourseDialog defaultRole={defaultRole} />)
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((r) => {
+    resolve = r
+  })
+  return { promise, resolve }
+}
+
+function openDialog(defaultRole: string | Promise<string> = "") {
+  render(<AddCourseDialog defaultRole={Promise.resolve(defaultRole)} />)
   fireEvent.click(screen.getByRole("button", { name: "+ Add your course" }))
 }
 
@@ -34,8 +42,40 @@ describe("AddCourseDialog", () => {
     expect(screen.getByRole("dialog", { name: "Add a capstone course" })).toBeInTheDocument()
   })
 
-  it("pre-fills Your role from the given default", () => {
+  it("pre-fills Your role from the given default", async () => {
     openDialog("Senior Lecturer")
+    await waitFor(() => {
+      expect(screen.getByLabelText("Your role")).toHaveValue("Senior Lecturer")
+    })
+  })
+
+  it("opens before the default role has arrived, and keeps what was typed when it does", async () => {
+    const role = deferred<string>()
+    openDialog(role.promise)
+
+    expect(screen.getByRole("dialog", { name: "Add a capstone course" })).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText("Course code"), { target: { value: "CS399" } })
+    fireEvent.change(screen.getByLabelText("Your role"), { target: { value: "Tutor" } })
+
+    await act(async () => {
+      role.resolve("Senior Lecturer")
+    })
+
+    expect(screen.getByLabelText("Course code")).toHaveValue("CS399")
+    expect(screen.getByLabelText("Your role")).toHaveValue("Tutor")
+  })
+
+  it("fills a still-blank Your role when the default arrives after opening", async () => {
+    const role = deferred<string>()
+    openDialog(role.promise)
+
+    fireEvent.change(screen.getByLabelText("Course code"), { target: { value: "CS399" } })
+
+    await act(async () => {
+      role.resolve("Senior Lecturer")
+    })
+
+    expect(screen.getByLabelText("Course code")).toHaveValue("CS399")
     expect(screen.getByLabelText("Your role")).toHaveValue("Senior Lecturer")
   })
 
@@ -52,7 +92,9 @@ describe("AddCourseDialog", () => {
     })
 
     fireEvent.click(screen.getByRole("button", { name: "+ Add your course" }))
-    expect(screen.getByLabelText("Your role")).toHaveValue("Senior Lecturer")
+    await waitFor(() => {
+      expect(screen.getByLabelText("Your role")).toHaveValue("Senior Lecturer")
+    })
   })
 
   it("submits the current field values to createCourse", async () => {
