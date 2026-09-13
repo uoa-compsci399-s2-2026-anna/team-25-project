@@ -20,4 +20,11 @@ describe("ProposalsSection", () => {
       screen.getByRole("heading", { level: 3, name: "Log in to see proposals available" }),
     ).toBeInTheDocument()
   })
+
+  it("renders the ResearchIdeaCta", () => {
+    render(<ProposalsSection />)
+    expect(
+      screen.getByRole("heading", { level: 3, name: "Have a research idea?" }),
+    ).toBeInTheDocument()
+  })
 })

@@ -27,7 +27,7 @@ describe("HeroSection", () => {
     render(<HeroSection />)
     expect(
       screen.getByText(
-        /Academics across eight Australian and New Zealand universities post research ideas/,
+        /Academics across Australian and New Zealand universities post research ideas/,
       ),
     ).toBeInTheDocument()
   })
@@ -45,11 +45,11 @@ describe("HeroSection", () => {
     )
   })
 
-  it("renders Register with your uni email as a link", () => {
+  it("links Register with your uni email to the register route", () => {
     render(<HeroSection />)
     expect(screen.getByRole("button", { name: "Register with your uni email" })).toHaveAttribute(
       "href",
-      Routes.HOME,
+      Routes.REGISTER.ROOT,
     )
   })
 })

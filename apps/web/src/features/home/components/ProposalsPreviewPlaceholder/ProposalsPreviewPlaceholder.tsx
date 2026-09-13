@@ -11,7 +11,7 @@ const stats = [
 
 export const ProposalsPreviewPlaceholder = () => {
   return (
-    <div className="flex flex-col gap-8 rounded-2xl bg-brand-blush/60 p-8">
+    <div className="flex flex-col justify-between gap-8 rounded-2xl bg-brand-blush/60 p-8">
       <div className="flex flex-col gap-2">
         <Heading level="h3">Log in to see proposals available</Heading>
         <p className="text-muted-foreground">
@@ -36,15 +36,13 @@ export const ProposalsPreviewPlaceholder = () => {
       </div>
 
       <div className="flex flex-wrap items-center gap-4">
-        {/* TODO: point to a real login page once #70 (session helper) lands */}
-        <Button nativeButton={false} render={<Link href={Routes.HOME} />} variant="button-mauve">
+        <Button nativeButton={false} render={<Link href={Routes.LOGIN} />} variant="button-mauve">
           Log in
         </Button>
-        {/* TODO: point to a real registration flow once it exists */}
         <Button
           borderColor="charcoal"
           nativeButton={false}
-          render={<Link href={Routes.HOME} />}
+          render={<Link href={Routes.REGISTER.ROOT} />}
           variant="button-transparent"
         >
           Register with your uni email

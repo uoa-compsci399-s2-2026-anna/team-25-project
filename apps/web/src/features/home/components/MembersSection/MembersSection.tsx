@@ -24,7 +24,7 @@ const benefits = [
 
 export const MembersSection = () => {
   return (
-    <section className="px-8 py-16 md:px-16">
+    <section className="px-8 py-10 md:px-16">
       <Heading className="mb-8" level="h2">
         What members get
       </Heading>
