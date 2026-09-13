@@ -3,7 +3,7 @@ import { useRender } from "@base-ui/react/use-render"
 import { cn } from "@repo/ui/lib/utils"
 import { cva, type VariantProps } from "class-variance-authority"
 
-const headingVariants = cva("font-heading text-foreground tracking-[-0.04em]", {
+const headingVariants = cva("font-heading text-black tracking-[-0.04em]", {
   variants: {
     level: {
       h1: "text-3xl font-semibold md:text-5xl",
@@ -21,7 +21,9 @@ const headingVariants = cva("font-heading text-foreground tracking-[-0.04em]", {
 
 type HeadingLevel = NonNullable<VariantProps<typeof headingVariants>["level"]>
 
-type HeadingProps = useRender.ComponentProps<HeadingLevel> & { level?: HeadingLevel }
+type HeadingProps = useRender.ComponentProps<HeadingLevel> & {
+  level?: HeadingLevel
+}
 
 function Heading({ className, level = "h1", render, ...props }: HeadingProps) {
   return useRender({

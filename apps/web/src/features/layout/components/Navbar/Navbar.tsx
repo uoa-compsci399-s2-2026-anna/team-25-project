@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, Skeleton } from "@repo/ui/components/ui"
+import { Avatar, AvatarFallback, Heading, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
 import { Suspense } from "react"
 import { Routes } from "@/lib/routes"
@@ -25,7 +25,7 @@ export const Navbar = () => {
         <Avatar>
           <AvatarFallback />
         </Avatar>
-        <span className="font-bold text-lg">CCCA</span>
+        <Heading level="h4">CCCA</Heading>
       </Link>
 
       <nav aria-label="Main" className="flex items-center gap-5">
