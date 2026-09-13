@@ -149,6 +149,14 @@ export const createCourse = async (input: unknown): Promise<ActionResult> => {
         collection: Slugs.Collections.COURSE_VERSIONS,
         data: {
           ...versionData,
+          // `draft: false` alone only tells Payload's own versioning system
+          // not to save a draft - the collection's own prepareVersion hook
+          // decides whether *this* write counts as a publish (running the
+          // hooks that stamp publishedAt/displaySnapshot and flip the
+          // course's hasPublishedVersion) by reading `data._status`, so that
+          // has to be sent explicitly too. Matches the seed script's own
+          // published-offering writes.
+          _status: "published",
           teachingTeam: [{ member: user.id, role }],
         } as RequiredDataFromCollectionSlug<"courseVersions">,
         draft: false,

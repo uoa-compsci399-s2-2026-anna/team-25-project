@@ -239,6 +239,11 @@ describe("createCourse", () => {
         expect.objectContaining({
           collection: "courseVersions",
           data: expect.objectContaining({
+            // `draft: false` alone doesn't make prepareVersion treat this as
+            // a publish - it reads `_status` off the data itself, so this
+            // has to be sent explicitly (matches the seed script's own
+            // published-offering writes).
+            _status: "published",
             course: 1,
             name: publishInput.name,
             teachingTeam: [{ member: member.user.id, role: publishInput.role }],
