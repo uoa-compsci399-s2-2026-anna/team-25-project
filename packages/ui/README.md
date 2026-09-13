@@ -7,7 +7,6 @@ Shared [shadcn/ui](https://ui.shadcn.com/) component library for the [Casa](../.
 - React 19 + Tailwind CSS v4
 - [Base UI](https://base-ui.com/) primitives (`@base-ui/react`)
 - `class-variance-authority`, `clsx`, `tailwind-merge` for variant/class handling
-- `next-themes` for light/dark theming
 - Storybook 10 (Vite builder) for component development, docs, and visual/a11y testing
 
 ## What's here
