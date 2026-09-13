@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Button,
   Dialog,
@@ -6,11 +8,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@repo/ui/components/ui"
+import { useState } from "react"
 import { PostProposalForm } from "./PostProposalForm"
 
 export const PostProposalDialog = () => {
+  const [open, setOpen] = useState(false)
+
   return (
-    <Dialog>
+    <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger
         render={
           <Button className="shrink-0 font-bold" size="lg" variant="button-mauve">
@@ -28,7 +33,7 @@ export const PostProposalDialog = () => {
             Cancel
           </DialogClose>
         </div>
-        <PostProposalForm />
+        <PostProposalForm onSuccess={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   )

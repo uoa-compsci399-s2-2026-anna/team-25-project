@@ -37,7 +37,11 @@ const RequiredAsterisk = () => (
   </span>
 )
 
-export const PostProposalForm = () => {
+type PostProposalFormProps = {
+  onSuccess?: () => void
+}
+
+export const PostProposalForm = ({ onSuccess }: PostProposalFormProps) => {
   const [formError, setFormError] = useState<string | undefined>(undefined)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
@@ -54,7 +58,7 @@ export const PostProposalForm = () => {
       body: "",
     },
     validators: { onChange: postProposalFormSchema },
-    onSubmit: async ({ value }) => {
+    onSubmit: async ({ value, formApi }) => {
       setFieldErrors({})
       setFormError(undefined)
 
@@ -62,6 +66,8 @@ export const PostProposalForm = () => {
         const result = await postProposal(value)
         if (result.ok) {
           toast.add({ type: "success", title: "Proposal posted" })
+          formApi.reset()
+          onSuccess?.()
           return
         }
 
