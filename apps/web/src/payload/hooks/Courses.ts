@@ -1,6 +1,10 @@
 import { isDeepStrictEqual } from "node:util"
+import { QueryKeys } from "@repo/shared/constants/query-keys"
 import type { Course } from "@repo/shared/payload-types"
+import { revalidateTag } from "next/cache"
 import type {
+  CollectionAfterChangeHook,
+  CollectionAfterDeleteHook,
   CollectionBeforeDeleteHook,
   CollectionBeforeValidateHook,
   PayloadRequest,
@@ -77,6 +81,21 @@ export const prepareCourse: CollectionBeforeValidateHook<Course> = async ({
   next.hasPublishedVersion = current?.hasPublishedVersion ?? false
 
   return next
+}
+
+export const revalidateCourse = (courseId: number) => {
+  revalidateTag(QueryKeys.COURSES.ROOT, "max")
+  revalidateTag(QueryKeys.COURSES.ID(courseId), "max")
+}
+
+export const revalidateCourses: CollectionAfterChangeHook<Course> = ({ doc, req }) => {
+  if (!req.context.disableRevalidate) revalidateCourse(doc.id)
+  return doc
+}
+
+export const revalidateDeletedCourse: CollectionAfterDeleteHook<Course> = ({ doc, req }) => {
+  if (!req.context.disableRevalidate) revalidateCourse(doc.id)
+  return doc
 }
 
 export const assertCourseDeletable: CollectionBeforeDeleteHook = async ({ id, req }) => {

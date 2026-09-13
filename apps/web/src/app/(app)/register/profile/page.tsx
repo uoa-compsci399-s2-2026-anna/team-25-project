@@ -1,3 +1,4 @@
+import { initials } from "@repo/shared/utils/initials"
 import { Heading } from "@repo/ui/components/ui"
 import { redirect } from "next/navigation"
 import { Suspense } from "react"
@@ -6,7 +7,6 @@ import {
   RegisterProfileSkeleton,
   RegisterStepper,
 } from "@/features/auth/components"
-import { initials } from "@/lib/initials"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
 import { Routes } from "@/lib/routes"

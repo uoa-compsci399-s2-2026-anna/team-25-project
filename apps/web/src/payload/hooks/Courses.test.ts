@@ -1,12 +1,19 @@
 import type { Course } from "@repo/shared/payload-types"
+import { revalidateTag } from "next/cache"
 import type { PayloadRequest } from "payload"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { lockDocument } from "@/lib/payload/lock"
 import { Slugs } from "@/lib/payload/slugs"
-import { assertCourseDeletable, prepareCourse } from "./Courses"
+import {
+  assertCourseDeletable,
+  prepareCourse,
+  revalidateCourses,
+  revalidateDeletedCourse,
+} from "./Courses"
 import { internal } from "./helpers"
 
 vi.mock("@/lib/payload/lock", () => ({ lockDocument: vi.fn() }))
+vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }))
 
 const owner = { id: 42, collection: Slugs.Collections.MEMBERS }
 const editor = { id: 7, collection: Slugs.Collections.MEMBERS }
@@ -50,7 +57,33 @@ const prepare = (
     typeof prepareCourse
   >[0]) as Promise<Partial<Course>>
 
-beforeEach(() => vi.mocked(lockDocument).mockReset())
+beforeEach(() => {
+  vi.mocked(lockDocument).mockReset()
+  vi.mocked(revalidateTag).mockReset()
+})
+
+describe("course cache revalidation", () => {
+  it.each([revalidateCourses, revalidateDeletedCourse])(
+    "marks course queries stale after a write",
+    async (hook) => {
+      const doc = saved()
+      const result = await hook({ doc, req: { context: {} } } as never)
+
+      expect(revalidateTag).toHaveBeenCalledWith("courses", "max")
+      expect(revalidateTag).toHaveBeenCalledWith("courses:5", "max")
+      expect(result).toBe(doc)
+    },
+  )
+
+  it.each([revalidateCourses, revalidateDeletedCourse])(
+    "can skip revalidation through request context",
+    async (hook) => {
+      await hook({ doc: saved(), req: { context: { disableRevalidate: true } } } as never)
+
+      expect(revalidateTag).not.toHaveBeenCalled()
+    },
+  )
+})
 
 describe("prepareCourse creation", () => {
   it("refuses a caller who is neither an admin nor a member", async () => {

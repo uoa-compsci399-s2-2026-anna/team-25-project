@@ -1,6 +1,8 @@
 import { isDeepStrictEqual } from "node:util"
 import type { Course, CourseVersion } from "@repo/shared/payload-types"
 import type {
+  CollectionAfterChangeHook,
+  CollectionAfterDeleteHook,
   CollectionBeforeDeleteHook,
   CollectionBeforeValidateHook,
   PayloadRequest,
@@ -8,6 +10,7 @@ import type {
 import { Slugs } from "@/lib/payload/slugs"
 import { relationID } from "../access/Courses/helpers"
 import { admin } from "../access/helpers"
+import { revalidateCourse } from "./Courses"
 import {
   fail,
   internal,
@@ -152,14 +155,15 @@ function validatePeriod(version: Partial<CourseVersion>) {
 async function snapshotTeachingTeam(req: PayloadRequest, version: Partial<CourseVersion>) {
   const teachingTeam = []
   for (const row of version.teachingTeam ?? []) {
+    const memberId = requireID(row.member)
     const person = await req.payload.findByID({
       collection: Slugs.Collections.MEMBERS,
-      id: requireID(row.member),
+      id: memberId,
       req,
       depth: 0,
       overrideAccess: true,
     })
-    teachingTeam.push({ name: `${person.firstName} ${person.lastName}`, role: row.role })
+    teachingTeam.push({ name: `${person.firstName} ${person.lastName}`, role: row.role, memberId })
   }
 
   return teachingTeam
@@ -282,6 +286,28 @@ export const prepareVersion: CollectionBeforeValidateHook<CourseVersion> = async
   else for (const key of versionMetadataKeys) delete data[key]
 
   return data
+}
+
+const revalidateVersionCourse = (doc: CourseVersion, req: PayloadRequest) => {
+  if (req.context.disableRevalidate) return
+  const courseId = relationID(doc.course)
+  if (courseId) revalidateCourse(courseId)
+}
+
+export const revalidateCourseVersions: CollectionAfterChangeHook<CourseVersion> = ({
+  doc,
+  req,
+}) => {
+  revalidateVersionCourse(doc, req)
+  return doc
+}
+
+export const revalidateDeletedCourseVersion: CollectionAfterDeleteHook<CourseVersion> = ({
+  doc,
+  req,
+}) => {
+  revalidateVersionCourse(doc, req)
+  return doc
 }
 
 export const assertVersionDeletable: CollectionBeforeDeleteHook = async ({ id, req }) => {

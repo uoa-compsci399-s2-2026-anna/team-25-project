@@ -1,4 +1,5 @@
 import type { CourseVersion } from "@repo/shared/payload-types"
+import { revalidateTag } from "next/cache"
 import type { PayloadRequest } from "payload"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { lockDocument } from "@/lib/payload/lock"
@@ -6,12 +7,15 @@ import { Slugs } from "@/lib/payload/slugs"
 import {
   assertVersionDeletable,
   prepareVersion,
+  revalidateCourseVersions,
+  revalidateDeletedCourseVersion,
   validatePublication,
   validateVersionChanges,
 } from "./CourseVersions"
 import { internal, isInternal, VERSION_WRITE, type VersionMetadataKey } from "./helpers"
 
 vi.mock("@/lib/payload/lock", () => ({ lockDocument: vi.fn() }))
+vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }))
 
 const richText: CourseVersion["learningOutcomes"] = {
   root: {
@@ -302,7 +306,34 @@ const prepare = (
     typeof prepareVersion
   >[0]) as Promise<Partial<CourseVersion>>
 
-beforeEach(() => vi.mocked(lockDocument).mockReset())
+beforeEach(() => {
+  vi.mocked(lockDocument).mockReset()
+  vi.mocked(revalidateTag).mockReset()
+})
+
+describe("course version cache revalidation", () => {
+  it.each([revalidateCourseVersions, revalidateDeletedCourseVersion])(
+    "marks its course queries stale after a write",
+    async (hook) => {
+      const doc = { id: 9, course: 7 } as CourseVersion
+      const result = await hook({ doc, req: { context: {} } } as never)
+
+      expect(revalidateTag).toHaveBeenCalledWith("courses", "max")
+      expect(revalidateTag).toHaveBeenCalledWith("courses:7", "max")
+      expect(result).toBe(doc)
+    },
+  )
+
+  it.each([revalidateCourseVersions, revalidateDeletedCourseVersion])(
+    "can skip revalidation through request context",
+    async (hook) => {
+      const doc = { id: 9, course: 7 } as CourseVersion
+      await hook({ doc, req: { context: { disableRevalidate: true } } } as never)
+
+      expect(revalidateTag).not.toHaveBeenCalled()
+    },
+  )
+})
 
 describe("prepareVersion guards", () => {
   it("returns data untouched when there is none", async () => {
@@ -503,7 +534,7 @@ describe("prepareVersion publication", () => {
     expect(result.displaySnapshot).toEqual({
       courseCode: "SE 101",
       institutionName: "University of Auckland",
-      teachingTeam: [{ name: "Ada Lovelace", role: "Lecturer" }],
+      teachingTeam: [{ name: "Ada Lovelace", role: "Lecturer", memberId: 1 }],
     })
     expect(result.publishedBy).toEqual({ relationTo: Slugs.Collections.MEMBERS, value: 42 })
     expect(Date.parse(result.publishedAt as string)).not.toBeNaN()

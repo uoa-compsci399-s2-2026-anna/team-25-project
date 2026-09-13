@@ -6,6 +6,11 @@ describe("QueryKeys", () => {
     expect(QueryKeys).toEqual({
       INSTITUTIONS: "institutions",
       PROPOSALS: "proposals",
+      COURSES: {
+        ROOT: "courses",
+        ID: expect.any(Function),
+      },
     })
+    expect(QueryKeys.COURSES.ID(7)).toBe("courses:7")
   })
 })
