@@ -37,15 +37,23 @@ describe("LogoutButton", () => {
     expect(screen.getByRole("button", { name: "Logout" })).toBeDisabled()
   })
 
-  it("refreshes and redirects home after a successful logout", async () => {
-    vi.mocked(logoutAction).mockResolvedValue({ success: true })
-    render(<LogoutButton />)
+  it("refreshes and redirects home after a successful logout, showing the server's message", async () => {
+    vi.mocked(logoutAction).mockResolvedValue({
+      success: true,
+      message: "User logged out successfully",
+    })
+    render(
+      <Toaster>
+        <LogoutButton />
+      </Toaster>,
+    )
     fireEvent.click(screen.getByRole("button", { name: "Logout" }))
 
     const router = useRouter()
     await waitFor(() => expect(router.push).toHaveBeenCalledWith("/"))
     expect(router.refresh).toHaveBeenCalled()
     expect(logoutAction).toHaveBeenCalled()
+    expect(await screen.findByText("User logged out successfully")).toBeInTheDocument()
   })
 
   it("shows a failure toast with the server's message when logout fails", async () => {
@@ -64,5 +72,40 @@ describe("LogoutButton", () => {
     expect(screen.getByText("We couldn't log you out. Try again later.")).toBeInTheDocument()
     const router = useRouter()
     expect(router.push).not.toHaveBeenCalled()
+  })
+
+  it("shows a failure toast when the server action call itself fails (e.g. network error)", async () => {
+    vi.mocked(logoutAction).mockRejectedValue(new Error("Network error"))
+    render(
+      <Toaster>
+        <LogoutButton />
+      </Toaster>,
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Logout" }))
+
+    expect(await screen.findByText("Logout failed")).toBeInTheDocument()
+    const router = useRouter()
+    expect(router.push).not.toHaveBeenCalled()
+  })
+
+  it("disables the button while logging out so a double-click can't fire a second request", async () => {
+    let resolveLogout: (result: { success: true; message: string }) => void = () => {}
+    vi.mocked(logoutAction).mockReturnValue(
+      new Promise((resolve) => {
+        resolveLogout = resolve
+      }),
+    )
+    render(<LogoutButton />)
+    const button = screen.getByRole("button", { name: "Logout" })
+
+    fireEvent.click(button)
+    fireEvent.click(button)
+
+    await waitFor(() => expect(button).toBeDisabled())
+    expect(logoutAction).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      resolveLogout({ success: true, message: "User logged out successfully" })
+    })
   })
 })
