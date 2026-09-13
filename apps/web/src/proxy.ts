@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 
-const memberRoutes = new Set(["/proposals"])
+const memberRoutes = new Set(["/proposals", "/courses"])
 const guestRoutes = new Set(["/login", "/register"])
 
 export async function proxy(request: NextRequest) {
