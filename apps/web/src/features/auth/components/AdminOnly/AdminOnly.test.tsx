@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Routes } from "@/lib/routes"
-import { AdminOnly } from "./AdminOnly"
+import { AdminOnlyGate } from "./AdminOnly"
 
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
 vi.mock("next/navigation", () => ({
@@ -40,21 +40,21 @@ describe("AdminOnly", () => {
 
   it("redirects home when no user is logged in", async () => {
     signOut()
-    await expect(AdminOnly({ children: <div>secret</div> })).rejects.toThrow()
+    await expect(AdminOnlyGate({ children: <div>secret</div> })).rejects.toThrow()
     expect(redirect).toHaveBeenCalledWith(Routes.HOME)
     expect(redirect).toHaveBeenCalledTimes(1)
   })
 
   it("redirects home when a non-admin member is logged in", async () => {
     signInAsMember()
-    await expect(AdminOnly({ children: <div>secret</div> })).rejects.toThrow()
+    await expect(AdminOnlyGate({ children: <div>secret</div> })).rejects.toThrow()
     expect(redirect).toHaveBeenCalledWith(Routes.HOME)
     expect(redirect).toHaveBeenCalledTimes(1)
   })
 
   it("renders children for a signed-in admin", async () => {
     signInAsAdmin()
-    render(await AdminOnly({ children: <div>secret</div> }))
+    render(await AdminOnlyGate({ children: <div>secret</div> }))
     expect(screen.getByText("secret")).toBeInTheDocument()
     expect(redirect).not.toHaveBeenCalled()
   })
