@@ -36,7 +36,9 @@ export function CoursesYourEntriesPanel({ myCourses }: CoursesYourEntriesPanelPr
       <CardContent className="w-full gap-3">
         <Eyebrow>Your entries</Eyebrow>
         {myCourses === null && (
-          <p className="text-muted-foreground">Sign in to view your courses</p>
+          <p className="text-muted-foreground">
+            This panel tracks a signed-in convenor's own courses.
+          </p>
         )}
         {myCourses !== null && myCourses.total === 0 && (
           <p className="text-muted-foreground">You don't convene any courses yet.</p>

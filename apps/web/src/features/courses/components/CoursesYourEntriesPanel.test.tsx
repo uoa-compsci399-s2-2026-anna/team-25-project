@@ -3,9 +3,11 @@ import { describe, expect, it } from "vitest"
 import { CoursesYourEntriesPanel } from "./CoursesYourEntriesPanel"
 
 describe("CoursesYourEntriesPanel", () => {
-  it("prompts sign-in when there's nothing to summarize - signed out or signed in as an admin", () => {
+  it("shows a neutral message when there's nothing to summarize - signed out or signed in as an admin", () => {
     render(<CoursesYourEntriesPanel myCourses={null} />)
-    expect(screen.getByText("Sign in to view your courses")).toBeInTheDocument()
+    expect(
+      screen.getByText("This panel tracks a signed-in convenor's own courses."),
+    ).toBeInTheDocument()
   })
 
   it("tells a convenor with no courses yet", () => {
