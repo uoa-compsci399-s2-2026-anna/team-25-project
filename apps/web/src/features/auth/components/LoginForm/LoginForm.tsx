@@ -6,6 +6,7 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
+  Heading,
   Input,
   toast,
 } from "@repo/ui/components/ui"
@@ -52,121 +53,113 @@ export function LoginForm() {
   })
 
   return (
-    <div className="my-[10vh] flex h-[60vh] w-[70vw] flex-col">
-      <div className="mx-auto flex w-fit flex-col">
-        <div className="text-center">
-          <h1 className="font-extrabold text-6xl">Welcome Back</h1>
-          <h6 className="text-lg text-muted-foreground">
-            Log in to see proposals, course data and member contact details.
-          </h6>
-        </div>
-
-        <div className="my-8">
-          <form
-            className="w-full"
-            noValidate
-            onSubmit={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              form.handleSubmit()
-            }}
-          >
-            <FieldGroup>
-              <form.Field
-                name="email"
-                validators={{ onBlur: validateOnBlur(loginFormSchema.shape.email) }}
-              >
-                {(field) => {
-                  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
-                  return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldLabel className="font-extrabold text-lg" htmlFor={field.name}>
-                        University Email
-                      </FieldLabel>
-                      <Input
-                        aria-invalid={isInvalid}
-                        autoComplete="email"
-                        className="h-13 gap-1.5 rounded-md px-3.5"
-                        id={field.name}
-                        name={field.name}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        type="email"
-                        value={field.state.value}
-                      />
-                      {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                    </Field>
-                  )
-                }}
-              </form.Field>
-
-              <form.Field
-                name="password"
-                validators={{ onBlur: validateOnBlur(loginFormSchema.shape.password) }}
-              >
-                {(field) => {
-                  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
-                  return (
-                    <Field data-invalid={isInvalid}>
-                      <div className="flex flex-row justify-between font-extrabold">
-                        <FieldLabel className="font-extrabold text-lg" htmlFor={field.name}>
-                          Password
-                        </FieldLabel>
-                        <Link className="text-brand-mauve hover:text-primary" href="/">
-                          Forgot password?
-                        </Link>
-                      </div>
-                      <div className="relative w-full">
-                        <Input
-                          aria-invalid={isInvalid}
-                          autoComplete="current-password"
-                          className="h-13 w-full gap-1.5 rounded-md px-3.5"
-                          id={field.name}
-                          name={field.name}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          type={showPassword ? "text" : "password"}
-                          value={field.state.value}
-                        />
-                        <button
-                          className="absolute top-1/2 right-4 -translate-y-1/2 text-sm hover:text-primary"
-                          onClick={() => setShowPassword((value) => !value)}
-                          type="button"
-                        >
-                          {showPassword ? "Hide" : "Show"}
-                        </button>
-                      </div>
-                      {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                    </Field>
-                  )
-                }}
-              </form.Field>
-            </FieldGroup>
-
-            <div className="my-8">
-              <form.Subscribe selector={(state) => state.isSubmitting}>
-                {(isSubmitting) => (
-                  <Button
-                    className="w-full"
-                    disabled={isSubmitting}
-                    size="xxl"
-                    type="submit"
-                    variant="button-mauve"
-                  >
-                    Log in
-                  </Button>
-                )}
-              </form.Subscribe>
-              <div className="mt-4">
-                <Link className="text-muted-foreground text-sm" href={Routes.REGISTER.ROOT}>
-                  New here?{" "}
-                  <span className="text-brand-mauve underline">Register with your uni email</span>
-                </Link>
-              </div>
-            </div>
-          </form>
-        </div>
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-3 text-center">
+        <Heading level="h1">Welcome Back</Heading>
+        <p className="text-muted-foreground">
+          Log in to see proposals, course data and member contact details.
+        </p>
       </div>
+
+      <form
+        className="flex flex-col gap-8"
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          form.handleSubmit()
+        }}
+      >
+        <FieldGroup>
+          <form.Field
+            name="email"
+            validators={{ onBlur: validateOnBlur(loginFormSchema.shape.email) }}
+          >
+            {(field) => {
+              const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={field.name}>University Email</FieldLabel>
+                  <Input
+                    aria-invalid={isInvalid}
+                    autoComplete="email"
+                    className="h-10"
+                    id={field.name}
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    type="email"
+                    value={field.state.value}
+                  />
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                </Field>
+              )
+            }}
+          </form.Field>
+
+          <form.Field
+            name="password"
+            validators={{ onBlur: validateOnBlur(loginFormSchema.shape.password) }}
+          >
+            {(field) => {
+              const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+              return (
+                <Field data-invalid={isInvalid}>
+                  <div className="flex flex-row items-center justify-between">
+                    <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                    <Link className="text-primary text-sm underline underline-offset-4" href="/">
+                      Forgot password?
+                    </Link>
+                  </div>
+                  <div className="relative w-full">
+                    <Input
+                      aria-invalid={isInvalid}
+                      autoComplete="current-password"
+                      className="h-10 w-full pr-16"
+                      id={field.name}
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      type={showPassword ? "text" : "password"}
+                      value={field.state.value}
+                    />
+                    <button
+                      className="absolute top-1/2 right-3 -translate-y-1/2 text-sm hover:text-primary"
+                      onClick={() => setShowPassword((value) => !value)}
+                      type="button"
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                </Field>
+              )
+            }}
+          </form.Field>
+        </FieldGroup>
+
+        <div className="flex flex-col gap-4">
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(isSubmitting) => (
+              <Button
+                className="w-full"
+                disabled={isSubmitting}
+                size="xl"
+                type="submit"
+                variant="button-mauve"
+              >
+                Log in
+              </Button>
+            )}
+          </form.Subscribe>
+          <Link className="text-muted-foreground text-sm" href={Routes.REGISTER.ROOT}>
+            New here?{" "}
+            <span className="text-primary underline underline-offset-4">
+              Register with your uni email
+            </span>
+          </Link>
+        </div>
+      </form>
     </div>
   )
 }
