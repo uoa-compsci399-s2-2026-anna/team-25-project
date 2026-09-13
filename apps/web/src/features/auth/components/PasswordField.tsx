@@ -1,11 +1,6 @@
 "use client"
 
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "@repo/ui/components/ui"
+import { Input } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import { useState } from "react"
 import { PASSWORD_STRENGTH_STEPS, passwordStrength } from "../helpers/passwordStrength"
@@ -34,10 +29,11 @@ export const PasswordField = ({
 
   return (
     <div className="flex flex-col gap-2">
-      <InputGroup className="h-10">
-        <InputGroupInput
+      <div className="relative w-full">
+        <Input
           aria-invalid={invalid}
           autoComplete="new-password"
+          className="h-10 w-full pr-16"
           id={id}
           name={name}
           onBlur={onBlur}
@@ -45,16 +41,14 @@ export const PasswordField = ({
           type={revealed ? "text" : "password"}
           value={value}
         />
-        <InputGroupAddon align="inline-end">
-          <InputGroupButton
-            onClick={() => setRevealed((current) => !current)}
-            type="button"
-            variant="button-transparent"
-          >
-            {revealed ? "Hide" : "Show"}
-          </InputGroupButton>
-        </InputGroupAddon>
-      </InputGroup>
+        <button
+          className="absolute top-1/2 right-3 -translate-y-1/2 text-sm hover:text-primary"
+          onClick={() => setRevealed((current) => !current)}
+          type="button"
+        >
+          {revealed ? "Hide" : "Show"}
+        </button>
+      </div>
 
       {value.length > 0 && (
         <div className="flex items-center gap-3">
