@@ -11,7 +11,7 @@ const stats = [
 
 export const ProposalsPreviewPlaceholder = () => {
   return (
-    <div className="flex flex-col gap-8 rounded-2xl bg-brand-blush/60 p-8">
+    <div className="flex flex-col justify-between gap-8 rounded-2xl bg-brand-blush/60 p-8">
       <div className="flex flex-col gap-2">
         <Heading level="h3">Log in to see proposals available</Heading>
         <p className="text-muted-foreground">
