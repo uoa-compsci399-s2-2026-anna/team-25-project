@@ -8,20 +8,16 @@ import {
   FieldLabel,
   Heading,
   Input,
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
   toast,
 } from "@repo/ui/components/ui"
 import { useForm } from "@tanstack/react-form"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import * as React from "react"
 import type { z } from "zod"
 import { loginAction } from "@/features/auth/actions/auth"
 import { loginFormSchema } from "@/features/auth/zod/loginFormSchema"
 import { Routes } from "@/lib/routes"
+import { PasswordField } from "../PasswordField"
 
 function validateOnBlur(schema: z.ZodType<string>) {
   return ({ value }: { value: string }) => {
@@ -33,7 +29,6 @@ function validateOnBlur(schema: z.ZodType<string>) {
 
 export function LoginForm() {
   const router = useRouter()
-  const [showPassword, setShowPassword] = React.useState(false)
   const form = useForm({
     defaultValues: {
       email: "",
@@ -115,27 +110,15 @@ export function LoginForm() {
                       Forgot password?
                     </Link>
                   </div>
-                  <InputGroup className="h-10">
-                    <InputGroupInput
-                      aria-invalid={isInvalid}
-                      autoComplete="current-password"
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      type={showPassword ? "text" : "password"}
-                      value={field.state.value}
-                    />
-                    <InputGroupAddon align="inline-end">
-                      <InputGroupButton
-                        onClick={() => setShowPassword((value) => !value)}
-                        type="button"
-                        variant="button-transparent"
-                      >
-                        {showPassword ? "Hide" : "Show"}
-                      </InputGroupButton>
-                    </InputGroupAddon>
-                  </InputGroup>
+                  <PasswordField
+                    autoComplete="current-password"
+                    id={field.name}
+                    invalid={isInvalid}
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onValueChange={field.handleChange}
+                    value={field.state.value}
+                  />
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               )
