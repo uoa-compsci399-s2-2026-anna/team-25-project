@@ -79,7 +79,7 @@ export function LoginForm() {
               const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
               return (
                 <Field data-invalid={isInvalid}>
-                  <FieldLabel htmlFor={field.name}>University Email</FieldLabel>
+                  <FieldLabel htmlFor={field.name}>University email</FieldLabel>
                   <Input
                     aria-invalid={isInvalid}
                     autoComplete="email"

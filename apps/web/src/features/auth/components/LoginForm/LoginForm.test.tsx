@@ -9,7 +9,7 @@ vi.mock("@/features/auth/actions/auth", () => ({ loginAction: vi.fn() }))
 vi.mock("next/navigation", () => ({ useRouter: vi.fn() }))
 
 function fillValidCredentials() {
-  fireEvent.change(screen.getByLabelText("University Email"), {
+  fireEvent.change(screen.getByLabelText("University email"), {
     target: { value: "member@uni.edu" },
   })
   fireEvent.change(screen.getByLabelText("Password"), {
@@ -33,14 +33,14 @@ describe("LoginForm", () => {
 
   it("renders the email field, password field, and submit button", () => {
     render(<LoginForm />)
-    expect(screen.getByLabelText("University Email")).toBeInTheDocument()
+    expect(screen.getByLabelText("University email")).toBeInTheDocument()
     expect(screen.getByLabelText("Password")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Log in" })).toBeInTheDocument()
   })
 
   it("shows a validation error and does not call loginAction for an invalid email", async () => {
     render(<LoginForm />)
-    fireEvent.change(screen.getByLabelText("University Email"), {
+    fireEvent.change(screen.getByLabelText("University email"), {
       target: { value: "not-an-email" },
     })
     fireEvent.click(screen.getByRole("button", { name: "Log in" }))
@@ -64,7 +64,7 @@ describe("LoginForm", () => {
 
   it("does not show a validation error when blurring an empty field", async () => {
     render(<LoginForm />)
-    const emailInput = screen.getByLabelText("University Email")
+    const emailInput = screen.getByLabelText("University email")
     fireEvent.focus(emailInput)
     fireEvent.blur(emailInput)
 
@@ -73,10 +73,10 @@ describe("LoginForm", () => {
 
   it("shows a validation error on blur for a non-empty invalid email", async () => {
     render(<LoginForm />)
-    fireEvent.change(screen.getByLabelText("University Email"), {
+    fireEvent.change(screen.getByLabelText("University email"), {
       target: { value: "not-an-email" },
     })
-    fireEvent.blur(screen.getByLabelText("University Email"))
+    fireEvent.blur(screen.getByLabelText("University email"))
 
     expect(await screen.findByText("Enter a valid email address")).toBeInTheDocument()
   })
