@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest"
 import { CoursesYourEntriesPanel } from "./CoursesYourEntriesPanel"
 
 describe("CoursesYourEntriesPanel", () => {
-  it("prompts a signed-out visitor to sign in", () => {
+  it("prompts sign-in when there's nothing to summarize - signed out or signed in as an admin", () => {
     render(<CoursesYourEntriesPanel myCourses={null} />)
-    expect(screen.getByText("Sign in to see the courses you convene.")).toBeInTheDocument()
+    expect(screen.getByText("Sign in to view your courses")).toBeInTheDocument()
   })
 
   it("tells a convenor with no courses yet", () => {

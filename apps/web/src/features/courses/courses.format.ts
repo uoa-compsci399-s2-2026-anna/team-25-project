@@ -6,9 +6,8 @@ const asPopulated = <T>(value: number | T | null | undefined): T | undefined =>
 
 const formatLecturerName = (member: Member) => `${member.firstName.charAt(0)}. ${member.lastName}`
 
-// Prefers whoever is marked "coordinator" on the offering's teaching team, then
-// falls back to the first listed member, then the course's owner - always
-// present, so a row can always show someone even before any offering exists.
+// Picks the coordinator if there is one, otherwise the first teaching-team
+// member, and falls back to the course owner if the team is empty.
 const pickLecturerMember = (
   version: CourseVersion | undefined,
   course: Course,
@@ -32,13 +31,10 @@ export const deriveTitle = (version: CourseVersion | undefined): string =>
 export const deriveStatus = (version: CourseVersion | undefined): CourseTableRow["status"] =>
   version?._status === "published" ? "published" : "draft"
 
-/**
- * `period` is free text written as "<year> <term>" (e.g. "2026 Semester 2",
- * "2027 Full Year") - see `CourseVersions` collection and its seed fixtures.
- * A course with no offering yet has no period to split, so it gets a `year`
- * of `0`: `CourseTableRow.year` is a plain `number` (fixed by `CoursesTable`,
- * #104), so there's no `null`/`"—"` to fall back to here.
- */
+// `period` is formatted as "<year> <term>", like "2026 Semester 2" or
+// "2027 Full Year". If there's no offering yet there's no period to read, so
+// `year` falls back to `0` - `CourseTableRow.year` has to be a plain number
+// since that's how `CoursesTable` (#104) defined it.
 export const splitPeriod = (
   period: string | undefined | null,
 ): { year: number; semester: string } => {
@@ -72,17 +68,14 @@ export interface CoursesSummaryStats {
   totalCourses: number
   yearLongCourses: number
   /**
-   * Neither field exists on `Course`/`CourseVersion` yet (see `CoursesTable`,
-   * #104's own note that `duration`/`students`/`teamSize`/`industry` were all
-   * dropped for the same reason) - held at a fixed ratio/value of the real
-   * course count so the panel isn't empty, until a real field backs them.
+   * Placeholder values for now - there's no field on `Course` or
+   * `CourseVersion` for either yet (the same gap #104 already called out
+   * when it dropped the industry/team-size columns).
    */
   industryRequiredCourses: number
   medianTeamSize: number
 }
 
-// A period's non-year remainder reads "Semester 2", "Trimester 1", or
-// "Full Year" - only the last one means the offering runs the whole year.
 const isYearLong = (row: CourseTableRow): boolean => row.semester.toLowerCase().includes("year")
 
 export const summarizeCourses = (rows: CourseTableRow[]): CoursesSummaryStats => ({
@@ -98,34 +91,22 @@ export interface MyCoursesSummary {
   year: number
 }
 
-const ownerIdOf = (course: Course): number | undefined =>
-  typeof course.owner === "number" ? course.owner : course.owner.id
-
 /**
- * Courses the given member owns, and how many have a published offering for
- * `year` (defaults to the current year) - the closest real proxy for "up to
- * date" available: whether they've submitted this year's entry yet, rather
- * than just having published *something* at some point.
+ * `myCourseIds` holds every course the viewer owns, published or not.
+ * `rows` is the public, published-only list. An unpublished course can never
+ * count as "up to date" anyway, so it's fine that it won't have a row here.
  */
 export const summarizeMyCourses = (
-  courses: Course[],
+  myCourseIds: ReadonlySet<string>,
   rows: CourseTableRow[],
-  ownerId: number,
   year: number = new Date().getFullYear(),
-): MyCoursesSummary => {
-  // Pair each course with its row by index *before* filtering - `rows` is
-  // built from `courses` 1:1 in the same order (see `getCoursesPageData`),
-  // and filtering `courses` alone first would throw that alignment off.
-  const mine = courses
-    .map((course, index) => ({ course, row: rows[index] }))
-    .filter(({ course }) => ownerIdOf(course) === ownerId)
-
-  return {
-    total: mine.length,
-    upToDate: mine.filter(({ row }) => row.status === "published" && row.year === year).length,
-    year,
-  }
-}
+): MyCoursesSummary => ({
+  total: myCourseIds.size,
+  upToDate: rows.filter(
+    (row) => myCourseIds.has(row.id) && row.status === "published" && row.year === year,
+  ).length,
+  year,
+})
 
 /**
  * Pinned so the server and browser agree; a reader's own zone could otherwise

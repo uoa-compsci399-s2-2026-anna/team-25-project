@@ -188,46 +188,44 @@ describe("summarizeCourses", () => {
 })
 
 describe("summarizeMyCourses", () => {
-  it("counts only the courses the given member owns", () => {
-    const mine = course({ id: 1, owner: member({ id: 7 }) })
-    const someoneElses = course({ id: 2, owner: member({ id: 8 }) })
-    const rows = [row({ id: "1" }), row({ id: "2" })]
+  it("counts every id in the owned-course set, published or not", () => {
+    const myCourseIds = new Set(["1", "2", "3"])
+    const rows = [row({ id: "1", year: 2026, status: "published" })]
 
-    const summary = summarizeMyCourses([mine, someoneElses], rows, 7, 2026)
-    expect(summary.total).toBe(1)
+    expect(summarizeMyCourses(myCourseIds, rows, 2026).total).toBe(3)
   })
 
-  it("counts a course as up to date only when published for the given year", () => {
-    const currentYear = course({ id: 1, owner: member({ id: 7 }) })
-    const pastYear = course({ id: 2, owner: member({ id: 7 }) })
-    const draftThisYear = course({ id: 3, owner: member({ id: 7 }) })
+  it("counts a course as up to date only when its row is published for the given year", () => {
+    const myCourseIds = new Set(["1", "2", "3"])
     const rows = [
       row({ id: "1", year: 2026, status: "published" }),
       row({ id: "2", year: 2025, status: "published" }),
-      row({ id: "3", year: 2026, status: "draft" }),
+      // id "3" has no row at all - an unpublished course, so it can't be up to date.
     ]
 
-    const summary = summarizeMyCourses([currentYear, pastYear, draftThisYear], rows, 7, 2026)
-    expect(summary).toEqual({ total: 3, upToDate: 1, year: 2026 })
+    expect(summarizeMyCourses(myCourseIds, rows, 2026)).toEqual({
+      total: 3,
+      upToDate: 1,
+      year: 2026,
+    })
   })
 
-  it("stays aligned to the right row when other members' courses are interleaved", () => {
-    const mine = course({ id: 2, owner: member({ id: 7 }) })
-    const someoneElses = course({ id: 1, owner: member({ id: 8 }) })
-    // `mine` is second in `courses` but its matching row must still be found by
-    // the same index - a bug here would silently grab the wrong row's status/year.
+  it("ignores rows that aren't in the owned-course set", () => {
+    const myCourseIds = new Set(["2"])
     const rows = [
-      row({ id: "1", year: 2020, status: "draft" }),
+      row({ id: "1", year: 2026, status: "published" }),
       row({ id: "2", year: 2026, status: "published" }),
     ]
 
-    const summary = summarizeMyCourses([someoneElses, mine], rows, 7, 2026)
-    expect(summary).toEqual({ total: 1, upToDate: 1, year: 2026 })
+    expect(summarizeMyCourses(myCourseIds, rows, 2026)).toEqual({
+      total: 1,
+      upToDate: 1,
+      year: 2026,
+    })
   })
 
   it("defaults to the current calendar year", () => {
-    const mine = course({ id: 1, owner: member({ id: 7 }) })
-    const summary = summarizeMyCourses([mine], [row({ id: "1" })], 7)
+    const summary = summarizeMyCourses(new Set(["1"]), [row({ id: "1" })])
     expect(summary.year).toBe(new Date().getFullYear())
   })
 })

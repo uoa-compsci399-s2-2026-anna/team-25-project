@@ -1,10 +1,11 @@
-import type { Course, CourseVersion, Member } from "@repo/shared/payload-types"
+import type { Admin, Course, CourseVersion, Member } from "@repo/shared/payload-types"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import {
-  getCoursesPageData,
+  getCoursesTableData,
   getLatestPublishedOffering,
+  getMyCoursesSummary,
   getPublishedCourse,
   getPublishedOffering,
   getPublishedOfferings,
@@ -51,27 +52,27 @@ const version = (overrides: Partial<CourseVersion>): CourseVersion =>
     ...overrides,
   }) as CourseVersion
 
-describe("getCoursesPageData", () => {
+describe("getCoursesTableData", () => {
   beforeEach(() => {
     find.mockReset()
     vi.mocked(getPayloadClient).mockResolvedValue({
       find,
     } as unknown as Awaited<ReturnType<typeof getPayloadClient>>)
-    vi.mocked(getCurrentUser).mockResolvedValue({ collection: null, user: null })
   })
 
-  it("fetches every visible course and offering, unpaginated and access-controlled", async () => {
+  it("fetches every published course and offering, unpaginated, viewer-independent", async () => {
     find.mockResolvedValueOnce({ docs: [] }).mockResolvedValueOnce({ docs: [] })
 
-    await getCoursesPageData()
+    await getCoursesTableData()
 
+    // Neither call passes a `user` - that's what keeps this cacheable across
+    // every viewer, admins included. See the function's own doc comment.
     expect(find).toHaveBeenCalledWith({
       collection: "courses",
       depth: 1,
       overrideAccess: false,
       pagination: false,
       sort: "code",
-      user: undefined,
     })
     expect(find).toHaveBeenCalledWith({
       collection: "courseVersions",
@@ -79,18 +80,7 @@ describe("getCoursesPageData", () => {
       overrideAccess: false,
       pagination: false,
       sort: ["-startDate", "-id"],
-      user: undefined,
     })
-  })
-
-  it("scopes both queries to the signed-in viewer, so their own drafts are included", async () => {
-    const member = { collection: "members", id: 7 } as unknown as Member
-    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: member })
-    find.mockResolvedValueOnce({ docs: [] }).mockResolvedValueOnce({ docs: [] })
-
-    await getCoursesPageData()
-
-    expect(find).toHaveBeenCalledWith(expect.objectContaining({ user: member }))
   })
 
   it("pairs each course with its most recently started offering, and summarizes the directory", async () => {
@@ -108,7 +98,7 @@ describe("getCoursesPageData", () => {
       // Already sorted newest first, as the real query would return them.
       .mockResolvedValueOnce({ docs: [newer, older] })
 
-    const { rows, summary, myCourses } = await getCoursesPageData()
+    const { rows, summary } = await getCoursesTableData()
 
     expect(rows).toEqual([
       expect.objectContaining({ id: "1", code: "COMPSCI 399", year: 2026, semester: "Full Year" }),
@@ -116,41 +106,74 @@ describe("getCoursesPageData", () => {
     ])
     expect(summary.totalCourses).toBe(2)
     expect(summary.yearLongCourses).toBe(1)
-    expect(myCourses).toBeNull()
+  })
+})
+
+describe("getMyCoursesSummary", () => {
+  // Uses the real current year instead of hardcoding one - `summarizeMyCourses`
+  // defaults "up to date" to the current year, so a fixed value here would
+  // go stale over time.
+  const currentYear = new Date().getFullYear()
+  const rows = [
+    {
+      id: "1",
+      code: "COMPSCI 399",
+      title: "Capstone",
+      lecturer: "A. Patel",
+      university: "UoA",
+      semester: "Semester 2",
+      year: currentYear,
+      status: "published" as const,
+    },
+  ]
+
+  beforeEach(() => {
+    find.mockReset()
+    vi.mocked(getPayloadClient).mockResolvedValue({
+      find,
+    } as unknown as Awaited<ReturnType<typeof getPayloadClient>>)
   })
 
-  it("summarizes the signed-in viewer's own courses", async () => {
-    // Built from the real current year, not a hardcoded one: `summarizeMyCourses`
-    // defaults "up to date" to "has an offering for the current year", so a
-    // fixed year would silently go stale the moment this test outlives it.
-    const currentYear = new Date().getFullYear()
-    const me = { collection: "members", id: 1 } as unknown as Member
-    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: me })
+  it("returns null when nobody's signed in", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: null, user: null })
 
-    const mine = course({
-      id: 1,
-      code: "COMPSCI 399",
-      owner: { id: 1, firstName: "A", lastName: "B" },
-    })
-    const someoneElses = course({
-      id: 2,
-      code: "COSC 345",
-      owner: { id: 2, firstName: "C", lastName: "D" },
-    })
-    const myOffering = version({
-      id: 1,
-      course: 1,
-      period: `${currentYear} Semester 2`,
-      startDate: `${currentYear}-07-20`,
-    })
+    expect(await getMyCoursesSummary(rows)).toBeNull()
+    expect(find).not.toHaveBeenCalled()
+  })
 
-    find
-      .mockResolvedValueOnce({ docs: [mine, someoneElses] })
-      .mockResolvedValueOnce({ docs: [myOffering] })
+  it("returns null for an admin, rather than matching their id against an unrelated member's courses", async () => {
+    // Admins and members are separate collections with their own id sequences,
+    // so an admin with id 1 has nothing to do with the member id 1 who owns rows[0].
+    const admin = { id: 1 } as Admin
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "admin", user: admin })
 
-    const { myCourses } = await getCoursesPageData()
+    expect(await getMyCoursesSummary(rows)).toBeNull()
+    expect(find).not.toHaveBeenCalled()
+  })
 
-    expect(myCourses).toEqual({ total: 1, upToDate: 1, year: currentYear })
+  it("scopes the owned-course lookup to the signed-in member", async () => {
+    const member = { id: 1 } as Member
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: member })
+    find.mockResolvedValueOnce({ docs: [{ id: 1 }] })
+
+    await getMyCoursesSummary(rows)
+
+    expect(find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: "courses",
+        where: { owner: { equals: 1 } },
+        overrideAccess: false,
+        user: member,
+      }),
+    )
+  })
+
+  it("summarizes the member's owned courses against the given rows", async () => {
+    const member = { id: 1 } as Member
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: member })
+    find.mockResolvedValueOnce({ docs: [{ id: 1 }] })
+
+    expect(await getMyCoursesSummary(rows)).toEqual({ total: 1, upToDate: 1, year: currentYear })
   })
 })
 
