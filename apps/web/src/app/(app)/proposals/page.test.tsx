@@ -11,6 +11,10 @@ vi.mock("@/features/proposals/components/ProposalsList", () => ({
   ProposalsList: vi.fn(() => <div>Proposal results</div>),
 }))
 
+vi.mock("@/features/auth/components/MemberOnly/MemberOnly", () => ({
+  MemberOnly: ({ children }: { children: React.ReactNode }) => children,
+}))
+
 describe("proposals page", () => {
   it("gives the search params to the filter and result sections", () => {
     const searchParams = Promise.resolve({ q: "peer" })

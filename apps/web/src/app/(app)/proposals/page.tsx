@@ -1,11 +1,12 @@
 import type { SearchParams } from "nuqs/server"
 import { Suspense } from "react"
+import { MemberOnly } from "@/features/auth/components/MemberOnly/MemberOnly"
 import { ProposalsFilterServer } from "@/features/proposals/components/ProposalsFilterServer"
 import { ProposalsList } from "@/features/proposals/components/ProposalsList"
 
 export default function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (
-    <>
+    <MemberOnly>
       <div className="w-full bg-brand-cream/60 px-10 py-5 md:px-12">
         <Suspense fallback={<div>loading..</div>}>
           <ProposalsFilterServer searchParams={searchParams} />
@@ -14,6 +15,6 @@ export default function Page({ searchParams }: { searchParams: Promise<SearchPar
       <Suspense fallback={<div>loading..</div>}>
         <ProposalsList searchParams={searchParams} />
       </Suspense>
-    </>
+    </MemberOnly>
   )
 }
