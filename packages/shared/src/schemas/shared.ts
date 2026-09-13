@@ -1,0 +1,15 @@
+import { z } from "zod"
+
+// Mirrors the Lexical editor state Payload's richText field stores `body` as.
+export const richTextSchema = z
+  .object({
+    root: z.object({
+      type: z.string(),
+      children: z.array(z.object({ type: z.any(), version: z.number() }).catchall(z.unknown())),
+      direction: z.enum(["ltr", "rtl"]).nullable(),
+      format: z.enum(["left", "start", "center", "right", "end", "justify", ""]),
+      indent: z.number(),
+      version: z.number(),
+    }),
+  })
+  .catchall(z.unknown())
