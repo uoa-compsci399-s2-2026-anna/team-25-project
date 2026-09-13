@@ -2,6 +2,7 @@ import { ProposalStatus, ProposalTag } from "@repo/shared/enums/proposals"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import {
+  getProposalById,
   getProposalStatusCounts,
   getProposals,
   loadProposalStatusCounts,
@@ -12,6 +13,7 @@ vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
 
 const find = vi.fn()
 const count = vi.fn()
+const findByID = vi.fn()
 
 describe("getProposals", () => {
   beforeEach(() => {
@@ -99,6 +101,31 @@ describe("getProposalStatusCounts", () => {
         },
       })
     }
+  })
+})
+
+describe("getProposalById", () => {
+  beforeEach(() => {
+    findByID.mockReset()
+    vi.mocked(getPayloadClient).mockResolvedValue({
+      findByID,
+    } as unknown as Awaited<ReturnType<typeof getPayloadClient>>)
+  })
+
+  it("looks up the proposal by id", async () => {
+    await getProposalById(12)
+
+    expect(findByID).toHaveBeenCalledWith({
+      id: 12,
+      collection: "proposals",
+      disableErrors: true,
+    })
+  })
+
+  it("returns null instead of throwing when the id doesn't exist", async () => {
+    findByID.mockResolvedValue(null)
+
+    expect(await getProposalById(999)).toBeNull()
   })
 })
 
