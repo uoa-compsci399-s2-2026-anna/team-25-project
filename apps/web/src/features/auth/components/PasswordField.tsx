@@ -13,20 +13,26 @@ import { PASSWORD_STRENGTH_STEPS, passwordStrength } from "../helpers/passwordSt
 const SEGMENTS = Array.from({ length: PASSWORD_STRENGTH_STEPS }, (_, index) => index + 1)
 
 type PasswordFieldProps = {
+  /** Explicit per call site: sign-up needs new-password, login needs current-password. */
+  autoComplete: string
   id: string
   invalid?: boolean
   name: string
   onBlur: () => void
   onValueChange: (value: string) => void
+  /** Opt in - scoring an existing password on login says nothing useful. */
+  showStrength?: boolean
   value: string
 }
 
 export const PasswordField = ({
+  autoComplete,
   id,
   invalid,
   name,
   onBlur,
   onValueChange,
+  showStrength = false,
   value,
 }: PasswordFieldProps) => {
   const [revealed, setRevealed] = useState(false)
@@ -37,7 +43,7 @@ export const PasswordField = ({
       <InputGroup className="h-10">
         <InputGroupInput
           aria-invalid={invalid}
-          autoComplete="new-password"
+          autoComplete={autoComplete}
           id={id}
           name={name}
           onBlur={onBlur}
@@ -56,7 +62,7 @@ export const PasswordField = ({
         </InputGroupAddon>
       </InputGroup>
 
-      {value.length > 0 && (
+      {showStrength && value.length > 0 && (
         <div className="flex items-center gap-3">
           <div aria-hidden="true" className="flex flex-1 gap-1.5">
             {SEGMENTS.map((segment) => (

@@ -14,8 +14,7 @@ export const NavAuthStatus = async () => {
   if (!user) {
     return (
       <div className="flex items-center gap-4">
-        {/* TODO: point to a real login page once a login form lands */}
-        <Link className="text-base transition-opacity hover:opacity-70" href={Routes.HOME}>
+        <Link className="text-base transition-opacity hover:opacity-70" href={Routes.LOGIN}>
           Log in
         </Link>
         <Link className={buttonVariants({ size: "sm" })} href={Routes.REGISTER.ROOT}>

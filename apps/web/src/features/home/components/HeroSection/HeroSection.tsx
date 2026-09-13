@@ -13,15 +13,14 @@ export const HeroSection = () => {
         </Heading>
 
         <p className="text-muted-foreground text-xl">
-          Academics across eight Australian and New Zealand universities post research ideas, find
+          Academics across Australian and New Zealand universities post research ideas, find
           co-investigators, and compare how capstone courses are taught.
         </p>
 
         <div className="flex flex-wrap items-center gap-4">
-          {/* TODO: point to a real registration flow once it exists */}
           <Button
             nativeButton={false}
-            render={<Link href={Routes.HOME} />}
+            render={<Link href={Routes.REGISTER.ROOT} />}
             size="lg"
             variant="button-mauve"
           >

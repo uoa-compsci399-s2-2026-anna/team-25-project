@@ -6,6 +6,7 @@ export function route<T extends string>(path: Route<T>): Route<T> {
 
 export const Routes = {
   HOME: route("/"),
+  LOGIN: route("/login"),
   COURSES: {
     ROOT: route("/courses"),
     COURSE: (courseId: string) => route(`/courses/${courseId}`),
