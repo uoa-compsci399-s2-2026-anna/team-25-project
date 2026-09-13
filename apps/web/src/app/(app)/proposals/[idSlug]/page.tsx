@@ -6,11 +6,9 @@ import { ProposalMeta } from "@/features/proposals/components/ProposalMeta/Propo
 import { ProposalStatusRow } from "@/features/proposals/components/ProposalStatusRow/ProposalStatusRow"
 import { StatusAuthorCard } from "@/features/proposals/components/StatusAuthorCard/StatusAuthorCard"
 import { TagsCard } from "@/features/proposals/components/TagsCard/TagsCard"
-import { loadProposalById } from "@/features/proposals/proposals.queries"
+import { getProposalById } from "@/lib/payload/getProposalById"
 
-// The id is the leading number in "12-peer-review" (or the whole segment when
-// there's no slug, e.g. "12"). The slug is only for readability - resolution
-// is always by id, matching Routes.PROPOSALS.PROPOSAL's own comment.
+// pulls the id off the front, e.g. "12-peer-review" or just "12"
 const parseProposalId = (idSlug: string) => {
   const id = Number(idSlug.split("-")[0])
   return Number.isInteger(id) ? id : null
@@ -24,14 +22,12 @@ export default async function Page({ params }: { params: Promise<{ idSlug: strin
     notFound()
   }
 
-  const proposal = await loadProposalById(id)
+  const proposal = await getProposalById(id)
 
   if (!proposal) {
     notFound()
   }
 
-  // The default query depth populates these, but don't pass a bare id through
-  // to a component that expects a full author object.
   const authors = proposal.author.filter((author) => typeof author === "object")
 
   return (
