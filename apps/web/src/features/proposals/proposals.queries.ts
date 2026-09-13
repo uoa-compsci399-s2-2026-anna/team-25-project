@@ -62,6 +62,22 @@ const getProposalsCached = async (filters: ProposalFilters, pagination: Paginati
   return getProposals(filters, pagination)
 }
 
+export const getProposalById = async (id: number) => {
+  const payload = await getPayloadClient()
+  return payload.findByID({
+    id,
+    collection: Slugs.Collections.PROPOSALS,
+    disableErrors: true,
+  })
+}
+
+export const getProposalByIdCached = async (id: number) => {
+  "use cache"
+  cacheLife("max")
+  cacheTag(QueryKeys.PROPOSALS)
+  return getProposalById(id)
+}
+
 /** Filters relevant to status counts: `status` is overwritten per tab and `sort` never affects a count. */
 type ProposalStatusCountFilters = Omit<ProposalFilters, "status" | "sort">
 
