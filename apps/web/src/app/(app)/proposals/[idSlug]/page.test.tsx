@@ -7,6 +7,10 @@ vi.mock("@/features/proposals/components/ProposalPage/ProposalPage", () => ({
   ProposalPage: vi.fn(() => <div>Proposal content</div>),
 }))
 
+vi.mock("@/features/auth/components/MemberOnly/MemberOnly", () => ({
+  MemberOnly: ({ children }: { children: React.ReactNode }) => children,
+}))
+
 describe("proposal detail page", () => {
   it("gives the route params to ProposalPage", () => {
     const params = Promise.resolve({ idSlug: "1-peer-review" })
