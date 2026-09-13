@@ -1,5 +1,6 @@
 import type { Meta, StoryFn } from "@storybook/nextjs-vite"
 import { createColumnHelper } from "@tanstack/react-table"
+import { useState } from "react"
 import { Badge } from "../Badge/badge"
 import { Button } from "../Button/button"
 import { BadgeCell, SortableHeader, StackedCell, TextCell } from "./cells"
@@ -222,3 +223,29 @@ export const WithExternalFilters: Story = (args) => {
   )
 }
 WithExternalFilters.args = { density: "compact" } satisfies StoryArgs
+
+/**
+ * `getRowProps` lets a consumer attach DOM props to each body row - e.g. a
+ * click handler and pointer cursor to make the whole row navigate -  while
+ * `DataTable` itself stays free of any navigation concept. A real consumer
+ * would `router.push`/render a `Link`; this story just tracks the last
+ * clicked row to show the callback receives the right one.
+ */
+export const ClickableRows: Story = (args) => {
+  const table = useDataTable({ columns, data: courses })
+  const [lastClicked, setLastClicked] = useState<string | null>(null)
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Badge variant="ghost">{lastClicked ? `Last clicked: ${lastClicked}` : "Click a row"}</Badge>
+      <DataTable
+        {...args}
+        getRowProps={(row) => ({
+          className: "cursor-pointer",
+          onClick: () => setLastClicked(row.original.title),
+        })}
+        table={table}
+      />
+    </div>
+  )
+}

@@ -33,7 +33,7 @@ const ProfileFormSection = async () => {
 
 export default function Page() {
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-8 px-4 py-16">
+    <main className="mx-auto flex w-full max-w-xl flex-col gap-8 px-4 py-20">
       <RegisterStepper current={2} />
 
       <div className="flex flex-col gap-3 text-center">

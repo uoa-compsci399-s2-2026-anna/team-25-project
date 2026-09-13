@@ -3,6 +3,7 @@ import { Geist_Mono } from "next/font/google"
 import localFont from "next/font/local"
 import { NuqsAdapter } from "nuqs/adapters/next/app"
 import "@repo/ui/globals.css"
+import { Toaster } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import { Footer, Navbar } from "@/features/layout/components"
 
