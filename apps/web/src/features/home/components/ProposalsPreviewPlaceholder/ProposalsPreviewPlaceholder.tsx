@@ -36,15 +36,13 @@ export const ProposalsPreviewPlaceholder = () => {
       </div>
 
       <div className="flex flex-wrap items-center gap-4">
-        {/* TODO: point to a real login page once #70 (session helper) lands */}
-        <Button nativeButton={false} render={<Link href={Routes.HOME} />} variant="button-mauve">
+        <Button nativeButton={false} render={<Link href={Routes.LOGIN} />} variant="button-mauve">
           Log in
         </Button>
-        {/* TODO: point to a real registration flow once it exists */}
         <Button
           borderColor="charcoal"
           nativeButton={false}
-          render={<Link href={Routes.HOME} />}
+          render={<Link href={Routes.REGISTER.ROOT} />}
           variant="button-transparent"
         >
           Register with your uni email

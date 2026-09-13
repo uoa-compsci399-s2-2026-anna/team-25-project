@@ -32,12 +32,12 @@ describe("ProposalsPreviewPlaceholder", () => {
     expect(screen.getByText(label)).toBeInTheDocument()
   })
 
-  it("renders Log in and Register with your uni email as links", () => {
+  it("links Log in and Register with your uni email to the real routes", () => {
     render(<ProposalsPreviewPlaceholder />)
-    expect(screen.getByRole("button", { name: "Log in" })).toHaveAttribute("href", Routes.HOME)
+    expect(screen.getByRole("button", { name: "Log in" })).toHaveAttribute("href", Routes.LOGIN)
     expect(screen.getByRole("button", { name: "Register with your uni email" })).toHaveAttribute(
       "href",
-      Routes.HOME,
+      Routes.REGISTER.ROOT,
     )
   })
 })
