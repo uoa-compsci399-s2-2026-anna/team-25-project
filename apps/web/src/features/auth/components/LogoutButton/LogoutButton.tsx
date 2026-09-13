@@ -19,7 +19,7 @@ export function LogoutButton({ children = "Logout", ...props }: LogoutButtonProp
         if (result.success) {
           router.refresh()
           router.push(Routes.HOME)
-          toast.add({ title: "Successful Logged Out", description: result.message })
+          toast.add({ title: "Successfully Logged Out", description: result.message })
         } else {
           toast.add({ title: "Logout failed", description: result.message })
         }
