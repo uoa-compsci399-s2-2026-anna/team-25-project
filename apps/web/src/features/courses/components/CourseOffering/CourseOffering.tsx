@@ -106,7 +106,7 @@ export const CourseOffering = async ({ params }: { params: CourseRouteParams }) 
         </div>
       </div>
 
-      <aside className="flex flex-col gap-4 lg:col-start-2 lg:row-span-3 lg:row-start-1">
+      <aside className="mt-2 flex flex-col gap-4 lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:mt-0">
         <CourseOfferingSidebarCard title="Offering">
           <CourseOfferingDetail label="Period" value={offering.period} />
           {offering.programme && (
@@ -156,6 +156,6 @@ export const CourseOfferingSkeleton = () => (
       <Skeleton className="h-8 w-72" />
       <Skeleton className="h-32 w-full" />
     </div>
-    <Skeleton className="h-48 w-full lg:col-start-2 lg:row-span-3 lg:row-start-1" />
+    <Skeleton className="mt-2 h-48 w-full lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:mt-0" />
   </>
 )
