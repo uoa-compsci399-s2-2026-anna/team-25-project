@@ -143,6 +143,9 @@ export function validateVersionChanges(
     fail("The offering's course cannot change.")
 }
 
+// Not required for a draft save - a rough first cut of an offering can exist
+// before its teaching period is settled. Anything else (a plain create/update,
+// or a publish) still needs it.
 function validatePeriod(version: Partial<CourseVersion>) {
   const start = Date.parse(version.startDate ?? "")
   const end = Date.parse(version.endDate ?? "")
@@ -277,7 +280,7 @@ export const prepareVersion: CollectionBeforeValidateHook<CourseVersion> = async
 
   data.course = course.id
   const next = mergeWithSaved(latest, data)
-  validatePeriod(next)
+  if (!savingDraft) validatePeriod(next)
 
   // Publication is the only writer of the metadata. Dropping the keys otherwise
   // leaves the stored columns untouched, so the guard above decides whether a
