@@ -190,3 +190,4 @@ Or run everything at once from the root with `pnpm test`.
 
 Commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/) — Commitlint checks this on every commit.
 Use the issue templates in `.github/ISSUE_TEMPLATE/` and the PR template in `.github/pull_request_template.md` when opening issues and pull requests.
+ 
