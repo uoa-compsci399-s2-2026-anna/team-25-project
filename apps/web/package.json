@@ -53,6 +53,8 @@
     "@repo/test-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "^4",
+    "@tanstack/react-devtools": "^0.10.12",
+    "@tanstack/react-form-devtools": "^0.2.34",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
