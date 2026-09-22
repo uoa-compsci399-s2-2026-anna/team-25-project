@@ -51,9 +51,6 @@ const TeamMember = ({ member }: { member: SnapshotMember }) => {
   )
 }
 
-const richTextClassName =
-  "flex flex-col gap-3 text-sm leading-relaxed [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
-
 export const CourseOffering = async ({ params }: { params: CourseRouteParams }) => {
   const courseId = await parseCourseId(params)
 
@@ -77,13 +74,13 @@ export const CourseOffering = async ({ params }: { params: CourseRouteParams }) 
 
         {offering.learningOutcomes && (
           <CourseOfferingSection title="Learning outcomes">
-            <RichText className={richTextClassName} data={offering.learningOutcomes} />
+            <RichText className="rich-text text-sm" data={offering.learningOutcomes} />
           </CourseOfferingSection>
         )}
 
         {offering.assessments && (
           <CourseOfferingSection title="Assessment">
-            <RichText className={richTextClassName} data={offering.assessments} />
+            <RichText className="rich-text text-sm" data={offering.assessments} />
           </CourseOfferingSection>
         )}
 

@@ -42,7 +42,7 @@ export const ProposalPage = async ({ params }: { params: Promise<{ idSlug: strin
         <Heading level="h1">{proposal.title}</Heading>
         <AuthorByline authors={authors} />
         <p className="text-muted-foreground">{proposal.summary}</p>
-        <RichText data={proposal.body} />
+        <RichText className="rich-text" data={proposal.body} />
         <ProposalMeta
           ethics={proposal.ethics}
           outputTarget={proposal.outputTarget}
