@@ -3,6 +3,7 @@ import { PaginationNav, ProposalCard } from "@repo/ui/components/composite"
 import type { Route } from "next"
 import Link from "next/link"
 import type { SearchParams } from "nuqs/server"
+import { StringHrefLink } from "@/components/StringHrefLink"
 import { Routes } from "@/lib/routes"
 import { loadProposalsPage } from "../proposals.queries"
 import {
@@ -64,7 +65,7 @@ export const ProposalsList = async ({ searchParams }: { searchParams: Promise<Se
               }}
               href={Routes.PROPOSALS.PROPOSAL(proposal.id, proposal.proposalSlug)}
               key={proposal.id}
-              linkComponent={Link}
+              linkComponent={StringHrefLink}
               postedAt={proposal.createdAt}
               status={proposal.status}
               summary={proposal.summary}
@@ -76,7 +77,7 @@ export const ProposalsList = async ({ searchParams }: { searchParams: Promise<Se
       </div>
       <PaginationNav
         getHref={getPageHref}
-        linkComponent={Link}
+        linkComponent={StringHrefLink}
         page={params.page}
         totalPages={totalPages}
       />
