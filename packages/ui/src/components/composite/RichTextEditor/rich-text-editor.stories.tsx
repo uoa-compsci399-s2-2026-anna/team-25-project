@@ -1,6 +1,7 @@
 import { RichText } from "@payloadcms/richtext-lexical/react"
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 import * as React from "react"
+import { richTextConverters } from "./rich-text-converters"
 import { RichTextEditor, type RichTextValue } from "./rich-text-editor"
 
 const text = (value: string, format = 0) => ({
@@ -14,6 +15,18 @@ const text = (value: string, format = 0) => ({
 })
 
 const element = { direction: "ltr", format: "", indent: 0, version: 1 } as const
+
+const cell = (value: string, headerState = 0) => ({
+  ...element,
+  type: "tablecell",
+  backgroundColor: null,
+  colSpan: 1,
+  headerState,
+  rowSpan: 1,
+  children: [
+    { ...element, type: "paragraph", textFormat: 0, textStyle: "", children: [text(value)] },
+  ],
+})
 
 const sample = {
   root: {
@@ -37,6 +50,15 @@ const sample = {
         children: [
           { ...element, type: "listitem", value: 1, children: [text("User research")] },
           { ...element, type: "listitem", value: 2, children: [text("Prototype")] },
+        ],
+      },
+      {
+        ...element,
+        type: "table",
+        children: [
+          { ...element, type: "tablerow", children: [cell("Week", 1), cell("Milestone", 1)] },
+          { ...element, type: "tablerow", children: [cell("4"), cell("User research done")] },
+          { ...element, type: "tablerow", children: [cell("8"), cell("Working prototype")] },
         ],
       },
     ],
@@ -88,7 +110,7 @@ export const RenderedPreview: Story = {
     return (
       <div className="flex flex-col gap-4">
         <RichTextEditor {...args} defaultValue={sample} onChange={setValue} />
-        <RichText className="rich-text text-sm" data={value} />
+        <RichText className="rich-text text-sm" converters={richTextConverters} data={value} />
       </div>
     )
   },
