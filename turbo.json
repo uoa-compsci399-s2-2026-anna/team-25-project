@@ -17,7 +17,7 @@
       "inputs": ["$TURBO_DEFAULT$", "biome.json", "biome.jsonc"]
     },
     "types:check": {
-      "dependsOn": ["^build", "^types:check"]
+      "dependsOn": ["^build", "^types:check", "generate:types"]
     },
     "test": {
       "cache": true,
