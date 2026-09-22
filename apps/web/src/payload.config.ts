@@ -4,6 +4,7 @@ import { postgresAdapter } from "@payloadcms/db-postgres"
 import {
   BlockquoteFeature,
   BoldFeature,
+  EXPERIMENTAL_TableFeature,
   HeadingFeature,
   InlineToolbarFeature,
   ItalicFeature,
@@ -57,6 +58,7 @@ export default buildConfig({
       BoldFeature(),
       ItalicFeature(),
       UnderlineFeature(),
+      EXPERIMENTAL_TableFeature(),
       InlineToolbarFeature(),
     ],
   }),
