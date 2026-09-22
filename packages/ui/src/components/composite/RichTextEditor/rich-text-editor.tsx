@@ -27,8 +27,13 @@ import { HeadingNode, QuoteNode } from "@lexical/rich-text"
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table"
 import { textAreaVariants } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
-import type { EditorThemeClasses, SerializedEditorState, SerializedLexicalNode } from "lexical"
-import { Component, type ReactNode, useEffect } from "react"
+import {
+  createEditor,
+  type EditorThemeClasses,
+  type SerializedEditorState,
+  type SerializedLexicalNode,
+} from "lexical"
+import { Component, type ReactNode, useEffect, useState } from "react"
 import { RichTextToolbar } from "./rich-text-toolbar"
 
 const NODES = [
@@ -63,15 +68,37 @@ const findUnsupportedTypes = (node: unknown, found = new Set<string>()) => {
   return found
 }
 
-// Lexical throws on each of these, so the editor does not mount for them. Unknown nodes are
-// not dropped, or the next save would delete them.
+// Parses the value the same way the editor will. In production Lexical only logs a parse
+// error and loads the nodes it read before it, so the next save would delete the rest.
+const parseError = (value: RichTextValue) => {
+  const editor = createEditor({
+    nodes: NODES,
+    onError: (error) => {
+      throw error
+    },
+  })
+  try {
+    editor.parseEditorState(value)
+    return null
+  } catch (error) {
+    return error
+  }
+}
+
+// The editor does not mount for any of these, so a save cannot delete content it did not load.
 const findLoadProblem = (value: RichTextValue) => {
   const root = value.root
   if (root?.type !== "root" || !Array.isArray(root.children)) return "it is not rich text"
   const unsupported = [...findUnsupportedTypes(root)]
-  return unsupported.length > 0
-    ? `it uses formatting the editor cannot edit (${unsupported.join(", ")})`
-    : null
+  if (unsupported.length > 0) {
+    return `it uses formatting the editor cannot edit (${unsupported.join(", ")})`
+  }
+  const error = parseError(value)
+  if (error) {
+    console.error("RichTextEditor: Lexical cannot parse defaultValue", error)
+    return "the editor cannot read it"
+  }
+  return null
 }
 
 // Lexical cannot load a root with no children. It is the same as no content.
@@ -114,8 +141,8 @@ type RichTextEditorProps = {
   "aria-labelledby"?: string
   className?: string
   /**
-   * Read once on mount. The editor is uncontrolled, so to load a different record, remount
-   * it with `key={record.id}`.
+   * Read once on mount, and later changes are ignored. The editor is uncontrolled, so to
+   * load a different record, remount it with `key={record.id}`.
    */
   defaultValue?: RichTextValue
   disabled?: boolean
@@ -137,11 +164,14 @@ const RichTextEditor = ({
   "aria-invalid": ariaInvalid,
   "aria-labelledby": ariaLabelledBy,
 }: RichTextEditorProps) => {
-  const initialValue = defaultValue && !isEmpty(defaultValue) ? defaultValue : undefined
-  const loadProblem = initialValue ? findLoadProblem(initialValue) : null
+  const [{ initialValue, loadProblem }] = useState(() => {
+    const value = defaultValue && !isEmpty(defaultValue) ? defaultValue : undefined
+    const problem = value ? findLoadProblem(value) : null
+    if (problem) console.error("RichTextEditor: defaultValue cannot be loaded", { id, problem })
+    return { initialValue: value, loadProblem: problem }
+  })
 
   if (loadProblem) {
-    console.error("RichTextEditor: defaultValue cannot be loaded", { id, loadProblem })
     return (
       <EditorAlert className={className}>This content cannot be edited: {loadProblem}.</EditorAlert>
     )
@@ -215,7 +245,7 @@ const EditorAlert = ({ children, className }: { children: ReactNode; className?:
   </p>
 )
 
-// Catches errors thrown while the editor renders, such as a failed parse of defaultValue.
+// Catches errors thrown while the editor renders. findLoadProblem catches bad content first.
 class EditorErrorBoundary extends Component<
   { children: ReactNode; className?: string },
   { failed: boolean }

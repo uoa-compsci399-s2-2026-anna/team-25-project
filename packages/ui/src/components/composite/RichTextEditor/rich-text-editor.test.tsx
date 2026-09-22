@@ -324,17 +324,35 @@ describe("RichTextEditor", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
   })
 
-  it("shows a fallback when Lexical cannot load the content", () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
-    // The node types are supported, but a text node cannot be a child of the root.
-    const invalid = { root: { ...doc().root, children: [text("Hi")] } } as unknown as RichTextValue
-    render(<RichTextEditor defaultValue={invalid} />)
+  // The node types are supported, but a text node cannot be a child of the root.
+  const unparsable = () =>
+    ({ root: { ...doc().root, children: [text("Hi")] } }) as unknown as RichTextValue
 
-    expect(screen.getByRole("alert")).toHaveTextContent("The editor could not load")
-    expect(consoleError).toHaveBeenCalledWith(
-      "RichTextEditor: the editor failed",
-      expect.anything(),
-    )
+  it.each(["test", "production"])(
+    "shows an alert when Lexical cannot parse the content (NODE_ENV=%s)",
+    (env) => {
+      // In production Lexical only logs a parse error and loads part of the tree.
+      vi.stubEnv("NODE_ENV", env)
+      const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
+      render(<RichTextEditor defaultValue={unparsable()} />)
+
+      expect(screen.getByRole("alert")).toHaveTextContent("the editor cannot read it")
+      expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
+      expect(consoleError).toHaveBeenCalled()
+      consoleError.mockRestore()
+      vi.unstubAllEnvs()
+    },
+  )
+
+  it("ignores defaultValue changes after mount", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
+    const { rerender } = render(<RichTextEditor defaultValue={doc("Hello")} />)
+    await screen.findByText("Hello")
+
+    rerender(<RichTextEditor defaultValue={unparsable()} />)
+    expect(screen.getByText("Hello")).toBeInTheDocument()
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+    expect(consoleError).not.toHaveBeenCalled()
     consoleError.mockRestore()
   })
 
