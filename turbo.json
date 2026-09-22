@@ -4,6 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": ["DATABASE_URL", "PAYLOAD_SECRET", "NEXT_PUBLIC_URL"],
       "inputs": ["$TURBO_DEFAULT$", ".env", ".env.local"],
       "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**", "dist/**"]
     },
