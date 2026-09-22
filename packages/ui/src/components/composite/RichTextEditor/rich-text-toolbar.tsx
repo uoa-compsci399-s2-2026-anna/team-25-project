@@ -16,6 +16,15 @@ import {
   $isQuoteNode,
 } from "@lexical/rich-text"
 import { $setBlocksType } from "@lexical/selection"
+import {
+  $deleteTableColumnAtSelection,
+  $deleteTableRowAtSelection,
+  $findTableNode,
+  $insertTableColumnAtSelection,
+  $insertTableRowAtSelection,
+  $isTableCellNode,
+  INSERT_TABLE_COMMAND,
+} from "@lexical/table"
 import { $getNearestNodeOfType, mergeRegister } from "@lexical/utils"
 import {
   buttonVariants,
@@ -31,8 +40,11 @@ import {
 import { cn } from "@repo/ui/lib/utils"
 import {
   $createParagraphNode,
+  $findMatchingParent,
   $getSelection,
+  $isElementNode,
   $isRangeSelection,
+  $isRootNode,
   CAN_REDO_COMMAND,
   CAN_UNDO_COMMAND,
   COMMAND_PRIORITY_LOW,
@@ -43,13 +55,19 @@ import {
   UNDO_COMMAND,
 } from "lexical"
 import {
+  BetweenHorizontalEnd,
+  BetweenVerticalEnd,
   Bold,
+  Columns3,
   Italic,
   List,
   ListOrdered,
   type LucideIcon,
   Quote,
   Redo2,
+  Rows3,
+  Table,
+  Trash2,
   Underline,
   Undo2,
 } from "lucide-react"
@@ -76,6 +94,7 @@ type ToolbarState = {
   blockType: BlockType
   canRedo: boolean
   canUndo: boolean
+  inTable: boolean
   isBold: boolean
   isItalic: boolean
   isUnderline: boolean
@@ -85,6 +104,7 @@ const initialState: ToolbarState = {
   blockType: "paragraph",
   canRedo: false,
   canUndo: false,
+  inTable: false,
   isBold: false,
   isItalic: false,
   isUnderline: false,
@@ -101,21 +121,30 @@ function useToolbarState() {
       if (!$isRangeSelection(selection)) return
 
       const anchor = selection.anchor.getNode()
-      const topLevel = anchor.getKey() === "root" ? null : anchor.getTopLevelElement()
+      // The nearest block, not the top-level element: inside a table that is the table itself.
+      const block = $findMatchingParent(
+        anchor,
+        (node) =>
+          $isElementNode(node) &&
+          !node.isInline() &&
+          ($isRootNode(node.getParent()) || $isTableCellNode(node.getParent())),
+      )
       const list = $getNearestNodeOfType(anchor, ListNode)
 
       let blockType: BlockType = "paragraph"
       if (list) blockType = list.getListType()
-      else if ($isHeadingNode(topLevel)) blockType = topLevel.getTag()
-      else if ($isQuoteNode(topLevel)) blockType = "quote"
+      else if ($isHeadingNode(block)) blockType = block.getTag()
+      else if ($isQuoteNode(block)) blockType = "quote"
 
-      setState((prev) => ({
-        ...prev,
+      // Read everything here: React runs the updater later, outside the editor state.
+      const next = {
         blockType,
+        inTable: $findTableNode(anchor) !== null,
         isBold: selection.hasFormat("bold"),
         isItalic: selection.hasFormat("italic"),
         isUnderline: selection.hasFormat("underline"),
-      }))
+      }
+      setState((prev) => ({ ...prev, ...next }))
     }
 
     return mergeRegister(
@@ -173,6 +202,12 @@ const RichTextToolbar = ({ disabled }: { disabled: boolean }) => {
     })
     editor.focus()
   }
+
+  const deleteTable = () =>
+    editor.update(() => {
+      const selection = $getSelection()
+      if ($isRangeSelection(selection)) $findTableNode(selection.anchor.getNode())?.remove()
+    })
 
   const toggleList = (type: Exclude<ListType, "check">) => {
     if (state.blockType === type) {
@@ -277,6 +312,59 @@ const RichTextToolbar = ({ disabled }: { disabled: boolean }) => {
           pressed={state.blockType === "number"}
         />
       </ToolbarPrimitive.Group>
+      <ToolbarSeparator />
+      <ToolbarPrimitive.Group aria-label="Insert" className="flex gap-1">
+        <ToolbarButton
+          // Lexical does not support tables inside tables.
+          disabled={disabled || state.inTable}
+          icon={Table}
+          label="Insert table"
+          onClick={() =>
+            editor.dispatchCommand(INSERT_TABLE_COMMAND, {
+              columns: "3",
+              includeHeaders: { columns: false, rows: true },
+              rows: "3",
+            })
+          }
+        />
+      </ToolbarPrimitive.Group>
+      {state.inTable && (
+        <>
+          <ToolbarSeparator />
+          <ToolbarPrimitive.Group aria-label="Table" className="flex gap-1">
+            <ToolbarButton
+              disabled={disabled}
+              icon={BetweenHorizontalEnd}
+              label="Add row"
+              onClick={() => editor.update(() => $insertTableRowAtSelection(true))}
+            />
+            <ToolbarButton
+              disabled={disabled}
+              icon={BetweenVerticalEnd}
+              label="Add column"
+              onClick={() => editor.update(() => $insertTableColumnAtSelection(true))}
+            />
+            <ToolbarButton
+              disabled={disabled}
+              icon={Rows3}
+              label="Delete row"
+              onClick={() => editor.update(() => $deleteTableRowAtSelection())}
+            />
+            <ToolbarButton
+              disabled={disabled}
+              icon={Columns3}
+              label="Delete column"
+              onClick={() => editor.update(() => $deleteTableColumnAtSelection())}
+            />
+            <ToolbarButton
+              disabled={disabled}
+              icon={Trash2}
+              label="Delete table"
+              onClick={deleteTable}
+            />
+          </ToolbarPrimitive.Group>
+        </>
+      )}
     </ToolbarPrimitive.Root>
   )
 }

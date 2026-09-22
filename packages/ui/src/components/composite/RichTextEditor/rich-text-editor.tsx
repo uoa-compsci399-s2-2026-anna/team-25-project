@@ -22,14 +22,24 @@ import { ListPlugin } from "@lexical/react/LexicalListPlugin"
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin"
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
+import { TablePlugin } from "@lexical/react/LexicalTablePlugin"
 import { HeadingNode, QuoteNode } from "@lexical/rich-text"
+import { TableCellNode, TableNode, TableRowNode } from "@lexical/table"
 import { textAreaVariants } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import type { EditorThemeClasses, SerializedEditorState, SerializedLexicalNode } from "lexical"
 import { Component, type ReactNode, useEffect } from "react"
 import { RichTextToolbar } from "./rich-text-toolbar"
 
-const NODES = [HeadingNode, QuoteNode, ListNode, ListItemNode]
+const NODES = [
+  HeadingNode,
+  QuoteNode,
+  ListNode,
+  ListItemNode,
+  TableNode,
+  TableRowNode,
+  TableCellNode,
+]
 
 const SUPPORTED_TYPES = new Set([
   "root",
@@ -83,8 +93,9 @@ const TRANSFORMERS = [
 ]
 
 // Underline renders as a plain span, and bold with italic renders as one <strong>, so the
-// text formats still need classes.
+// text formats still need classes. So does the table's scroll wrapper, a plain <div>.
 const theme: EditorThemeClasses = {
+  tableScrollableWrapper: "overflow-x-auto",
   text: { bold: "font-bold", italic: "italic", underline: "underline" },
 }
 
@@ -181,6 +192,9 @@ const RichTextEditor = ({
         </div>
         <HistoryPlugin />
         <ListPlugin />
+        {/* Same flags as Payload's admin table plugin. With cell merge off, Lexical would
+            flatten merged cells made in the admin on load, and the next save would lose them. */}
+        <TablePlugin hasCellBackgroundColor={false} hasCellMerge hasHorizontalScroll />
         <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
         <OnChangePlugin
           ignoreSelectionChange

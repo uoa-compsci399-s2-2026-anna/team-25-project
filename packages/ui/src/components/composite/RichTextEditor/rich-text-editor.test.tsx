@@ -1,3 +1,4 @@
+import { $isTableNode, type TableCellNode, type TableRowNode } from "@lexical/table"
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import {
@@ -5,6 +6,10 @@ import {
   $createRangeSelection,
   $createTextNode,
   $getRoot,
+  $getSelection,
+  $isElementNode,
+  $isRangeSelection,
+  $isTextNode,
   $setSelection,
   type LexicalEditor,
 } from "lexical"
@@ -44,6 +49,45 @@ const doc = (...children: Array<string | Record<string, unknown>>) =>
     },
   }) as unknown as RichTextValue
 
+const element = { direction: "ltr", format: "", indent: 0, version: 1 }
+
+const cell = (content: string | Record<string, unknown>, extra: Record<string, unknown> = {}) => ({
+  ...element,
+  backgroundColor: null,
+  children: [
+    typeof content === "string"
+      ? { ...element, children: [text(content)], textFormat: 0, textStyle: "", type: "paragraph" }
+      : content,
+  ],
+  colSpan: 1,
+  headerState: 0,
+  rowSpan: 1,
+  type: "tablecell",
+  ...extra,
+})
+
+const tableDoc = (rows: Array<Array<ReturnType<typeof cell>>>) =>
+  ({
+    root: {
+      ...element,
+      children: [
+        {
+          ...element,
+          children: rows.map((cells) => ({ ...element, children: cells, type: "tablerow" })),
+          type: "table",
+        },
+      ],
+      type: "root",
+    },
+  }) as unknown as RichTextValue
+
+// A 2x2 table with a header row.
+const grid = () =>
+  tableDoc([
+    [cell("A", { headerState: 1 }), cell("B", { headerState: 1 })],
+    [cell("C"), cell("D")],
+  ])
+
 // Lexical stores its editor on the root element. jsdom cannot type into contenteditable,
 // so the tests drive the editor directly.
 const getEditor = () => {
@@ -61,6 +105,22 @@ const selectAll = () =>
       selection.anchor.set(first.getKey(), 0, "text")
       selection.focus.set(last.getKey(), last.getTextContentSize(), "text")
       $setSelection(selection)
+    })
+  })
+
+// Puts the cursor at the end of the given cell's first block.
+const selectCell = (row: number, column: number) =>
+  act(async () => {
+    getEditor().update(() => {
+      const table = $getRoot().getChildren().find($isTableNode)
+      const cellNode = (table?.getChildAtIndex(row) as TableRowNode | null)?.getChildAtIndex(
+        column,
+      ) as TableCellNode | null
+      const block = cellNode?.getFirstChild()
+      if (!$isElementNode(block)) throw new Error(`no cell at ${row},${column}`)
+      const last = block.getLastChild()
+      if ($isTextNode(last)) last.select(last.getTextContentSize(), last.getTextContentSize())
+      else block.select(0, 0)
     })
   })
 
@@ -116,6 +176,7 @@ describe("RichTextEditor", () => {
       "Quote",
       "Bulleted list",
       "Numbered list",
+      "Insert table",
     ]) {
       expect(screen.getByRole("button", { name })).toBeInTheDocument()
     }
@@ -287,5 +348,99 @@ describe("RichTextEditor", () => {
       expect(screen.getByRole("textbox")).toHaveAttribute("contenteditable", "true"),
     )
     expect(isDisabled("Bold")).toBe(false)
+  })
+
+  describe("tables", () => {
+    type Node = Record<string, unknown> & { children?: Node[]; type: string }
+    const tableIn = (onChange: ReturnType<typeof vi.fn>) =>
+      (lastValue(onChange).root.children as Node[]).find((node) => node.type === "table")
+    const shape = (table: Node | undefined) =>
+      table?.children?.map((row) => row.children?.length ?? 0) ?? []
+
+    it("inserts a 3x3 table with a header row", async () => {
+      const onChange = vi.fn()
+      render(<RichTextEditor defaultValue={doc("Hello")} onChange={onChange} />)
+      await act(async () => {
+        getEditor().update(() => $getRoot().selectEnd())
+      })
+      await click("Insert table")
+
+      await waitFor(() => expect(shape(tableIn(onChange))).toEqual([3, 3, 3]))
+      const [header, body] = tableIn(onChange)?.children ?? []
+      expect(header?.children?.map((c) => c.headerState)).toEqual([1, 1, 1])
+      expect(body?.children?.map((c) => c.headerState)).toEqual([0, 0, 0])
+    })
+
+    it("shows the table actions only while the cursor is in a table", async () => {
+      render(<RichTextEditor defaultValue={grid()} />)
+      await screen.findByText("A")
+      expect(screen.queryByRole("button", { name: "Add row" })).not.toBeInTheDocument()
+
+      await selectCell(1, 1)
+      for (const name of ["Add row", "Add column", "Delete row", "Delete column", "Delete table"]) {
+        expect(await screen.findByRole("button", { name })).toBeInTheDocument()
+      }
+      // Lexical does not support nested tables.
+      expect(isDisabled("Insert table")).toBe(true)
+    })
+
+    it.each([
+      ["Add row", [2, 2, 2]],
+      ["Add column", [3, 3]],
+      ["Delete row", [2]],
+      ["Delete column", [1, 1]],
+    ])("%s changes the table shape", async (name, expected) => {
+      const onChange = vi.fn()
+      render(<RichTextEditor defaultValue={grid()} onChange={onChange} />)
+      await screen.findByText("A")
+      await selectCell(1, 1)
+      await click(name)
+
+      await waitFor(() => expect(shape(tableIn(onChange))).toEqual(expected))
+    })
+
+    it("deletes the table", async () => {
+      const onChange = vi.fn()
+      render(<RichTextEditor defaultValue={grid()} onChange={onChange} />)
+      await screen.findByText("A")
+      await selectCell(0, 0)
+      await click("Delete table")
+
+      await waitFor(() => expect(onChange).toHaveBeenCalled())
+      expect(tableIn(onChange)).toBeUndefined()
+      expect(screen.queryByRole("button", { name: "Delete table" })).not.toBeInTheDocument()
+    })
+
+    it("keeps merged cells from the Payload admin", async () => {
+      const onChange = vi.fn()
+      const merged = tableDoc([
+        [cell("Wide", { colSpan: 2, headerState: 1 })],
+        [cell("C"), cell("D")],
+      ])
+      render(<RichTextEditor defaultValue={merged} onChange={onChange} />)
+      await screen.findByText("Wide")
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+
+      await selectCell(1, 0)
+      await act(async () => {
+        getEditor().update(() => {
+          const selection = $getSelection()
+          if ($isRangeSelection(selection)) selection.insertText("!")
+        })
+      })
+      await waitFor(() => expect(onChange).toHaveBeenCalled())
+      expect(tableIn(onChange)?.children?.[0]?.children?.[0]?.colSpan).toBe(2)
+    })
+
+    it("shows the text style of a heading inside a cell", async () => {
+      const heading = { ...element, children: [text("Title")], tag: "h3", type: "heading" }
+      render(<RichTextEditor defaultValue={tableDoc([[cell(heading), cell("B")]])} />)
+      await screen.findByText("Title")
+      await selectCell(0, 0)
+
+      await waitFor(() =>
+        expect(screen.getByRole("combobox", { name: "Text style" })).toHaveTextContent("Heading 3"),
+      )
+    })
   })
 })
