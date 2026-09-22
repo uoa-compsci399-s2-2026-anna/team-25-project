@@ -1,7 +1,18 @@
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { postgresAdapter } from "@payloadcms/db-postgres"
-import { lexicalEditor } from "@payloadcms/richtext-lexical"
+import {
+  BlockquoteFeature,
+  BoldFeature,
+  HeadingFeature,
+  InlineToolbarFeature,
+  ItalicFeature,
+  lexicalEditor,
+  OrderedListFeature,
+  ParagraphFeature,
+  UnderlineFeature,
+  UnorderedListFeature,
+} from "@payloadcms/richtext-lexical"
 import { s3Storage } from "@payloadcms/storage-s3"
 import type { Config } from "@repo/shared/payload-types"
 import { buildConfig } from "payload"
@@ -35,7 +46,20 @@ export default buildConfig({
     },
   },
   collections: [Admin, Members, Institutions, Media, Proposals, Courses, CourseVersions],
-  editor: lexicalEditor(),
+  // Only the features RichTextEditor (@repo/ui) can edit. It cannot load other nodes.
+  editor: lexicalEditor({
+    features: [
+      ParagraphFeature(),
+      HeadingFeature(),
+      BlockquoteFeature(),
+      UnorderedListFeature(),
+      OrderedListFeature(),
+      BoldFeature(),
+      ItalicFeature(),
+      UnderlineFeature(),
+      InlineToolbarFeature(),
+    ],
+  }),
   graphQL: {
     disable: true,
   },
