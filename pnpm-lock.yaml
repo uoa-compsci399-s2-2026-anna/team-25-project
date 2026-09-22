@@ -226,6 +226,9 @@ importers:
       react-dom:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
+      react-fast-marquee:
+        specifier: 1.6.4
+        version: 1.6.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       shadcn:
         specifier: ^4.16.1
         version: 4.16.1(babel-plugin-macros@3.1.0)(supports-color@7.2.0)(typescript@7.0.2)
@@ -5593,6 +5596,12 @@ packages:
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
 
+  react-fast-marquee@1.6.4:
+    resolution: {integrity: sha512-LAgvhRmHdqaUQ8R5jCUwzEGFUIjnCCt3T3W8X7j7wF6DWe0SATlpP0JX1V0pp2qX3DYUezmn1Iz5AtRFdL2EWQ==}
+    peerDependencies:
+      react: '>= 16.8.0 || 18.0.0'
+      react-dom: '>= 16.8.0 || 18.0.0'
+
   react-image-crop@10.1.8:
     resolution: {integrity: sha512-4rb8XtXNx7ZaOZarKKnckgz4xLMvds/YrU6mpJfGhGAsy2Mg4mIw1x+DCCGngVGq2soTBVVOxx2s/C6mTX9+pA==}
     peerDependencies:
@@ -9330,7 +9339,7 @@ snapshots:
       magicast: 0.5.4
       obug: 2.1.4
       tinyrainbow: 3.1.1
-      vitest: 4.1.10(@opentelemetry/api@1.9.0)(@types/node@20.19.41)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-istanbul@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(happy-dom@20.11.1)(jsdom@28.0.0(supports-color@7.2.0))(vite@8.2.0(@types/node@20.19.41)(esbuild@0.25.12)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.0))
+      vitest: 4.1.10(@opentelemetry/api@1.9.0)(@types/node@20.19.41)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-istanbul@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(happy-dom@20.11.1)(jsdom@28.0.0(supports-color@7.2.0))(vite@8.2.0(@types/node@20.19.41)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.0))
     transitivePeerDependencies:
       - supports-color
 
@@ -9346,9 +9355,9 @@ snapshots:
       obug: 2.1.4
       std-env: 4.2.0
       tinyrainbow: 3.1.1
-      vitest: 4.1.10(@opentelemetry/api@1.9.0)(@types/node@20.19.41)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-istanbul@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(happy-dom@20.11.1)(jsdom@28.0.0(supports-color@7.2.0))(vite@8.2.0(@types/node@20.19.41)(esbuild@0.25.12)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.0))
+      vitest: 4.1.10(@opentelemetry/api@1.9.0)(@types/node@20.19.41)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-istanbul@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(happy-dom@20.11.1)(jsdom@28.0.0(supports-color@7.2.0))(vite@8.2.0(@types/node@20.19.41)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.0))
     optionalDependencies:
-      '@vitest/browser': 4.1.10(vite@8.2.0(@types/node@20.19.41)(esbuild@0.25.12)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.0))(vitest@4.1.10)
+      '@vitest/browser': 4.1.10(vite@8.2.0(@types/node@20.19.41)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.0))(vitest@4.1.10)
     optional: true
 
   '@vitest/expect@3.2.4':
@@ -9419,7 +9428,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.1
-      vitest: 4.1.10(@opentelemetry/api@1.9.0)(@types/node@20.19.41)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-istanbul@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(happy-dom@20.11.1)(jsdom@28.0.0(supports-color@7.2.0))(vite@8.2.0(@types/node@20.19.41)(esbuild@0.25.12)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.0))
+      vitest: 4.1.10(@opentelemetry/api@1.9.0)(@types/node@20.19.41)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-istanbul@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(happy-dom@20.11.1)(jsdom@28.0.0(supports-color@7.2.0))(vite@8.2.0(@types/node@20.19.41)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.0))
 
   '@vitest/utils@3.2.4':
     dependencies:
@@ -11585,6 +11594,11 @@ snapshots:
   react-error-boundary@6.1.2(react@19.2.4):
     dependencies:
       react: 19.2.4
+
+  react-fast-marquee@1.6.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    dependencies:
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
 
   react-image-crop@10.1.8(react@19.2.4):
     dependencies:
