@@ -2,20 +2,13 @@ import { ProposalStatus, ProposalTag } from "@repo/shared/enums/proposals"
 // `nuqs/server` carries no "use client" boundary, so these parsers work in server and client code.
 import {
   createLoader,
-  createParser,
   createSerializer,
   type inferParserType,
   parseAsString,
   parseAsStringLiteral,
 } from "nuqs/server"
+import { parseAsPositiveInteger } from "@/lib/search-params"
 import type { ProposalFilters } from "./proposals.queries"
-
-// parseAsInteger uses parseInt, which reads "2abc" as 2 and accepts 0 and negatives.
-// Ids and page numbers start at 1, so anything else falls back to the default.
-const parseAsPositiveInteger = createParser({
-  parse: (value) => (/^[1-9]\d*$/.test(value) ? Number(value) : null),
-  serialize: String,
-})
 
 export const PROPOSAL_STATUS_ALL = "all"
 export const proposalStatusFilters = [
