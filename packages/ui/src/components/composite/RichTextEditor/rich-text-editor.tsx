@@ -1,6 +1,5 @@
 "use client"
 
-import { ListItemNode, ListNode } from "@lexical/list"
 import {
   BOLD_ITALIC_STAR,
   BOLD_ITALIC_UNDERSCORE,
@@ -23,8 +22,6 @@ import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPl
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
 import { TablePlugin } from "@lexical/react/LexicalTablePlugin"
-import { HeadingNode, QuoteNode } from "@lexical/rich-text"
-import { TableCellNode, TableNode, TableRowNode } from "@lexical/table"
 import { textAreaVariants } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import {
@@ -34,36 +31,22 @@ import {
   type SerializedLexicalNode,
 } from "lexical"
 import { Component, type ReactNode, useEffect, useState } from "react"
+import { RICH_TEXT_NODES, SUPPORTED_NODE_TYPES } from "./rich-text-nodes"
 import { RichTextToolbar } from "./rich-text-toolbar"
 
-const NODES = [
-  HeadingNode,
-  QuoteNode,
-  ListNode,
-  ListItemNode,
-  TableNode,
-  TableRowNode,
-  TableCellNode,
-]
-
-const SUPPORTED_TYPES = new Set([
-  "root",
-  "paragraph",
-  "text",
-  "linebreak",
-  "tab",
-  ...NODES.map((node) => node.getType()),
-])
-
-type Node = SerializedLexicalNode & { children?: unknown }
+type SerializedNodeLike = SerializedLexicalNode & { children?: unknown }
 
 const findUnsupportedTypes = (node: unknown, found = new Set<string>()) => {
-  if (typeof node !== "object" || node === null || typeof (node as Node).type !== "string") {
+  if (
+    typeof node !== "object" ||
+    node === null ||
+    typeof (node as SerializedNodeLike).type !== "string"
+  ) {
     found.add("invalid node")
     return found
   }
-  const { children, type } = node as Node
-  if (!SUPPORTED_TYPES.has(type)) found.add(type)
+  const { children, type } = node as SerializedNodeLike
+  if (!SUPPORTED_NODE_TYPES.has(type)) found.add(type)
   if (Array.isArray(children)) for (const child of children) findUnsupportedTypes(child, found)
   return found
 }
@@ -72,7 +55,7 @@ const findUnsupportedTypes = (node: unknown, found = new Set<string>()) => {
 // error and loads the nodes it read before it, so the next save would delete the rest.
 const parseError = (value: RichTextValue) => {
   const editor = createEditor({
-    nodes: NODES,
+    nodes: RICH_TEXT_NODES,
     onError: (error) => {
       throw error
     },
@@ -185,7 +168,7 @@ const RichTextEditor = ({
           // LexicalComposer takes a JSON string or an EditorState, not a plain object.
           editorState: initialValue ? JSON.stringify(initialValue) : undefined,
           namespace: "RichTextEditor",
-          nodes: NODES,
+          nodes: RICH_TEXT_NODES,
           // Throwing skips Lexical's reset to the last good state, so production only logs.
           onError: (error) => {
             console.error("RichTextEditor:", error)

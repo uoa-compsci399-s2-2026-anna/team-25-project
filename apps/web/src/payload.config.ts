@@ -1,19 +1,7 @@
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { postgresAdapter } from "@payloadcms/db-postgres"
-import {
-  BlockquoteFeature,
-  BoldFeature,
-  EXPERIMENTAL_TableFeature,
-  HeadingFeature,
-  InlineToolbarFeature,
-  ItalicFeature,
-  lexicalEditor,
-  OrderedListFeature,
-  ParagraphFeature,
-  UnderlineFeature,
-  UnorderedListFeature,
-} from "@payloadcms/richtext-lexical"
+import { lexicalEditor } from "@payloadcms/richtext-lexical"
 import { s3Storage } from "@payloadcms/storage-s3"
 import type { Config } from "@repo/shared/payload-types"
 import { buildConfig } from "payload"
@@ -25,6 +13,7 @@ import { Institutions } from "./payload/collections/Institutions"
 import { Media } from "./payload/collections/Media"
 import { Members } from "./payload/collections/Members"
 import { Proposals } from "./payload/collections/Proposals"
+import { richTextFeatures } from "./payload/richText"
 
 declare module "payload" {
   export interface GeneratedTypes extends Config {}
@@ -47,21 +36,7 @@ export default buildConfig({
     },
   },
   collections: [Admin, Members, Institutions, Media, Proposals, Courses, CourseVersions],
-  // Only the features RichTextEditor (@repo/ui) can edit. It cannot load other nodes.
-  editor: lexicalEditor({
-    features: [
-      ParagraphFeature(),
-      HeadingFeature(),
-      BlockquoteFeature(),
-      UnorderedListFeature(),
-      OrderedListFeature(),
-      BoldFeature(),
-      ItalicFeature(),
-      UnderlineFeature(),
-      EXPERIMENTAL_TableFeature(),
-      InlineToolbarFeature(),
-    ],
-  }),
+  editor: lexicalEditor({ features: richTextFeatures }),
   graphQL: {
     disable: true,
   },
