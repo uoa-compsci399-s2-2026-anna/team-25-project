@@ -1,17 +1,26 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 import { Button } from "./button"
 
-const variants = ["default", "outline", "secondary", "ghost", "destructive", "link"] as const
-
-const sizes = ["default", "xs", "sm", "lg", "icon", "icon-xs", "icon-sm", "icon-lg"] as const
+const variants = [
+  "button-charcoal",
+  "button-mauve",
+  "button-transparent",
+  "button-white",
+  "button-cream",
+  "button-unstyled",
+] as const
+const sizes = ["sm", "md", "lg", "xl", "xxl", "icon", "icon-xs", "icon-sm", "icon-lg"] as const
+const borderColors = ["charcoal", "white"] as const
 
 const meta: Meta<typeof Button> = {
   title: "ui/Button",
   component: Button,
   args: {
     children: "Button",
-    variant: "default",
-    size: "default",
+    variant: "button-charcoal",
+    size: "md",
+    borderColor: "charcoal",
+    active: false,
     disabled: false,
   },
   argTypes: {
@@ -22,6 +31,13 @@ const meta: Meta<typeof Button> = {
     size: {
       control: { type: "select" },
       options: sizes,
+    },
+    borderColor: {
+      control: { type: "select" },
+      options: borderColors,
+    },
+    active: {
+      control: { type: "boolean" },
     },
     disabled: { control: { type: "boolean" } },
   },

@@ -55,10 +55,10 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   
   ALTER TABLE "users_sessions" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "users" DISABLE ROW LEVEL SECURITY;
-  DROP TABLE "users_sessions" CASCADE;
-  DROP TABLE "users" CASCADE;
-  DROP INDEX "payload_locked_documents_rels_users_id_idx";
-  DROP INDEX "payload_preferences_rels_users_id_idx";
+  DROP TABLE IF EXISTS "users_sessions" CASCADE;
+  DROP TABLE IF EXISTS "users" CASCADE;
+  DROP INDEX IF EXISTS "payload_locked_documents_rels_users_id_idx";
+  DROP INDEX IF EXISTS "payload_preferences_rels_users_id_idx";
   ALTER TABLE "payload_locked_documents_rels" ADD COLUMN "admin_id" integer;
   ALTER TABLE "payload_locked_documents_rels" ADD COLUMN "members_id" integer;
   ALTER TABLE "payload_preferences_rels" ADD COLUMN "admin_id" integer;
@@ -85,8 +85,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "payload_locked_documents_rels_members_id_idx" ON "payload_locked_documents_rels" USING btree ("members_id");
   CREATE INDEX "payload_preferences_rels_admin_id_idx" ON "payload_preferences_rels" USING btree ("admin_id");
   CREATE INDEX "payload_preferences_rels_members_id_idx" ON "payload_preferences_rels" USING btree ("members_id");
-  ALTER TABLE "payload_locked_documents_rels" DROP COLUMN "users_id";
-  ALTER TABLE "payload_preferences_rels" DROP COLUMN "users_id";`)
+  ALTER TABLE "payload_locked_documents_rels" DROP COLUMN IF EXISTS "users_id";
+  ALTER TABLE "payload_preferences_rels" DROP COLUMN IF EXISTS "users_id";`)
 }
 
 export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
@@ -116,14 +116,14 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   ALTER TABLE "admin" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "members_sessions" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "members" DISABLE ROW LEVEL SECURITY;
-  DROP TABLE "admin_sessions" CASCADE;
-  DROP TABLE "admin" CASCADE;
-  DROP TABLE "members_sessions" CASCADE;
-  DROP TABLE "members" CASCADE;
-  DROP INDEX "payload_locked_documents_rels_admin_id_idx";
-  DROP INDEX "payload_locked_documents_rels_members_id_idx";
-  DROP INDEX "payload_preferences_rels_admin_id_idx";
-  DROP INDEX "payload_preferences_rels_members_id_idx";
+  DROP TABLE IF EXISTS "admin_sessions" CASCADE;
+  DROP TABLE IF EXISTS "admin" CASCADE;
+  DROP TABLE IF EXISTS "members_sessions" CASCADE;
+  DROP TABLE IF EXISTS "members" CASCADE;
+  DROP INDEX IF EXISTS "payload_locked_documents_rels_admin_id_idx";
+  DROP INDEX IF EXISTS "payload_locked_documents_rels_members_id_idx";
+  DROP INDEX IF EXISTS "payload_preferences_rels_admin_id_idx";
+  DROP INDEX IF EXISTS "payload_preferences_rels_members_id_idx";
   ALTER TABLE "payload_locked_documents_rels" ADD COLUMN "users_id" integer;
   ALTER TABLE "payload_preferences_rels" ADD COLUMN "users_id" integer;
   ALTER TABLE "users_sessions" ADD CONSTRAINT "users_sessions_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
@@ -136,8 +136,8 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   ALTER TABLE "payload_preferences_rels" ADD CONSTRAINT "payload_preferences_rels_users_fk" FOREIGN KEY ("users_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
   CREATE INDEX "payload_locked_documents_rels_users_id_idx" ON "payload_locked_documents_rels" USING btree ("users_id");
   CREATE INDEX "payload_preferences_rels_users_id_idx" ON "payload_preferences_rels" USING btree ("users_id");
-  ALTER TABLE "payload_locked_documents_rels" DROP COLUMN "admin_id";
-  ALTER TABLE "payload_locked_documents_rels" DROP COLUMN "members_id";
-  ALTER TABLE "payload_preferences_rels" DROP COLUMN "admin_id";
-  ALTER TABLE "payload_preferences_rels" DROP COLUMN "members_id";`)
+  ALTER TABLE "payload_locked_documents_rels" DROP COLUMN IF EXISTS "admin_id";
+  ALTER TABLE "payload_locked_documents_rels" DROP COLUMN IF EXISTS "members_id";
+  ALTER TABLE "payload_preferences_rels" DROP COLUMN IF EXISTS "admin_id";
+  ALTER TABLE "payload_preferences_rels" DROP COLUMN IF EXISTS "members_id";`)
 }

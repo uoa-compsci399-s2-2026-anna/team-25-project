@@ -6,20 +6,27 @@ export function route<T extends string>(path: Route<T>): Route<T> {
 
 export const Routes = {
   HOME: route("/"),
+  LOGIN: route("/login"),
   COURSES: {
     ROOT: route("/courses"),
     COURSE: (courseId: string) => route(`/courses/${courseId}`),
   },
   MEMBERS: {
     ROOT: route("/members"),
-    MEMBER: (memberId: string) => route(`/members/${memberId}`),
+    MEMBER: (memberId: number | string) => route(`/members/${memberId}`),
   },
   PROPOSALS: {
     ROOT: route("/proposals"),
-    PROPOSAL: (proposalId: string) => route(`/proposals/${proposalId}`),
+    // The page resolves on the leading id; the slug is only for readability.
+    PROPOSAL: (proposalId: number, proposalSlug?: string | null) =>
+      route(`/proposals/${proposalSlug ? `${proposalId}-${proposalSlug}` : String(proposalId)}`),
   },
   ABOUT: route("/about"),
   PRIVACY: route("/privacy"),
+  REGISTER: {
+    ROOT: route("/register"),
+    PROFILE: route("/register/profile"),
+  },
 } as const
 
 type DeepValues<T> = T extends (...args: never[]) => infer R

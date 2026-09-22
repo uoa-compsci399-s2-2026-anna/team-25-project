@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@custom-variant dark (&:is(.dark *));
 
 @source "../../../apps/**/*.{ts,tsx}";
 @source "../../../components/**/*.{ts,tsx}";
@@ -17,6 +16,8 @@
   --color-brand-plum: #6e4450;
   --color-brand-salmon: #f9cfc3;
   --color-brand-border: #e6deda;
+  --color-brand-cream: #faf7f4;
+  --color-brand-mauve: #c08497;
 }
 
 @theme inline {

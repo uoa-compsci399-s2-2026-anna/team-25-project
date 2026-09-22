@@ -1,9 +1,9 @@
 import { Geist_Mono } from "next/font/google"
 import localFont from "next/font/local"
-
 import "@repo/ui/globals.css"
 import { cn } from "@repo/ui/lib/utils"
-import { Footer } from "@/features/layout/components"
+import { Providers } from "@/components/Providers"
+import { Footer, Navbar } from "@/features/layout/components"
 
 const satoshi = localFont({
   src: [
@@ -25,9 +25,12 @@ export default function RootLayout({
 }>) {
   return (
     <html className={cn("antialiased", fontMono.variable, "font-sans", satoshi.variable)} lang="en">
-      <body>
-        {children}
-        <Footer />
+      <body className="flex min-h-dvh flex-col items-center">
+        <Providers>
+          <Navbar />
+          <div className="w-full max-w-[1512px] flex-1">{children}</div>
+          <Footer />
+        </Providers>
       </body>
     </html>
   )

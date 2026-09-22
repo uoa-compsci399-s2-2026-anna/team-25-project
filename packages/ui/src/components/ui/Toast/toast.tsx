@@ -21,7 +21,7 @@ function ToastViewport({ className, ...props }: ToastPrimitive.Viewport.Props) {
   return (
     <ToastPrimitive.Viewport
       className={cn(
-        "pointer-events-none fixed inset-x-4 bottom-4 z-50 mx-auto w-auto max-w-sm outline-none sm:right-4 sm:left-auto sm:mx-0 sm:w-full",
+        "pointer-events-none fixed inset-x-4 bottom-4 z-[100] mx-auto w-auto max-w-sm outline-none sm:right-4 sm:left-auto sm:mx-0 sm:w-full",
         className,
       )}
       data-slot="toast-viewport"
@@ -92,7 +92,9 @@ function ToastDescription({ className, ...props }: ToastPrimitive.Description.Pr
 
 function ToastAction({
   className,
-  render = <Button size="sm" variant="outline" />,
+  render = (
+    <Button borderColor="charcoal" className="border" size="sm" variant="button-transparent" />
+  ),
   ...props
 }: ToastPrimitive.Action.Props) {
   return (
@@ -108,7 +110,7 @@ function ToastAction({
 function ToastClose({
   className,
   children,
-  render = <Button size="icon-sm" variant="ghost" />,
+  render = <Button size="icon-sm" variant="button-transparent" />,
   ...props
 }: ToastPrimitive.Close.Props) {
   return (

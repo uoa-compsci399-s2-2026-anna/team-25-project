@@ -1,8 +1,41 @@
 import { mockInstitution } from "@repo/shared/mocks/institution"
 import type { Institution, Member } from "@repo/shared/payload-types"
+import { revalidateTag } from "next/cache"
 import { ValidationError } from "payload"
-import { describe, expect, it, vi } from "vitest"
-import { enforceInstitutionDomain } from "./Members"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import {
+  enforceInstitutionDomain,
+  revalidateDeletedMemberProposals,
+  revalidateMemberProposals,
+} from "./Members"
+
+vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }))
+
+describe("member cache revalidation", () => {
+  beforeEach(() => {
+    vi.mocked(revalidateTag).mockReset()
+  })
+
+  it.each([revalidateMemberProposals, revalidateDeletedMemberProposals])(
+    "marks proposal queries stale after a write",
+    async (hook) => {
+      const doc = { id: 1 }
+      const result = await hook({ doc, req: { context: {} } } as never)
+
+      expect(revalidateTag).toHaveBeenCalledWith("proposals", "max")
+      expect(result).toBe(doc)
+    },
+  )
+
+  it.each([revalidateMemberProposals, revalidateDeletedMemberProposals])(
+    "can skip revalidation through request context",
+    async (hook) => {
+      await hook({ doc: { id: 1 }, req: { context: { disableRevalidate: true } } } as never)
+
+      expect(revalidateTag).not.toHaveBeenCalled()
+    },
+  )
+})
 
 type HookArgs = Parameters<typeof enforceInstitutionDomain>[0]
 

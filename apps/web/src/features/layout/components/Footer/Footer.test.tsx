@@ -1,7 +1,9 @@
 import { cleanup, render, screen, within } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { Routes } from "@/lib/routes"
 import { Footer } from "./Footer"
+
+vi.mock("next/navigation", () => ({ useRouter: vi.fn() }))
 
 describe("Footer", () => {
   afterEach(() => {

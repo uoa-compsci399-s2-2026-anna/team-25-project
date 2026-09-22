@@ -6,12 +6,21 @@ import type { Config } from "@repo/shared/payload-types"
 import { buildConfig } from "payload"
 import sharp from "sharp"
 import { Admin } from "./payload/collections/Admin"
+import { Courses } from "./payload/collections/Courses"
+import { CourseVersions } from "./payload/collections/CourseVersions"
 import { Institutions } from "./payload/collections/Institutions"
 import { Media } from "./payload/collections/Media"
 import { Members } from "./payload/collections/Members"
+import { Proposals } from "./payload/collections/Proposals"
 
 declare module "payload" {
   export interface GeneratedTypes extends Config {}
+  export interface RequestContext {
+    /** Lets completeProfile stamp registrationCompletedAt; see Members.ts. */
+    completingRegistration?: boolean
+    /** Skips cache revalidation hooks - set by seed.ts, which runs outside a request. */
+    disableRevalidate?: boolean
+  }
 }
 
 const filename = fileURLToPath(import.meta.url)
@@ -24,7 +33,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Admin, Members, Institutions, Media],
+  collections: [Admin, Members, Institutions, Media, Proposals, Courses, CourseVersions],
   editor: lexicalEditor(),
   graphQL: {
     disable: true,
