@@ -344,6 +344,13 @@ describe("RichTextEditor", () => {
     },
   )
 
+  it("treats a null defaultValue as empty content", async () => {
+    render(<RichTextEditor defaultValue={null} placeholder="Write here" />)
+
+    expect(await screen.findByText("Write here")).toBeInTheDocument()
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+  })
+
   it("ignores defaultValue changes after mount", async () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
     const { rerender } = render(<RichTextEditor defaultValue={doc("Hello")} />)

@@ -142,9 +142,9 @@ type RichTextEditorProps = {
   className?: string
   /**
    * Read once on mount, and later changes are ignored. The editor is uncontrolled, so to
-   * load a different record, remount it with `key={record.id}`.
+   * load a different record, remount it with `key={record.id}`. `null` is an empty field.
    */
-  defaultValue?: RichTextValue
+  defaultValue?: RichTextValue | null
   disabled?: boolean
   id?: string
   onBlur?: () => void
