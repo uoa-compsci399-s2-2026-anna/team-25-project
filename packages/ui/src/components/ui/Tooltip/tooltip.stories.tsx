@@ -13,14 +13,14 @@ type Story = StoryFn<typeof Tooltip>
 
 export const Default: Story = () => (
   <Tooltip>
-    <TooltipTrigger render={<Button variant="outline" />}>Hover me</TooltipTrigger>
+    <TooltipTrigger render={<Button variant="button-transparent" />}>Hover me</TooltipTrigger>
     <TooltipContent>Add to library</TooltipContent>
   </Tooltip>
 )
 
 export const IconTrigger: Story = () => (
   <Tooltip>
-    <TooltipTrigger render={<Button size="icon" variant="outline" />}>
+    <TooltipTrigger render={<Button size="icon" variant="button-transparent" />}>
       <PlusIcon />
     </TooltipTrigger>
     <TooltipContent>Create new item</TooltipContent>
@@ -31,7 +31,7 @@ export const Sides: Story = () => (
   <div className="flex items-center gap-6">
     {(["top", "right", "bottom", "left"] as const).map((side) => (
       <Tooltip key={side}>
-        <TooltipTrigger render={<Button variant="outline" />}>{side}</TooltipTrigger>
+        <TooltipTrigger render={<Button variant="button-transparent" />}>{side}</TooltipTrigger>
         <TooltipContent side={side}>Tooltip on the {side}</TooltipContent>
       </Tooltip>
     ))}
