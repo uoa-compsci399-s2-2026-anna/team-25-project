@@ -1,4 +1,10 @@
-import { $isTableNode, type TableCellNode, type TableRowNode } from "@lexical/table"
+import {
+  $createTableSelectionFrom,
+  $isTableCellNode,
+  $isTableNode,
+  type TableCellNode,
+  type TableRowNode,
+} from "@lexical/table"
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import {
@@ -409,6 +415,42 @@ describe("RichTextEditor", () => {
       await waitFor(() => expect(onChange).toHaveBeenCalled())
       expect(tableIn(onChange)).toBeUndefined()
       expect(screen.queryByRole("button", { name: "Delete table" })).not.toBeInTheDocument()
+    })
+
+    // Selects every cell, as a drag across the table does.
+    const selectAllCells = () =>
+      act(async () => {
+        getEditor().update(() => {
+          const table = $getRoot().getChildren().find($isTableNode)
+          const first = table?.getFirstDescendant()?.getParents().find($isTableCellNode)
+          const last = table?.getLastDescendant()?.getParents().find($isTableCellNode)
+          if (!table || !first || !last) throw new Error("no table")
+          $setSelection($createTableSelectionFrom(table, first, last))
+        })
+      })
+
+    it("highlights the selected cells", async () => {
+      render(<RichTextEditor defaultValue={grid()} />)
+      await screen.findByText("A")
+      await selectCell(0, 0)
+      await selectAllCells()
+
+      await waitFor(() =>
+        expect(screen.getByRole("columnheader", { name: "A" })).toHaveClass("bg-brand-charcoal/10"),
+      )
+      expect(screen.getByRole("cell", { name: "D" })).toHaveClass("bg-brand-charcoal/10")
+    })
+
+    it("deletes the table while several cells are selected", async () => {
+      const onChange = vi.fn()
+      render(<RichTextEditor defaultValue={grid()} onChange={onChange} />)
+      await screen.findByText("A")
+      await selectCell(0, 0)
+      await selectAllCells()
+      await click("Delete table")
+
+      await waitFor(() => expect(onChange).toHaveBeenCalled())
+      expect(tableIn(onChange)).toBeUndefined()
     })
 
     it("keeps merged cells from the Payload admin", async () => {

@@ -23,6 +23,7 @@ import {
   $insertTableColumnAtSelection,
   $insertTableRowAtSelection,
   $isTableCellNode,
+  $isTableSelection,
   INSERT_TABLE_COMMAND,
 } from "@lexical/table"
 import { $getNearestNodeOfType, mergeRegister } from "@lexical/utils"
@@ -118,6 +119,12 @@ function useToolbarState() {
     // Runs inside a read or update, so the $ helpers have an active editor state.
     const readSelection = () => {
       const selection = $getSelection()
+      // A drag across cells makes a table selection. It has no block type or text format.
+      if ($isTableSelection(selection)) {
+        const inTable = $findTableNode(selection.anchor.getNode()) !== null
+        setState((prev) => ({ ...prev, inTable }))
+        return
+      }
       if (!$isRangeSelection(selection)) return
 
       const anchor = selection.anchor.getNode()
@@ -206,7 +213,9 @@ const RichTextToolbar = ({ disabled }: { disabled: boolean }) => {
   const deleteTable = () =>
     editor.update(() => {
       const selection = $getSelection()
-      if ($isRangeSelection(selection)) $findTableNode(selection.anchor.getNode())?.remove()
+      if ($isRangeSelection(selection) || $isTableSelection(selection)) {
+        $findTableNode(selection.anchor.getNode())?.remove()
+      }
     })
 
   const toggleList = (type: Exclude<ListType, "check">) => {

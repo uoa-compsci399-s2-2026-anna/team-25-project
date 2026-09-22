@@ -94,8 +94,11 @@ const TRANSFORMERS = [
 
 // Underline renders as a plain span, and bold with italic renders as one <strong>, so the
 // text formats still need classes. So does the table's scroll wrapper, a plain <div>.
+// Lexical hides the browser selection while cells are selected, so the cells show it instead.
 const theme: EditorThemeClasses = {
+  tableCellSelected: "bg-brand-charcoal/10",
   tableScrollableWrapper: "overflow-x-auto",
+  tableSelection: "[&_*::selection]:bg-transparent",
   text: { bold: "font-bold", italic: "italic", underline: "underline" },
 }
 
