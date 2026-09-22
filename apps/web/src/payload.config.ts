@@ -2,6 +2,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { postgresAdapter } from "@payloadcms/db-postgres"
 import { lexicalEditor } from "@payloadcms/richtext-lexical"
+import { s3Storage } from "@payloadcms/storage-s3"
 import type { Config } from "@repo/shared/payload-types"
 import { buildConfig } from "payload"
 import sharp from "sharp"
@@ -55,5 +56,17 @@ export default buildConfig({
     push: false,
   }),
   sharp,
-  plugins: [],
+  plugins: [
+    s3Storage({
+      enabled: Boolean(process.env.S3_BUCKET && process.env.S3_REGION),
+      alwaysInsertFields: true,
+      collections: {
+        media: { prefix: "media" },
+      },
+      bucket: process.env.S3_BUCKET ?? "",
+      config: {
+        region: process.env.S3_REGION ?? "",
+      },
+    }),
+  ],
 })
