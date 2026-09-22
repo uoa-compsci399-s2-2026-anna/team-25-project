@@ -17,6 +17,9 @@ import {
   $isRangeSelection,
   $isTextNode,
   $setSelection,
+  IS_BOLD,
+  IS_ITALIC,
+  IS_UNDERLINE,
   type LexicalEditor,
 } from "lexical"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -361,6 +364,73 @@ describe("RichTextEditor", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
     expect(consoleError).not.toHaveBeenCalled()
     consoleError.mockRestore()
+  })
+
+  it("saves every supported node unchanged, apart from the edit", async () => {
+    const block = (type: string, children: unknown[], extra: Record<string, unknown> = {}) => ({
+      ...element,
+      children,
+      type,
+      ...extra,
+    })
+    // Lexical stores the format of a paragraph's first text as textFormat.
+    const paragraph = (...children: Array<Record<string, unknown>>) =>
+      block("paragraph", children, { textFormat: children[0]?.format ?? 0, textStyle: "" })
+    const styled = (value: string, format: number) => ({ ...text(value), format })
+    const item = (value: number, ...children: unknown[]) => block("listitem", children, { value })
+    const nestedItem = (value: number, ...children: unknown[]) => ({
+      ...item(value, ...children),
+      indent: 1,
+    })
+    const list = (listType: "bullet" | "number", ...items: unknown[]) =>
+      block("list", items, { listType, start: 1, tag: listType === "bullet" ? "ul" : "ol" })
+
+    const saved = {
+      root: block("root", [
+        paragraph(text("Edit me")),
+        ...(["h1", "h2", "h3", "h4", "h5", "h6"] as const).map((tag) =>
+          block("heading", [text(tag)], { tag }),
+        ),
+        block("quote", [text("Quote")]),
+        paragraph(
+          styled("bold", IS_BOLD),
+          styled("italic", IS_ITALIC),
+          styled("underline", IS_UNDERLINE),
+          styled("all", IS_BOLD | IS_ITALIC | IS_UNDERLINE),
+          { type: "linebreak", version: 1 },
+          { ...text("\t"), detail: 2, type: "tab" },
+          text("after"),
+        ),
+        list(
+          "bullet",
+          item(1, text("One")),
+          item(2, list("bullet", nestedItem(1, text("Nested")))),
+        ),
+        list("number", item(1, text("First")), item(2, text("Second"))),
+        tableDoc([
+          [cell("H1", { headerState: 3 }), cell("H2", { headerState: 1 })],
+          [cell("R", { headerState: 2 }), cell("D")],
+        ]).root.children[0],
+      ]),
+    } as unknown as RichTextValue
+
+    const onChange = vi.fn()
+    render(<RichTextEditor defaultValue={saved} onChange={onChange} />)
+    await screen.findByText("Edit me")
+    await act(async () => {
+      getEditor().update(() => {
+        const first = $getRoot().getFirstDescendant()
+        if ($isTextNode(first)) first.setTextContent("Edited")
+      })
+    })
+
+    await waitFor(() => expect(onChange).toHaveBeenCalled())
+    const expected = structuredClone(saved) as unknown as {
+      root: { children: Array<{ children: Array<{ text: string }> }> }
+    }
+    const firstText = expected.root.children[0]?.children[0]
+    if (firstText) firstText.text = "Edited"
+    expect(lastValue(onChange)).toEqual(expected)
   })
 
   it("locks the editor and toolbar while disabled", async () => {
