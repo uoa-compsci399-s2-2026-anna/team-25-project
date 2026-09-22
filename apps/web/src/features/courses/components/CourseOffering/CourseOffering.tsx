@@ -1,9 +1,9 @@
-import { RichText } from "@payloadcms/richtext-lexical/react"
 import { CourseDeliveryFormatLabels } from "@repo/shared/enums/courses"
 import type { CourseVersion } from "@repo/shared/payload-types"
 import { initialsFromName } from "@repo/shared/utils/initials"
 import { Avatar, AvatarFallback, Heading, Separator, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
+import { RichTextContent } from "@/components/RichTextContent"
 import { Routes } from "@/lib/routes"
 import { periodRange } from "../../courses.format"
 import { type CourseRouteParams, parseCourseId } from "../../courses.params"
@@ -74,13 +74,13 @@ export const CourseOffering = async ({ params }: { params: CourseRouteParams }) 
 
         {offering.learningOutcomes && (
           <CourseOfferingSection title="Learning outcomes">
-            <RichText className="rich-text text-sm" data={offering.learningOutcomes} />
+            <RichTextContent className="text-sm" data={offering.learningOutcomes} />
           </CourseOfferingSection>
         )}
 
         {offering.assessments && (
           <CourseOfferingSection title="Assessment">
-            <RichText className="rich-text text-sm" data={offering.assessments} />
+            <RichTextContent className="text-sm" data={offering.assessments} />
           </CourseOfferingSection>
         )}
 
