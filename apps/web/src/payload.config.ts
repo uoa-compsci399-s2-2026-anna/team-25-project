@@ -58,6 +58,8 @@ export default buildConfig({
   sharp,
   plugins: [
     s3Storage({
+      enabled: Boolean(process.env.S3_BUCKET && process.env.S3_REGION),
+      alwaysInsertFields: true,
       collections: {
         media: { prefix: "media" },
       },
