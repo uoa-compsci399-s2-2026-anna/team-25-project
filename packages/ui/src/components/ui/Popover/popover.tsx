@@ -28,10 +28,14 @@ function PopoverContent({
   side,
   align = "center",
   alignOffset,
+  collisionAvoidance,
   showCloseButton = false,
   ...props
 }: PopoverPrimitive.Popup.Props &
-  Pick<PopoverPrimitive.Positioner.Props, "side" | "sideOffset" | "align" | "alignOffset"> & {
+  Pick<
+    PopoverPrimitive.Positioner.Props,
+    "side" | "sideOffset" | "align" | "alignOffset" | "collisionAvoidance"
+  > & {
     showCloseButton?: boolean
   }) {
   return (
@@ -39,6 +43,7 @@ function PopoverContent({
       <PopoverPrimitive.Positioner
         align={align}
         alignOffset={alignOffset}
+        collisionAvoidance={collisionAvoidance}
         side={side}
         sideOffset={sideOffset}
       >

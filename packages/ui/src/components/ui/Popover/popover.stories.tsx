@@ -37,11 +37,15 @@ export const WithCloseButton: Story = () => (
 )
 
 export const Sides: Story = () => (
-  <div className="flex items-center gap-6">
+  <div className="flex min-h-96 items-center justify-center gap-6 p-24">
     {(["top", "right", "bottom", "left"] as const).map((side) => (
       <Popover key={side}>
         <PopoverTrigger render={<Button variant="button-transparent" />}>{side}</PopoverTrigger>
-        <PopoverContent side={side}>
+        <PopoverContent
+          className="w-auto"
+          collisionAvoidance={{ align: "none", side: "none" }}
+          side={side}
+        >
           <PopoverTitle>On the {side}</PopoverTitle>
         </PopoverContent>
       </Popover>
