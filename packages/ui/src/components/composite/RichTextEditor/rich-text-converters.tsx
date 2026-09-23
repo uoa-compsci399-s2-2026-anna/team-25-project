@@ -30,12 +30,15 @@ const link: JSXConverter<SerializedAutoLinkNode | SerializedLinkNode> = ({ node,
  * Payload's default JSX converters, with these changes:
  * - Tables have no inline styles, so the `rich-text` utility styles them.
  * - Links are kept only for http, https and mailto URLs.
+ * - Uploads render nothing. Payload's converter uses the upload URL with no check, and the editor
+ *   cannot make upload nodes.
  * - Nodes with no converter render nothing, not the text "unknown node".
  */
 const richTextConverters: JSXConvertersFunction = ({ defaultConverters }) => ({
   ...defaultConverters,
   autolink: link,
   link,
+  upload: () => null,
   table: ({ node, nodesToJSX }) => (
     <div className="overflow-x-auto">
       <table>

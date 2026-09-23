@@ -132,6 +132,25 @@ describe("richTextConverters", () => {
     expect(screen.queryByRole("link")).not.toBeInTheDocument()
   })
 
+  it.each([
+    ["a file", { filename: "evil.pdf", mimeType: "application/pdf" }],
+    ["an image", { alt: "Evil", mimeType: "image/png" }],
+  ])("renders nothing for an upload of %s", (_, doc) => {
+    const upload = {
+      fields: {},
+      relationTo: "media",
+      type: "upload",
+      value: { id: "1", url: "javascript:alert(1)", ...doc },
+      version: 3,
+    }
+    const { container } = render(
+      <RichText converters={richTextConverters} data={inline(textNode("Before"), upload)} />,
+    )
+
+    expect(screen.getByText("Before")).toBeInTheDocument()
+    expect(container.querySelector("a, img, picture")).toBeNull()
+  })
+
   it("renders nothing for a node with no converter", () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
     const block = { fields: {}, type: "block", version: 2 }
