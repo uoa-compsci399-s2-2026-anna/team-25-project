@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { Avatar, AvatarFallback } from "../Avatar/avatar"
 import {
   Popover,
   PopoverClose,
@@ -8,6 +9,12 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "./popover"
+
+const mockMember = {
+  email: "maya.chen@example.ac.nz",
+  initials: "MC",
+  name: "Maya Chen",
+}
 
 function renderPopover(props?: {
   showCloseButton?: boolean
@@ -155,6 +162,35 @@ describe("Popover", () => {
     expect(
       document.querySelector("[data-slot=popover-content]")?.closest("[data-side]"),
     ).toHaveAttribute("data-side", "right")
+  })
+
+  it("opens an account menu from an avatar trigger", () => {
+    const onLogOut = vi.fn()
+    render(
+      <Popover>
+        <PopoverTrigger nativeButton={false} render={<Avatar />}>
+          <AvatarFallback>{mockMember.initials}</AvatarFallback>
+        </PopoverTrigger>
+        <PopoverContent>
+          <PopoverTitle>{mockMember.name}</PopoverTitle>
+          <PopoverDescription>{mockMember.email}</PopoverDescription>
+          <button onClick={onLogOut} type="button">
+            Log out
+          </button>
+        </PopoverContent>
+      </Popover>,
+    )
+
+    expect(screen.queryByRole("button", { name: "Log out" })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: mockMember.initials }))
+
+    expect(screen.getByRole("dialog", { name: mockMember.name })).toHaveAccessibleDescription(
+      mockMember.email,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Log out" }))
+    expect(onLogOut).toHaveBeenCalledOnce()
   })
 
   // "end" rather than "start", which is the default - a default would pass whether or not

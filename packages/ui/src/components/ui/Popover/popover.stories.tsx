@@ -1,4 +1,5 @@
 import type { Meta, StoryFn } from "@storybook/nextjs-vite"
+import { Avatar, AvatarFallback } from "../Avatar/avatar"
 import { Button } from "../Button/button"
 import {
   Popover,
@@ -50,5 +51,28 @@ export const Sides: Story = () => (
         </PopoverContent>
       </Popover>
     ))}
+  </div>
+)
+
+const mockMember = {
+  email: "maya.chen@example.ac.nz",
+  initials: "MC",
+  name: "Maya Chen",
+}
+
+export const AccountMenu: Story = () => (
+  <div className="flex justify-end">
+    <Popover>
+      <PopoverTrigger nativeButton={false} render={<Avatar className="cursor-pointer" />}>
+        <AvatarFallback>{mockMember.initials}</AvatarFallback>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-52 gap-2">
+        <PopoverTitle>{mockMember.name}</PopoverTitle>
+        <PopoverDescription>{mockMember.email}</PopoverDescription>
+        <Button className="mt-2" variant="button-transparent">
+          Log out
+        </Button>
+      </PopoverContent>
+    </Popover>
   </div>
 )
