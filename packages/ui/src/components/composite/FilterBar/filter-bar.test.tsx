@@ -114,4 +114,27 @@ describe("FilterBar", () => {
     expect(screen.getByRole("searchbox", { name: "Search..." })).toBeInTheDocument()
     expect(screen.queryByRole("combobox", { name: "University" })).not.toBeInTheDocument()
   })
+
+  // How the members directory uses the bar: it filters on no status, so there is
+  // nothing to tab between and an empty tab strip would just be furniture.
+  it("renders no status tabs when the status props are omitted", () => {
+    const { status, statusOptions, onStatusChange, ...withoutStatus } = props()
+    render(<FilterBar {...withoutStatus} />)
+
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument()
+    expect(screen.queryAllByRole("tab")).toHaveLength(0)
+
+    // The rest of the bar still works without them.
+    expect(screen.getByRole("searchbox", { name: "Search proposals..." })).toBeInTheDocument()
+    expect(screen.getByRole("combobox", { name: "University" })).toBeInTheDocument()
+    expect(screen.getByRole("combobox", { name: "Sort" })).toBeInTheDocument()
+  })
+
+  it("renders no status tabs when the status options are empty", () => {
+    const p = props()
+    render(<FilterBar {...p} statusOptions={[]} />)
+
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument()
+    expect(screen.queryAllByRole("tab")).toHaveLength(0)
+  })
 })
