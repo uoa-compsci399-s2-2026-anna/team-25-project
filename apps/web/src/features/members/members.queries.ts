@@ -56,8 +56,7 @@ export const getMembers = async (filters: MemberFilters, pagination: Pagination)
     collection: Slugs.Collections.MEMBERS,
     ...pagination,
     depth: 1,
-    // The Local API overrides access, so ask only for what the card draws rather
-    // than pulling back gated fields like email.
+    // The Local API overrides access, so ask only for what the card draws.
     select: {
       avatar: true,
       firstName: true,
@@ -65,7 +64,8 @@ export const getMembers = async (filters: MemberFilters, pagination: Pagination)
       lastName: true,
       position: true,
     },
-    sort: filters.sort === "surnameDesc" ? "-lastName" : "lastName",
+    // id breaks surname ties; without it paging can repeat or skip a member.
+    sort: filters.sort === "surnameDesc" ? ["-lastName", "id"] : ["lastName", "id"],
     where: memberFiltersToWhere(filters),
   })
 }

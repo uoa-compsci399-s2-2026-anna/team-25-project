@@ -59,7 +59,7 @@ describe("getMembers", () => {
       limit: 12,
       page: 2,
       select: selectedFields,
-      sort: "-lastName",
+      sort: ["-lastName", "id"],
       where: {
         and: [{ or: [{ firstName: { contains: "tui" } }, { lastName: { contains: "tui" } }] }],
         institution: { equals: 12 },
@@ -77,7 +77,7 @@ describe("getMembers", () => {
       limit: 12,
       page: 1,
       select: selectedFields,
-      sort: "lastName",
+      sort: ["lastName", "id"],
       where: {},
     })
   })
@@ -108,6 +108,16 @@ describe("getMembers", () => {
         },
       }),
     )
+  })
+
+  // Without a tiebreaker, equal surnames can land a member on two pages or none.
+  it.each([
+    ["surnameAsc", ["lastName", "id"]],
+    ["surnameDesc", ["-lastName", "id"]],
+  ] as const)("breaks ties on id when sorting %s", async (sort, expected) => {
+    await getMembers({ sort }, { limit: 12, page: 1 })
+
+    expect(find).toHaveBeenCalledWith(expect.objectContaining({ sort: expected }))
   })
 
   it("asks only for the fields the card draws, leaving gated ones behind", async () => {
