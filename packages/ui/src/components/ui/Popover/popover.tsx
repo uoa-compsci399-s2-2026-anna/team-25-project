@@ -26,7 +26,7 @@ function PopoverContent({
   children,
   sideOffset = 8,
   side,
-  align = "center",
+  align = "start",
   alignOffset,
   collisionAvoidance,
   showCloseButton = false,

@@ -157,10 +157,25 @@ describe("Popover", () => {
     ).toHaveAttribute("data-side", "right")
   })
 
+  // "end" rather than "start", which is the default - a default would pass whether or not
+  // the prop actually reached the positioner.
   it("forwards the align prop to the positioner", () => {
     render(
       <Popover open>
-        <PopoverContent align="start">
+        <PopoverContent align="end">
+          <PopoverTitle>Title</PopoverTitle>
+        </PopoverContent>
+      </Popover>,
+    )
+    expect(
+      document.querySelector("[data-slot=popover-content]")?.closest("[data-align]"),
+    ).toHaveAttribute("data-align", "end")
+  })
+
+  it("aligns to the start of the trigger by default", () => {
+    render(
+      <Popover open>
+        <PopoverContent>
           <PopoverTitle>Title</PopoverTitle>
         </PopoverContent>
       </Popover>,
