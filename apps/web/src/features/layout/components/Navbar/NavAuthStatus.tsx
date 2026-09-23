@@ -4,6 +4,7 @@ import Link from "next/link"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
 import { Routes } from "@/lib/routes"
+import { NavUserMenu } from "./NavUserMenu"
 
 // Isolated from Navbar so only this reads headers() (via getCurrentUser) -
 // keeps the static shell (logo, nav links) prerenderable, with just this
@@ -24,12 +25,16 @@ export const NavAuthStatus = async () => {
     )
   }
 
+  // TODO: point at the real profile page once #89 lands. An admin has no
+  // member directory entry of their own, so they get no profile link.
+  const profileHref =
+    collection === Slugs.Collections.MEMBERS
+      ? // biome-ignore lint/nursery/useReactCompiler: MEMBER builds a route, it isn't a component
+        Routes.MEMBERS.MEMBER(user.id)
+      : undefined
+
   return (
-    <Link
-      className="flex min-w-0 items-center gap-2 transition-opacity hover:opacity-70"
-      // TODO: point to the real profile page once #89 lands
-      href={Routes.HOME}
-    >
+    <NavUserMenu profileHref={profileHref}>
       {/* Capped so a long name can't outgrow the logo side and shift the
           nav links off-center (Navbar's flex-1/flex-1 layout only keeps
           them centered as long as neither outer side dominates). */}
@@ -40,6 +45,6 @@ export const NavAuthStatus = async () => {
           user.avatar?.url && <AvatarImage alt="" src={user.avatar.url} />}
         <AvatarFallback>{initials(user.firstName, user.lastName)}</AvatarFallback>
       </Avatar>
-    </Link>
+    </NavUserMenu>
   )
 }
