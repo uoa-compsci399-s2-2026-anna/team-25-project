@@ -2,6 +2,7 @@ import { PaginationNav } from "@repo/ui/components/composite"
 import type { Route } from "next"
 import Link from "next/link"
 import type { SearchParams } from "nuqs/server"
+import { StringHrefLink } from "@/components/StringHrefLink"
 import { Routes } from "@/lib/routes"
 import { countMembers, getMembers, MEMBERS_PAGE_SIZE } from "../members.queries"
 import {
@@ -10,11 +11,6 @@ import {
   toMemberFilters,
 } from "../members.search-params"
 import { MemberCard } from "./MemberCard"
-
-/** PaginationNav passes a plain `string` href, which typed routes reject. */
-const PageLink = ({ href, ...props }: React.ComponentPropsWithRef<"a"> & { href: string }) => (
-  <Link href={href as Route} {...props} />
-)
 
 export const MembersList = async ({ searchParams }: { searchParams: Promise<SearchParams> }) => {
   const params = await loadMemberSearchParams(searchParams)
@@ -76,7 +72,7 @@ export const MembersList = async ({ searchParams }: { searchParams: Promise<Sear
       </div>
       <PaginationNav
         getHref={getPageHref}
-        linkComponent={PageLink}
+        linkComponent={StringHrefLink}
         page={params.page}
         totalPages={totalPages}
       />
