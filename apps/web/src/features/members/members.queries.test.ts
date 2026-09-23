@@ -2,7 +2,7 @@ import { InstitutionCountry } from "@repo/shared/enums/institutions"
 import { connection } from "next/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
-import { getMemberCounts, getMembers } from "./members.queries"
+import { countMembers, getMemberCounts, getMembers } from "./members.queries"
 
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
 // The real one throws outside a request scope, which a unit test has no way to enter.
@@ -34,10 +34,11 @@ describe("request-time deferral", () => {
     count.mockResolvedValue({ totalDocs: 0 })
 
     await getMembers({ country: InstitutionCountry.NZ }, { limit: 12, page: 1 })
-    expect(connection).toHaveBeenCalled()
+    expect(connection).toHaveBeenCalledOnce()
 
-    await getMemberCounts({})
-    expect(connection).toHaveBeenCalledTimes(2)
+    vi.mocked(connection).mockClear()
+    await countMembers({})
+    expect(connection).toHaveBeenCalledOnce()
   })
 })
 
@@ -130,6 +131,18 @@ describe("getMembers", () => {
   })
 })
 
+describe("countMembers", () => {
+  it("counts through the same filters the list uses", async () => {
+    count.mockResolvedValue({ totalDocs: 13 })
+
+    await expect(countMembers({ country: InstitutionCountry.NZ })).resolves.toBe(13)
+    expect(count).toHaveBeenCalledWith({
+      collection: "members",
+      where: { "institution.country": { equals: InstitutionCountry.NZ } },
+    })
+  })
+})
+
 describe("getMemberCounts", () => {
   it("counts the filtered members against the whole directory", async () => {
     count.mockResolvedValueOnce({ totalDocs: 8 }).mockResolvedValueOnce({ totalDocs: 124 })
@@ -143,7 +156,8 @@ describe("getMemberCounts", () => {
       collection: "members",
       where: { "institution.country": { equals: InstitutionCountry.NZ } },
     })
-    expect(count).toHaveBeenNthCalledWith(2, { collection: "members" })
+    // The total is the same count with nothing filtering it.
+    expect(count).toHaveBeenNthCalledWith(2, { collection: "members", where: {} })
   })
 
   it("reports the same number twice when nothing is filtered", async () => {

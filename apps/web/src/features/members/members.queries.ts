@@ -70,16 +70,19 @@ export const getMembers = async (filters: MemberFilters, pagination: Pagination)
   })
 }
 
-/** What the header reports: how many members these filters leave, out of the whole directory. */
-export const getMemberCounts = async (filters: MemberFilters) => {
+/** Counting stays accurate where find() reports no totals, so page counts derive from this. */
+export const countMembers = async (filters: MemberFilters) => {
   await connection()
   const payload = await getPayloadClient()
-  const [shown, total] = await Promise.all([
-    payload.count({
-      collection: Slugs.Collections.MEMBERS,
-      where: memberFiltersToWhere(filters),
-    }),
-    payload.count({ collection: Slugs.Collections.MEMBERS }),
-  ])
-  return { shown: shown.totalDocs, total: total.totalDocs }
+  const { totalDocs } = await payload.count({
+    collection: Slugs.Collections.MEMBERS,
+    where: memberFiltersToWhere(filters),
+  })
+  return totalDocs
+}
+
+/** What the header reports: how many members these filters leave, out of the whole directory. */
+export const getMemberCounts = async (filters: MemberFilters) => {
+  const [shown, total] = await Promise.all([countMembers(filters), countMembers({})])
+  return { shown, total }
 }
