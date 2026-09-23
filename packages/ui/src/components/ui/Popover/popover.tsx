@@ -40,16 +40,20 @@ function PopoverContent({
   }) {
   return (
     <PopoverPortal>
+      {/* The positioner is what gets portaled to the body, so the z-index
+          belongs here - on the popup it can't lift the popover above a
+          sticky header that sets its own z-index. */}
       <PopoverPrimitive.Positioner
         align={align}
         alignOffset={alignOffset}
+        className="z-50"
         collisionAvoidance={collisionAvoidance}
         side={side}
         sideOffset={sideOffset}
       >
         <PopoverPrimitive.Popup
           className={cn(
-            "data-closed:fade-out-0 data-closed:zoom-out-95 data-open:fade-in-0 data-open:zoom-in-95 z-50 w-72 origin-(--transform-origin) rounded-xl border border-brand-border bg-popover p-4 text-popover-foreground text-sm shadow-md outline-none duration-100 data-closed:animate-out data-open:animate-in",
+            "data-closed:fade-out-0 data-closed:zoom-out-95 data-open:fade-in-0 data-open:zoom-in-95 w-72 origin-(--transform-origin) rounded-xl border border-brand-border bg-popover p-4 text-popover-foreground text-sm shadow-md outline-none duration-100 data-closed:animate-out data-open:animate-in",
             className,
           )}
           data-slot="popover-content"
