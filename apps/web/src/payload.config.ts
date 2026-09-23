@@ -13,6 +13,7 @@ import { Institutions } from "./payload/collections/Institutions"
 import { Media } from "./payload/collections/Media"
 import { Members } from "./payload/collections/Members"
 import { Proposals } from "./payload/collections/Proposals"
+import { richTextFeatures } from "./payload/richText"
 
 declare module "payload" {
   export interface GeneratedTypes extends Config {}
@@ -35,7 +36,7 @@ export default buildConfig({
     },
   },
   collections: [Admin, Members, Institutions, Media, Proposals, Courses, CourseVersions],
-  editor: lexicalEditor(),
+  editor: lexicalEditor({ features: richTextFeatures }),
   graphQL: {
     disable: true,
   },

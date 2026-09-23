@@ -1,7 +1,7 @@
-import { RichText } from "@payloadcms/richtext-lexical/react"
 import { Heading } from "@repo/ui/components/ui"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
+import { RichTextContent } from "@/components/RichTextContent"
 import { AuthorByline } from "@/features/proposals/components/AuthorByline/AuthorByline"
 import { ProposalMeta } from "@/features/proposals/components/ProposalMeta/ProposalMeta"
 import { ProposalStatusRow } from "@/features/proposals/components/ProposalStatusRow/ProposalStatusRow"
@@ -42,7 +42,7 @@ export const ProposalPage = async ({ params }: { params: Promise<{ idSlug: strin
         <Heading level="h1">{proposal.title}</Heading>
         <AuthorByline authors={authors} />
         <p className="text-muted-foreground">{proposal.summary}</p>
-        <RichText data={proposal.body} />
+        <RichTextContent data={proposal.body} />
         <ProposalMeta
           ethics={proposal.ethics}
           outputTarget={proposal.outputTarget}
