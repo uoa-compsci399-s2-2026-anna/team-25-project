@@ -4,6 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": ["DATABASE_URL", "PAYLOAD_SECRET", "NEXT_PUBLIC_URL"],
       "inputs": ["$TURBO_DEFAULT$", ".env", ".env.local"],
       "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**", "dist/**"]
     },
@@ -16,7 +17,7 @@
       "inputs": ["$TURBO_DEFAULT$", "biome.json", "biome.jsonc"]
     },
     "types:check": {
-      "dependsOn": ["^build", "^types:check"]
+      "dependsOn": ["^build", "^types:check", "generate:types"]
     },
     "test": {
       "cache": true,
