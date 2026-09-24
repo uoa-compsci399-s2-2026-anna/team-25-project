@@ -17,12 +17,13 @@ describe("member cache revalidation", () => {
   })
 
   it.each([revalidateMemberProposals, revalidateDeletedMemberProposals])(
-    "marks proposal queries stale after a write",
+    "marks proposal and profile queries stale after a write",
     async (hook) => {
       const doc = { id: 1 }
       const result = await hook({ doc, req: { context: {} } } as never)
 
       expect(revalidateTag).toHaveBeenCalledWith("proposals", "max")
+      expect(revalidateTag).toHaveBeenCalledWith("member:1", "max")
       expect(result).toBe(doc)
     },
   )

@@ -74,3 +74,26 @@ describe("MembersList empty states", () => {
     expect(countMembers).toHaveBeenCalledWith(expect.objectContaining({ country: "NZ" }))
   })
 })
+
+describe("MembersList cards", () => {
+  afterEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
+
+  it("links each card to that member's profile", async () => {
+    vi.mocked(getMembers).mockResolvedValue({
+      docs: [
+        { id: 3, firstName: "Anna", lastName: "Tui", institution: 1 },
+        { id: 8, firstName: "Priya", lastName: "Nair", institution: 1 },
+      ],
+      totalDocs: 2,
+      totalPages: 1,
+    } as unknown as MembersPage)
+
+    render(await renderAt("1"))
+
+    expect(screen.getByRole("link", { name: /Anna Tui/ })).toHaveAttribute("href", "/members/3")
+    expect(screen.getByRole("link", { name: /Priya Nair/ })).toHaveAttribute("href", "/members/8")
+  })
+})

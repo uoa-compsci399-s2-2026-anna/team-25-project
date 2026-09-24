@@ -62,6 +62,7 @@ export const MembersList = async ({ searchParams }: { searchParams: Promise<Sear
               avatarSrc={avatar?.url ?? undefined}
               country={institution?.country}
               firstName={member.firstName}
+              href={Routes.MEMBERS.MEMBER(member.id)}
               institution={institution?.name}
               key={member.id}
               lastName={member.lastName}
