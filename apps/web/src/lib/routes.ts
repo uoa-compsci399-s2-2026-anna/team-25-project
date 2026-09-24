@@ -7,6 +7,8 @@ export function route<T extends string>(path: Route<T>): Route<T> {
 export const Routes = {
   HOME: route("/"),
   LOGIN: route("/login"),
+  /** Payload's own admin UI, which only admins can reach (see payload.config.ts). */
+  ADMIN: route("/payload/admin"),
   COURSES: {
     ROOT: route("/courses"),
     COURSE: (courseId: string) => route(`/courses/${courseId}`),

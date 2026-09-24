@@ -1,6 +1,5 @@
 import { Heading } from "@repo/ui/components/ui"
 import Link from "next/link"
-import { LogoutButton } from "@/features/auth/components/LogoutButton/LogoutButton"
 import { Routes } from "@/lib/routes"
 
 const links = {
@@ -38,7 +37,6 @@ export const Footer = () => {
             </ul>
           </div>
         ))}
-        <LogoutButton />
       </nav>
     </footer>
   )
