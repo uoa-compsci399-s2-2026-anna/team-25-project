@@ -263,6 +263,24 @@ jobs:
     name: Build Web
     needs: [lint, setup, type-check]
     runs-on: ubuntu-latest
+    # Throwaway Postgres for this job only, so the build needs no real credentials.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/ci
+      NEXT_PUBLIC_URL: ${{ vars.NEXT_PUBLIC_URL || 'http://localhost:3000' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -294,11 +312,13 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: pnpm install --frozen-lockfile --ignore-scripts
 
+      - name: Generate Payload secret
+        run: echo "PAYLOAD_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+      - name: Run migrations
+        run: pnpm --filter web migrate
+
       - name: Build Web
-        env:
-          PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          NEXT_PUBLIC_URL: ${{ vars.NEXT_PUBLIC_URL }}
         run: pnpm build:web
 
   build-storybook:

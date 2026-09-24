@@ -50,9 +50,10 @@ type FilterBarProps<
   TStatus extends string = string,
   TSort extends string = string,
 > = React.ComponentProps<"div"> & {
-  statusOptions: FilterBarStatusOption<TStatus>[]
-  status: TStatus
-  onStatusChange: (status: TStatus) => void
+  /** Omit to drop the status tabs; a bar that filters on nothing else has no use for them. */
+  statusOptions?: FilterBarStatusOption<TStatus>[]
+  status?: TStatus
+  onStatusChange?: (status: TStatus) => void
   search: string
   onSearchChange: (search: string) => void
   searchPlaceholder?: string
@@ -75,7 +76,7 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
   sort,
   sortOptions,
   status,
-  statusOptions,
+  statusOptions = [],
   ...props
 }: FilterBarProps<TStatus, TSort>) {
   return (
@@ -84,16 +85,18 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
       data-slot="filter-bar"
       {...props}
     >
-      <Tabs onValueChange={(value) => onStatusChange(value as TStatus)} value={status}>
-        <TabsList className="h-10" variant="pill">
-          {statusOptions.map((option) => (
-            <TabsTrigger className="px-4" key={option.value} value={option.value}>
-              {option.label}
-              {option.count !== undefined && ` - ${option.count}`}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      {statusOptions.length > 0 && (
+        <Tabs onValueChange={(value) => onStatusChange?.(value as TStatus)} value={status}>
+          <TabsList className="h-10" variant="pill">
+            {statusOptions.map((option) => (
+              <TabsTrigger className="px-4" key={option.value} value={option.value}>
+                {option.label}
+                {option.count !== undefined && ` - ${option.count}`}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      )}
 
       <InputGroup className="h-10 w-full sm:w-80" variant="pill">
         <InputGroupAddon className="pl-4">

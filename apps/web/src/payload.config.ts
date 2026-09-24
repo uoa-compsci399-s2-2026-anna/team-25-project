@@ -2,6 +2,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { postgresAdapter } from "@payloadcms/db-postgres"
 import { lexicalEditor } from "@payloadcms/richtext-lexical"
+import { s3Storage } from "@payloadcms/storage-s3"
 import type { Config } from "@repo/shared/payload-types"
 import { buildConfig } from "payload"
 import sharp from "sharp"
@@ -12,6 +13,7 @@ import { Institutions } from "./payload/collections/Institutions"
 import { Media } from "./payload/collections/Media"
 import { Members } from "./payload/collections/Members"
 import { Proposals } from "./payload/collections/Proposals"
+import { richTextFeatures } from "./payload/richText"
 
 declare module "payload" {
   export interface GeneratedTypes extends Config {}
@@ -34,7 +36,7 @@ export default buildConfig({
     },
   },
   collections: [Admin, Members, Institutions, Media, Proposals, Courses, CourseVersions],
-  editor: lexicalEditor(),
+  editor: lexicalEditor({ features: richTextFeatures }),
   graphQL: {
     disable: true,
   },
@@ -55,5 +57,17 @@ export default buildConfig({
     push: false,
   }),
   sharp,
-  plugins: [],
+  plugins: [
+    s3Storage({
+      enabled: Boolean(process.env.S3_BUCKET && process.env.S3_REGION),
+      alwaysInsertFields: true,
+      collections: {
+        media: { prefix: "media" },
+      },
+      bucket: process.env.S3_BUCKET ?? "",
+      config: {
+        region: process.env.S3_REGION ?? "",
+      },
+    }),
+  ],
 })

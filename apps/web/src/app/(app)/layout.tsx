@@ -1,9 +1,8 @@
-import { Toaster } from "@repo/ui/components/ui"
 import { Geist_Mono } from "next/font/google"
 import localFont from "next/font/local"
-import { NuqsAdapter } from "nuqs/adapters/next/app"
 import "@repo/ui/globals.css"
 import { cn } from "@repo/ui/lib/utils"
+import { Providers } from "@/components/Providers"
 import { Footer, Navbar } from "@/features/layout/components"
 
 const satoshi = localFont({
@@ -27,13 +26,11 @@ export default function RootLayout({
   return (
     <html className={cn("antialiased", fontMono.variable, "font-sans", satoshi.variable)} lang="en">
       <body className="flex min-h-dvh flex-col items-center">
-        <Toaster>
+        <Providers>
           <Navbar />
-          <div className="w-full max-w-[1512px] flex-1">
-            <NuqsAdapter>{children}</NuqsAdapter>
-          </div>
+          <div className="w-full max-w-[1512px] flex-1">{children}</div>
           <Footer />
-        </Toaster>
+        </Providers>
       </body>
     </html>
   )

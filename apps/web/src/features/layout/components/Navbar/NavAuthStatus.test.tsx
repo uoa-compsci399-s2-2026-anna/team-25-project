@@ -1,10 +1,19 @@
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import type { ReactNode } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Routes } from "@/lib/routes"
 import { NavAuthStatus } from "./NavAuthStatus"
 
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
+
+// Opening the dropdown mounts LogoutButton, which needs a router it has no
+// business needing here - its own behaviour is covered by its own tests.
+vi.mock("@/features/auth/components/LogoutButton/LogoutButton", () => ({
+  LogoutButton: ({ children }: { children: ReactNode }) => (
+    <button type="button">{children}</button>
+  ),
+}))
 
 const signOut = () => {
   vi.mocked(getCurrentUser).mockResolvedValue({ collection: null, user: null })
@@ -110,6 +119,37 @@ describe("NavAuthStatus", () => {
       await renderNavAuthStatus()
       const name = screen.getByText("Christopher Featherstonehaugh")
       expect(name).toHaveClass("max-w-32", "truncate")
+    })
+
+    describe("the dropdown's destinations", () => {
+      const openMenu = (name: string) => {
+        fireEvent.click(screen.getByRole("button", { name: new RegExp(name) }))
+      }
+
+      it("sends a member to their own directory entry and not to the admin UI", async () => {
+        signInAsMember()
+        await renderNavAuthStatus()
+        openMenu("Anna Tui")
+
+        expect(screen.getByRole("button", { name: "Profile" })).toHaveAttribute(
+          "href",
+          Routes.MEMBERS.MEMBER(1),
+        )
+        expect(screen.queryByRole("button", { name: "Admin dashboard" })).not.toBeInTheDocument()
+      })
+
+      // An admin has no member directory entry of their own to link to.
+      it("sends an admin to the admin UI and offers them no profile", async () => {
+        signInAsAdmin()
+        await renderNavAuthStatus()
+        openMenu("Ada Lovelace")
+
+        expect(screen.getByRole("button", { name: "Admin dashboard" })).toHaveAttribute(
+          "href",
+          Routes.ADMIN,
+        )
+        expect(screen.queryByRole("button", { name: "Profile" })).not.toBeInTheDocument()
+      })
     })
   })
 })
