@@ -1,3 +1,5 @@
+import { InstitutionCountryLabels } from "@repo/shared/enums/institutions"
+import { toSelectOptions } from "@repo/shared/utils/select-options"
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { isAdmin } from "../access"
@@ -25,7 +27,7 @@ export const Institutions: CollectionConfig = {
       name: "country",
       type: "select",
       required: true,
-      options: ["AU", "NZ"],
+      options: toSelectOptions(InstitutionCountryLabels),
     },
     {
       name: "domains",
