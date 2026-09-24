@@ -9,9 +9,8 @@ const links = [
   { name: "Members", href: Routes.MEMBERS.ROOT },
   { name: "Courses", href: Routes.COURSES.ROOT },
   { name: "Proposals", href: Routes.PROPOSALS.ROOT },
-  // TODO: point to the real Resources/News pages once #16 lands
-  { name: "Resources", href: Routes.HOME },
-  { name: "News", href: Routes.HOME },
+  { name: "Resources", href: Routes.RESOURCES },
+  { name: "News", href: Routes.NEWS },
 ]
 
 export const Navbar = () => {

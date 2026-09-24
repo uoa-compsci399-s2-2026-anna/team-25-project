@@ -31,8 +31,8 @@ describe("Navbar", () => {
     ["Members", Routes.MEMBERS.ROOT],
     ["Courses", Routes.COURSES.ROOT],
     ["Proposals", Routes.PROPOSALS.ROOT],
-    ["Resources", Routes.HOME],
-    ["News", Routes.HOME],
+    ["Resources", Routes.RESOURCES],
+    ["News", Routes.NEWS],
   ])("links %s to %s", (name, href) => {
     render(<Navbar />)
     expect(screen.getByRole("link", { name })).toHaveAttribute("href", href)
