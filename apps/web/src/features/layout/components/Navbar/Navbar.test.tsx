@@ -3,12 +3,15 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { Routes } from "@/lib/routes"
 import { Navbar } from "./Navbar"
 
-// NavAuthStatus is async - it can only really run inside Next.js's RSC
-// pipeline, not a plain client-side render(), so it's covered on its own in
-// NavAuthStatus.test.tsx. Stub it here to a plain sync component so Suspense
-// has nothing to actually suspend on.
+// NavAuthStatus and NavLinks are async - they can only really run inside
+// Next.js's RSC pipeline, not a plain client-side render(), so they're covered
+// on their own in NavAuthStatus.test.tsx and NavLinks.test.tsx. Stub them here
+// to plain sync components so Suspense has nothing to actually suspend on.
 vi.mock("./NavAuthStatus", () => ({
   NavAuthStatus: () => <div data-testid="nav-auth-status" />,
+}))
+vi.mock("./NavLinks", () => ({
+  NavLinks: () => <div data-testid="nav-links" />,
 }))
 
 describe("Navbar", () => {
@@ -26,24 +29,11 @@ describe("Navbar", () => {
     expect(screen.getByRole("link", { name: "CCCA" })).toHaveAttribute("href", Routes.HOME)
   })
 
-  it.each([
-    ["About", Routes.ABOUT],
-    ["Members", Routes.MEMBERS.ROOT],
-    ["Courses", Routes.COURSES.ROOT],
-    ["Proposals", Routes.PROPOSALS.ROOT],
-    ["Resources", Routes.RESOURCES],
-    ["News", Routes.NEWS],
-  ])("links %s to %s", (name, href) => {
+  it("renders NavLinks inside the main navigation landmark", () => {
     render(<Navbar />)
-    expect(screen.getByRole("link", { name })).toHaveAttribute("href", href)
-  })
-
-  it("renders every nav item inside the main navigation landmark", () => {
-    render(<Navbar />)
-    const nav = screen.getByRole("navigation", { name: "Main" })
-    for (const name of ["About", "Members", "Courses", "Proposals", "Resources", "News"]) {
-      expect(nav).toContainElement(screen.getByRole("link", { name }))
-    }
+    expect(screen.getByRole("navigation", { name: "Main" })).toContainElement(
+      screen.getByTestId("nav-links"),
+    )
   })
 
   it("renders NavAuthStatus", () => {

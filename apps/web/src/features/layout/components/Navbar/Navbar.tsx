@@ -3,15 +3,7 @@ import Link from "next/link"
 import { Suspense } from "react"
 import { Routes } from "@/lib/routes"
 import { NavAuthStatus } from "./NavAuthStatus"
-
-const links = [
-  { name: "About", href: Routes.ABOUT },
-  { name: "Members", href: Routes.MEMBERS.ROOT },
-  { name: "Courses", href: Routes.COURSES.ROOT },
-  { name: "Proposals", href: Routes.PROPOSALS.ROOT },
-  { name: "Resources", href: Routes.RESOURCES },
-  { name: "News", href: Routes.NEWS },
-]
+import { NavLinks } from "./NavLinks"
 
 export const Navbar = () => {
   return (
@@ -28,15 +20,20 @@ export const Navbar = () => {
       </Link>
 
       <nav aria-label="Main" className="flex items-center gap-5">
-        {links.map((link) => (
-          <Link
-            className="text-base transition-opacity hover:opacity-70"
-            href={link.href}
-            key={link.name}
-          >
-            {link.name}
-          </Link>
-        ))}
+        <Suspense
+          fallback={
+            // One bar per guest link - the signed-in set is longer, but the
+            // flex-1 sides keep the nav centered as it grows.
+            <>
+              <Skeleton className="h-6 w-12 rounded-full" />
+              <Skeleton className="h-6 w-16 rounded-full" />
+              <Skeleton className="h-6 w-18 rounded-full" />
+              <Skeleton className="h-6 w-10 rounded-full" />
+            </>
+          }
+        >
+          <NavLinks />
+        </Suspense>
       </nav>
 
       <div className="flex flex-1 justify-end">
