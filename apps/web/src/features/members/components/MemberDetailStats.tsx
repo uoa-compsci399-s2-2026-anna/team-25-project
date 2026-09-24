@@ -3,8 +3,8 @@ import Link from "next/link"
 import type { ReactNode } from "react"
 import { formatDate } from "@/features/courses/courses.format"
 import { Routes } from "@/lib/routes"
-import { getMemberCoursesCached, getMemberDetailsCached } from "../member.queries"
 import { type MembersRouteParams, parseMemberId } from "../members.params"
+import { getMemberCoursesCached, getMemberDetailsCached } from "../members.queries"
 
 const StatCard = ({ label, children }: { label: string; children: ReactNode }) => (
   <Card>
@@ -40,16 +40,14 @@ export const MemberStats = async ({ params }: { params: MembersRouteParams }) =>
                   href={Routes.COURSES.COURSE(String(course.courseId))}
                 >
                   <div className="flex items-center justify-between gap-3 text-muted-foreground text-xs">
-                    <span>{course.period}</span>
-                    {/* TODO: show enrolment once CourseVersion has a field for it */}
-                    <span>— students</span>
+                    {course.code && (
+                      <span className="font-medium group-hover:underline">{course.code}</span>
+                    )}
+                    {course.name && (
+                      <span className="text-muted-foreground text-sm">{course.name}</span>
+                    )}
                   </div>
-                  {course.code && (
-                    <span className="font-medium group-hover:underline">{course.code}</span>
-                  )}
-                  {course.name && (
-                    <span className="text-muted-foreground text-sm">{course.name}</span>
-                  )}
+                  <span>{course.period}</span>
                 </Link>
               </li>
             ))}

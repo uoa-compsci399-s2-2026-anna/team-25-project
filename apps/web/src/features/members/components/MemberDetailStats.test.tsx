@@ -1,9 +1,9 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { getMemberCoursesCached, getMemberDetailsCached } from "../member.queries"
+import { getMemberCoursesCached, getMemberDetailsCached } from "../members.queries"
 import { MemberStats, MemberStatsSkeleton } from "./MemberDetailStats"
 
-vi.mock("../member.queries", () => ({
+vi.mock("../members.queries", () => ({
   getMemberCoursesCached: vi.fn(),
   getMemberDetailsCached: vi.fn(),
 }))
@@ -26,7 +26,6 @@ describe("MemberStats", () => {
 
     await renderStats()
     expect(screen.getByText("2026 Semester 2")).toBeInTheDocument()
-    expect(screen.getByText("— students")).toBeInTheDocument()
     expect(screen.getByText("Capstone Project")).toBeInTheDocument()
     expect(screen.getByRole("link", { name: /COMPSCI 399/ })).toHaveAttribute("href", "/courses/12")
   })
@@ -38,7 +37,7 @@ describe("MemberStats", () => {
     ])
 
     await renderStats()
-    expect(screen.getByRole("link")).toHaveTextContent("2026 Semester 2— students")
+    expect(screen.getByRole("link")).toHaveTextContent(/^2026 Semester 2$/)
   })
 
   it("shows an empty state when the member convenes no courses", async () => {

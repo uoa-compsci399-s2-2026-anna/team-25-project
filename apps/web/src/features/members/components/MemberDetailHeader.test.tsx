@@ -1,10 +1,10 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getInstitutionCached } from "@/features/institutions/institutions.queries"
-import { getMemberDetailsCached } from "../member.queries"
+import { getMemberDetailsCached } from "../members.queries"
 import { MemberHeader, MemberHeaderSkeleton } from "./MemberDetailHeader"
 
-vi.mock("../member.queries", () => ({ getMemberDetailsCached: vi.fn() }))
+vi.mock("../members.queries", () => ({ getMemberDetailsCached: vi.fn() }))
 vi.mock("@/features/institutions/institutions.queries", () => ({
   getInstitutionCached: vi.fn(),
 }))

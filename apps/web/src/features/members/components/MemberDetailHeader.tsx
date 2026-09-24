@@ -9,8 +9,8 @@ import {
 } from "@repo/ui/components/ui"
 import { notFound } from "next/navigation"
 import { getInstitutionCached } from "@/features/institutions/institutions.queries"
-import { getMemberDetailsCached } from "../member.queries"
 import { type MembersRouteParams, parseMemberId } from "../members.params"
+import { getMemberDetailsCached } from "../members.queries"
 
 export const MemberHeader = async ({ params }: { params: MembersRouteParams }) => {
   const memberId = await parseMemberId(params)

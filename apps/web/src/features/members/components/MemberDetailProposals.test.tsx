@@ -1,10 +1,10 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { getMemberProposalsCached } from "../member.queries"
+import { getMemberProposalsCached } from "../members.queries"
 import { MemberProposals, MemberProposalsSkeleton } from "./MemberDetailProposals"
 
-vi.mock("../member.queries", () => ({ getMemberProposalsCached: vi.fn() }))
+vi.mock("../members.queries", () => ({ getMemberProposalsCached: vi.fn() }))
 
 const renderProposals = async () =>
   render(await MemberProposals({ params: Promise.resolve({ memberId: "7" }) }))

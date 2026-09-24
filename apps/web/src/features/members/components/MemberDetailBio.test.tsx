@@ -1,9 +1,9 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { getMemberDetailsCached } from "../member.queries"
+import { getMemberDetailsCached } from "../members.queries"
 import { MemberBio, MemberBioSkeleton } from "./MemberDetailBio"
 
-vi.mock("../member.queries", () => ({ getMemberDetailsCached: vi.fn() }))
+vi.mock("../members.queries", () => ({ getMemberDetailsCached: vi.fn() }))
 
 const renderBio = async () =>
   render(await MemberBio({ params: Promise.resolve({ memberId: "7" }) }))

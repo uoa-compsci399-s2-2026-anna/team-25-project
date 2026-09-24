@@ -9,7 +9,7 @@ import { MemberDetailRightColumn } from "./MemberDetailRightColumn"
 import { MemberStats, MemberStatsSkeleton } from "./MemberDetailStats"
 
 // The async children never run here - the columns are checked as element trees.
-vi.mock("../member.queries", () => ({}))
+vi.mock("../members.queries", () => ({}))
 vi.mock("@/lib/payload/getCurrentUser", () => ({}))
 
 type Props = { children?: ReactNode; fallback?: ReactNode; params?: unknown }
