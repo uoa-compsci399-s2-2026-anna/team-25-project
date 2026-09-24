@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { getMemberProposalsCached } from "../member.queries"
 import { MemberProposals, MemberProposalsSkeleton } from "./MemberDetailProposals"
@@ -13,11 +14,15 @@ describe("MemberProposals", () => {
     cleanup()
   })
 
-  it("shows an empty state when the member has no proposals", async () => {
+  it("shows an empty state for each tab when the member has no proposals", async () => {
     vi.mocked(getMemberProposalsCached).mockResolvedValue([])
+    const user = userEvent.setup()
 
     await renderProposals()
-    expect(screen.getByText("No proposals yet.")).toBeInTheDocument()
+    expect(screen.getByText("No active proposals.")).toBeInTheDocument()
+
+    await user.click(screen.getByRole("tab", { name: "Closed - 0" }))
+    expect(screen.getByText("No closed proposals.")).toBeInTheDocument()
   })
 
   it("links each proposal to its page", async () => {
@@ -43,7 +48,7 @@ describe("MemberProposals", () => {
 
   it("leaves out the posted date when there isn't one", async () => {
     vi.mocked(getMemberProposalsCached).mockResolvedValue([
-      { id: 3, title: "Untitled", proposalSlug: null, status: "closed", createdAt: "" },
+      { id: 3, title: "Untitled", proposalSlug: null, status: "active", createdAt: "" },
     ] as never)
 
     await renderProposals()
@@ -54,10 +59,29 @@ describe("MemberProposals", () => {
     vi.mocked(getMemberProposalsCached).mockResolvedValue([
       { id: 3, title: "Untitled", proposalSlug: null, status: "closed", createdAt: "" },
     ] as never)
+    const user = userEvent.setup()
 
     await renderProposals()
+    await user.click(screen.getByRole("tab", { name: "Closed - 1" }))
     expect(screen.getByText("Closed")).toBeInTheDocument()
     expect(screen.getByRole("link")).toHaveAttribute("href", "/proposals/3")
+  })
+
+  it("filters proposals by the selected status tab", async () => {
+    vi.mocked(getMemberProposalsCached).mockResolvedValue([
+      { id: 1, title: "Active one", proposalSlug: null, status: "active", createdAt: "" },
+      { id: 2, title: "Closed one", proposalSlug: null, status: "closed", createdAt: "" },
+    ] as never)
+    const user = userEvent.setup()
+
+    await renderProposals()
+    expect(screen.getByRole("tab", { name: "Active - 1" })).toBeInTheDocument()
+    expect(screen.getByText("Active one")).toBeInTheDocument()
+    expect(screen.queryByText("Closed one")).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole("tab", { name: "Closed - 1" }))
+    expect(screen.getByText("Closed one")).toBeInTheDocument()
+    expect(screen.queryByText("Active one")).not.toBeInTheDocument()
   })
 })
 
