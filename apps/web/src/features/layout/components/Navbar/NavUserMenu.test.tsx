@@ -66,6 +66,31 @@ describe("NavUserMenu", () => {
     expect(screen.getByRole("button", { name: "Log out" })).toBeInTheDocument()
   })
 
+  it("shows the admin dashboard link when one is given", () => {
+    renderMenu({ adminHref: Routes.ADMIN, profileHref: undefined })
+    openMenu()
+    expect(screen.getByRole("button", { name: "Admin dashboard" })).toHaveAttribute(
+      "href",
+      Routes.ADMIN,
+    )
+  })
+
+  // Only admins reach Payload's admin UI, so a member is never offered it.
+  it("omits the admin dashboard link for a member", () => {
+    renderMenu()
+    openMenu()
+    expect(screen.queryByRole("button", { name: "Admin dashboard" })).not.toBeInTheDocument()
+  })
+
+  it("closes the menu when the admin dashboard link is followed", async () => {
+    renderMenu({ adminHref: Routes.ADMIN, profileHref: undefined })
+    openMenu()
+    fireEvent.click(screen.getByRole("button", { name: "Admin dashboard" }))
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: "Log out" })).not.toBeInTheDocument()
+    })
+  })
+
   it("names the menu for screen readers, since the trigger is only a name and avatar", () => {
     renderMenu()
     openMenu()

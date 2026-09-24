@@ -25,15 +25,16 @@ export const NavAuthStatus = async () => {
     )
   }
 
-  // An admin has no member directory entry of their own, so they get no profile link.
-  const profileHref =
-    collection === Slugs.Collections.MEMBERS
-      ? // biome-ignore lint/nursery/useReactCompiler: MEMBER builds a route, it isn't a component
-        Routes.MEMBERS.MEMBER(user.id)
-      : undefined
+  // An admin has no member directory entry of their own, so they get the admin
+  // dashboard in place of a profile link - and a member has no business there.
+  const isMember = collection === Slugs.Collections.MEMBERS
+  const profileHref = isMember
+    ? // biome-ignore lint/nursery/useReactCompiler: MEMBER builds a route, it isn't a component
+      Routes.MEMBERS.MEMBER(user.id)
+    : undefined
 
   return (
-    <NavUserMenu profileHref={profileHref}>
+    <NavUserMenu adminHref={isMember ? undefined : Routes.ADMIN} profileHref={profileHref}>
       {/* Capped so a long name can't outgrow the logo side and shift the
           nav links off-center (Navbar's flex-1/flex-1 layout only keeps
           them centered as long as neither outer side dominates). */}
