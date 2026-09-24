@@ -10,9 +10,11 @@ import { ValidationError } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 
 // Cached proposals show each author's name, avatar and institution, and filter on the institution.
+// The member's own profile page is cached under its id tag.
 export const revalidateMemberProposals: CollectionAfterChangeHook<Member> = ({ doc, req }) => {
   if (!req.context.disableRevalidate) {
     revalidateTag(QueryKeys.PROPOSALS, "max")
+    revalidateTag(QueryKeys.MEMBERS.ID(doc.id), "max")
   }
   return doc
 }
@@ -23,6 +25,7 @@ export const revalidateDeletedMemberProposals: CollectionAfterDeleteHook<Member>
 }) => {
   if (!req.context.disableRevalidate) {
     revalidateTag(QueryKeys.PROPOSALS, "max")
+    revalidateTag(QueryKeys.MEMBERS.ID(doc.id), "max")
   }
   return doc
 }

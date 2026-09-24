@@ -36,6 +36,18 @@ export const getInstitutionName = async (
   return docs[0] ?? null
 }
 
+export const getInstitution = async (institutionId: number): Promise<Institution | null> => {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: Slugs.Collections.INSTITUTIONS,
+    where: { id: { equals: institutionId } },
+    depth: 0,
+    limit: 1,
+    pagination: false,
+  })
+  return docs[0] ?? null
+}
+
 export const getInstitutionOptionsCached = async () => {
   "use cache"
   cacheLife("max")
@@ -48,4 +60,11 @@ export const getInstitutionNameCached = async (institutionId: number) => {
   cacheLife("max")
   cacheTag(QueryKeys.INSTITUTIONS)
   return getInstitutionName(institutionId)
+}
+
+export const getInstitutionCached = async (institutionId: number) => {
+  "use cache"
+  cacheLife("max")
+  cacheTag(QueryKeys.INSTITUTIONS)
+  return getInstitution(institutionId)
 }
