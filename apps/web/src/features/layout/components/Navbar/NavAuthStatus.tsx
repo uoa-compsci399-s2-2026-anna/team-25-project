@@ -25,8 +25,7 @@ export const NavAuthStatus = async () => {
     )
   }
 
-  // TODO: point at the real profile page once #89 lands. An admin has no
-  // member directory entry of their own, so they get no profile link.
+  // An admin has no member directory entry of their own, so they get no profile link.
   const profileHref =
     collection === Slugs.Collections.MEMBERS
       ? // biome-ignore lint/nursery/useReactCompiler: MEMBER builds a route, it isn't a component

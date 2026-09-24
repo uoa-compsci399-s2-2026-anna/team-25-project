@@ -3,6 +3,7 @@
 import {
   Button,
   Popover,
+  PopoverClose,
   PopoverContent,
   PopoverTitle,
   PopoverTrigger,
@@ -29,15 +30,22 @@ export function NavUserMenu({ children, profileHref }: NavUserMenuProps) {
       <PopoverContent align="end" className="w-44 gap-1">
         <PopoverTitle className="sr-only">Account</PopoverTitle>
 
+        {/* Wrapped in PopoverClose so following the link also dismisses the menu -
+            navigating on its own leaves it open behind the new page. */}
         {profileHref && (
-          <Button
-            className="w-full justify-start"
+          <PopoverClose
             nativeButton={false}
-            render={<Link href={profileHref} />}
-            variant="button-transparent"
+            render={
+              <Button
+                className="w-full justify-start"
+                nativeButton={false}
+                render={<Link href={profileHref} />}
+                variant="button-transparent"
+              />
+            }
           >
             Profile
-          </Button>
+          </PopoverClose>
         )}
 
         <LogoutButton className="w-full justify-start" variant="button-transparent">

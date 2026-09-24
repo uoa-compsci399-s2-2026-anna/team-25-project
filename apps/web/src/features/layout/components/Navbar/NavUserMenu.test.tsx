@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import type { ComponentProps, ReactNode } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { Routes } from "@/lib/routes"
@@ -47,6 +47,15 @@ describe("NavUserMenu", () => {
       Routes.MEMBERS.MEMBER(1),
     )
     expect(screen.getByRole("button", { name: "Log out" })).toBeInTheDocument()
+  })
+
+  it("closes the menu when the profile link is followed", async () => {
+    renderMenu()
+    openMenu()
+    fireEvent.click(screen.getByRole("button", { name: "Profile" }))
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: "Log out" })).not.toBeInTheDocument()
+    })
   })
 
   // An admin has no member directory entry, so NavAuthStatus sends no href.
