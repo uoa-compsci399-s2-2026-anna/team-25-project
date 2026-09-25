@@ -9,6 +9,7 @@ import {
 import { postProposalFormSchema } from "@repo/shared/schemas/proposals"
 import { toSelectOptions } from "@repo/shared/utils/select-options"
 import { validateField } from "@repo/shared/utils/validate-field"
+import { RichTextEditor, type RichTextValue } from "@repo/ui/components/composite"
 import {
   Button,
   DialogFooter,
@@ -35,6 +36,12 @@ const ethicsOptions = toSelectOptions(ProposalEthicsStatusLabels)
 const formShape = postProposalFormSchema.shape
 const timeframeShape = formShape.timeframe.shape
 
+// The editor treats a root with no children as empty, so this passes the shape check and
+// fails only the "Body is required" check.
+const emptyBody: RichTextValue = {
+  root: { type: "root", children: [], direction: null, format: "", indent: 0, version: 1 },
+}
+
 const RequiredAsterisk = () => (
   <span aria-hidden="true" className="text-destructive">
     *
@@ -59,7 +66,7 @@ export const PostProposalForm = ({ onSuccess }: PostProposalFormProps) => {
       },
       ethics: ProposalEthicsStatus.UNKNOWN as ProposalEthicsStatus,
       summary: "",
-      body: "",
+      body: emptyBody,
     },
     validators: { onSubmit: postProposalFormSchema },
     onSubmit: async ({ value, formApi }) => {
@@ -289,19 +296,17 @@ export const PostProposalForm = ({ onSuccess }: PostProposalFormProps) => {
               const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
               return (
                 <Field data-invalid={isInvalid || undefined}>
-                  <FieldLabel htmlFor={field.name}>
+                  <FieldLabel htmlFor={field.name} id={`${field.name}-label`}>
                     <span>
                       Body <RequiredAsterisk />
                     </span>
                   </FieldLabel>
-                  <TextArea
+                  <RichTextEditor
                     aria-invalid={isInvalid}
-                    className="min-h-40"
+                    aria-labelledby={`${field.name}-label`}
                     id={field.name}
-                    name={field.name}
                     onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                    value={field.state.value}
+                    onChange={field.handleChange}
                   />
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   {fieldErrors.body && <FieldError>{fieldErrors.body}</FieldError>}
