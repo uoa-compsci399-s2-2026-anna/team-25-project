@@ -36,8 +36,8 @@ const ethicsOptions = toSelectOptions(ProposalEthicsStatusLabels)
 const formShape = postProposalFormSchema.shape
 const timeframeShape = formShape.timeframe.shape
 
-// The editor treats a root with no children as empty, so this passes the shape check and
-// fails only the "Body is required" check.
+// Form value before the first edit. It matches richTextSchema but has no text, so validation
+// gives only "Body is required".
 const emptyBody: RichTextValue = {
   root: { type: "root", children: [], direction: null, format: "", indent: 0, version: 1 },
 }
