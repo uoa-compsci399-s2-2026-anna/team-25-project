@@ -1,6 +1,6 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
 import type { SearchParams } from "nuqs/server"
-import { PageContainer } from "@/components/PageContainer"
+import { PageContainer } from "@/features/layout/components"
 import {
   MembersFilterServer,
   MembersFilterServerSkeleton,

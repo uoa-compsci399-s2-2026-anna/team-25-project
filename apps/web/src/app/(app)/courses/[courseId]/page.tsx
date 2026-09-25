@@ -1,5 +1,5 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
-import { PageContainer } from "@/components/PageContainer"
+import { PageContainer } from "@/features/layout/components"
 import { CourseHeader, CourseHeaderSkeleton } from "@/features/courses/components/CourseHeader"
 import {
   CourseOffering,
@@ -10,6 +10,7 @@ import {
   CourseOfferingMetaSkeleton,
 } from "@/features/courses/components/CourseOfferingMeta"
 import type { CourseRouteParams } from "@/features/courses/courses.params"
+import { PageContainer } from "@/features/layout/components"
 
 export default function Page({ params }: { params: CourseRouteParams }) {
   return (

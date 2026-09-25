@@ -1,5 +1,5 @@
 import { Heading, Skeleton } from "@repo/ui/components/ui"
-import { PageHeader } from "@/components/PageHeader"
+import { PageHeader } from "@/features/layout/components"
 import { AddCourseTriggerButton } from "./AddCourseDialog"
 import { AddCourseTrigger } from "./AddCourseTrigger"
 import { CoursesExportButton } from "./CoursesExportButton"

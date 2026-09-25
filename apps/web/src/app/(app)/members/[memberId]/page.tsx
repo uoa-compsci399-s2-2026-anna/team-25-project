@@ -1,5 +1,5 @@
 import { AnimatedSuspense, Separator } from "@repo/ui/components/ui"
-import { PageContainer } from "@/components/PageContainer"
+import { PageContainer } from "@/features/layout/components"
 import {
   MemberHeader,
   MemberHeaderSkeleton,

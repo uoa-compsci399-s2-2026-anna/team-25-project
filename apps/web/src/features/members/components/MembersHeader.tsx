@@ -1,7 +1,7 @@
 import { Heading, Skeleton } from "@repo/ui/components/ui"
 import type { SearchParams } from "nuqs/server"
-import { PageHeader } from "@/components/PageHeader"
 import { getInstitutionOptionsCached } from "@/features/institutions/institutions.queries"
+import { PageHeader } from "@/features/layout/components"
 import { getMemberCounts, MEMBERS_PAGE_SIZE } from "../members.queries"
 import { loadMemberSearchParams, toMemberFilters } from "../members.search-params"
 
