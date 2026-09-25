@@ -69,6 +69,7 @@ export const CourseVersions: CollectionConfig = {
     { name: "projectType", type: "text" },
     { name: "learningOutcomes", type: "richText" },
     { name: "assessments", type: "richText" },
+    { name: "additionalInfo", label: "Additional information", type: "richText" },
     {
       name: "teachingTeam",
       type: "array",

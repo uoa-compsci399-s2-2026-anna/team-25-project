@@ -1,5 +1,6 @@
 import { CourseDeliveryFormatLabels } from "@repo/shared/enums/courses"
 import type { CourseVersion } from "@repo/shared/payload-types"
+import { richTextHasText } from "@repo/shared/schemas/shared"
 import { initialsFromName } from "@repo/shared/utils/initials"
 import { Avatar, AvatarFallback, Heading, Separator, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
@@ -81,6 +82,12 @@ export const CourseOffering = async ({ params }: { params: CourseRouteParams }) 
         {offering.assessments && (
           <CourseOfferingSection title="Assessment">
             <RichTextContent className="text-sm" data={offering.assessments} />
+          </CourseOfferingSection>
+        )}
+
+        {offering.additionalInfo && richTextHasText(offering.additionalInfo.root) && (
+          <CourseOfferingSection title="Additional information">
+            <RichTextContent className="text-sm" data={offering.additionalInfo} />
           </CourseOfferingSection>
         )}
 

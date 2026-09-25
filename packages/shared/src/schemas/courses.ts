@@ -26,6 +26,7 @@ const requiredRichText = (message: string) =>
     .refine((value) => value !== null && richTextHasText(value.root), message)
 
 const draftOfferingFields = {
+  additionalInfo: richTextSchema.nullable().optional(),
   assessments: richTextSchema.nullable().optional(),
   // The dialog's Select always sends "" until a real option is picked - plain
   // `.optional()` only lets `undefined` through, so a untouched draft would
@@ -49,6 +50,8 @@ const draftOfferingFields = {
  * `role` is that member's role in the offering.
  */
 const publishOfferingFields = {
+  // Optional even to publish - not every offering has more to say.
+  additionalInfo: richTextSchema.nullable().optional(),
   assessments: requiredRichText("Assessments are required to publish"),
   deliveryFormat: z.enum(CourseDeliveryFormat, { error: "Select a delivery format to publish" }),
   endDate: z.string().min(1, "End date is required"),

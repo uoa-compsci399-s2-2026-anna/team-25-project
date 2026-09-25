@@ -115,6 +115,7 @@ const offerings = [
     learningOutcomes:
       "Work in a small team to analyse a substantial problem, design a solution, build an artefact and present it.",
     assessments: "Team project milestones, final artefact, presentation and individual reflection.",
+    additionalInfo: "Projects come from industry clients. Teams meet their client every two weeks.",
     teachingTeam: [
       ["arohan.patel@auckland.ac.nz", "Course coordinator"],
       ["maya.chen@auckland.ac.nz", "Lecturer"],
@@ -133,6 +134,7 @@ const offerings = [
     learningOutcomes:
       "Develop large-scale, reliable and maintainable software in a team of three or four.",
     assessments: "Four team project milestones (40%) and final exam (60%).",
+    additionalInfo: undefined,
     teachingTeam: [["liam.wilson@otago.ac.nz", "Course coordinator"]],
   },
 ] as const
@@ -293,6 +295,7 @@ export const seed = async () => {
     status,
     learningOutcomes,
     assessments,
+    additionalInfo,
     teachingTeam,
     ...fixture
   } of offerings) {
@@ -317,6 +320,7 @@ export const seed = async () => {
           _status: status,
           learningOutcomes: richText(learningOutcomes),
           assessments: richText(assessments),
+          additionalInfo: additionalInfo ? richText(additionalInfo) : undefined,
           teachingTeam: teachingTeam.map(([email, role]) => ({
             member: requiredID(memberIds, email),
             role,
