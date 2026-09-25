@@ -1,5 +1,6 @@
 import { CourseDeliveryFormat } from "@repo/shared/enums/courses"
 import { z } from "zod"
+import { richTextHasText, richTextSchema } from "./shared"
 
 /**
  * Shared by the client form and the server action, so a course can never be
@@ -18,14 +19,20 @@ export type CreateCourseInput = z.infer<typeof createCourseSchema>
  * CourseVersions collection hooks' `validatePeriod`, which now skips a draft
  * save for the same reason).
  */
+// The dialog sends `null` for a rich-text field the user has not typed in.
+const requiredRichText = (message: string) =>
+  richTextSchema
+    .nullable()
+    .refine((value) => value !== null && richTextHasText(value.root), message)
+
 const draftOfferingFields = {
-  assessments: z.string().trim().optional(),
+  assessments: richTextSchema.nullable().optional(),
   // The dialog's Select always sends "" until a real option is picked - plain
   // `.optional()` only lets `undefined` through, so a untouched draft would
   // fail here with "Invalid option" instead of just leaving it unset.
   deliveryFormat: z.union([z.enum(CourseDeliveryFormat), z.literal("")]).optional(),
   endDate: z.string().optional(),
-  learningOutcomes: z.string().trim().optional(),
+  learningOutcomes: richTextSchema.nullable().optional(),
   name: z.string().trim().min(1, "Course name is required"),
   period: z.string().trim().optional(),
   programme: z.string().trim().optional(),
@@ -42,10 +49,10 @@ const draftOfferingFields = {
  * `role` is that member's role in the offering.
  */
 const publishOfferingFields = {
-  assessments: z.string().trim().min(1, "Assessments are required to publish"),
+  assessments: requiredRichText("Assessments are required to publish"),
   deliveryFormat: z.enum(CourseDeliveryFormat, { error: "Select a delivery format to publish" }),
   endDate: z.string().min(1, "End date is required"),
-  learningOutcomes: z.string().trim().min(1, "Learning outcomes are required to publish"),
+  learningOutcomes: requiredRichText("Learning outcomes are required to publish"),
   name: z.string().trim().min(1, "Course name is required to publish"),
   period: z.string().trim().min(1, "Teaching period is required"),
   programme: z.string().trim().min(1, "Course program is required to publish"),
