@@ -60,6 +60,7 @@ export const ProposalsList = async ({ searchParams }: { searchParams: Promise<Se
             <ProposalCard
               author={{
                 avatarSrc: avatar?.url ?? undefined,
+                href: author ? Routes.MEMBERS.MEMBER(author.id) : undefined,
                 institution: institution?.name,
                 name: author ? `${author.firstName} ${author.lastName}` : "Unknown author",
               }}
