@@ -49,6 +49,9 @@ describe("publication validation", () => {
   ] as const)("requires %s", (key) => {
     expect(() => validatePublication({ ...complete, [key]: null })).toThrow(`${key} is required`)
   })
+  it("does not require additional information", () => {
+    expect(() => validatePublication({ ...complete, additionalInfo: null })).not.toThrow()
+  })
   it("rejects blank rich text and incomplete teaching rows", () => {
     expect(() =>
       validatePublication({
@@ -82,6 +85,13 @@ describe("publication validation", () => {
     expect(() =>
       validatePublication(
         { ...previous, period: "Corrected", changeSummary: "Fix period" },
+        previous,
+      ),
+    ).not.toThrow()
+
+    expect(() =>
+      validatePublication(
+        { ...previous, additionalInfo: richText, changeSummary: "Add a note" },
         previous,
       ),
     ).not.toThrow()

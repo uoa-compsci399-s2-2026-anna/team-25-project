@@ -46,7 +46,15 @@ const publicationKeys = [
   "assessments",
 ] as const
 
-const contentKeys = ["period", "startDate", "endDate", ...publicationKeys, "teachingTeam"] as const
+// Optional, so publication does not require it, but a correction can still change it.
+const contentKeys = [
+  "period",
+  "startDate",
+  "endDate",
+  ...publicationKeys,
+  "additionalInfo",
+  "teachingTeam",
+] as const
 
 // Array row IDs and populated relationship objects are not content changes.
 function content(version: Partial<CourseVersion>) {

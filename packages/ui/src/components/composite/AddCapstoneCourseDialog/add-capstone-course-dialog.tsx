@@ -35,11 +35,12 @@ export type AddCapstoneCourseDialogValues = {
   /** `null` until the editor first reports a change. */
   learningOutcomes: RichTextValue | null
   assessments: RichTextValue | null
+  additionalInfo: RichTextValue | null
   /** The signed-in creator's role in the offering - only required to publish. */
   role: string
 }
 
-type RichTextField = "learningOutcomes" | "assessments"
+type RichTextField = "learningOutcomes" | "assessments" | "additionalInfo"
 
 export type AddCapstoneCourseDialogFieldErrors = Partial<
   Record<keyof AddCapstoneCourseDialogValues, string>
@@ -86,6 +87,7 @@ export function AddCapstoneCourseDialog({
   onPublish,
 }: AddCapstoneCourseDialogProps) {
   const ids = {
+    additionalInfo: React.useId(),
     assessments: React.useId(),
     code: React.useId(),
     deliveryFormat: React.useId(),
@@ -213,6 +215,7 @@ export function AddCapstoneCourseDialog({
           <FieldGroup className="gap-4">
             {richTextField("learningOutcomes", "Learning outcomes")}
             {richTextField("assessments", "Assessments")}
+            {richTextField("additionalInfo", "Additional information")}
           </FieldGroup>
 
           <FieldGroup className="grid gap-4 md:grid-cols-2">

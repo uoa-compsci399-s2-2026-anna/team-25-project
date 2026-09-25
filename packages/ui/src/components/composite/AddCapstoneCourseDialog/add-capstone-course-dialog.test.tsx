@@ -13,6 +13,7 @@ const deliveryFormatOptions = [
 ]
 
 const emptyValues: AddCapstoneCourseDialogValues = {
+  additionalInfo: null,
   assessments: null,
   code: "",
   deliveryFormat: "",
@@ -78,6 +79,7 @@ describe("AddCapstoneCourseDialog", () => {
     expect(screen.getByLabelText("Your role")).toBeInTheDocument()
     expect(screen.getByLabelText("Learning outcomes")).toBeInTheDocument()
     expect(screen.getByLabelText("Assessments")).toBeInTheDocument()
+    expect(screen.getByLabelText("Additional information")).toBeInTheDocument()
   })
 
   it("groups fields into separate blocks rather than one flat list", () => {

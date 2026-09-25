@@ -13,6 +13,7 @@ const deliveryFormatOptions = [
 ]
 
 const emptyValues: AddCapstoneCourseDialogValues = {
+  additionalInfo: null,
   assessments: null,
   code: "",
   deliveryFormat: "",
