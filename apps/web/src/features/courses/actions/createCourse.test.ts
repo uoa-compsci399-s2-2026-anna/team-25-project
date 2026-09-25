@@ -1,3 +1,5 @@
+import { QueryKeys } from "@repo/shared/constants/query-keys"
+import { updateTag } from "next/cache"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
@@ -16,6 +18,7 @@ const { APIError, ValidationError } = vi.hoisted(() => {
 })
 
 vi.mock("payload", () => ({ APIError, ValidationError }))
+vi.mock("next/cache", () => ({ updateTag: vi.fn() }))
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
 
@@ -282,6 +285,7 @@ describe("createCourse", () => {
         }),
       )
       expect(payload.db.commitTransaction).toHaveBeenCalledWith(1)
+      expect(updateTag).toHaveBeenCalledWith(QueryKeys.COURSES.ROOT)
     })
 
     it("surfaces a hook's APIError as a form-level message rather than a generic one", async () => {
@@ -355,6 +359,7 @@ describe("createCourse", () => {
     expect(result).toEqual({ formError: "Could not add this course. Try again.", ok: false })
     expect(payload.db.rollbackTransaction).toHaveBeenCalledWith(1)
     expect(payload.logger.error).toHaveBeenCalled()
+    expect(updateTag).not.toHaveBeenCalled()
   })
 
   it("still creates the course when the adapter cannot open a transaction", async () => {

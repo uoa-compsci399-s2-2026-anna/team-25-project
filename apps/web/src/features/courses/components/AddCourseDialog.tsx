@@ -6,7 +6,6 @@ import {
   type AddCapstoneCourseDialogValues,
 } from "@repo/ui/components/composite"
 import { Button, toast } from "@repo/ui/components/ui"
-import { useRouter } from "next/navigation"
 import type { ComponentProps } from "react"
 import { useState } from "react"
 import { createCourse } from "../actions/createCourse"
@@ -59,7 +58,6 @@ export function AddCourseTriggerButton(props: ComponentProps<typeof Button>) {
 }
 
 export function AddCourseDialog({ defaultRole }: AddCourseDialogProps) {
-  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [values, setValues] = useState(baseValues)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
@@ -101,10 +99,6 @@ export function AddCourseDialog({ defaultRole }: AddCourseDialogProps) {
           title: "Course added",
         })
         setOpen(false)
-        // The courses table and "Your Entries" panel are server-rendered and
-        // read the tag the create action just revalidated - refresh to pull
-        // that in rather than patching client state by hand.
-        router.refresh()
         return
       }
 

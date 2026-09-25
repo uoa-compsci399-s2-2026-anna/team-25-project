@@ -1,7 +1,9 @@
 "use server"
 
+import { QueryKeys } from "@repo/shared/constants/query-keys"
 import { addCourseFormSchema } from "@repo/shared/schemas/courses"
 import { richTextHasText } from "@repo/shared/schemas/shared"
+import { updateTag } from "next/cache"
 import { APIError, type RequiredDataFromCollectionSlug, ValidationError } from "payload"
 import type { ActionResult } from "@/features/auth/actions/types"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
@@ -178,6 +180,8 @@ export const createCourse = async (input: unknown): Promise<ActionResult> => {
     payload.logger.error({ err: error }, "createCourse failed")
     return { formError: "Could not add this course. Try again.", ok: false }
   }
+
+  updateTag(QueryKeys.COURSES.ROOT)
 
   return { ok: true }
 }
