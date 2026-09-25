@@ -114,6 +114,12 @@ describe("addCourseFormSchema (publish)", () => {
     expect(addCourseFormSchema.safeParse(rest).success).toBe(false)
   })
 
+  it("publishes without additional information", () => {
+    expect(addCourseFormSchema.safeParse({ ...publishInput, additionalInfo: null }).success).toBe(
+      true,
+    )
+  })
+
   it("rejects blank publication fields, not just missing ones", () => {
     const result = addCourseFormSchema.safeParse({ ...publishInput, name: "   " })
     expect(result.success).toBe(false)

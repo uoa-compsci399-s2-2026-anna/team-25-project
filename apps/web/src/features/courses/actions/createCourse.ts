@@ -86,6 +86,7 @@ export const createCourse = async (input: unknown): Promise<ActionResult> => {
 
   const payload = await getPayloadClient()
   const {
+    additionalInfo,
     assessments,
     code,
     deliveryFormat,
@@ -118,6 +119,7 @@ export const createCourse = async (input: unknown): Promise<ActionResult> => {
     })
 
     const versionData = {
+      additionalInfo: richTextOrUndefined(additionalInfo),
       assessments: richTextOrUndefined(assessments),
       course: course.id,
       deliveryFormat: deliveryFormat ? deliveryFormat : undefined,

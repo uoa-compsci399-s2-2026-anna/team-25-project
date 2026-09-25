@@ -201,12 +201,21 @@ describe("createCourse", () => {
     it("sends rich text with no visible text as undefined", async () => {
       const payload = mockPayload()
 
-      await createCourse({ ...draftInput, assessments: richText(""), learningOutcomes: null })
+      await createCourse({
+        ...draftInput,
+        additionalInfo: richText(" "),
+        assessments: richText(""),
+        learningOutcomes: null,
+      })
 
       expect(payload.create).toHaveBeenNthCalledWith(
         2,
         expect.objectContaining({
-          data: expect.objectContaining({ assessments: undefined, learningOutcomes: undefined }),
+          data: expect.objectContaining({
+            additionalInfo: undefined,
+            assessments: undefined,
+            learningOutcomes: undefined,
+          }),
         }),
       )
     })
