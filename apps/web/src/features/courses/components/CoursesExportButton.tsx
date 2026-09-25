@@ -29,8 +29,9 @@ export function CoursesExportButton({ rows }: CoursesExportButtonProps) {
   return (
     <Button
       borderColor="charcoal"
+      className="font-bold"
       onClick={handleExport}
-      size="xl"
+      size="lg"
       type="button"
       variant="button-white"
     >
