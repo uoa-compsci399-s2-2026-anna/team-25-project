@@ -1,7 +1,9 @@
 "use server"
 
+import { QueryKeys } from "@repo/shared/constants/query-keys"
 import { ProposalStatus } from "@repo/shared/enums/proposals"
 import { postProposalFormSchema } from "@repo/shared/schemas/proposals"
+import { updateTag } from "next/cache"
 import { ValidationError } from "payload"
 import type { ActionResult } from "@/features/auth/actions/types"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
@@ -70,6 +72,8 @@ export const postProposal = async (input: unknown): Promise<ActionResult> => {
     payload.logger.error({ err: error }, "postProposal failed")
     return { formError: "Could not post your proposal. Try again.", ok: false }
   }
+
+  updateTag(QueryKeys.PROPOSALS)
 
   return { ok: true }
 }
