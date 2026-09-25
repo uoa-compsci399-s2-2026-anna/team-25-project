@@ -1,6 +1,6 @@
 import type { SearchParams } from "nuqs/server"
 import { Suspense } from "react"
-import { PageContainer } from "@/components/PageContainer"
+import { PageContainer } from "@/features/layout/components"
 import { MembersFilterServer } from "@/features/members/components/MembersFilterServer"
 import { MembersHeader } from "@/features/members/components/MembersHeader"
 import { MembersList } from "@/features/members/components/MembersList"

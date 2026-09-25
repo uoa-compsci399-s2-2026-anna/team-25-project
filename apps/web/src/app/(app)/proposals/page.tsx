@@ -1,6 +1,6 @@
 import type { SearchParams } from "nuqs/server"
 import { Suspense } from "react"
-import { PageContainer } from "@/components/PageContainer"
+import { PageContainer } from "@/features/layout/components"
 import { ProposalsFilterServer } from "@/features/proposals/components/ProposalsFilterServer"
 import { ProposalsHeader } from "@/features/proposals/components/ProposalsHeader"
 import { ProposalsList } from "@/features/proposals/components/ProposalsList"

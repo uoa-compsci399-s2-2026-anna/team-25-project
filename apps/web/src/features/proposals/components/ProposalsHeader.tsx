@@ -1,4 +1,4 @@
-import { PageHeader } from "@/components/PageHeader"
+import { PageHeader } from "@/features/layout/components"
 import { PostProposalDialog } from "./PostProposalDialog"
 
 export const ProposalsHeader = () => {

@@ -1,6 +1,6 @@
 import { Separator } from "@repo/ui/components/ui"
 import { Suspense } from "react"
-import { PageContainer } from "@/components/PageContainer"
+import { PageContainer } from "@/features/layout/components"
 import {
   MemberHeader,
   MemberHeaderSkeleton,

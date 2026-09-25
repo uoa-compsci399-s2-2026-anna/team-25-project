@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { PageContainer } from "@/components/PageContainer"
 import { CoursesList } from "@/features/courses/components/CoursesList"
+import { PageContainer } from "@/features/layout/components"
 
 export default function Page() {
   return (

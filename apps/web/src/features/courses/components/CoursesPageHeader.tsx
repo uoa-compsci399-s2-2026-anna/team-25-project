@@ -1,4 +1,4 @@
-import { PageHeader } from "@/components/PageHeader"
+import { PageHeader } from "@/features/layout/components"
 import { AddCourseTrigger } from "./AddCourseTrigger"
 import { CoursesExportButton } from "./CoursesExportButton"
 import type { CourseTableRow } from "./CoursesTable"
