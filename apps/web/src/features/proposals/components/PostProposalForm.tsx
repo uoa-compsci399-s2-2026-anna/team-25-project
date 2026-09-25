@@ -9,6 +9,7 @@ import {
 import { postProposalFormSchema } from "@repo/shared/schemas/proposals"
 import { toSelectOptions } from "@repo/shared/utils/select-options"
 import { validateField } from "@repo/shared/utils/validate-field"
+import { RichTextEditor, type RichTextValue } from "@repo/ui/components/composite"
 import {
   Button,
   DialogFooter,
@@ -35,6 +36,12 @@ const ethicsOptions = toSelectOptions(ProposalEthicsStatusLabels)
 const formShape = postProposalFormSchema.shape
 const timeframeShape = formShape.timeframe.shape
 
+// Form value before the first edit. It matches richTextSchema but has no text, so validation
+// gives only "Body is required".
+const emptyBody: RichTextValue = {
+  root: { type: "root", children: [], direction: null, format: "", indent: 0, version: 1 },
+}
+
 const RequiredAsterisk = () => (
   <span aria-hidden="true" className="text-destructive">
     *
@@ -59,7 +66,7 @@ export const PostProposalForm = ({ onSuccess }: PostProposalFormProps) => {
       },
       ethics: ProposalEthicsStatus.UNKNOWN as ProposalEthicsStatus,
       summary: "",
-      body: "",
+      body: emptyBody,
     },
     validators: { onSubmit: postProposalFormSchema },
     onSubmit: async ({ value, formApi }) => {
@@ -92,88 +99,33 @@ export const PostProposalForm = ({ onSuccess }: PostProposalFormProps) => {
         void form.handleSubmit()
       }}
     >
-      <div className="grid gap-8 py-4 sm:grid-cols-2">
-        <FieldGroup className="gap-5">
-          <form.Field name="title" validators={{ onBlur: validateField(formShape.title) }}>
-            {(field) => {
-              const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
-              return (
-                <Field data-invalid={isInvalid || undefined}>
-                  <FieldLabel htmlFor={field.name}>
-                    <span>
-                      Title <RequiredAsterisk />
-                    </span>
-                  </FieldLabel>
-                  <Input
-                    aria-invalid={isInvalid}
-                    id={field.name}
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                    value={field.state.value}
-                  />
-                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                  {fieldErrors.title && <FieldError>{fieldErrors.title}</FieldError>}
-                </Field>
-              )
-            }}
-          </form.Field>
+      <FieldGroup className="gap-5 py-4">
+        <form.Field name="title" validators={{ onBlur: validateField(formShape.title) }}>
+          {(field) => {
+            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+            return (
+              <Field data-invalid={isInvalid || undefined}>
+                <FieldLabel htmlFor={field.name}>
+                  <span>
+                    Title <RequiredAsterisk />
+                  </span>
+                </FieldLabel>
+                <Input
+                  aria-invalid={isInvalid}
+                  id={field.name}
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  value={field.state.value}
+                />
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                {fieldErrors.title && <FieldError>{fieldErrors.title}</FieldError>}
+              </Field>
+            )
+          }}
+        </form.Field>
 
-          <form.Field
-            name="outputTarget"
-            validators={{ onBlur: validateField(formShape.outputTarget) }}
-          >
-            {(field) => {
-              const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
-              return (
-                <Field data-invalid={isInvalid || undefined}>
-                  <FieldLabel htmlFor={field.name}>Output target</FieldLabel>
-                  <Input
-                    aria-invalid={isInvalid}
-                    id={field.name}
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                    placeholder="e.g. ACE 2027 paper"
-                    value={field.state.value}
-                  />
-                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                </Field>
-              )
-            }}
-          </form.Field>
-
-          <form.Field
-            name="timeframe.startYear"
-            validators={{ onBlur: validateField(timeframeShape.startYear) }}
-          >
-            {(field) => {
-              const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
-              return (
-                <Field data-invalid={isInvalid || undefined}>
-                  <FieldLabel htmlFor={field.name}>
-                    <span>
-                      Start year <RequiredAsterisk />
-                    </span>
-                  </FieldLabel>
-                  <Input
-                    aria-invalid={isInvalid}
-                    id={field.name}
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(Number(event.target.value))}
-                    type="number"
-                    value={field.state.value}
-                  />
-                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                  {fieldErrors["timeframe.startYear"] && (
-                    <FieldError>{fieldErrors["timeframe.startYear"]}</FieldError>
-                  )}
-                </Field>
-              )
-            }}
-          </form.Field>
-
+        <div className="grid gap-5 sm:grid-cols-2">
           <form.Field
             name="timeframe.startPeriod"
             validators={{ onChange: validateField(timeframeShape.startPeriod) }}
@@ -218,6 +170,63 @@ export const PostProposalForm = ({ onSuccess }: PostProposalFormProps) => {
             }}
           </form.Field>
 
+          <form.Field
+            name="timeframe.startYear"
+            validators={{ onBlur: validateField(timeframeShape.startYear) }}
+          >
+            {(field) => {
+              const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+              return (
+                <Field data-invalid={isInvalid || undefined}>
+                  <FieldLabel htmlFor={field.name}>
+                    <span>
+                      Start year <RequiredAsterisk />
+                    </span>
+                  </FieldLabel>
+                  <Input
+                    aria-invalid={isInvalid}
+                    id={field.name}
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(Number(event.target.value))}
+                    type="number"
+                    value={field.state.value}
+                  />
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                  {fieldErrors["timeframe.startYear"] && (
+                    <FieldError>{fieldErrors["timeframe.startYear"]}</FieldError>
+                  )}
+                </Field>
+              )
+            }}
+          </form.Field>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <form.Field
+            name="outputTarget"
+            validators={{ onBlur: validateField(formShape.outputTarget) }}
+          >
+            {(field) => {
+              const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+              return (
+                <Field data-invalid={isInvalid || undefined}>
+                  <FieldLabel htmlFor={field.name}>Output target</FieldLabel>
+                  <Input
+                    aria-invalid={isInvalid}
+                    id={field.name}
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                    placeholder="e.g. ACE 2027 paper"
+                    value={field.state.value}
+                  />
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                </Field>
+              )
+            }}
+          </form.Field>
+
           <form.Field name="ethics" validators={{ onChange: validateField(formShape.ethics) }}>
             {(field) => {
               const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
@@ -254,63 +263,60 @@ export const PostProposalForm = ({ onSuccess }: PostProposalFormProps) => {
               )
             }}
           </form.Field>
-        </FieldGroup>
+        </div>
 
-        <FieldGroup>
-          <form.Field name="summary" validators={{ onBlur: validateField(formShape.summary) }}>
-            {(field) => {
-              const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
-              return (
-                <Field data-invalid={isInvalid || undefined}>
-                  <FieldLabel htmlFor={field.name}>
-                    <span>
-                      Summary <RequiredAsterisk />
-                    </span>
-                  </FieldLabel>
-                  <TextArea
-                    aria-invalid={isInvalid}
-                    className="min-h-40"
-                    id={field.name}
-                    maxLength={500}
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                    value={field.state.value}
-                  />
-                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                  {fieldErrors.summary && <FieldError>{fieldErrors.summary}</FieldError>}
-                </Field>
-              )
-            }}
-          </form.Field>
+        <form.Field name="summary" validators={{ onBlur: validateField(formShape.summary) }}>
+          {(field) => {
+            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+            return (
+              <Field data-invalid={isInvalid || undefined}>
+                <FieldLabel htmlFor={field.name}>
+                  <span>
+                    Summary <RequiredAsterisk />
+                  </span>
+                </FieldLabel>
+                <TextArea
+                  aria-invalid={isInvalid}
+                  className="min-h-20"
+                  id={field.name}
+                  maxLength={500}
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  value={field.state.value}
+                />
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                {fieldErrors.summary && <FieldError>{fieldErrors.summary}</FieldError>}
+              </Field>
+            )
+          }}
+        </form.Field>
 
-          <form.Field name="body" validators={{ onBlur: validateField(formShape.body) }}>
-            {(field) => {
-              const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
-              return (
-                <Field data-invalid={isInvalid || undefined}>
-                  <FieldLabel htmlFor={field.name}>
-                    <span>
-                      Body <RequiredAsterisk />
-                    </span>
-                  </FieldLabel>
-                  <TextArea
-                    aria-invalid={isInvalid}
-                    className="min-h-40"
-                    id={field.name}
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                    value={field.state.value}
-                  />
-                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                  {fieldErrors.body && <FieldError>{fieldErrors.body}</FieldError>}
-                </Field>
-              )
-            }}
-          </form.Field>
-        </FieldGroup>
-      </div>
+        <form.Field name="body" validators={{ onBlur: validateField(formShape.body) }}>
+          {(field) => {
+            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+            return (
+              <Field data-invalid={isInvalid || undefined}>
+                <FieldLabel htmlFor={field.name} id={`${field.name}-label`}>
+                  <span>
+                    Body <RequiredAsterisk />
+                  </span>
+                </FieldLabel>
+                <RichTextEditor
+                  aria-invalid={isInvalid}
+                  aria-labelledby={`${field.name}-label`}
+                  className="[&_[contenteditable]]:min-h-72"
+                  id={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={field.handleChange}
+                />
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                {fieldErrors.body && <FieldError>{fieldErrors.body}</FieldError>}
+              </Field>
+            )
+          }}
+        </form.Field>
+      </FieldGroup>
 
       {formError && <FieldError className="mb-4">{formError}</FieldError>}
 
