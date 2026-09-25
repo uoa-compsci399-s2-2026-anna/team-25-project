@@ -19,9 +19,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  TextArea,
 } from "@repo/ui/components/ui"
 import * as React from "react"
+import { RichTextEditor, type RichTextValue } from "../RichTextEditor/rich-text-editor"
 
 export type AddCapstoneCourseDialogValues = {
   code: string
@@ -32,11 +32,14 @@ export type AddCapstoneCourseDialogValues = {
   programme: string
   deliveryFormat: string
   projectType: string
-  learningOutcomes: string
-  assessments: string
+  /** `null` until the editor first reports a change. */
+  learningOutcomes: RichTextValue | null
+  assessments: RichTextValue | null
   /** The signed-in creator's role in the offering - only required to publish. */
   role: string
 }
+
+type RichTextField = "learningOutcomes" | "assessments"
 
 export type AddCapstoneCourseDialogFieldErrors = Partial<
   Record<keyof AddCapstoneCourseDialogValues, string>
@@ -50,7 +53,10 @@ export type AddCapstoneCourseDialogProps = {
   open?: boolean
   onOpenChange?: (open: boolean) => void
   values: AddCapstoneCourseDialogValues
-  onValueChange: (field: keyof AddCapstoneCourseDialogValues, value: string) => void
+  onValueChange: <Field extends keyof AddCapstoneCourseDialogValues>(
+    field: Field,
+    value: AddCapstoneCourseDialogValues[Field],
+  ) => void
   fieldErrors?: AddCapstoneCourseDialogFieldErrors
   formError?: string
   /** Kept out of the design system so it never couples to `CourseDeliveryFormat`. */
@@ -97,11 +103,12 @@ export function AddCapstoneCourseDialog({
   // never the label - so `Field`'s own `data-invalid` (which would also tint
   // the label text) is never set here.
   const textField = (
-    field: keyof AddCapstoneCourseDialogValues,
+    field: Exclude<keyof AddCapstoneCourseDialogValues, RichTextField>,
     label: string,
     inputProps?: React.ComponentProps<typeof Input>,
+    className?: string,
   ) => (
-    <Field>
+    <Field className={className}>
       <FieldLabel htmlFor={ids[field]}>{label}</FieldLabel>
       <Input
         aria-invalid={Boolean(fieldErrors?.[field]) || undefined}
@@ -109,6 +116,24 @@ export function AddCapstoneCourseDialog({
         onChange={(event) => onValueChange(field, event.target.value)}
         value={values[field]}
         {...inputProps}
+      />
+      {fieldErrors?.[field] && <FieldError>{fieldErrors[field]}</FieldError>}
+    </Field>
+  )
+
+  // The editor is uncontrolled, so `values` only seeds it. It remounts empty each time the
+  // dialog opens, because the dialog unmounts its content when it closes.
+  const richTextField = (field: RichTextField, label: string) => (
+    <Field>
+      <FieldLabel htmlFor={ids[field]} id={`${ids[field]}-label`}>
+        {label}
+      </FieldLabel>
+      <RichTextEditor
+        aria-invalid={Boolean(fieldErrors?.[field]) || undefined}
+        aria-labelledby={`${ids[field]}-label`}
+        defaultValue={values[field]}
+        id={ids[field]}
+        onChange={(value) => onValueChange(field, value)}
       />
       {fieldErrors?.[field] && <FieldError>{fieldErrors[field]}</FieldError>}
     </Field>
@@ -137,103 +162,62 @@ export function AddCapstoneCourseDialog({
         {/* Grouped by real-world category (identity, schedule, description,
             content, publishing) rather than one flat list - no labels on the
             groups themselves, just wider gaps between them than within them,
-            so proximity alone reads as the grouping. */}
-        <div className="grid grid-cols-1 gap-6 pt-6 md:grid-cols-2">
-          <div className="flex flex-col gap-8">
-            <FieldGroup className="gap-4">
-              {textField("code", "Course code", { placeholder: "e.g. CS399" })}
-              {textField("name", "Course name")}
-            </FieldGroup>
+            so proximity alone reads as the grouping. Long or free-form fields
+            span the full width; short ones share a row. */}
+        <div className="flex flex-col gap-8 pt-6">
+          <FieldGroup className="grid gap-4 md:grid-cols-2">
+            {textField("name", "Course name", undefined, "md:col-span-2")}
+            {textField("code", "Course code", { placeholder: "e.g. CS399" })}
+            {textField("programme", "Course program")}
+          </FieldGroup>
 
-            <FieldGroup className="gap-4">
-              {textField("period", "Teaching period", {
-                // "<year> <term>" - the table's splitPeriod parses the first
-                // token as the year, so this order isn't just cosmetic.
-                placeholder: "e.g. 2026 Semester 2",
-              })}
-              <div className="grid grid-cols-2 gap-4">
-                {textField("startDate", "Start date", { type: "date" })}
-                {textField("endDate", "End date", { type: "date" })}
-              </div>
-            </FieldGroup>
+          <FieldGroup className="grid gap-4 md:grid-cols-3">
+            {textField("period", "Teaching period", {
+              // "<year> <term>" - the table's splitPeriod parses the first
+              // token as the year, so this order isn't just cosmetic.
+              placeholder: "e.g. 2026 Semester 2",
+            })}
+            {textField("startDate", "Start date", { type: "date" })}
+            {textField("endDate", "End date", { type: "date" })}
+          </FieldGroup>
 
-            <FieldGroup className="gap-4">
-              {textField("programme", "Course program")}
-
-              <Field>
-                <FieldLabel htmlFor={ids.deliveryFormat}>Delivery format</FieldLabel>
-                <Select
-                  items={deliveryFormatOptions}
-                  onValueChange={(next) => onValueChange("deliveryFormat", next ?? "")}
-                  value={values.deliveryFormat || null}
+          <FieldGroup className="grid gap-4 md:grid-cols-2">
+            <Field>
+              <FieldLabel htmlFor={ids.deliveryFormat}>Delivery format</FieldLabel>
+              <Select
+                items={deliveryFormatOptions}
+                onValueChange={(next) => onValueChange("deliveryFormat", next ?? "")}
+                value={values.deliveryFormat || null}
+              >
+                <SelectTrigger
+                  aria-invalid={Boolean(fieldErrors?.deliveryFormat) || undefined}
+                  className="w-full px-3 data-[size=default]:h-10"
+                  id={ids.deliveryFormat}
                 >
-                  <SelectTrigger
-                    aria-invalid={Boolean(fieldErrors?.deliveryFormat) || undefined}
-                    className="w-full px-3 data-[size=default]:h-10"
-                    id={ids.deliveryFormat}
-                  >
-                    <SelectValue placeholder="Select a delivery format" />
-                  </SelectTrigger>
-                  <SelectContent align="start" alignItemWithTrigger={false}>
-                    {deliveryFormatOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {fieldErrors?.deliveryFormat && (
-                  <FieldError>{fieldErrors.deliveryFormat}</FieldError>
-                )}
-              </Field>
+                  <SelectValue placeholder="Select a delivery format" />
+                </SelectTrigger>
+                <SelectContent align="start" alignItemWithTrigger={false}>
+                  {deliveryFormatOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {fieldErrors?.deliveryFormat && <FieldError>{fieldErrors.deliveryFormat}</FieldError>}
+            </Field>
 
-              {textField("projectType", "Project type")}
-            </FieldGroup>
-          </div>
+            {textField("projectType", "Project type")}
+          </FieldGroup>
 
-          <div className="flex flex-col gap-8">
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor={ids.learningOutcomes}>Learning outcomes</FieldLabel>
-                <TextArea
-                  aria-invalid={Boolean(fieldErrors?.learningOutcomes) || undefined}
-                  className="min-h-32"
-                  id={ids.learningOutcomes}
-                  onChange={(event) => onValueChange("learningOutcomes", event.target.value)}
-                  value={values.learningOutcomes}
-                />
-                {fieldErrors?.learningOutcomes && (
-                  <FieldError>{fieldErrors.learningOutcomes}</FieldError>
-                )}
-              </Field>
+          <FieldGroup className="gap-4">
+            {richTextField("learningOutcomes", "Learning outcomes")}
+            {richTextField("assessments", "Assessments")}
+          </FieldGroup>
 
-              <Field>
-                <FieldLabel htmlFor={ids.assessments}>Assessments</FieldLabel>
-                <TextArea
-                  aria-invalid={Boolean(fieldErrors?.assessments) || undefined}
-                  className="min-h-32"
-                  id={ids.assessments}
-                  onChange={(event) => onValueChange("assessments", event.target.value)}
-                  value={values.assessments}
-                />
-                {fieldErrors?.assessments && <FieldError>{fieldErrors.assessments}</FieldError>}
-              </Field>
-            </FieldGroup>
-
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor={ids.role}>Your role</FieldLabel>
-                <Input
-                  aria-invalid={Boolean(fieldErrors?.role) || undefined}
-                  id={ids.role}
-                  onChange={(event) => onValueChange("role", event.target.value)}
-                  placeholder="e.g. Course Coordinator"
-                  value={values.role}
-                />
-                {fieldErrors?.role && <FieldError>{fieldErrors.role}</FieldError>}
-              </Field>
-            </FieldGroup>
-          </div>
+          <FieldGroup className="grid gap-4 md:grid-cols-2">
+            {textField("role", "Your role", { placeholder: "e.g. Course Coordinator" })}
+          </FieldGroup>
         </div>
 
         {formError && (

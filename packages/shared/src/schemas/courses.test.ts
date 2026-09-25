@@ -2,6 +2,19 @@ import { describe, expect, it } from "vitest"
 import { CourseDeliveryFormat } from "../enums/courses"
 import { addCourseFormSchema, createCourseSchema } from "./courses"
 
+const richText = (text: string) => ({
+  root: {
+    type: "root",
+    children: [
+      { type: "paragraph", version: 1, children: text ? [{ type: "text", version: 1, text }] : [] },
+    ],
+    direction: null,
+    format: "" as const,
+    indent: 0,
+    version: 1,
+  },
+})
+
 const draftInput = {
   code: "CS399",
   intent: "draft" as const,
@@ -10,11 +23,11 @@ const draftInput = {
 
 const publishInput = {
   ...draftInput,
-  assessments: "Weekly sprint reviews.",
+  assessments: richText("Weekly sprint reviews."),
   deliveryFormat: CourseDeliveryFormat.HYBRID,
   endDate: "2026-11-06",
   intent: "publish" as const,
-  learningOutcomes: "Design and ship a production system.",
+  learningOutcomes: richText("Design and ship a production system."),
   period: "Semester 2, 2026",
   programme: "Bachelor of Computer Science",
   projectType: "Industry-sponsored",
@@ -45,13 +58,13 @@ describe("addCourseFormSchema (draft)", () => {
   it("accepts the teaching period and every publication-only field as optional", () => {
     const result = addCourseFormSchema.safeParse({
       ...draftInput,
-      assessments: "",
+      assessments: null,
       // The dialog's Select sends "" until an option is picked - a plain
       // z.enum(...).optional() only lets undefined through, not "", so this
       // one guards against that regressing.
       deliveryFormat: "",
       endDate: "",
-      learningOutcomes: "",
+      learningOutcomes: null,
       period: "",
       programme: "",
       projectType: "",
@@ -105,6 +118,16 @@ describe("addCourseFormSchema (publish)", () => {
     const result = addCourseFormSchema.safeParse({ ...publishInput, name: "   " })
     expect(result.success).toBe(false)
   })
+
+  it.each(["learningOutcomes", "assessments"] as const)(
+    "rejects %s with no text in it, as the editor holds once cleared",
+    (field) => {
+      expect(addCourseFormSchema.safeParse({ ...publishInput, [field]: null }).success).toBe(false)
+      expect(
+        addCourseFormSchema.safeParse({ ...publishInput, [field]: richText("  ") }).success,
+      ).toBe(false)
+    },
+  )
 
   it("rejects an end date before the start date", () => {
     const result = addCourseFormSchema.safeParse({
