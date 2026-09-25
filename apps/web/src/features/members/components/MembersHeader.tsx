@@ -19,7 +19,7 @@ export const MembersHeader = async ({ searchParams }: { searchParams: Promise<Se
         // Past the last page the range would read backwards, and the list says so instead.
         shown > 0 &&
         start <= shown && (
-          <p className="shrink-0 text-muted-foreground text-xs">
+          <p className="text-muted-foreground text-xs">
             Showing {start}-{Math.min(params.page * MEMBERS_PAGE_SIZE, shown)} of {shown}
           </p>
         )

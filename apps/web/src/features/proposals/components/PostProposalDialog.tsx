@@ -18,7 +18,7 @@ export const PostProposalDialog = () => {
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger
         render={
-          <Button className="shrink-0 font-bold" size="lg" variant="button-mauve">
+          <Button className="font-bold" size="lg" variant="button-mauve">
             + Post a proposal
           </Button>
         }
