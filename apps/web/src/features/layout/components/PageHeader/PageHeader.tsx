@@ -22,7 +22,7 @@ export function PageHeader({ title, description, actions, align = "center" }: Pa
         )}
       >
         <p className="max-w-2xl text-muted-foreground">{description}</p>
-        {actions}
+        {actions && <div className="shrink-0">{actions}</div>}
       </div>
     </div>
   )
