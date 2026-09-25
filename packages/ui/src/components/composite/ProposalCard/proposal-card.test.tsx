@@ -137,6 +137,29 @@ describe("ProposalCard", () => {
     expect(screen.getByTestId("custom-link")).toHaveAttribute("href", "/proposals/fairness")
   })
 
+  it("links the byline to the author's href", () => {
+    render(<ProposalCard {...props} author={{ ...props.author, href: "/members/1" }} />)
+    expect(
+      screen.getByRole("link", { name: "Dr Anna Tui - University of Example" }),
+    ).toHaveAttribute("href", "/members/1")
+  })
+
+  it("renders the byline through the custom link component", () => {
+    const CustomLink = ({ children, ...linkProps }: React.ComponentProps<"a">) => (
+      <a data-testid="custom-link" {...linkProps}>
+        {children}
+      </a>
+    )
+    render(
+      <ProposalCard
+        {...props}
+        author={{ ...props.author, href: "/members/1" }}
+        linkComponent={CustomLink}
+      />,
+    )
+    expect(screen.getByTestId("custom-link")).toHaveAttribute("href", "/members/1")
+  })
+
   it("passes the size through to the card", () => {
     render(<ProposalCard {...props} data-testid="card" size="sm" />)
     expect(screen.getByTestId("card")).toHaveAttribute("data-size", "sm")

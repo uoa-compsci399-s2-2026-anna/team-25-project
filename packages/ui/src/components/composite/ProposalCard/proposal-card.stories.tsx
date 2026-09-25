@@ -62,6 +62,16 @@ export const WithAvatar: Story = {
   },
 }
 
+export const WithAuthorLink: Story = {
+  args: {
+    author: {
+      href: "/members/1",
+      institution: "University of Example",
+      name: "Dr Anna Tui",
+    },
+  },
+}
+
 export const LongContent: Story = {
   args: {
     author: {

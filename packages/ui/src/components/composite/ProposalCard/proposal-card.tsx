@@ -27,6 +27,7 @@ type ProposalCardTag = {
 
 type ProposalCardAuthor = {
   name: string
+  href?: string
   institution?: string
   /** Omit to fall back to the author's initials. */
   avatarSrc?: string
@@ -95,6 +96,19 @@ function ProposalCard({
   const posted = new Date(postedAt)
   const postedLabel = Number.isNaN(posted.getTime()) ? null : postedFormatter.format(posted)
 
+  const byline = (
+    <>
+      {/* The name sits right beside it, so the photo and initials are decorative. */}
+      <Avatar aria-hidden className="group-data-[status=closed]/card:opacity-60">
+        {author.avatarSrc && <AvatarImage alt="" src={author.avatarSrc} />}
+        <AvatarFallback>{initials(author.name)}</AvatarFallback>
+      </Avatar>
+      <p className="truncate text-muted-foreground text-sm group-hover/author:underline group-data-[status=closed]/card:text-neutral-400">
+        {author.institution ? `${author.name} - ${author.institution}` : author.name}
+      </p>
+    </>
+  )
+
   return (
     <Card
       className={cn("relative data-[status=closed]:text-neutral-400", className)}
@@ -152,16 +166,16 @@ function ProposalCard({
 
       <CardFooter className="flex-col items-stretch gap-3 border-t-0 bg-transparent pt-0">
         <Separator />
-        <div className="flex min-w-0 items-center gap-2">
-          {/* The name sits right beside it, so the photo itself is decorative. */}
-          <Avatar className="group-data-[status=closed]/card:opacity-60">
-            {author.avatarSrc && <AvatarImage alt="" src={author.avatarSrc} />}
-            <AvatarFallback>{initials(author.name)}</AvatarFallback>
-          </Avatar>
-          <p className="truncate text-muted-foreground text-sm group-data-[status=closed]/card:text-neutral-400">
-            {author.institution ? `${author.name} - ${author.institution}` : author.name}
-          </p>
-        </div>
+        {author.href ? (
+          <LinkComponent
+            className="group/author flex min-w-0 items-center gap-2"
+            href={author.href}
+          >
+            {byline}
+          </LinkComponent>
+        ) : (
+          <div className="flex min-w-0 items-center gap-2">{byline}</div>
+        )}
       </CardFooter>
     </Card>
   )
