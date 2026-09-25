@@ -19,6 +19,19 @@ vi.mock("payload", () => ({ APIError, ValidationError }))
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
 
+const richText = (text: string) => ({
+  root: {
+    type: "root",
+    children: [
+      { type: "paragraph", version: 1, children: text ? [{ type: "text", version: 1, text }] : [] },
+    ],
+    direction: null,
+    format: "" as const,
+    indent: 0,
+    version: 1,
+  },
+})
+
 const draftInput = {
   code: "CS399",
   intent: "draft" as const,
@@ -27,11 +40,11 @@ const draftInput = {
 
 const publishInput = {
   ...draftInput,
-  assessments: "Weekly sprint reviews.",
+  assessments: richText("Weekly sprint reviews."),
   deliveryFormat: "hybrid" as const,
   endDate: "2026-11-06",
   intent: "publish" as const,
-  learningOutcomes: "Design and ship a production system.",
+  learningOutcomes: richText("Design and ship a production system."),
   period: "Semester 2, 2026",
   programme: "Bachelor of Computer Science",
   projectType: "Industry-sponsored",
@@ -182,6 +195,19 @@ describe("createCourse", () => {
       )
     })
 
+    it("sends rich text with no visible text as undefined", async () => {
+      const payload = mockPayload()
+
+      await createCourse({ ...draftInput, assessments: richText(""), learningOutcomes: null })
+
+      expect(payload.create).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          data: expect.objectContaining({ assessments: undefined, learningOutcomes: undefined }),
+        }),
+      )
+    })
+
     it("rejects a draft submission missing the course name, without touching Payload", async () => {
       const payload = mockPayload()
       const { name: _omitted, ...incomplete } = draftInput
@@ -244,7 +270,9 @@ describe("createCourse", () => {
             // has to be sent explicitly (matches the seed script's own
             // published-offering writes).
             _status: "published",
+            assessments: publishInput.assessments,
             course: 1,
+            learningOutcomes: publishInput.learningOutcomes,
             name: publishInput.name,
             teachingTeam: [{ member: member.user.id, role: publishInput.role }],
           }),

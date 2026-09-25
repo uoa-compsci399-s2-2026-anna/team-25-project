@@ -12,11 +12,11 @@ import { useState } from "react"
 import { createCourse } from "../actions/createCourse"
 
 const baseValues: AddCapstoneCourseDialogValues = {
-  assessments: "",
+  assessments: null,
   code: "",
   deliveryFormat: "",
   endDate: "",
-  learningOutcomes: "",
+  learningOutcomes: null,
   name: "",
   period: "",
   programme: "",

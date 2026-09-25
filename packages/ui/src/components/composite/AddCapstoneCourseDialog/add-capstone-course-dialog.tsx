@@ -19,9 +19,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  TextArea,
 } from "@repo/ui/components/ui"
 import * as React from "react"
+import { RichTextEditor, type RichTextValue } from "../RichTextEditor/rich-text-editor"
 
 export type AddCapstoneCourseDialogValues = {
   code: string
@@ -32,11 +32,14 @@ export type AddCapstoneCourseDialogValues = {
   programme: string
   deliveryFormat: string
   projectType: string
-  learningOutcomes: string
-  assessments: string
+  /** `null` until the editor first reports a change. */
+  learningOutcomes: RichTextValue | null
+  assessments: RichTextValue | null
   /** The signed-in creator's role in the offering - only required to publish. */
   role: string
 }
+
+type RichTextField = "learningOutcomes" | "assessments"
 
 export type AddCapstoneCourseDialogFieldErrors = Partial<
   Record<keyof AddCapstoneCourseDialogValues, string>
@@ -50,7 +53,10 @@ export type AddCapstoneCourseDialogProps = {
   open?: boolean
   onOpenChange?: (open: boolean) => void
   values: AddCapstoneCourseDialogValues
-  onValueChange: (field: keyof AddCapstoneCourseDialogValues, value: string) => void
+  onValueChange: <Field extends keyof AddCapstoneCourseDialogValues>(
+    field: Field,
+    value: AddCapstoneCourseDialogValues[Field],
+  ) => void
   fieldErrors?: AddCapstoneCourseDialogFieldErrors
   formError?: string
   /** Kept out of the design system so it never couples to `CourseDeliveryFormat`. */
@@ -97,7 +103,7 @@ export function AddCapstoneCourseDialog({
   // never the label - so `Field`'s own `data-invalid` (which would also tint
   // the label text) is never set here.
   const textField = (
-    field: keyof AddCapstoneCourseDialogValues,
+    field: Exclude<keyof AddCapstoneCourseDialogValues, RichTextField>,
     label: string,
     inputProps?: React.ComponentProps<typeof Input>,
   ) => (
@@ -109,6 +115,24 @@ export function AddCapstoneCourseDialog({
         onChange={(event) => onValueChange(field, event.target.value)}
         value={values[field]}
         {...inputProps}
+      />
+      {fieldErrors?.[field] && <FieldError>{fieldErrors[field]}</FieldError>}
+    </Field>
+  )
+
+  // The editor is uncontrolled, so `values` only seeds it. It remounts empty each time the
+  // dialog opens, because the dialog unmounts its content when it closes.
+  const richTextField = (field: RichTextField, label: string) => (
+    <Field>
+      <FieldLabel htmlFor={ids[field]} id={`${ids[field]}-label`}>
+        {label}
+      </FieldLabel>
+      <RichTextEditor
+        aria-invalid={Boolean(fieldErrors?.[field]) || undefined}
+        aria-labelledby={`${ids[field]}-label`}
+        defaultValue={values[field]}
+        id={ids[field]}
+        onChange={(value) => onValueChange(field, value)}
       />
       {fieldErrors?.[field] && <FieldError>{fieldErrors[field]}</FieldError>}
     </Field>
@@ -193,31 +217,8 @@ export function AddCapstoneCourseDialog({
 
           <div className="flex flex-col gap-8">
             <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor={ids.learningOutcomes}>Learning outcomes</FieldLabel>
-                <TextArea
-                  aria-invalid={Boolean(fieldErrors?.learningOutcomes) || undefined}
-                  className="min-h-32"
-                  id={ids.learningOutcomes}
-                  onChange={(event) => onValueChange("learningOutcomes", event.target.value)}
-                  value={values.learningOutcomes}
-                />
-                {fieldErrors?.learningOutcomes && (
-                  <FieldError>{fieldErrors.learningOutcomes}</FieldError>
-                )}
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor={ids.assessments}>Assessments</FieldLabel>
-                <TextArea
-                  aria-invalid={Boolean(fieldErrors?.assessments) || undefined}
-                  className="min-h-32"
-                  id={ids.assessments}
-                  onChange={(event) => onValueChange("assessments", event.target.value)}
-                  value={values.assessments}
-                />
-                {fieldErrors?.assessments && <FieldError>{fieldErrors.assessments}</FieldError>}
-              </Field>
+              {richTextField("learningOutcomes", "Learning outcomes")}
+              {richTextField("assessments", "Assessments")}
             </FieldGroup>
 
             <FieldGroup>
