@@ -1,3 +1,4 @@
+import { PageContainer } from "@/components/PageContainer"
 import {
   AboutSection,
   BenefitsSection,
@@ -9,11 +10,15 @@ import {
 export default function Page() {
   return (
     <>
-      <HeroSection />
+      <PageContainer>
+        <HeroSection />
+      </PageContainer>
       <TickerPlaceholder />
-      <AboutSection />
-      <BenefitsSection />
-      <JoinCommunityBand />
+      <PageContainer>
+        <AboutSection />
+        <BenefitsSection />
+        <JoinCommunityBand />
+      </PageContainer>
     </>
   )
 }

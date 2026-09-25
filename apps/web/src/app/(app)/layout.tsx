@@ -28,7 +28,7 @@ export default function RootLayout({
       <body className="flex min-h-dvh flex-col items-center">
         <Providers>
           <Navbar />
-          <div className="w-full max-w-[1512px] flex-1">{children}</div>
+          <div className="w-full flex-1">{children}</div>
           <Footer />
         </Providers>
       </body>

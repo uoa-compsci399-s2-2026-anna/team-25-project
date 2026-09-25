@@ -1,5 +1,6 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
 import type { SearchParams } from "nuqs/server"
+import { PageContainer } from "@/components/PageContainer"
 import {
   MembersFilterServer,
   MembersFilterServerSkeleton,
@@ -10,15 +11,19 @@ import { MembersList, MembersListSkeleton } from "@/features/members/components/
 export default function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (
     <>
-      <AnimatedSuspense fallback={<MembersHeaderSkeleton />}>
-        <MembersHeader searchParams={searchParams} />
-      </AnimatedSuspense>
+      <PageContainer>
+        <AnimatedSuspense fallback={<MembersHeaderSkeleton />}>
+          <MembersHeader searchParams={searchParams} />
+        </AnimatedSuspense>
+      </PageContainer>
       <AnimatedSuspense fallback={<MembersFilterServerSkeleton />}>
         <MembersFilterServer />
       </AnimatedSuspense>
-      <AnimatedSuspense fallback={<MembersListSkeleton />}>
-        <MembersList searchParams={searchParams} />
-      </AnimatedSuspense>
+      <PageContainer>
+        <AnimatedSuspense fallback={<MembersListSkeleton />}>
+          <MembersList searchParams={searchParams} />
+        </AnimatedSuspense>
+      </PageContainer>
     </>
   )
 }
