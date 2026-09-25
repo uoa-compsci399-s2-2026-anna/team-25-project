@@ -52,7 +52,7 @@ export interface AddCourseDialogProps {
  */
 export function AddCourseTriggerButton(props: ComponentProps<typeof Button>) {
   return (
-    <Button size="xl" type="button" variant="button-mauve" {...props}>
+    <Button className="font-bold" size="lg" type="button" variant="button-mauve" {...props}>
       + Add your course
     </Button>
   )

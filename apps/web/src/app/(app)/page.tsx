@@ -4,14 +4,19 @@ import {
   ProposalsSection,
   TickerPlaceholder,
 } from "@/features/home/components"
+import { PageContainer } from "@/features/layout/components"
 
 export default function Page() {
   return (
     <>
-      <HeroSection />
+      <PageContainer>
+        <HeroSection />
+      </PageContainer>
       <TickerPlaceholder />
-      <MembersSection />
-      <ProposalsSection />
+      <PageContainer>
+        <MembersSection />
+        <ProposalsSection />
+      </PageContainer>
     </>
   )
 }
