@@ -126,7 +126,7 @@ export const getMemberProposals = async (memberId: number) => {
 export const getMemberProposalsCached = async (memberId: number) => {
   "use cache"
   cacheLife("max")
-  cacheTag(QueryKeys.PROPOSALS)
+  cacheTag(QueryKeys.PROPOSALS.ROOT)
   return getMemberProposals(memberId)
 }
 

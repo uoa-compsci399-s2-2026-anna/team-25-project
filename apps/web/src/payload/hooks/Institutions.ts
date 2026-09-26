@@ -6,7 +6,7 @@ import type { CollectionAfterChangeHook, CollectionAfterDeleteHook } from "paylo
 // Cached proposals carry each author's institution and filter on it, so they go stale too.
 const revalidate = () => {
   revalidateTag(QueryKeys.INSTITUTIONS, "max")
-  revalidateTag(QueryKeys.PROPOSALS, "max")
+  revalidateTag(QueryKeys.PROPOSALS.ROOT, "max")
 }
 
 export const revalidateInstitutions: CollectionAfterChangeHook<Institution> = ({ doc, req }) => {
