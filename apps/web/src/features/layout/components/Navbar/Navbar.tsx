@@ -39,7 +39,7 @@ export const Navbar = () => {
       <div className="flex flex-1 justify-end">
         <Suspense
           fallback={
-            // Matches NavAuthStatus's signed-out layout exactly (same
+            // Matches NavGuestLinks's layout exactly (same
             // container, same gap-4) so nothing shifts vertically once the
             // real content streams in - both bars share the real Join CCCA
             // button's h-6 height for a uniform placeholder.

@@ -1,6 +1,7 @@
 import { Button, Heading } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import Link from "next/link"
+import { withRedirect } from "@/features/auth/redirect"
 import { Routes } from "@/lib/routes"
 
 const stats = [
@@ -36,13 +37,17 @@ export const ProposalsPreviewPlaceholder = () => {
       </div>
 
       <div className="flex flex-wrap items-center gap-4">
-        <Button nativeButton={false} render={<Link href={Routes.LOGIN} />} variant="button-mauve">
+        <Button
+          nativeButton={false}
+          render={<Link href={withRedirect(Routes.LOGIN, Routes.PROPOSALS.ROOT)} />}
+          variant="button-mauve"
+        >
           Log in
         </Button>
         <Button
           borderColor="charcoal"
           nativeButton={false}
-          render={<Link href={Routes.REGISTER.ROOT} />}
+          render={<Link href={withRedirect(Routes.REGISTER.ROOT, Routes.PROPOSALS.ROOT)} />}
           variant="button-transparent"
         >
           Register with your uni email

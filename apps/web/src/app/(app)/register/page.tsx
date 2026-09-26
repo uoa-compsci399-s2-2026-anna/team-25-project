@@ -1,4 +1,5 @@
 import { Heading } from "@repo/ui/components/ui"
+import { Suspense } from "react"
 import { RegisterDetailsForm, RegisterStepper } from "@/features/auth/components"
 import { getInstitutionsCached } from "@/features/institutions/queries"
 
@@ -17,7 +18,10 @@ export default async function Page() {
         </p>
       </div>
 
-      <RegisterDetailsForm institutions={institutions} />
+      {/* RegisterDetailsForm reads the redirect search param, which is only known per request. */}
+      <Suspense>
+        <RegisterDetailsForm institutions={institutions} />
+      </Suspense>
     </main>
   )
 }
