@@ -1,12 +1,10 @@
 import { toast } from "@repo/ui/components/ui"
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
-import { useRouter } from "next/navigation"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { createCourse } from "../actions/createCourse"
 import { AddCourseDialog } from "./AddCourseDialog"
 
 vi.mock("../actions/createCourse", () => ({ createCourse: vi.fn() }))
-vi.mock("next/navigation", () => ({ useRouter: vi.fn() }))
 
 function deferred<T>() {
   let resolve!: (value: T) => void
@@ -22,13 +20,6 @@ function openDialog(defaultRole: string | Promise<string> = "") {
 }
 
 describe("AddCourseDialog", () => {
-  const refresh = vi.fn()
-
-  beforeEach(() => {
-    // biome-ignore lint/suspicious/noExplicitAny: minimal useRouter mock, only .refresh is used
-    vi.mocked(useRouter).mockReturnValue({ refresh } as any)
-  })
-
   afterEach(() => {
     cleanup()
     vi.clearAllMocks()
@@ -152,7 +143,7 @@ describe("AddCourseDialog", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument()
   })
 
-  it("closes the dialog, resets the form, and refreshes the route on success", async () => {
+  it("closes the dialog and resets the form on success", async () => {
     vi.mocked(createCourse).mockResolvedValue({ ok: true })
     openDialog()
 
@@ -162,7 +153,6 @@ describe("AddCourseDialog", () => {
     await waitFor(() => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
     })
-    expect(refresh).toHaveBeenCalled()
 
     fireEvent.click(screen.getByRole("button", { name: "+ Add your course" }))
     expect(screen.getByLabelText("Course code")).toHaveValue("")
@@ -179,7 +169,6 @@ describe("AddCourseDialog", () => {
 
     expect(await screen.findByText("Course code is required")).toBeInTheDocument()
     expect(screen.getByRole("dialog")).toBeInTheDocument()
-    expect(refresh).not.toHaveBeenCalled()
   })
 
   it("shows a form-level error when createCourse rejects", async () => {

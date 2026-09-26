@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { Button } from "../../ui/Button/button"
 import {
   AddCapstoneCourseDialog,
+  type AddCapstoneCourseDialogProps,
   type AddCapstoneCourseDialogValues,
 } from "./add-capstone-course-dialog"
 
@@ -12,11 +13,11 @@ const deliveryFormatOptions = [
 ]
 
 const emptyValues: AddCapstoneCourseDialogValues = {
-  assessments: "",
+  assessments: null,
   code: "",
   deliveryFormat: "",
   endDate: "",
-  learningOutcomes: "",
+  learningOutcomes: null,
   name: "",
   period: "",
   programme: "",
@@ -32,7 +33,7 @@ function renderDialog(overrides?: {
   submitting?: "draft" | "publish"
   onSaveDraft?: () => void
   onPublish?: () => void
-  onValueChange?: (field: keyof AddCapstoneCourseDialogValues, value: string) => void
+  onValueChange?: AddCapstoneCourseDialogProps["onValueChange"]
 }) {
   return render(
     <AddCapstoneCourseDialog
