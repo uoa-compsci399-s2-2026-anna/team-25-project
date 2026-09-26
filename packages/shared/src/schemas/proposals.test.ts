@@ -77,21 +77,50 @@ describe("createProposalSchema", () => {
 describe("postProposalFormSchema", () => {
   const { author, ...formInput } = validInput
 
+  const bodyWithText = {
+    root: {
+      ...validBody.root,
+      children: [
+        { type: "paragraph", version: 1, children: [{ type: "text", version: 1, text: "Hi" }] },
+      ],
+    },
+  }
+
   it("accepts what the post-proposal form collects, without author", () => {
     const result = postProposalFormSchema.safeParse({
       ...formInput,
-      body: "The proposal body.",
+      body: bodyWithText,
       outputTarget: "",
     })
     expect(result.success).toBe(true)
   })
 
-  it("requires a plain-text body rather than a rich-text object", () => {
+  it("rejects a plain-text body", () => {
     const result = postProposalFormSchema.safeParse({
       ...formInput,
-      body: validBody,
+      body: "The proposal body.",
       outputTarget: "",
     })
     expect(result.success).toBe(false)
+  })
+
+  it.each([
+    ["no nodes", { root: { ...validBody.root, children: [] } }],
+    ["an empty paragraph", validBody],
+    [
+      "only whitespace",
+      {
+        root: {
+          ...validBody.root,
+          children: [
+            { type: "paragraph", version: 1, children: [{ type: "text", version: 1, text: "  " }] },
+          ],
+        },
+      },
+    ],
+  ])("rejects a rich-text body with %s", (_label, body) => {
+    const result = postProposalFormSchema.safeParse({ ...formInput, body, outputTarget: "" })
+    expect(result.success).toBe(false)
+    expect(!result.success && result.error.issues[0]?.message).toBe("Body is required")
   })
 })

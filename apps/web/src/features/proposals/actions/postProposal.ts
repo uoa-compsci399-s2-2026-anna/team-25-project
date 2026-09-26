@@ -1,7 +1,9 @@
 "use server"
 
+import { QueryKeys } from "@repo/shared/constants/query-keys"
 import { ProposalStatus } from "@repo/shared/enums/proposals"
 import { postProposalFormSchema } from "@repo/shared/schemas/proposals"
+import { updateTag } from "next/cache"
 import { ValidationError } from "payload"
 import type { ActionResult } from "@/features/auth/actions/types"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
@@ -39,25 +41,6 @@ const resultFromValidationError = (
     : { formError: fallbackFormError, ok: false }
 }
 
-// Body is a plain-text textarea, so wrap each line as a Lexical paragraph.
-const toLexicalRichText = (plainText: string) => ({
-  root: {
-    type: "root",
-    children: plainText.split("\n").map((line) => ({
-      type: "paragraph",
-      children: line ? [{ type: "text", version: 1, text: line }] : [],
-      direction: "ltr" as const,
-      format: "" as const,
-      indent: 0,
-      version: 1,
-    })),
-    direction: "ltr" as const,
-    format: "" as const,
-    indent: 0,
-    version: 1,
-  },
-})
-
 export const postProposal = async (input: unknown): Promise<ActionResult> => {
   const parsed = postProposalFormSchema.safeParse(input)
   if (!parsed.success) {
@@ -76,7 +59,6 @@ export const postProposal = async (input: unknown): Promise<ActionResult> => {
       collection: Slugs.Collections.PROPOSALS,
       data: {
         ...parsed.data,
-        body: toLexicalRichText(parsed.data.body),
         author: [], // The defaultProposalAuthor hook fills this in from the signed-in member.
         status: ProposalStatus.ACTIVE,
       },
@@ -90,6 +72,8 @@ export const postProposal = async (input: unknown): Promise<ActionResult> => {
     payload.logger.error({ err: error }, "postProposal failed")
     return { formError: "Could not post your proposal. Try again.", ok: false }
   }
+
+  updateTag(QueryKeys.PROPOSALS)
 
   return { ok: true }
 }
