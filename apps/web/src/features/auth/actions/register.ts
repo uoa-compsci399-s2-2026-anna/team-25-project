@@ -100,7 +100,7 @@ export const registerMember = async (input: RegisterDetails): Promise<ActionResu
     return { fieldErrors: fieldErrorsFromIssues(parsed.error.issues), ok: false }
   }
 
-  const { email, firstName, institution, lastName, password } = parsed.data
+  const { email, firstName, institution, lastName, password, position } = parsed.data
   const institutionId = Number(institution)
   if (!Number.isInteger(institutionId)) {
     return { fieldErrors: { institution: "Select your university or institution" }, ok: false }
@@ -111,7 +111,7 @@ export const registerMember = async (input: RegisterDetails): Promise<ActionResu
   try {
     await payload.create({
       collection: Slugs.Collections.MEMBERS,
-      data: { email, firstName, institution: institutionId, lastName, password },
+      data: { email, firstName, institution: institutionId, lastName, password, position },
       overrideAccess: false,
     })
   } catch (error) {
@@ -140,7 +140,6 @@ export const completeProfile = async (formData: FormData): Promise<ActionResult>
 
   const parsed = registerProfileSchema.safeParse({
     bio: (formData.get("bio") as string | null) ?? "",
-    position: (formData.get("position") as string | null) ?? "",
   })
   if (!parsed.success) {
     return { fieldErrors: fieldErrorsFromIssues(parsed.error.issues), ok: false }
@@ -184,7 +183,6 @@ export const completeProfile = async (formData: FormData): Promise<ActionResult>
       data: {
         avatar: avatarId,
         bio: parsed.data.bio,
-        position: parsed.data.position,
         registrationCompletedAt: new Date().toISOString(),
       },
       id: user.id,

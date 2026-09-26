@@ -40,6 +40,7 @@ const validDetails = {
   institution: "1",
   lastName: "Tui",
   password: "Password1!",
+  position: "Senior Lecturer",
 }
 
 const setCookie = vi.fn()
@@ -74,6 +75,15 @@ describe("registerMember", () => {
     expect(payload.create).not.toHaveBeenCalled()
   })
 
+  it("requires a position", async () => {
+    const payload = mockPayload()
+
+    const result = await registerMember({ ...validDetails, position: "   " })
+
+    expect(result).toEqual({ fieldErrors: { position: "Position is required" }, ok: false })
+    expect(payload.create).not.toHaveBeenCalled()
+  })
+
   it("requires the community guidelines to be accepted", async () => {
     mockPayload()
 
@@ -93,7 +103,11 @@ describe("registerMember", () => {
       expect.objectContaining({
         collection: "members",
         // The institution reaches Payload as a number, not the form's string.
-        data: expect.objectContaining({ email: validDetails.email, institution: 1 }),
+        data: expect.objectContaining({
+          email: validDetails.email,
+          institution: 1,
+          position: "Senior Lecturer",
+        }),
       }),
     )
     expect(payload.login).toHaveBeenCalled()
@@ -184,8 +198,7 @@ describe("completeProfile", () => {
     const payload = mockPayload()
 
     const formData = new FormData()
-    formData.set("position", "  Senior Lecturer  ")
-    formData.set("bio", "Teaches capstone.")
+    formData.set("bio", "  Teaches capstone.  ")
 
     const result = await completeProfile(formData)
 
@@ -193,7 +206,7 @@ describe("completeProfile", () => {
     expect(payload.update).toHaveBeenCalledWith(
       expect.objectContaining({
         collection: "members",
-        data: expect.objectContaining({ bio: "Teaches capstone.", position: "Senior Lecturer" }),
+        data: expect.objectContaining({ bio: "Teaches capstone." }),
         id: 7,
         // Access control must still apply - a member may only update themselves.
         overrideAccess: false,
@@ -208,7 +221,7 @@ describe("completeProfile", () => {
       user: { firstName: "Anna", id: 7, lastName: "Tui" } as any,
     })
     // The Media collection's own paths (file, filename, alt) mean nothing to a
-    // form that only renders position/bio, so this must never surface as fieldErrors.
+    // form that only renders bio, so this must never surface as fieldErrors.
     mockPayload({
       create: vi
         .fn()
@@ -216,7 +229,6 @@ describe("completeProfile", () => {
     })
 
     const formData = new FormData()
-    formData.set("position", "")
     formData.set("bio", "")
     formData.set("avatar", new File(["data"], "photo.png", { type: "image/png" }))
 
@@ -234,7 +246,6 @@ describe("completeProfile", () => {
     mockPayload({ update: vi.fn().mockRejectedValue(new ValidationError([])) })
 
     const formData = new FormData()
-    formData.set("position", "")
     formData.set("bio", "")
 
     const result = await completeProfile(formData)
