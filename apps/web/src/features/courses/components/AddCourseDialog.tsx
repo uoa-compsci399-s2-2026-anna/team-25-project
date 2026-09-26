@@ -11,6 +11,7 @@ import { useState } from "react"
 import { createCourse } from "../actions/createCourse"
 
 const baseValues: AddCapstoneCourseDialogValues = {
+  additionalInfo: null,
   assessments: null,
   code: "",
   deliveryFormat: "",

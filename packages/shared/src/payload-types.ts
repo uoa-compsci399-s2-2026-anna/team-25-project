@@ -377,6 +377,21 @@ export interface CourseVersion {
     };
     [k: string]: unknown;
   } | null;
+  additionalInfo?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   teachingTeam?:
     | {
         member?: (number | null) | Member;
@@ -652,6 +667,7 @@ export interface CourseVersionsSelect<T extends boolean = true> {
   projectType?: T;
   learningOutcomes?: T;
   assessments?: T;
+  additionalInfo?: T;
   teachingTeam?:
     | T
     | {
