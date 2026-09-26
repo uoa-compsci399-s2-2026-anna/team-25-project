@@ -1,3 +1,5 @@
+import { MemberTitleLabels } from "@repo/shared/enums/members"
+import { toSelectOptions } from "@repo/shared/utils/select-options"
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { canReadEmail, isAdmin, isAdminOrSelf } from "../access"
@@ -7,6 +9,7 @@ import {
   revalidateDeletedMemberProposals,
   revalidateMemberProposals,
 } from "../hooks/Members"
+import { validateMemberLinkUrl } from "../validation/Members"
 
 export const Members: CollectionConfig = {
   slug: Slugs.Collections.MEMBERS,
@@ -51,8 +54,22 @@ export const Members: CollectionConfig = {
       relationTo: Slugs.Collections.INSTITUTIONS,
       required: true,
     },
-    { name: "position", type: "text" },
+    {
+      name: "title",
+      type: "select",
+      options: toSelectOptions(MemberTitleLabels),
+    },
+    { name: "position", type: "text", required: true },
     { name: "bio", type: "textarea" },
+    { name: "researchInterests", type: "text", hasMany: true },
+    {
+      name: "links",
+      type: "array",
+      fields: [
+        { name: "label", type: "text", required: true },
+        { name: "url", type: "text", required: true, validate: validateMemberLinkUrl },
+      ],
+    },
     { name: "avatar", type: "upload", relationTo: Slugs.Collections.MEDIA },
     {
       name: "showEmailPublicly",
