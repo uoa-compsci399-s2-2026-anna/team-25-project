@@ -1,5 +1,6 @@
 /** Seeds the local database with an admin account and development fixtures. */
 import { CourseDeliveryFormat } from "@repo/shared/enums/courses"
+import { MemberTitle } from "@repo/shared/enums/members"
 import {
   ProposalEthicsStatus,
   ProposalStatus,
@@ -28,13 +29,73 @@ const institutions = [
 ] as const
 
 const members = [
-  ["arohan.patel@auckland.ac.nz", "Arohan", "Patel", "University of Auckland", "Senior Lecturer"],
-  ["maya.chen@auckland.ac.nz", "Maya", "Chen", "University of Auckland", "Lecturer"],
-  ["hana.rangi@otago.ac.nz", "Hana", "Rangi", "University of Otago", "Associate Professor"],
-  ["liam.wilson@otago.ac.nz", "Liam", "Wilson", "University of Otago", "Teaching Fellow"],
-  ["priya.nair@unimelb.edu.au", "Priya", "Nair", "University of Melbourne", "Senior Lecturer"],
-  ["noah.taylor@unsw.edu.au", "Noah", "Taylor", "UNSW Sydney", "Lecturer"],
-] as const
+  {
+    email: "arohan.patel@auckland.ac.nz",
+    firstName: "Arohan",
+    lastName: "Patel",
+    institution: "University of Auckland",
+    title: MemberTitle.DR,
+    position: "Senior Lecturer",
+    researchInterests: ["Code review", "Generative AI"],
+    links: [
+      { label: "Staff page", url: "https://profiles.auckland.ac.nz/arohan-patel" },
+      { label: "GitHub", url: "https://github.com/arohan-patel" },
+    ],
+  },
+  {
+    email: "maya.chen@auckland.ac.nz",
+    firstName: "Maya",
+    lastName: "Chen",
+    institution: "University of Auckland",
+    title: MemberTitle.DR,
+    position: "Lecturer",
+    researchInterests: ["Belonging", "First-year programming"],
+    links: [{ label: "ORCID", url: "https://orcid.org/0000-0002-1825-0097" }],
+  },
+  {
+    email: "hana.rangi@otago.ac.nz",
+    firstName: "Hana",
+    lastName: "Rangi",
+    institution: "University of Otago",
+    title: MemberTitle.ASSOC_PROF,
+    position: "Associate Professor",
+    researchInterests: ["Authentic assessment", "Industry partnerships"],
+    links: [{ label: "Staff page", url: "https://www.otago.ac.nz/staff/hana-rangi" }],
+  },
+  {
+    email: "liam.wilson@otago.ac.nz",
+    firstName: "Liam",
+    lastName: "Wilson",
+    institution: "University of Otago",
+    title: MemberTitle.MR,
+    position: "Teaching Fellow",
+    researchInterests: ["Teamwork"],
+    links: [],
+  },
+  {
+    email: "priya.nair@unimelb.edu.au",
+    firstName: "Priya",
+    lastName: "Nair",
+    institution: "University of Melbourne",
+    title: MemberTitle.DR,
+    position: "Senior Lecturer",
+    researchInterests: ["Generative AI", "Assessment", "Qualitative methods"],
+    links: [
+      { label: "Staff page", url: "https://findanexpert.unimelb.edu.au/profile/priya-nair" },
+      { label: "Website", url: "https://priyanair.example.com" },
+    ],
+  },
+  {
+    email: "noah.taylor@unsw.edu.au",
+    firstName: "Noah",
+    lastName: "Taylor",
+    institution: "UNSW Sydney",
+    title: MemberTitle.MX,
+    position: "Lecturer",
+    researchInterests: [],
+    links: [],
+  },
+]
 
 const proposals = [
   {
@@ -206,7 +267,7 @@ export const seed = async () => {
   }
 
   const memberIds = new Map<string, number>()
-  for (const [email, firstName, lastName, institution, position] of members) {
+  for (const { email, institution, ...profile } of members) {
     const existing = await payload.find({
       collection: Slugs.Collections.MEMBERS,
       where: { email: { equals: email } },
@@ -219,10 +280,8 @@ export const seed = async () => {
         collection: Slugs.Collections.MEMBERS,
         data: {
           email,
-          firstName,
-          lastName,
+          ...profile,
           institution: requiredID(institutionIds, institution),
-          position,
           password: MEMBER_PASSWORD,
         },
         context: SEED_CONTEXT,
