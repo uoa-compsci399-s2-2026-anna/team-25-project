@@ -1,11 +1,19 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { usePathname, useSearchParams } from "next/navigation"
 import type { ReactNode } from "react"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Routes } from "@/lib/routes"
 import { NavAuthStatus } from "./NavAuthStatus"
 
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
+vi.mock("next/navigation", () => ({ usePathname: vi.fn(), useSearchParams: vi.fn() }))
+
+const visit = (pathname: string, search = "") => {
+  vi.mocked(usePathname).mockReturnValue(pathname)
+  // biome-ignore lint/suspicious/noExplicitAny: URLSearchParams stands in for ReadonlyURLSearchParams
+  vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams(search) as any)
+}
 
 // Opening the dropdown mounts LogoutButton, which needs a router it has no
 // business needing here - its own behaviour is covered by its own tests.
@@ -49,6 +57,10 @@ const signInAsAdmin = () => {
 const renderNavAuthStatus = async () => render(await NavAuthStatus())
 
 describe("NavAuthStatus", () => {
+  beforeEach(() => {
+    visit(Routes.HOME)
+  })
+
   afterEach(() => {
     cleanup()
   })
@@ -61,6 +73,34 @@ describe("NavAuthStatus", () => {
       expect(screen.getByRole("link", { name: "Join CCCA" })).toHaveAttribute(
         "href",
         Routes.REGISTER.ROOT,
+      )
+    })
+
+    it("links back to the current page, including its query", async () => {
+      signOut()
+      visit(Routes.MEMBERS.ROOT, "q=anna")
+      await renderNavAuthStatus()
+      expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute(
+        "href",
+        "/login?redirect=%2Fmembers%3Fq%3Danna",
+      )
+      expect(screen.getByRole("link", { name: "Join CCCA" })).toHaveAttribute(
+        "href",
+        "/register?redirect=%2Fmembers%3Fq%3Danna",
+      )
+    })
+
+    it("passes on the redirect it already has on an auth page", async () => {
+      signOut()
+      visit(Routes.LOGIN, "redirect=%2Fproposals")
+      await renderNavAuthStatus()
+      expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute(
+        "href",
+        "/login?redirect=%2Fproposals",
+      )
+      expect(screen.getByRole("link", { name: "Join CCCA" })).toHaveAttribute(
+        "href",
+        "/register?redirect=%2Fproposals",
       )
     })
 

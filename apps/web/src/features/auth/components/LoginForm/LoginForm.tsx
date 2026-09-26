@@ -14,13 +14,16 @@ import {
 import { useForm } from "@tanstack/react-form"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useQueryState } from "nuqs"
 import { loginAction } from "@/features/auth/actions/auth"
+import { parseAsRedirect, REDIRECT_PARAM, withRedirect } from "@/features/auth/redirect"
 import { loginFormSchema } from "@/features/auth/zod/loginFormSchema"
 import { Routes } from "@/lib/routes"
 import { PasswordField } from "../PasswordField"
 
 export function LoginForm() {
   const router = useRouter()
+  const [redirect] = useQueryState(REDIRECT_PARAM, parseAsRedirect)
   const form = useForm({
     defaultValues: {
       email: "",
@@ -33,7 +36,7 @@ export function LoginForm() {
       const result = await loginAction(values.value.email, values.value.password)
       if (result.success) {
         router.refresh()
-        router.push(Routes.HOME)
+        router.push(redirect ?? Routes.HOME)
       } else {
         toast.add({
           title: "Login failed",
@@ -132,7 +135,10 @@ export function LoginForm() {
               </Button>
             )}
           </form.Subscribe>
-          <Link className="text-muted-foreground text-sm" href={Routes.REGISTER.ROOT}>
+          <Link
+            className="text-muted-foreground text-sm"
+            href={withRedirect(Routes.REGISTER.ROOT, redirect)}
+          >
             New here?{" "}
             <span className="text-primary underline underline-offset-4">
               Register with your uni email

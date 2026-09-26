@@ -1,6 +1,7 @@
 import { Toaster, toast } from "@repo/ui/components/ui"
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { useRouter } from "next/navigation"
+import { withNuqsTestingAdapter } from "nuqs/adapters/testing"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { loginAction } from "@/features/auth/actions/auth"
 import { LoginForm } from "./LoginForm"
@@ -32,14 +33,14 @@ describe("LoginForm", () => {
   })
 
   it("renders the email field, password field, and submit button", () => {
-    render(<LoginForm />)
+    render(<LoginForm />, { wrapper: withNuqsTestingAdapter() })
     expect(screen.getByLabelText("University email")).toBeInTheDocument()
     expect(screen.getByLabelText("Password")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Log in" })).toBeInTheDocument()
   })
 
   it("shows a validation error and does not call loginAction for an invalid email", async () => {
-    render(<LoginForm />)
+    render(<LoginForm />, { wrapper: withNuqsTestingAdapter() })
     fireEvent.change(screen.getByLabelText("University email"), {
       target: { value: "not-an-email" },
     })
@@ -52,7 +53,7 @@ describe("LoginForm", () => {
   it("redirects home after a successful login", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: minimal loginAction mock return value
     vi.mocked(loginAction).mockResolvedValue({ success: true, result: {} } as any)
-    render(<LoginForm />)
+    render(<LoginForm />, { wrapper: withNuqsTestingAdapter() })
     fillValidCredentials()
     fireEvent.click(screen.getByRole("button", { name: "Log in" }))
 
@@ -62,8 +63,44 @@ describe("LoginForm", () => {
     expect(loginAction).toHaveBeenCalledWith("member@uni.edu", "password123")
   })
 
+  it("redirects to the redirect param after a successful login", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: minimal loginAction mock return value
+    vi.mocked(loginAction).mockResolvedValue({ success: true, result: {} } as any)
+    render(<LoginForm />, {
+      wrapper: withNuqsTestingAdapter({ searchParams: { redirect: "/proposals?q=ai" } }),
+    })
+    fillValidCredentials()
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }))
+
+    const router = useRouter()
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/proposals?q=ai"))
+  })
+
+  it("ignores a redirect param that leaves the site", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: minimal loginAction mock return value
+    vi.mocked(loginAction).mockResolvedValue({ success: true, result: {} } as any)
+    render(<LoginForm />, {
+      wrapper: withNuqsTestingAdapter({ searchParams: { redirect: "//evil.com" } }),
+    })
+    fillValidCredentials()
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }))
+
+    const router = useRouter()
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/"))
+  })
+
+  it("carries the redirect param through to the register link", () => {
+    render(<LoginForm />, {
+      wrapper: withNuqsTestingAdapter({ searchParams: { redirect: "/courses" } }),
+    })
+    expect(screen.getByRole("link", { name: /New here/ })).toHaveAttribute(
+      "href",
+      "/register?redirect=%2Fcourses",
+    )
+  })
+
   it("does not show a validation error when blurring an empty field", async () => {
-    render(<LoginForm />)
+    render(<LoginForm />, { wrapper: withNuqsTestingAdapter() })
     const emailInput = screen.getByLabelText("University email")
     fireEvent.focus(emailInput)
     fireEvent.blur(emailInput)
@@ -72,7 +109,7 @@ describe("LoginForm", () => {
   })
 
   it("shows a validation error on blur for a non-empty invalid email", async () => {
-    render(<LoginForm />)
+    render(<LoginForm />, { wrapper: withNuqsTestingAdapter() })
     fireEvent.change(screen.getByLabelText("University email"), {
       target: { value: "not-an-email" },
     })
@@ -90,6 +127,7 @@ describe("LoginForm", () => {
       <Toaster>
         <LoginForm />
       </Toaster>,
+      { wrapper: withNuqsTestingAdapter() },
     )
     fillValidCredentials()
     fireEvent.click(screen.getByRole("button", { name: "Log in" }))
