@@ -1,4 +1,6 @@
 import { z } from "zod"
+import { MemberTitle } from "../enums/members"
+import { isHttpUrl } from "../utils/is-http-url"
 
 /**
  * Shared by the client form and the server action, so a field can never be
@@ -12,6 +14,7 @@ export const PASSWORD_MIN_LENGTH = 8
 export const ALLOWED_AVATAR_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
 
 export const registerDetailsSchema = z.object({
+  title: z.enum(MemberTitle).nullable(),
   firstName: z.string().trim().min(1, "First name is required"),
   lastName: z.string().trim().min(1, "Surname is required"),
   // The combobox holds the institution id as a string; the action parses it once
@@ -41,6 +44,35 @@ export type RegisterDetails = z.infer<typeof registerDetailsSchema>
  */
 export const registerProfileSchema = z.object({
   bio: z.string().trim().max(500, "Keep your bio under 500 characters"),
+  // Typed as one comma-separated line, stored as a list.
+  researchInterests: z
+    .string()
+    .transform((value) =>
+      value
+        .split(",")
+        .map((interest) => interest.trim())
+        .filter(Boolean),
+    )
+    .pipe(
+      z
+        .array(z.string().max(50, "Keep each research interest under 50 characters"))
+        .max(10, "Add up to 10 research interests"),
+    ),
+  links: z
+    .array(
+      z.object({
+        label: z
+          .string()
+          .trim()
+          .min(1, "Add a label")
+          .max(50, "Keep the label under 50 characters"),
+        url: z
+          .string()
+          .trim()
+          .refine(isHttpUrl, "Enter a full web address starting with http:// or https://"),
+      }),
+    )
+    .max(5, "Add up to 5 links"),
 })
 
 export type RegisterProfile = z.infer<typeof registerProfileSchema>
