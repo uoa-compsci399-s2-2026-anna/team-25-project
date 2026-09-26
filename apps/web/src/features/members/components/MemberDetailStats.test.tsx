@@ -48,7 +48,20 @@ describe("MemberStats", () => {
     expect(screen.getByText("No courses yet.")).toBeInTheDocument()
   })
 
-  it("shows the research interests filler", async () => {
+  it("lists the member's research interests", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue({
+      ...member,
+      researchInterests: ["Code review", "Generative AI"],
+    } as never)
+    vi.mocked(getMemberCoursesCached).mockResolvedValue([])
+
+    await renderStats()
+    expect(screen.getByText("Code review")).toBeInTheDocument()
+    expect(screen.getByText("Generative AI")).toBeInTheDocument()
+    expect(screen.queryByText("Not added yet")).not.toBeInTheDocument()
+  })
+
+  it("shows the research interests filler when there are none", async () => {
     vi.mocked(getMemberDetailsCached).mockResolvedValue(member as never)
     vi.mocked(getMemberCoursesCached).mockResolvedValue([])
 

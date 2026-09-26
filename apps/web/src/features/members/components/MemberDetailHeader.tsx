@@ -1,3 +1,4 @@
+import { MemberTitleLabels } from "@repo/shared/enums/members"
 import { initials } from "@repo/shared/utils/initials"
 import {
   Avatar,
@@ -37,7 +38,9 @@ export const MemberHeader = async ({ params }: { params: MembersRouteParams }) =
       </Avatar>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <Heading level="h1">
-          {member.firstName} {member.lastName}
+          {[member.title && MemberTitleLabels[member.title], member.firstName, member.lastName]
+            .filter(Boolean)
+            .join(" ")}
         </Heading>
         {affiliation && <p className="text-muted-foreground">{affiliation}</p>}
         <div className="flex flex-row gap-1">

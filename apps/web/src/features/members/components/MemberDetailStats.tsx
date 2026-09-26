@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, Skeleton } from "@repo/ui/components/ui"
+import { Badge, Card, CardContent, CardHeader, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { formatDate } from "@/features/courses/courses.format"
@@ -55,8 +55,17 @@ export const MemberStats = async ({ params }: { params: MembersRouteParams }) =>
         )}
       </StatCard>
       <StatCard label="Research interests">
-        {/* TODO: render the member's research interests once Members has a field for them */}
-        <span className="text-muted-foreground">Not added yet</span>
+        {member.researchInterests?.length ? (
+          <ul className="flex flex-wrap gap-1">
+            {member.researchInterests.map((interest) => (
+              <li key={interest}>
+                <Badge>{interest}</Badge>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <span className="text-muted-foreground">Not added yet</span>
+        )}
       </StatCard>
       {memberSince && (
         <StatCard label="Member since">

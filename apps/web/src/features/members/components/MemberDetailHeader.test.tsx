@@ -55,6 +55,15 @@ describe("MemberHeader", () => {
     expect(screen.getByText("Senior Lecturer - University of Auckland - NZ")).toBeInTheDocument()
   })
 
+  it("puts the member's title before their name", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue(member({ title: "assocProf" }) as never)
+
+    await renderHeader()
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Assoc Prof Anna Tui" }),
+    ).toBeInTheDocument()
+  })
+
   it("uses an already-populated institution without looking it up", async () => {
     vi.mocked(getMemberDetailsCached).mockResolvedValue(
       member({ institution, position: null }) as never,
