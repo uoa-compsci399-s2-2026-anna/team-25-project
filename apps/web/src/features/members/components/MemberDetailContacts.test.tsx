@@ -7,9 +7,10 @@ import { MemberContacts, MemberContactsSkeleton } from "./MemberDetailContacts"
 vi.mock("../members.queries", () => ({ getMemberDetailsCached: vi.fn() }))
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
 
-const member = (showEmailPublicly: boolean) => ({
+const member = (showEmailPublicly: boolean, links: { label: string; url: string }[] = []) => ({
   id: 7,
   email: "anna.tui@auckland.ac.nz",
+  links,
   showEmailPublicly,
 })
 
@@ -57,12 +58,30 @@ describe("MemberContacts", () => {
     expect(screen.getByRole("link", { name: "anna.tui@auckland.ac.nz" })).toBeInTheDocument()
   })
 
-  it("shows the staff page and ORCID links", async () => {
+  it("links each of the member's websites in a new tab", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue(
+      member(false, [
+        { label: "Staff page", url: "https://auckland.ac.nz/anna" },
+        { label: "GitHub", url: "https://github.com/anna" },
+      ]) as never,
+    )
+
+    await renderContacts()
+    const staffPage = screen.getByRole("link", { name: "Staff page" })
+    expect(staffPage).toHaveAttribute("href", "https://auckland.ac.nz/anna")
+    expect(staffPage).toHaveAttribute("target", "_blank")
+    expect(staffPage).toHaveAttribute("rel", "noopener noreferrer")
+    expect(screen.getByRole("link", { name: "GitHub" })).toHaveAttribute(
+      "href",
+      "https://github.com/anna",
+    )
+  })
+
+  it("shows no website links when the member hasn't added any", async () => {
     vi.mocked(getMemberDetailsCached).mockResolvedValue(member(false) as never)
 
     await renderContacts()
-    expect(screen.getByRole("link", { name: "Staff page" })).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: "ORCID" })).toBeInTheDocument()
+    expect(screen.queryAllByRole("link")).toHaveLength(0)
   })
 
   it("renders nothing when the member doesn't exist", async () => {

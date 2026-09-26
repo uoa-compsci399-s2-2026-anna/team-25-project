@@ -19,11 +19,15 @@ export const MemberContacts = async ({ params }: { params: MembersRouteParams })
           {member.email}
         </Link>
       )}
-      {/* TODO: link the staff page and ORCID once Members has fields for them */}
-      <div className="flex flex-col gap-1 text-brand-mauve">
-        <Link href="/">Staff page</Link>
-        <Link href="/">ORCID</Link>
-      </div>
+      {member.links && member.links.length > 0 && (
+        <div className="flex flex-col gap-1 text-brand-mauve">
+          {member.links.map((link) => (
+            <a href={link.url} key={link.id ?? link.url} rel="noopener noreferrer" target="_blank">
+              {link.label}
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
