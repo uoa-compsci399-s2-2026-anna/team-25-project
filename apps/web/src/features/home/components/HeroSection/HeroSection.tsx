@@ -1,15 +1,17 @@
 import { Button, Eyebrow, Heading } from "@repo/ui/components/ui"
 import Link from "next/link"
 import { Routes } from "@/lib/routes"
+import { HeroGraphic } from "../HeroGraphic/HeroGraphic"
 
 export const HeroSection = () => {
   return (
-    <section className="flex flex-col items-center gap-16 px-8 pt-20 pb-32 md:flex-row md:items-center md:justify-between md:px-16 md:pt-25 md:pb-25">
-      <div className="flex max-w-2xl flex-col gap-8">
+    <section className="flex flex-col items-center gap-12 px-8 pt-20 pb-32 md:flex-row md:px-16 md:pt-25 md:pb-25">
+      {/* Capped so the headline wraps as the design does, rather than running the page width. */}
+      <div className="flex max-w-3xl flex-col gap-8">
         <Eyebrow>Computing Capstone Community Australasia</Eyebrow>
 
         <Heading className="text-6xl md:text-7xl" level="h1">
-          Find collaborators for your next capstone project.
+          Join the Computing Capstone Community Australasia
         </Heading>
 
         <p className="text-muted-foreground text-xl">
@@ -17,29 +19,21 @@ export const HeroSection = () => {
           co-investigators, and compare how capstone courses are taught.
         </p>
 
-        <div className="flex flex-wrap items-center gap-4">
-          <Button
-            nativeButton={false}
-            render={<Link href={Routes.REGISTER.ROOT} />}
-            size="lg"
-            variant="button-mauve"
-          >
-            Register with your uni email
-          </Button>
-          <Button
-            className="border-brand-charcoal/30"
-            nativeButton={false}
-            render={<Link href={Routes.PROPOSALS.ROOT} />}
-            size="lg"
-            variant="button-transparent"
-          >
-            Browse proposals
-          </Button>
-        </div>
+        <Button
+          className="w-fit"
+          nativeButton={false}
+          render={<Link href={Routes.REGISTER.ROOT} />}
+          size="lg"
+          variant="button-mauve"
+        >
+          Become a member
+        </Button>
       </div>
 
-      <div className="flex size-80 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground md:size-[32rem]">
-        placeholder
+      {/* Takes the space the copy leaves and centres the cap in it, rather than
+          pinning it to the section's right edge. */}
+      <div className="flex justify-center md:flex-1">
+        <HeroGraphic className="w-64 shrink-0 md:w-80 lg:w-96" />
       </div>
     </section>
   )
