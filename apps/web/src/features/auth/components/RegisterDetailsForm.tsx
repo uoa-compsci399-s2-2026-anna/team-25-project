@@ -100,7 +100,7 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
                     {(value: MemberTitle | null) => (value ? MemberTitleLabels[value] : "None")}
                   </SelectValue>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent align="start" alignItemWithTrigger={false}>
                   <SelectItem value={null}>None</SelectItem>
                   {titleOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
