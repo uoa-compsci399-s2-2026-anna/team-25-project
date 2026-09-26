@@ -16,9 +16,11 @@ import {
 } from "@repo/ui/components/ui"
 import { useForm } from "@tanstack/react-form"
 import { useRouter } from "next/navigation"
+import { useQueryState } from "nuqs"
 import { useState } from "react"
 import { Routes } from "@/lib/routes"
 import { completeProfile } from "../actions/register"
+import { parseAsRedirect, REDIRECT_PARAM } from "../redirect"
 
 // Matches next.config.ts's serverActions.bodySizeLimit - checked here too so a
 // large photo gets a clear message instead of the request failing silently.
@@ -26,6 +28,7 @@ const MAX_AVATAR_BYTES = 4 * 1024 * 1024
 
 export const RegisterProfileForm = ({ initials }: { initials: string }) => {
   const router = useRouter()
+  const [redirect] = useQueryState(REDIRECT_PARAM, parseAsRedirect)
   const [avatar, setAvatar] = useState<File | undefined>(undefined)
   const [formError, setFormError] = useState<string | undefined>(undefined)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -50,7 +53,7 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
         const result = await completeProfile(formData)
 
         if (result.ok) {
-          router.push(Routes.HOME)
+          router.push(redirect ?? Routes.HOME)
           return
         }
 

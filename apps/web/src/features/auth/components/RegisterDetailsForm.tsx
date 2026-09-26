@@ -14,10 +14,12 @@ import { useForm } from "@tanstack/react-form"
 import { Check } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useQueryState } from "nuqs"
 import { useState } from "react"
 import { Routes } from "@/lib/routes"
 import { registerMember } from "../actions/register"
 import { isRecognisedEmail } from "../helpers/recognisedEmail"
+import { parseAsRedirect, REDIRECT_PARAM, withRedirect } from "../redirect"
 import { type InstitutionOption, InstitutionSelect } from "./InstitutionSelect"
 import { PasswordField } from "./PasswordField"
 
@@ -29,6 +31,7 @@ const RequiredMark = () => (
 
 export const RegisterDetailsForm = ({ institutions }: { institutions: InstitutionOption[] }) => {
   const router = useRouter()
+  const [redirect] = useQueryState(REDIRECT_PARAM, parseAsRedirect)
   const [formError, setFormError] = useState<string | undefined>(undefined)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
@@ -49,7 +52,7 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
         const result = await registerMember(value)
 
         if (result.ok) {
-          router.push(Routes.REGISTER.PROFILE)
+          router.push(withRedirect(Routes.REGISTER.PROFILE, redirect))
           return
         }
 
