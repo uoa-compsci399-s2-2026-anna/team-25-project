@@ -1,6 +1,8 @@
 "use client"
 
+import { type MemberTitle, MemberTitleLabels } from "@repo/shared/enums/members"
 import { registerDetailsSchema } from "@repo/shared/schemas/register"
+import { toSelectOptions } from "@repo/shared/utils/select-options"
 import {
   Button,
   Checkbox,
@@ -9,6 +11,11 @@ import {
   FieldGroup,
   FieldLabel,
   Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@repo/ui/components/ui"
 import { useForm } from "@tanstack/react-form"
 import { Check } from "lucide-react"
@@ -20,6 +27,8 @@ import { registerMember } from "../actions/register"
 import { isRecognisedEmail } from "../helpers/recognisedEmail"
 import { type InstitutionOption, InstitutionSelect } from "./InstitutionSelect"
 import { PasswordField } from "./PasswordField"
+
+const titleOptions = toSelectOptions(MemberTitleLabels)
 
 const RequiredMark = () => (
   <span aria-hidden="true" className="text-destructive">
@@ -41,6 +50,7 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
       lastName: "",
       password: "",
       position: "",
+      title: null as MemberTitle | null,
     },
     onSubmit: async ({ value }) => {
       setFieldErrors({})
@@ -73,6 +83,38 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
       }}
     >
       <FieldGroup>
+        <form.Field name="title">
+          {(field) => (
+            <Field
+              className="sm:max-w-40"
+              data-invalid={field.state.meta.errors.length > 0 || undefined}
+            >
+              <FieldLabel htmlFor={field.name}>Title</FieldLabel>
+              <Select
+                name={field.name}
+                onValueChange={(value) => field.handleChange(value as MemberTitle | null)}
+                value={field.state.value}
+              >
+                <SelectTrigger className="h-10 w-full" id={field.name}>
+                  <SelectValue placeholder="None">
+                    {(value: MemberTitle | null) => (value ? MemberTitleLabels[value] : "None")}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null}>None</SelectItem>
+                  {titleOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError errors={field.state.meta.errors} />
+              {fieldErrors.title && <FieldError>{fieldErrors.title}</FieldError>}
+            </Field>
+          )}
+        </form.Field>
+
         <div className="grid gap-6 sm:grid-cols-2">
           <form.Field name="firstName">
             {(field) => (

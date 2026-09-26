@@ -100,7 +100,7 @@ export const registerMember = async (input: RegisterDetails): Promise<ActionResu
     return { fieldErrors: fieldErrorsFromIssues(parsed.error.issues), ok: false }
   }
 
-  const { email, firstName, institution, lastName, password, position } = parsed.data
+  const { email, firstName, institution, lastName, password, position, title } = parsed.data
   const institutionId = Number(institution)
   if (!Number.isInteger(institutionId)) {
     return { fieldErrors: { institution: "Select your university or institution" }, ok: false }
@@ -111,7 +111,7 @@ export const registerMember = async (input: RegisterDetails): Promise<ActionResu
   try {
     await payload.create({
       collection: Slugs.Collections.MEMBERS,
-      data: { email, firstName, institution: institutionId, lastName, password, position },
+      data: { email, firstName, institution: institutionId, lastName, password, position, title },
       overrideAccess: false,
     })
   } catch (error) {
@@ -132,6 +132,16 @@ export const registerMember = async (input: RegisterDetails): Promise<ActionResu
   return { ok: true }
 }
 
+// Links are an array of objects, which FormData can't carry natively. Malformed
+// JSON becomes null so the schema rejects it rather than the action throwing.
+const parseLinks = (value: FormDataEntryValue | null): unknown => {
+  try {
+    return JSON.parse((value as string | null) ?? "[]")
+  } catch {
+    return null
+  }
+}
+
 export const completeProfile = async (formData: FormData): Promise<ActionResult> => {
   const { collection, user } = await getCurrentUser()
   if (collection !== Slugs.Collections.MEMBERS) {
@@ -140,6 +150,8 @@ export const completeProfile = async (formData: FormData): Promise<ActionResult>
 
   const parsed = registerProfileSchema.safeParse({
     bio: (formData.get("bio") as string | null) ?? "",
+    links: parseLinks(formData.get("links")),
+    researchInterests: (formData.get("researchInterests") as string | null) ?? "",
   })
   if (!parsed.success) {
     return { fieldErrors: fieldErrorsFromIssues(parsed.error.issues), ok: false }
@@ -183,6 +195,8 @@ export const completeProfile = async (formData: FormData): Promise<ActionResult>
       data: {
         avatar: avatarId,
         bio: parsed.data.bio,
+        links: parsed.data.links,
+        researchInterests: parsed.data.researchInterests,
         registrationCompletedAt: new Date().toISOString(),
       },
       id: user.id,

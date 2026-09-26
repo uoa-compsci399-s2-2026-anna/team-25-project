@@ -41,6 +41,7 @@ const validDetails = {
   lastName: "Tui",
   password: "Password1!",
   position: "Senior Lecturer",
+  title: null,
 }
 
 const setCookie = vi.fn()
@@ -82,6 +83,16 @@ describe("registerMember", () => {
 
     expect(result).toEqual({ fieldErrors: { position: "Position is required" }, ok: false })
     expect(payload.create).not.toHaveBeenCalled()
+  })
+
+  it("passes the chosen title through to Payload", async () => {
+    const payload = mockPayload()
+
+    await registerMember({ ...validDetails, title: "dr" })
+
+    expect(payload.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ title: "dr" }) }),
+    )
   })
 
   it("requires the community guidelines to be accepted", async () => {
@@ -199,6 +210,8 @@ describe("completeProfile", () => {
 
     const formData = new FormData()
     formData.set("bio", "  Teaches capstone.  ")
+    formData.set("researchInterests", " Code review, , Generative AI ")
+    formData.set("links", JSON.stringify([{ label: " GitHub ", url: "https://github.com/anna" }]))
 
     const result = await completeProfile(formData)
 
@@ -206,12 +219,56 @@ describe("completeProfile", () => {
     expect(payload.update).toHaveBeenCalledWith(
       expect.objectContaining({
         collection: "members",
-        data: expect.objectContaining({ bio: "Teaches capstone." }),
+        data: expect.objectContaining({
+          bio: "Teaches capstone.",
+          // Blank entries between commas are dropped.
+          researchInterests: ["Code review", "Generative AI"],
+          links: [{ label: "GitHub", url: "https://github.com/anna" }],
+        }),
         id: 7,
         // Access control must still apply - a member may only update themselves.
         overrideAccess: false,
       }),
     )
+  })
+
+  it("treats a profile with no interests or links as empty lists", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      // biome-ignore lint/suspicious/noExplicitAny: only the fields the action reads
+      user: { firstName: "Anna", id: 7, lastName: "Tui" } as any,
+    })
+    const payload = mockPayload()
+
+    const result = await completeProfile(new FormData())
+
+    expect(result).toEqual({ ok: true })
+    expect(payload.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ links: [], researchInterests: [] }),
+      }),
+    )
+  })
+
+  it.each([
+    ["a non-web link", JSON.stringify([{ label: "Evil", url: "javascript:alert(1)" }])],
+    ["malformed links", "{not json"],
+  ])("rejects %s without touching Payload", async (_, links) => {
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      // biome-ignore lint/suspicious/noExplicitAny: only the fields the action reads
+      user: { firstName: "Anna", id: 7, lastName: "Tui" } as any,
+    })
+    const payload = mockPayload()
+
+    const formData = new FormData()
+    formData.set("links", links)
+
+    const result = await completeProfile(formData)
+
+    expect(result.ok).toBe(false)
+    expect(result).toHaveProperty("fieldErrors.links")
+    expect(payload.update).not.toHaveBeenCalled()
   })
 
   it("reports a form error when the avatar upload itself fails validation", async () => {
