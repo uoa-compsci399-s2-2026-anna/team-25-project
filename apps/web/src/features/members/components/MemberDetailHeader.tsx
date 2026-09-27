@@ -1,13 +1,6 @@
 import { MemberTitleLabels } from "@repo/shared/enums/members"
 import { initials } from "@repo/shared/utils/initials"
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  Badge,
-  Heading,
-  Skeleton,
-} from "@repo/ui/components/ui"
+import { Avatar, AvatarFallback, AvatarImage, Heading, Skeleton } from "@repo/ui/components/ui"
 import { notFound } from "next/navigation"
 import { getInstitutionCached } from "@/features/institutions/institutions.queries"
 import { type MembersRouteParams, parseMemberId } from "../members.params"
@@ -43,9 +36,6 @@ export const MemberHeader = async ({ params }: { params: MembersRouteParams }) =
             .join(" ")}
         </Heading>
         {affiliation && <p className="text-muted-foreground">{affiliation}</p>}
-        <div className="flex flex-row gap-1">
-          <Badge>TODO</Badge>
-        </div>
       </div>
     </div>
   )
