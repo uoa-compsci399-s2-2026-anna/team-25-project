@@ -40,6 +40,7 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
       institution: "",
       lastName: "",
       password: "",
+      position: "",
     },
     onSubmit: async ({ value }) => {
       setFieldErrors({})
@@ -132,6 +133,28 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
               />
               <FieldError errors={field.state.meta.errors} />
               {fieldErrors.institution && <FieldError>{fieldErrors.institution}</FieldError>}
+            </Field>
+          )}
+        </form.Field>
+
+        <form.Field name="position">
+          {(field) => (
+            <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+              <FieldLabel htmlFor={field.name}>
+                Position <RequiredMark />
+              </FieldLabel>
+              <Input
+                autoComplete="organization-title"
+                className="h-10"
+                id={field.name}
+                name={field.name}
+                onBlur={field.handleBlur}
+                onChange={(event) => field.handleChange(event.target.value)}
+                placeholder="Senior Lecturer"
+                value={field.state.value}
+              />
+              <FieldError errors={field.state.meta.errors} />
+              {fieldErrors.position && <FieldError>{fieldErrors.position}</FieldError>}
             </Field>
           )}
         </form.Field>

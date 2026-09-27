@@ -9,7 +9,6 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
-  Input,
   Separator,
   Skeleton,
   TextArea,
@@ -31,7 +30,7 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const form = useForm({
-    defaultValues: { bio: "", position: "" },
+    defaultValues: { bio: "" },
     onSubmit: async ({ value }) => {
       setFieldErrors({})
       setFormError(undefined)
@@ -43,7 +42,6 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
 
       const formData = new FormData()
       formData.set("bio", value.bio)
-      formData.set("position", value.position)
       if (avatar) formData.set("avatar", avatar)
 
       try {
@@ -86,24 +84,6 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
       </div>
 
       <FieldGroup>
-        <form.Field name="position">
-          {(field) => (
-            <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
-              <FieldLabel htmlFor={field.name}>Position</FieldLabel>
-              <Input
-                id={field.name}
-                name={field.name}
-                onBlur={field.handleBlur}
-                onChange={(event) => field.handleChange(event.target.value)}
-                placeholder="Senior Lecturer"
-                value={field.state.value}
-              />
-              <FieldError errors={field.state.meta.errors} />
-              {fieldErrors.position && <FieldError>{fieldErrors.position}</FieldError>}
-            </Field>
-          )}
-        </form.Field>
-
         <form.Field name="bio">
           {(field) => (
             <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
@@ -155,12 +135,6 @@ export const RegisterProfileSkeleton = () => (
     </div>
 
     <FieldGroup>
-      <Field>
-        <FieldLabel className="invisible" htmlFor="skeleton">
-          Position
-        </FieldLabel>
-        <Skeleton className="h-8 w-full rounded-md" />
-      </Field>
       <Field>
         <FieldLabel className="invisible" htmlFor="skeleton">
           About you

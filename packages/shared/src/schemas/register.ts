@@ -7,6 +7,9 @@ import { z } from "zod"
 
 export const PASSWORD_MIN_LENGTH = 8
 
+// Also the Members collection's maxLength, so the admin panel enforces the same limit.
+export const POSITION_MAX_LENGTH = 100
+
 // Matches Media's own mimeTypes restriction. Excludes image/svg+xml
 // deliberately - an SVG can carry an embedded <script>.
 export const ALLOWED_AVATAR_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
@@ -17,6 +20,11 @@ export const registerDetailsSchema = z.object({
   // The combobox holds the institution id as a string; the action parses it once
   // it has been validated as present.
   institution: z.string().min(1, "Select your university or institution"),
+  position: z
+    .string()
+    .trim()
+    .min(1, "Position is required")
+    .max(POSITION_MAX_LENGTH, `Keep your position under ${POSITION_MAX_LENGTH} characters`),
   email: z.email("Enter a valid email address"),
   password: z
     .string()
@@ -35,7 +43,6 @@ export type RegisterDetails = z.infer<typeof registerDetailsSchema>
  * schema's input type line up.
  */
 export const registerProfileSchema = z.object({
-  position: z.string().trim().max(100, "Keep your position under 100 characters"),
   bio: z.string().trim().max(500, "Keep your bio under 500 characters"),
 })
 
