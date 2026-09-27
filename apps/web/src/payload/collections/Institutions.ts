@@ -9,7 +9,7 @@ export const Institutions: CollectionConfig = {
   slug: Slugs.Collections.INSTITUTIONS,
   admin: {
     useAsTitle: "name",
-    defaultColumns: ["name", "country"],
+    defaultColumns: ["name", "country", "showLogo"],
   },
   hooks: {
     afterChange: [revalidateInstitutions],
@@ -38,6 +38,21 @@ export const Institutions: CollectionConfig = {
         description: "e.g. auckland.ac.nz — subdomains are accepted automatically",
       },
       fields: [{ name: "domain", type: "text", required: true }],
+    },
+    {
+      name: "logo",
+      type: "upload",
+      relationTo: Slugs.Collections.MEDIA,
+      admin: {
+        description:
+          "PNG, JPG, WebP, or GIF. Prefer a transparent background - it'll be shown at a small, fixed height.",
+      },
+    },
+    {
+      name: "showLogo",
+      type: "checkbox",
+      defaultValue: true,
+      label: "Show this institution's logo on the public ticker",
     },
   ],
 }

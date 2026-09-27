@@ -231,6 +231,11 @@ export interface Institution {
     domain: string;
     id?: string | null;
   }[];
+  /**
+   * PNG, JPG, WebP, or GIF. Prefer a transparent background - it'll be shown at a small, fixed height.
+   */
+  logo?: (number | null) | Media;
+  showLogo?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -605,6 +610,8 @@ export interface InstitutionsSelect<T extends boolean = true> {
         domain?: T;
         id?: T;
       };
+  logo?: T;
+  showLogo?: T;
   updatedAt?: T;
   createdAt?: T;
 }
