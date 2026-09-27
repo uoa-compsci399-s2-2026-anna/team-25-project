@@ -7,6 +7,9 @@ import { z } from "zod"
 
 export const PASSWORD_MIN_LENGTH = 8
 
+// Also the Members collection's maxLength, so the admin panel enforces the same limit.
+export const POSITION_MAX_LENGTH = 100
+
 // Matches Media's own mimeTypes restriction. Excludes image/svg+xml
 // deliberately - an SVG can carry an embedded <script>.
 export const ALLOWED_AVATAR_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
@@ -21,7 +24,7 @@ export const registerDetailsSchema = z.object({
     .string()
     .trim()
     .min(1, "Position is required")
-    .max(100, "Keep your position under 100 characters"),
+    .max(POSITION_MAX_LENGTH, `Keep your position under ${POSITION_MAX_LENGTH} characters`),
   email: z.email("Enter a valid email address"),
   password: z
     .string()

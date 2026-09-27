@@ -1,4 +1,5 @@
 import { MemberTitleLabels } from "@repo/shared/enums/members"
+import { POSITION_MAX_LENGTH } from "@repo/shared/schemas/register"
 import { toSelectOptions } from "@repo/shared/utils/select-options"
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
@@ -59,7 +60,7 @@ export const Members: CollectionConfig = {
       type: "select",
       options: toSelectOptions(MemberTitleLabels),
     },
-    { name: "position", type: "text", required: true },
+    { name: "position", type: "text", required: true, maxLength: POSITION_MAX_LENGTH },
     { name: "bio", type: "textarea" },
     { name: "researchInterests", type: "text", hasMany: true },
     {
