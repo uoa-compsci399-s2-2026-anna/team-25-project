@@ -7,7 +7,7 @@ import {
 } from "@repo/shared/enums/proposals"
 import { z } from "zod"
 import type { Proposal } from "../payload-types"
-import { richTextSchema } from "./shared"
+import { richTextHasText, richTextSchema } from "./shared"
 
 const timeframeSchema = z
   .object({
@@ -45,7 +45,7 @@ export type CreateProposalInput = z.infer<typeof createProposalSchema>
 export const postProposalFormSchema = createProposalSchema
   .omit({ author: true, status: true })
   .extend({
-    body: z.string().min(1, "Body is required"),
+    body: richTextSchema.refine((body) => richTextHasText(body.root), "Body is required"),
     outputTarget: z.string(),
   })
 

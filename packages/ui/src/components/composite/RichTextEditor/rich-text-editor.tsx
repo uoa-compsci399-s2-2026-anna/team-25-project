@@ -177,7 +177,10 @@ const RichTextEditor = ({
           theme,
         }}
       >
-        <div className={cn("flex flex-col gap-2", className)} data-slot="rich-text-editor">
+        <div
+          className={cn("flex flex-col gap-2 text-foreground", className)}
+          data-slot="rich-text-editor"
+        >
           <RichTextToolbar disabled={disabled} />
           <div className="relative">
             <RichTextPlugin

@@ -13,3 +13,13 @@ export const richTextSchema = z
     }),
   })
   .catchall(z.unknown())
+
+type RichTextNodeLike = { text?: unknown; children?: unknown }
+
+// True when any node in the tree has visible text. An empty editor still holds an empty paragraph.
+export const richTextHasText = (node: unknown): boolean => {
+  if (typeof node !== "object" || node === null) return false
+  const { children, text } = node as RichTextNodeLike
+  if (typeof text === "string" && text.trim() !== "") return true
+  return Array.isArray(children) && children.some(richTextHasText)
+}

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { Button } from "../../ui/Button/button"
 import {
   AddCapstoneCourseDialog,
+  type AddCapstoneCourseDialogProps,
   type AddCapstoneCourseDialogValues,
 } from "./add-capstone-course-dialog"
 
@@ -12,11 +13,12 @@ const deliveryFormatOptions = [
 ]
 
 const emptyValues: AddCapstoneCourseDialogValues = {
-  assessments: "",
+  additionalInfo: null,
+  assessments: null,
   code: "",
   deliveryFormat: "",
   endDate: "",
-  learningOutcomes: "",
+  learningOutcomes: null,
   name: "",
   period: "",
   programme: "",
@@ -32,7 +34,7 @@ function renderDialog(overrides?: {
   submitting?: "draft" | "publish"
   onSaveDraft?: () => void
   onPublish?: () => void
-  onValueChange?: (field: keyof AddCapstoneCourseDialogValues, value: string) => void
+  onValueChange?: AddCapstoneCourseDialogProps["onValueChange"]
 }) {
   return render(
     <AddCapstoneCourseDialog
@@ -77,6 +79,7 @@ describe("AddCapstoneCourseDialog", () => {
     expect(screen.getByLabelText("Your role")).toBeInTheDocument()
     expect(screen.getByLabelText("Learning outcomes")).toBeInTheDocument()
     expect(screen.getByLabelText("Assessments")).toBeInTheDocument()
+    expect(screen.getByLabelText("Additional information")).toBeInTheDocument()
   })
 
   it("groups fields into separate blocks rather than one flat list", () => {

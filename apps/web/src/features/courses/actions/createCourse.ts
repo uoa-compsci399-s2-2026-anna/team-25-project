@@ -1,6 +1,9 @@
 "use server"
 
+import { QueryKeys } from "@repo/shared/constants/query-keys"
 import { addCourseFormSchema } from "@repo/shared/schemas/courses"
+import { richTextHasText } from "@repo/shared/schemas/shared"
+import { updateTag } from "next/cache"
 import { APIError, type RequiredDataFromCollectionSlug, ValidationError } from "payload"
 import type { ActionResult } from "@/features/auth/actions/types"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
@@ -41,24 +44,10 @@ const resultFromValidationError = (
 // reach `create()` as `undefined`, never `""`.
 const blankToUndefined = (value: string | undefined) => (value ? value : undefined)
 
-// Both textareas are plain text, so wrap each line as a Lexical paragraph.
-const toLexicalRichText = (plainText: string) => ({
-  root: {
-    type: "root",
-    children: plainText.split("\n").map((line) => ({
-      type: "paragraph",
-      children: line ? [{ type: "text", version: 1, text: line }] : [],
-      direction: "ltr" as const,
-      format: "" as const,
-      indent: 0,
-      version: 1,
-    })),
-    direction: "ltr" as const,
-    format: "" as const,
-    indent: 0,
-    version: 1,
-  },
-})
+// An editor the user typed in and then cleared still holds an empty paragraph, so a draft
+// stores only rich text with visible text in it.
+const richTextOrUndefined = <Value extends { root: unknown }>(value: Value | null | undefined) =>
+  value && richTextHasText(value.root) ? value : undefined
 
 /**
  * Creates the course and its first offering together. The two writes share
@@ -97,6 +86,7 @@ export const createCourse = async (input: unknown): Promise<ActionResult> => {
 
   const payload = await getPayloadClient()
   const {
+    additionalInfo,
     assessments,
     code,
     deliveryFormat,
@@ -129,11 +119,12 @@ export const createCourse = async (input: unknown): Promise<ActionResult> => {
     })
 
     const versionData = {
-      assessments: assessments ? toLexicalRichText(assessments) : undefined,
+      additionalInfo: richTextOrUndefined(additionalInfo),
+      assessments: richTextOrUndefined(assessments),
       course: course.id,
       deliveryFormat: deliveryFormat ? deliveryFormat : undefined,
       endDate: blankToUndefined(endDate),
-      learningOutcomes: learningOutcomes ? toLexicalRichText(learningOutcomes) : undefined,
+      learningOutcomes: richTextOrUndefined(learningOutcomes),
       name,
       period: blankToUndefined(period),
       programme: blankToUndefined(programme),
@@ -191,6 +182,8 @@ export const createCourse = async (input: unknown): Promise<ActionResult> => {
     payload.logger.error({ err: error }, "createCourse failed")
     return { formError: "Could not add this course. Try again.", ok: false }
   }
+
+  updateTag(QueryKeys.COURSES.ROOT)
 
   return { ok: true }
 }

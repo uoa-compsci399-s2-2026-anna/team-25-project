@@ -224,94 +224,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.members_links": {
-      "name": "members_links",
-      "schema": "",
-      "columns": {
-        "_order": {
-          "name": "_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "label": {
-          "name": "label",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "url": {
-          "name": "url",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "members_links_order_idx": {
-          "name": "members_links_order_idx",
-          "columns": [
-            {
-              "expression": "_order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "members_links_parent_id_idx": {
-          "name": "members_links_parent_id_idx",
-          "columns": [
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "members_links_parent_id_fk": {
-          "name": "members_links_parent_id_fk",
-          "tableFrom": "members_links",
-          "tableTo": "members",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.members_sessions": {
       "name": "members_sessions",
       "schema": "",
@@ -428,18 +340,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "title": {
-          "name": "title",
-          "type": "enum_members_title",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
         "position": {
           "name": "position",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "bio": {
           "name": "bio",
@@ -632,85 +537,6 @@
             "id"
           ],
           "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.members_texts": {
-      "name": "members_texts",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "order": {
-          "name": "order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "parent_id": {
-          "name": "parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "path": {
-          "name": "path",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "text": {
-          "name": "text",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "members_texts_order_parent": {
-          "name": "members_texts_order_parent",
-          "columns": [
-            {
-              "expression": "order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "members_texts_parent_fk": {
-          "name": "members_texts_parent_fk",
-          "tableFrom": "members_texts",
-          "tableTo": "members",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1987,6 +1813,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "additional_info": {
+          "name": "additional_info",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "display_snapshot_course_code": {
           "name": "display_snapshot_course_code",
           "type": "varchar",
@@ -2592,6 +2424,12 @@
         },
         "version_assessments": {
           "name": "version_assessments",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_additional_info": {
+          "name": "version_additional_info",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": false
@@ -3786,19 +3624,6 @@
     }
   },
   "enums": {
-    "public.enum_members_title": {
-      "name": "enum_members_title",
-      "schema": "public",
-      "values": [
-        "dr",
-        "prof",
-        "assocProf",
-        "mr",
-        "ms",
-        "mrs",
-        "mx"
-      ]
-    },
     "public.enum_institutions_country": {
       "name": "enum_institutions_country",
       "schema": "public",
@@ -3903,6 +3728,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "2d6acf76-ffdb-434e-a22f-b5fef5c68beb",
+  "id": "0f33de10-b03b-4697-9cd7-31655ef889b9",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }
