@@ -39,6 +39,12 @@ export const registerDetailsSchema = z.object({
 
 export type RegisterDetails = z.infer<typeof registerDetailsSchema>
 
+const splitResearchInterests = (value: string) =>
+  value
+    .split(",")
+    .map((interest) => interest.trim())
+    .filter(Boolean)
+
 /**
  * Every profile field is skippable - the Figma frames this step as optional
  * ("You can finish this later from your profile"), so an empty submit is valid.
@@ -47,20 +53,21 @@ export type RegisterDetails = z.infer<typeof registerDetailsSchema>
  */
 export const registerProfileSchema = z.object({
   bio: z.string().trim().max(500, "Keep your bio under 500 characters"),
-  // Typed as one comma-separated line, stored as a list.
+  // Typed as one comma-separated line, stored as a list. Checked before the
+  // transform so every issue lands on the input itself - a per-item path like
+  // researchInterests[1] matches no form field and would never be shown.
   researchInterests: z
     .string()
-    .transform((value) =>
-      value
-        .split(",")
-        .map((interest) => interest.trim())
-        .filter(Boolean),
-    )
-    .pipe(
-      z
-        .array(z.string().max(50, "Keep each research interest under 50 characters"))
-        .max(10, "Add up to 10 research interests"),
-    ),
+    .superRefine((value, ctx) => {
+      const interests = splitResearchInterests(value)
+      if (interests.length > 10) {
+        ctx.addIssue({ code: "custom", message: "Add up to 10 research interests" })
+      }
+      if (interests.some((interest) => interest.length > 50)) {
+        ctx.addIssue({ code: "custom", message: "Keep each research interest under 50 characters" })
+      }
+    })
+    .transform(splitResearchInterests),
   links: z
     .array(
       z.object({
