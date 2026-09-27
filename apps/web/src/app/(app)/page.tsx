@@ -1,7 +1,8 @@
 import {
+  AboutSection,
+  BenefitsSection,
   HeroSection,
-  MembersSection,
-  ProposalsSection,
+  JoinCommunityBand,
   TickerPlaceholder,
 } from "@/features/home/components"
 
@@ -10,8 +11,9 @@ export default function Page() {
     <>
       <HeroSection />
       <TickerPlaceholder />
-      <MembersSection />
-      <ProposalsSection />
+      <AboutSection />
+      <BenefitsSection />
+      <JoinCommunityBand />
     </>
   )
 }

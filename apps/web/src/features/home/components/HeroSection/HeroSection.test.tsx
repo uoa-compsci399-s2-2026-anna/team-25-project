@@ -18,7 +18,7 @@ describe("HeroSection", () => {
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: "Find collaborators for your next capstone project.",
+        name: "Join the Computing Capstone Community Australasia",
       }),
     ).toBeInTheDocument()
   })
@@ -32,24 +32,17 @@ describe("HeroSection", () => {
     ).toBeInTheDocument()
   })
 
-  it("renders the placeholder graphic", () => {
+  it("links Become a member to the register route", () => {
     render(<HeroSection />)
-    expect(screen.getByText("placeholder")).toBeInTheDocument()
-  })
-
-  it("links Browse proposals to the real proposals route", () => {
-    render(<HeroSection />)
-    expect(screen.getByRole("button", { name: "Browse proposals" })).toHaveAttribute(
-      "href",
-      Routes.PROPOSALS.ROOT,
-    )
-  })
-
-  it("links Register with your uni email to the register route", () => {
-    render(<HeroSection />)
-    expect(screen.getByRole("button", { name: "Register with your uni email" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Become a member" })).toHaveAttribute(
       "href",
       Routes.REGISTER.ROOT,
     )
+  })
+
+  // The design replaced the two-button pair with a single call to action.
+  it("renders only the one call to action", () => {
+    render(<HeroSection />)
+    expect(screen.getAllByRole("button")).toHaveLength(1)
   })
 })
