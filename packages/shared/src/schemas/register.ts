@@ -39,11 +39,15 @@ export const registerDetailsSchema = z.object({
 
 export type RegisterDetails = z.infer<typeof registerDetailsSchema>
 
-const splitResearchInterests = (value: string) =>
-  value
-    .split(",")
-    .map((interest) => interest.trim())
-    .filter(Boolean)
+// Deduplicated because each interest is also its React key when listed.
+const splitResearchInterests = (value: string) => [
+  ...new Set(
+    value
+      .split(",")
+      .map((interest) => interest.trim())
+      .filter(Boolean),
+  ),
+]
 
 /**
  * Every profile field is skippable - the Figma frames this step as optional

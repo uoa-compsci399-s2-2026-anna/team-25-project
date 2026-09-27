@@ -9,6 +9,17 @@ describe("registerProfileSchema researchInterests", () => {
     expect(result.researchInterests).toEqual(["Code review", "Generative AI"])
   })
 
+  it("drops repeated interests", () => {
+    const result = registerProfileSchema.parse(profile("Code review, Generative AI, Code review"))
+    expect(result.researchInterests).toEqual(["Code review", "Generative AI"])
+  })
+
+  it("counts repeats once towards the limit of 10", () => {
+    const interests = Array.from({ length: 10 }, (_, i) => `Interest ${i}`)
+    const result = registerProfileSchema.safeParse(profile([...interests, "Interest 0"].join(",")))
+    expect(result.success).toBe(true)
+  })
+
   // The form only shows errors on paths that match one of its fields, so a
   // per-item path like researchInterests[1] would never reach the user.
   it.each([
