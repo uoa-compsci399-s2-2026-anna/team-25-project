@@ -8,15 +8,14 @@ const about = [
     title: "Member directory",
   },
   {
-    description:
-      "Record course data annually so designs can be compared across institutions, and host research proposals for members seeking co-investigators.",
+    description: "Host research proposals for members seeking co-investigators.",
     number: "02",
     title: "Research proposals",
   },
   {
-    description: "Convene a workshop alongside ACE each year.",
+    description: "Record course data annually so designs can be compared across institutions.",
     number: "03",
-    title: "Workshop",
+    title: "Course comparison",
   },
 ]
 

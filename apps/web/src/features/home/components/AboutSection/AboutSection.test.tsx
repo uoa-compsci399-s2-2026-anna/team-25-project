@@ -17,7 +17,7 @@ describe("AboutSection", () => {
     for (const [number, title] of [
       ["01", "Member directory"],
       ["02", "Research proposals"],
-      ["03", "Workshop"],
+      ["03", "Course comparison"],
     ]) {
       expect(screen.getByText(number)).toBeInTheDocument()
       expect(screen.getByRole("heading", { level: 3, name: title })).toBeInTheDocument()
