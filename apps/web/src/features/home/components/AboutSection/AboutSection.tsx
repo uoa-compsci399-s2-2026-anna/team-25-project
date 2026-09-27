@@ -22,10 +22,8 @@ const about = [
 
 export const AboutSection = () => {
   return (
-    <section className="px-8 py-10 md:px-16">
-      <Heading className="mb-8" level="h2">
-        About us
-      </Heading>
+    <section className="flex flex-col gap-8 px-8 py-10 md:px-16">
+      <Heading level="h2">About us</Heading>
       <div className="grid gap-6 md:grid-cols-3">
         {about.map((item) => (
           <AboutCard key={item.title} {...item} />

@@ -10,10 +10,8 @@ const benefits = [
 
 export const BenefitsSection = () => {
   return (
-    <section className="px-8 py-10 md:px-16">
-      <Heading className="mb-8" level="h2">
-        Benefits of being a member
-      </Heading>
+    <section className="flex flex-col gap-8 px-8 py-10 md:px-16">
+      <Heading level="h2">Benefits of being a member</Heading>
 
       <div className="flex flex-col gap-8 rounded-2xl bg-brand-blush/60 p-8">
         <ul className="flex flex-col gap-4">
