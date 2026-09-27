@@ -1,6 +1,10 @@
 "use client"
 
-import { ALLOWED_AVATAR_MIME_TYPES, registerProfileSchema } from "@repo/shared/schemas/register"
+import {
+  ALLOWED_AVATAR_MIME_TYPES,
+  LINKS_MAX,
+  registerProfileSchema,
+} from "@repo/shared/schemas/register"
 import { AvatarUpload } from "@repo/ui/components/composite"
 import {
   Button,
@@ -27,9 +31,6 @@ import { completeProfile } from "../actions/register"
 // Matches next.config.ts's serverActions.bodySizeLimit - checked here too so a
 // large photo gets a clear message instead of the request failing silently.
 const MAX_AVATAR_BYTES = 4 * 1024 * 1024
-
-// Matches registerProfileSchema's links.max.
-const MAX_LINKS = 5
 
 export const RegisterProfileForm = ({ initials }: { initials: string }) => {
   const router = useRouter()
@@ -201,7 +202,7 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
                   </Button>
                 </div>
               ))}
-              {linksField.state.value.length < MAX_LINKS && (
+              {linksField.state.value.length < LINKS_MAX && (
                 <Button
                   className="self-start"
                   onClick={() => linksField.pushValue({ label: "", url: "" })}
