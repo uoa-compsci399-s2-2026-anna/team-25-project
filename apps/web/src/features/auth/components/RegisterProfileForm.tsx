@@ -1,6 +1,10 @@
 "use client"
 
-import { ALLOWED_AVATAR_MIME_TYPES, registerProfileSchema } from "@repo/shared/schemas/register"
+import {
+  ALLOWED_AVATAR_MIME_TYPES,
+  LINKS_MAX,
+  registerProfileSchema,
+} from "@repo/shared/schemas/register"
 import { AvatarUpload } from "@repo/ui/components/composite"
 import {
   Button,
@@ -9,11 +13,16 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldLegend,
+  FieldSet,
+  FieldTitle,
+  Input,
   Separator,
   Skeleton,
   TextArea,
 } from "@repo/ui/components/ui"
 import { useForm } from "@tanstack/react-form"
+import { Plus, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Routes } from "@/lib/routes"
@@ -30,7 +39,11 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const form = useForm({
-    defaultValues: { bio: "" },
+    defaultValues: {
+      bio: "",
+      links: [] as { label: string; url: string }[],
+      researchInterests: "",
+    },
     onSubmit: async ({ value }) => {
       setFieldErrors({})
       setFormError(undefined)
@@ -42,6 +55,8 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
 
       const formData = new FormData()
       formData.set("bio", value.bio)
+      formData.set("researchInterests", value.researchInterests)
+      formData.set("links", JSON.stringify(value.links))
       if (avatar) formData.set("avatar", avatar)
 
       try {
@@ -102,6 +117,106 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
             </Field>
           )}
         </form.Field>
+
+        <form.Field name="researchInterests">
+          {(field) => (
+            <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+              <FieldLabel htmlFor={field.name}>Research interests</FieldLabel>
+              <Input
+                id={field.name}
+                name={field.name}
+                onBlur={field.handleBlur}
+                onChange={(event) => field.handleChange(event.target.value)}
+                placeholder="Code review, Generative AI, Assessment"
+                value={field.state.value}
+              />
+              <FieldDescription>Separate each interest with a comma.</FieldDescription>
+              <FieldError errors={field.state.meta.errors} />
+              {fieldErrors.researchInterests && (
+                <FieldError>{fieldErrors.researchInterests}</FieldError>
+              )}
+            </Field>
+          )}
+        </form.Field>
+
+        <form.Field mode="array" name="links">
+          {(linksField) => (
+            <FieldSet className="gap-3">
+              <FieldLegend className="mb-0" variant="label">
+                Links
+              </FieldLegend>
+              <FieldDescription>
+                Your university profile, ORCID, GitHub or website.
+              </FieldDescription>
+              {linksField.state.value.map((_, index) => (
+                // Rows have no stable id of their own; index keys match TanStack Form's array paths.
+                // biome-ignore lint/suspicious/noArrayIndexKey: see above
+                <div className="flex items-start gap-2" key={index}>
+                  <form.Field name={`links[${index}].label`}>
+                    {(field) => (
+                      <Field
+                        className="w-2/5"
+                        data-invalid={field.state.meta.errors.length > 0 || undefined}
+                      >
+                        <Input
+                          aria-label={`Link ${index + 1} label`}
+                          id={field.name}
+                          name={field.name}
+                          onBlur={field.handleBlur}
+                          onChange={(event) => field.handleChange(event.target.value)}
+                          placeholder="GitHub"
+                          value={field.state.value}
+                        />
+                        <FieldError errors={field.state.meta.errors} />
+                      </Field>
+                    )}
+                  </form.Field>
+                  <form.Field name={`links[${index}].url`}>
+                    {(field) => (
+                      <Field
+                        className="flex-1"
+                        data-invalid={field.state.meta.errors.length > 0 || undefined}
+                      >
+                        <Input
+                          aria-label={`Link ${index + 1} address`}
+                          id={field.name}
+                          name={field.name}
+                          onBlur={field.handleBlur}
+                          onChange={(event) => field.handleChange(event.target.value)}
+                          placeholder="https://github.com/your-name"
+                          type="url"
+                          value={field.state.value}
+                        />
+                        <FieldError errors={field.state.meta.errors} />
+                      </Field>
+                    )}
+                  </form.Field>
+                  <Button
+                    aria-label={`Remove link ${index + 1}`}
+                    onClick={() => linksField.removeValue(index)}
+                    size="icon"
+                    type="button"
+                    variant="button-transparent"
+                  >
+                    <X />
+                  </Button>
+                </div>
+              ))}
+              {linksField.state.value.length < LINKS_MAX && (
+                <Button
+                  className="self-start"
+                  onClick={() => linksField.pushValue({ label: "", url: "" })}
+                  type="button"
+                  variant="button-cream"
+                >
+                  <Plus />
+                  Add link
+                </Button>
+              )}
+              {fieldErrors.links && <FieldError>{fieldErrors.links}</FieldError>}
+            </FieldSet>
+          )}
+        </form.Field>
       </FieldGroup>
 
       <Separator />
@@ -143,6 +258,22 @@ export const RegisterProfileSkeleton = () => (
         <FieldDescription className="invisible">
           This is what other members see in the directory.
         </FieldDescription>
+      </Field>
+      <Field>
+        <FieldLabel className="invisible" htmlFor="skeleton">
+          Research interests
+        </FieldLabel>
+        <Skeleton className="h-8 w-full rounded-md" />
+        <FieldDescription className="invisible">
+          Separate each interest with a comma.
+        </FieldDescription>
+      </Field>
+      <Field>
+        <FieldTitle className="invisible">Links</FieldTitle>
+        <FieldDescription className="invisible">
+          Your university profile, ORCID, GitHub or website.
+        </FieldDescription>
+        <Skeleton className="h-7 w-24 rounded-full" />
       </Field>
     </FieldGroup>
 

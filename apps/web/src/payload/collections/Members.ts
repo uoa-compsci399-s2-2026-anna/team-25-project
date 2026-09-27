@@ -1,5 +1,11 @@
 import { MemberTitleLabels } from "@repo/shared/enums/members"
-import { POSITION_MAX_LENGTH } from "@repo/shared/schemas/register"
+import {
+  LINK_LABEL_MAX_LENGTH,
+  LINKS_MAX,
+  POSITION_MAX_LENGTH,
+  RESEARCH_INTEREST_MAX_LENGTH,
+  RESEARCH_INTERESTS_MAX,
+} from "@repo/shared/schemas/register"
 import { toSelectOptions } from "@repo/shared/utils/select-options"
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
@@ -62,12 +68,20 @@ export const Members: CollectionConfig = {
     },
     { name: "position", type: "text", required: true, maxLength: POSITION_MAX_LENGTH },
     { name: "bio", type: "textarea" },
-    { name: "researchInterests", type: "text", hasMany: true },
+    {
+      name: "researchInterests",
+      type: "text",
+      hasMany: true,
+      maxRows: RESEARCH_INTERESTS_MAX,
+      // With hasMany, maxLength applies to each interest rather than the list.
+      maxLength: RESEARCH_INTEREST_MAX_LENGTH,
+    },
     {
       name: "links",
       type: "array",
+      maxRows: LINKS_MAX,
       fields: [
-        { name: "label", type: "text", required: true },
+        { name: "label", type: "text", required: true, maxLength: LINK_LABEL_MAX_LENGTH },
         { name: "url", type: "text", required: true, validate: validateMemberLinkUrl },
       ],
     },
