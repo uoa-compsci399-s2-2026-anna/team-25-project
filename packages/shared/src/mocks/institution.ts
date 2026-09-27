@@ -6,7 +6,7 @@ export const mockInstitution = (overrides: Partial<Institution> = {}): Instituti
   country: "NZ",
   domains: [{ domain: "auckland.ac.nz" }],
   logo: null,
-  showLogo: false,
+  showLogo: true,
   updatedAt: "",
   createdAt: "",
   ...overrides,

@@ -51,7 +51,7 @@ export const Institutions: CollectionConfig = {
     {
       name: "showLogo",
       type: "checkbox",
-      defaultValue: false,
+      defaultValue: true,
       label: "Show this institution's logo on the public ticker",
     },
   ],

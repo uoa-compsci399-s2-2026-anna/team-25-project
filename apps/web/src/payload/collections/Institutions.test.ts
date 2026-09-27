@@ -6,8 +6,8 @@ const findField = (name: string) =>
   Institutions.fields.find((field) => "name" in field && field.name === name)
 
 describe("Institutions collection", () => {
-  it("keeps the logo hidden from the ticker until an admin opts in", () => {
-    expect(findField("showLogo")).toMatchObject({ type: "checkbox", defaultValue: false })
+  it("shows the logo on the ticker by default once one is uploaded", () => {
+    expect(findField("showLogo")).toMatchObject({ type: "checkbox", defaultValue: true })
   })
 
   it("keeps the logo optional so existing institutions aren't broken", () => {
