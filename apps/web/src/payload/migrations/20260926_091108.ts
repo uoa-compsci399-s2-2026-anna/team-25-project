@@ -19,7 +19,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"text" varchar
   );
   
-  UPDATE "members" SET "position" = '' WHERE "position" IS NULL;
+  UPDATE "members" SET "position" = 'Not specified' WHERE "position" IS NULL OR trim("position") = '';
   ALTER TABLE "members" ALTER COLUMN "position" SET NOT NULL;
   ALTER TABLE "members" ADD COLUMN "title" "enum_members_title";
   ALTER TABLE "members_links" ADD CONSTRAINT "members_links_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."members"("id") ON DELETE cascade ON UPDATE no action;
