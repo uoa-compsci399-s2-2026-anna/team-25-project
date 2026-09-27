@@ -1,4 +1,5 @@
 import { Button, Heading } from "@repo/ui/components/ui"
+import { Check } from "lucide-react"
 import Link from "next/link"
 import { Routes } from "@/lib/routes"
 
@@ -16,9 +17,8 @@ export const BenefitsSection = () => {
       <div className="flex flex-col gap-8 rounded-2xl bg-brand-blush/60 p-8">
         <ul className="flex flex-col gap-4">
           {benefits.map((benefit) => (
-            <li className="flex items-start gap-4 text-muted-foreground" key={benefit}>
-              {/* A plain rule rather than a bullet, matching the design. */}
-              <span aria-hidden className="mt-3 h-px w-6 shrink-0 bg-border" />
+            <li className="flex items-start gap-3 text-muted-foreground" key={benefit}>
+              <Check aria-hidden className="mt-1 size-4 shrink-0 text-primary" />
               {benefit}
             </li>
           ))}
