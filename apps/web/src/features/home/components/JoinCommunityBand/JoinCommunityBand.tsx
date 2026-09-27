@@ -14,8 +14,10 @@ export const JoinCommunityBand = () => {
           Post a research idea, keep it active while you're recruiting, and close it once your team
           is formed.
         </p>
+        {/* button-white hovers to a translucent charcoal, which lets the mauve
+            through and makes the button vanish - an opaque blush instead. */}
         <Button
-          className="w-fit"
+          className="w-fit hover:bg-brand-blush"
           nativeButton={false}
           render={<Link href={Routes.REGISTER.ROOT} />}
           variant="button-white"
