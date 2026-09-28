@@ -25,7 +25,11 @@ export const Routes = {
   },
   ABOUT: route("/about"),
   NEWS: route("/news"),
-  RESOURCES: route("/resources"),
+  RESOURCES: {
+    ROOT: route("/resources"),
+    RESOURCE: (resourceId: string) => route(`/resources/${resourceId}`),
+  },
+  PUBLICATIONS: route("/publications"),
   PRIVACY: route("/privacy"),
   REGISTER: {
     ROOT: route("/register"),

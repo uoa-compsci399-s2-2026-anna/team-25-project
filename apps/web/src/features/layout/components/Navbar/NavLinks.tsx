@@ -9,7 +9,7 @@ const links = [
   { name: "Members", href: Routes.MEMBERS.ROOT, membersOnly: false },
   { name: "Courses", href: Routes.COURSES.ROOT, membersOnly: true },
   { name: "Proposals", href: Routes.PROPOSALS.ROOT, membersOnly: true },
-  { name: "Resources", href: Routes.RESOURCES, membersOnly: false },
+  { name: "Resources", href: Routes.RESOURCES.ROOT, membersOnly: false },
   { name: "News", href: Routes.NEWS, membersOnly: false },
 ]
 
