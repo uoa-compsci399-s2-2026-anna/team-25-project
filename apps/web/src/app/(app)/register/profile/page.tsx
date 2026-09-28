@@ -1,7 +1,6 @@
 import { initials } from "@repo/shared/utils/initials"
-import { Heading } from "@repo/ui/components/ui"
+import { AnimatedSuspense, Heading } from "@repo/ui/components/ui"
 import { redirect } from "next/navigation"
-import { Suspense } from "react"
 import {
   RegisterProfileForm,
   RegisterProfileSkeleton,
@@ -43,9 +42,9 @@ export default function Page() {
         </p>
       </div>
 
-      <Suspense fallback={<RegisterProfileSkeleton />}>
+      <AnimatedSuspense fallback={<RegisterProfileSkeleton />}>
         <ProfileFormSection />
-      </Suspense>
+      </AnimatedSuspense>
     </main>
   )
 }

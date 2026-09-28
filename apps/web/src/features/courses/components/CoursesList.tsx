@@ -1,4 +1,4 @@
-import { Suspense } from "react"
+import { AnimatedSuspense } from "@repo/ui/components/ui"
 import { getCoursesTableDataCached, getMyCoursesSummary } from "../courses.queries"
 import { CoursesListClient, CoursesListClientSkeleton } from "./CoursesListClient"
 import { CoursesPageHeader, CoursesPageHeaderSkeleton } from "./CoursesPageHeader"
@@ -18,9 +18,9 @@ export async function CoursesList() {
       <CoursesListClient rows={rows} />
       <div className="grid w-full gap-4 px-10 pt-6 pb-10 md:grid-cols-2 md:px-12">
         <CoursesSummaryPanel summary={summary} />
-        <Suspense fallback={<CoursesYourEntriesPanelSkeleton />}>
+        <AnimatedSuspense fallback={<CoursesYourEntriesPanelSkeleton />}>
           <YourEntries rows={rows} />
-        </Suspense>
+        </AnimatedSuspense>
       </div>
     </>
   )

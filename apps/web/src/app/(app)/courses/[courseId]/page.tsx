@@ -1,4 +1,4 @@
-import { Suspense } from "react"
+import { AnimatedSuspense } from "@repo/ui/components/ui"
 import { CourseHeader, CourseHeaderSkeleton } from "@/features/courses/components/CourseHeader"
 import {
   CourseOffering,
@@ -13,15 +13,15 @@ import type { CourseRouteParams } from "@/features/courses/courses.params"
 export default function Page({ params }: { params: CourseRouteParams }) {
   return (
     <article className="grid w-full gap-x-10 gap-y-4 p-10 md:p-12 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-12">
-      <Suspense fallback={<CourseOfferingMetaSkeleton />}>
+      <AnimatedSuspense fallback={<CourseOfferingMetaSkeleton />}>
         <CourseOfferingMeta params={params} />
-      </Suspense>
-      <Suspense fallback={<CourseHeaderSkeleton />}>
+      </AnimatedSuspense>
+      <AnimatedSuspense fallback={<CourseHeaderSkeleton />}>
         <CourseHeader params={params} />
-      </Suspense>
-      <Suspense fallback={<CourseOfferingSkeleton />}>
+      </AnimatedSuspense>
+      <AnimatedSuspense fallback={<CourseOfferingSkeleton />}>
         <CourseOffering params={params} />
-      </Suspense>
+      </AnimatedSuspense>
     </article>
   )
 }

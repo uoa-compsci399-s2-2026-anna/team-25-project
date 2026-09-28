@@ -1,5 +1,5 @@
+import { AnimatedSuspense } from "@repo/ui/components/ui"
 import type { SearchParams } from "nuqs/server"
-import { Suspense } from "react"
 import {
   ProposalsFilterBarSkeleton,
   ProposalsFilterServer,
@@ -12,13 +12,13 @@ export default function Page({ searchParams }: { searchParams: Promise<SearchPar
     <>
       <ProposalsHeader />
       <div className="w-full bg-brand-cream/60 px-10 py-5 md:px-12">
-        <Suspense fallback={<ProposalsFilterBarSkeleton />}>
+        <AnimatedSuspense fallback={<ProposalsFilterBarSkeleton />}>
           <ProposalsFilterServer searchParams={searchParams} />
-        </Suspense>
+        </AnimatedSuspense>
       </div>
-      <Suspense fallback={<ProposalsListSkeleton />}>
+      <AnimatedSuspense fallback={<ProposalsListSkeleton />}>
         <ProposalsList searchParams={searchParams} />
-      </Suspense>
+      </AnimatedSuspense>
     </>
   )
 }

@@ -1,10 +1,10 @@
-import { Suspense } from "react"
+import { AnimatedSuspense } from "@repo/ui/components/ui"
 import { CoursesList, CoursesListSkeleton } from "@/features/courses/components/CoursesList"
 
 export default function Page() {
   return (
-    <Suspense fallback={<CoursesListSkeleton />}>
+    <AnimatedSuspense fallback={<CoursesListSkeleton />}>
       <CoursesList />
-    </Suspense>
+    </AnimatedSuspense>
   )
 }
