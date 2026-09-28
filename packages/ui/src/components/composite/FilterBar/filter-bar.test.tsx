@@ -151,6 +151,21 @@ describe("FilterBarSkeleton", () => {
     expect(container.querySelector('[data-slot="filter-bar-skeleton-status"]')).toBeInTheDocument()
   })
 
+  it("renders only the search and sort placeholders by default", () => {
+    const { container } = render(<FilterBarSkeleton />)
+
+    expect(container.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(2)
+    expect(container.querySelector('[data-slot="filter-bar-skeleton-status"]')).toBeNull()
+    expect(container.querySelector('[data-slot="filter-bar-skeleton-filter"]')).toBeNull()
+  })
+
+  it("sizes the status placeholder by the number of tabs", () => {
+    const { container } = render(<FilterBarSkeleton statusCount={3} />)
+    expect(container.querySelector('[data-slot="filter-bar-skeleton-status"]')).toHaveStyle({
+      width: "18rem",
+    })
+  })
+
   it("leaves out the status placeholder when the bar has no tabs", () => {
     const { container } = render(<FilterBarSkeleton filterCount={2} />)
     expect(container.querySelector('[data-slot="filter-bar-skeleton-status"]')).toBeNull()
