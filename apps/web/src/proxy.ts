@@ -63,6 +63,5 @@ export const config = {
     "/courses/:courseId",
     "/resources",
     "/resources/:resourceId",
-    "/publications",
   ],
 }
