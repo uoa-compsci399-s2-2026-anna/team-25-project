@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
   Separator,
+  Skeleton,
 } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import type * as React from "react"
@@ -181,10 +182,47 @@ function ProposalCard({
   )
 }
 
+/** Holds a `ProposalCard`'s space while the listing loads. */
+function ProposalCardSkeleton({
+  className,
+  size = "default",
+  ...props
+}: React.ComponentProps<"div"> & Pick<ProposalCardProps, "size">) {
+  return (
+    <Card className={className} data-slot="proposal-card-skeleton" size={size} {...props}>
+      <CardHeader className="gap-3">
+        <Skeleton className="h-5 w-20 rounded-full" />
+        <CardAction className="row-span-1">
+          <Skeleton className="h-4 w-28" />
+        </CardAction>
+        <div className="col-span-full flex flex-col gap-1.5">
+          <Skeleton className="h-6 w-3/4" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex-row flex-wrap gap-2">
+        <Skeleton className="h-5 w-24 rounded-full" />
+        <Skeleton className="h-5 w-20 rounded-full" />
+      </CardContent>
+
+      <CardFooter className="flex-col items-stretch gap-3 border-t-0 bg-transparent pt-0">
+        <Separator />
+        <div className="flex items-center gap-2">
+          <Skeleton className="size-8 rounded-full" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+      </CardFooter>
+    </Card>
+  )
+}
+
 export {
   ProposalCard,
   type ProposalCardAuthor,
   type ProposalCardProps,
+  ProposalCardSkeleton,
   type ProposalCardStatus,
   type ProposalCardTag,
 }

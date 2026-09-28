@@ -126,7 +126,7 @@ const SKELETON_ROW_COUNT = 8
 // underlying data of their own to key off.
 const skeletonRowIds = Array.from({ length: SKELETON_ROW_COUNT }, () => crypto.randomUUID())
 
-function CoursesTableSkeleton({ density, striped }: TableVariantProps) {
+export function CoursesTableSkeleton({ density, striped }: TableVariantProps) {
   return (
     <Table density={density} striped={striped}>
       <TableHeader>

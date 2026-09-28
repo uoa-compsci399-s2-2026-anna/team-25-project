@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { FilterBar, type FilterBarProps } from "../index"
+import { FilterBar, type FilterBarProps, FilterBarSkeleton } from "../index"
 
 const props = (): FilterBarProps => ({
   filters: [
@@ -136,5 +136,23 @@ describe("FilterBar", () => {
 
     expect(screen.queryByRole("tablist")).not.toBeInTheDocument()
     expect(screen.queryAllByRole("tab")).toHaveLength(0)
+  })
+})
+
+describe("FilterBarSkeleton", () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it("renders one placeholder per filter and one for the status tabs", () => {
+    const { container } = render(<FilterBarSkeleton filterCount={2} statusCount={3} />)
+
+    expect(container.querySelectorAll('[data-slot="filter-bar-skeleton-filter"]')).toHaveLength(2)
+    expect(container.querySelector('[data-slot="filter-bar-skeleton-status"]')).toBeInTheDocument()
+  })
+
+  it("leaves out the status placeholder when the bar has no tabs", () => {
+    const { container } = render(<FilterBarSkeleton filterCount={2} />)
+    expect(container.querySelector('[data-slot="filter-bar-skeleton-status"]')).toBeNull()
   })
 })

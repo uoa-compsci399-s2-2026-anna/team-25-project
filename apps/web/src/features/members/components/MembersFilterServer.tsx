@@ -1,3 +1,4 @@
+import { FilterBarSkeleton } from "@repo/ui/components/composite"
 import { getInstitutionOptionsCached } from "@/features/institutions/institutions.queries"
 import { MembersActiveFilters } from "./MembersActiveFilters"
 import { MembersFilterBar } from "./MembersFilterBar"
@@ -15,3 +16,10 @@ export const MembersFilterServer = async () => {
     </>
   )
 }
+
+// The active-filter chips render nothing until a filter is set, so they need no placeholder.
+export const MembersFilterServerSkeleton = () => (
+  <div className="w-full bg-brand-cream/60 px-10 py-5 md:px-12">
+    <FilterBarSkeleton filterCount={2} />
+  </div>
+)

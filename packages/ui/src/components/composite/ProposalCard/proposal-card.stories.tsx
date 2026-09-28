@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
-import { ProposalCard } from "./proposal-card"
+import { ProposalCard, ProposalCardSkeleton } from "./proposal-card"
 
 const meta: Meta<typeof ProposalCard> = {
   title: "composite/ProposalCard",
@@ -111,4 +111,15 @@ export const Narrow: Story = {
       </div>
     ),
   ],
+}
+
+/** Stands in for a card while the listing loads, next to a real one to compare sizes. */
+export const Skeleton: Story = {
+  parameters: { fullWidth: true },
+  render: (args) => (
+    <div className="grid gap-6 md:grid-cols-2">
+      <ProposalCard {...args} />
+      <ProposalCardSkeleton />
+    </div>
+  ),
 }
