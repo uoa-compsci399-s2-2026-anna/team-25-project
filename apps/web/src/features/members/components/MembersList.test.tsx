@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { countMembers, getMembers } from "../members.queries"
-import { MembersList } from "./MembersList"
+import { MembersList, MembersListSkeleton } from "./MembersList"
 
 vi.mock("../members.queries", () => ({
   countMembers: vi.fn(),
@@ -95,5 +95,21 @@ describe("MembersList cards", () => {
 
     expect(screen.getByRole("link", { name: /Anna Tui/ })).toHaveAttribute("href", "/members/3")
     expect(screen.getByRole("link", { name: /Priya Nair/ })).toHaveAttribute("href", "/members/8")
+  })
+})
+
+describe("MembersListSkeleton", () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it("renders a full page of placeholder cards", () => {
+    const { container } = render(<MembersListSkeleton />)
+    expect(container.querySelectorAll('[data-slot="card"]')).toHaveLength(12)
+  })
+
+  it("renders no links, since the placeholders go nowhere", () => {
+    render(<MembersListSkeleton />)
+    expect(screen.queryByRole("link")).not.toBeInTheDocument()
   })
 })
