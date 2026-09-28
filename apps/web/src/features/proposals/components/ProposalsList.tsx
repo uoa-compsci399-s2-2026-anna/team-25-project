@@ -14,7 +14,7 @@ import {
 
 const PAGE_SIZE = 10
 // Stable keys for the placeholder cards, which have no data of their own.
-const skeletonCardIds = Array.from({ length: PAGE_SIZE }, () => crypto.randomUUID())
+const skeletonCardIds = Array.from({ length: PAGE_SIZE }, (_, i) => `proposal-skeleton-${i}`)
 
 export const ProposalsList = async ({ searchParams }: { searchParams: Promise<SearchParams> }) => {
   const params = await loadProposalSearchParams(searchParams)

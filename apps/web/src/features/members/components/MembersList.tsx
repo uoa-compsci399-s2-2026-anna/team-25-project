@@ -13,7 +13,7 @@ import {
 import { MemberCard, MemberCardSkeleton } from "./MemberCard"
 
 // Stable keys for the placeholder cards, which have no data of their own.
-const skeletonCardIds = Array.from({ length: MEMBERS_PAGE_SIZE }, () => crypto.randomUUID())
+const skeletonCardIds = Array.from({ length: MEMBERS_PAGE_SIZE }, (_, i) => `member-skeleton-${i}`)
 
 export const MembersList = async ({ searchParams }: { searchParams: Promise<SearchParams> }) => {
   const params = await loadMemberSearchParams(searchParams)

@@ -124,7 +124,7 @@ export type CoursesTableInstance = DataTableInstance<CourseTableRow>
 const SKELETON_ROW_COUNT = 8
 // Stable per-row identity for the placeholder rows below, since they have no
 // underlying data of their own to key off.
-const skeletonRowIds = Array.from({ length: SKELETON_ROW_COUNT }, () => crypto.randomUUID())
+const skeletonRowIds = Array.from({ length: SKELETON_ROW_COUNT }, (_, i) => `course-skeleton-${i}`)
 
 export function CoursesTableSkeleton({ density, striped }: TableVariantProps) {
   return (
