@@ -21,7 +21,7 @@ export function PageHeader({ title, description, actions, align = "center" }: Pa
           align === "end" ? "md:items-end" : "md:items-center",
         )}
       >
-        <p className="max-w-2xl text-muted-foreground">{description}</p>
+        <div className="w-full max-w-2xl text-muted-foreground">{description}</div>
         {actions && <div className="shrink-0">{actions}</div>}
       </div>
     </div>
