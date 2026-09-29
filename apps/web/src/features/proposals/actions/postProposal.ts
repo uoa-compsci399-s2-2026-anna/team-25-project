@@ -73,7 +73,7 @@ export const postProposal = async (input: unknown): Promise<ActionResult> => {
     return { formError: "Could not post your proposal. Try again.", ok: false }
   }
 
-  updateTag(QueryKeys.PROPOSALS)
+  updateTag(QueryKeys.PROPOSALS.ROOT)
 
   return { ok: true }
 }
