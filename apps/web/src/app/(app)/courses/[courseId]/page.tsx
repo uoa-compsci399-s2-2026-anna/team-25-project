@@ -1,5 +1,4 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
-import { PageContainer } from "@/features/layout/components"
 import { CourseHeader, CourseHeaderSkeleton } from "@/features/courses/components/CourseHeader"
 import {
   CourseOffering,
