@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { CoursesPageHeader, CoursesPageHeaderSkeleton } from "./CoursesPageHeader"
+import { CoursesPageHeader } from "./CoursesPageHeader"
 import type { CourseTableRow } from "./CoursesTable"
 
 // AddCourseTrigger reads the signed-in member's profile, which is exercised
@@ -35,21 +35,5 @@ describe("CoursesPageHeader", () => {
     expect(screen.getByText(/how each institution structures its capstone/i)).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Export CSV" })).toBeInTheDocument()
     expect(screen.getByText("Add course trigger")).toBeInTheDocument()
-  })
-})
-
-describe("CoursesPageHeaderSkeleton", () => {
-  it("renders the real title and description, with a placeholder for the export", () => {
-    const { container } = render(<CoursesPageHeaderSkeleton />)
-
-    expect(screen.getByRole("heading", { level: 1, name: "Capstone courses" })).toBeInTheDocument()
-    expect(screen.getByText(/how each institution structures its capstone/i)).toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: "Export CSV" })).not.toBeInTheDocument()
-    expect(container.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(1)
-  })
-
-  it("shows the add-course button, which needs no data", () => {
-    render(<CoursesPageHeaderSkeleton />)
-    expect(screen.getByRole("button", { name: "+ Add your course" })).toBeInTheDocument()
   })
 })

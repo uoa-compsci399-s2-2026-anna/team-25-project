@@ -1,7 +1,9 @@
-import { AnimatedSuspense } from "@repo/ui/components/ui"
+import { AnimatedSuspense, Skeleton } from "@repo/ui/components/ui"
+import { PageHeaderSkeleton } from "@/features/layout/components"
 import { getCoursesTableDataCached, getMyCoursesSummary } from "../courses.queries"
+import { AddCourseTriggerButton } from "./AddCourseDialog"
 import { CoursesListClient, CoursesListClientSkeleton } from "./CoursesListClient"
-import { CoursesPageHeader, CoursesPageHeaderSkeleton } from "./CoursesPageHeader"
+import { CoursesPageHeader, coursesPageHeading } from "./CoursesPageHeader"
 import { CoursesSummaryPanel, CoursesSummaryPanelSkeleton } from "./CoursesSummaryPanel"
 import type { CourseTableRow } from "./CoursesTable"
 import { CoursesYourEntriesPanel, CoursesYourEntriesPanelSkeleton } from "./CoursesYourEntriesPanel"
@@ -34,7 +36,16 @@ async function YourEntries({ rows }: { rows: CourseTableRow[] }) {
 export function CoursesListSkeleton() {
   return (
     <>
-      <CoursesPageHeaderSkeleton />
+      <PageHeaderSkeleton
+        actions={
+          // Only the export needs the rows; the add button needs no data.
+          <div className="flex shrink-0 items-center gap-3">
+            <Skeleton className="h-9 w-32 rounded-full" />
+            <AddCourseTriggerButton />
+          </div>
+        }
+        {...coursesPageHeading}
+      />
       <CoursesListClientSkeleton />
       <div className="grid w-full gap-4 px-10 pt-6 pb-10 md:grid-cols-2 md:px-12">
         <CoursesSummaryPanelSkeleton />

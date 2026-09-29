@@ -5,15 +5,20 @@ import {
   JoinCommunityBand,
   TickerPlaceholder,
 } from "@/features/home/components"
+import { PageContainer } from "@/features/layout/components"
 
 export default function Page() {
   return (
     <>
-      <HeroSection />
+      <PageContainer>
+        <HeroSection />
+      </PageContainer>
       <TickerPlaceholder />
-      <AboutSection />
-      <BenefitsSection />
-      <JoinCommunityBand />
+      <PageContainer>
+        <AboutSection />
+        <BenefitsSection />
+        <JoinCommunityBand />
+      </PageContainer>
     </>
   )
 }

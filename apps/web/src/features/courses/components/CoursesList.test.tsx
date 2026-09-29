@@ -11,6 +11,8 @@ describe("CoursesListSkeleton", () => {
     render(<CoursesListSkeleton />)
 
     expect(screen.getByRole("heading", { level: 1, name: "Capstone courses" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "+ Add your course" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Export CSV" })).not.toBeInTheDocument()
     expect(screen.getByRole("columnheader", { name: "Course" })).toBeInTheDocument()
     expect(screen.getByText("Summary")).toBeInTheDocument()
     expect(screen.getByText("Your entries")).toBeInTheDocument()
