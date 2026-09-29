@@ -1,9 +1,9 @@
 import { initials } from "@repo/shared/utils/initials"
-import { Avatar, AvatarFallback, AvatarImage, buttonVariants } from "@repo/ui/components/ui"
-import Link from "next/link"
+import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/components/ui"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
 import { Routes } from "@/lib/routes"
+import { NavGuestLinks } from "./NavGuestLinks"
 import { NavUserMenu } from "./NavUserMenu"
 
 // Isolated from Navbar so only this reads headers() (via getCurrentUser) -
@@ -13,16 +13,7 @@ export const NavAuthStatus = async () => {
   const { collection, user } = await getCurrentUser()
 
   if (!user) {
-    return (
-      <div className="flex items-center gap-4">
-        <Link className="text-base transition-opacity hover:opacity-70" href={Routes.LOGIN}>
-          Log in
-        </Link>
-        <Link className={buttonVariants({ size: "sm" })} href={Routes.REGISTER.ROOT}>
-          Join CCCA
-        </Link>
-      </div>
-    )
+    return <NavGuestLinks />
   }
 
   // An admin has no member directory entry of their own, so they get the admin
