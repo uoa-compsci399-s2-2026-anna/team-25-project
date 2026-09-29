@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
-import { PageHeaderSkeleton } from "./PageHeaderSkeleton"
+import { PageHeaderSkeleton } from "./PageHeader"
 
 afterEach(() => {
   cleanup()
