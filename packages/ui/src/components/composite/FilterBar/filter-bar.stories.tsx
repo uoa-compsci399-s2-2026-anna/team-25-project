@@ -1,6 +1,6 @@
 import type { Meta, StoryFn } from "@storybook/nextjs-vite"
 import { useState } from "react"
-import { FilterBar, type FilterBarFilter } from "./filter-bar"
+import { FilterBar, type FilterBarFilter, FilterBarSkeleton } from "./filter-bar"
 
 const meta: Meta<typeof FilterBar> = {
   title: "composite/FilterBar",
@@ -67,3 +67,10 @@ export const Primary: StoryFn<typeof FilterBar> = () => {
     </div>
   )
 }
+
+/** Holds the bar's space while its options load. */
+export const Skeleton: StoryFn<typeof FilterBar> = () => (
+  <div className="bg-brand-cream/60 p-5">
+    <FilterBarSkeleton filterCount={2} statusCount={3} />
+  </div>
+)

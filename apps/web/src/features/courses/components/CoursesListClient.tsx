@@ -1,6 +1,12 @@
 "use client"
 
-import { CoursesTable, type CourseTableRow, useCoursesTable } from "./CoursesTable"
+import { FilterBarSkeleton } from "@repo/ui/components/composite"
+import {
+  CoursesTable,
+  CoursesTableSkeleton,
+  type CourseTableRow,
+  useCoursesTable,
+} from "./CoursesTable"
 import { CoursesToolbar } from "./CoursesToolbar"
 
 export interface CoursesListClientProps {
@@ -21,6 +27,15 @@ export function CoursesListClient({ rows }: CoursesListClientProps) {
     <div className="flex w-full flex-col gap-4 px-10 py-6 md:px-12">
       <CoursesToolbar rows={rows} table={table} />
       <CoursesTable emptyMessage="No courses match these filters." table={table} />
+    </div>
+  )
+}
+
+export function CoursesListClientSkeleton() {
+  return (
+    <div className="flex w-full flex-col gap-4 px-10 py-6 md:px-12">
+      <FilterBarSkeleton filterCount={3} statusCount={3} />
+      <CoursesTableSkeleton />
     </div>
   )
 }

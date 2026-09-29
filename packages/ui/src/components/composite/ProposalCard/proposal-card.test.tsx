@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import type * as React from "react"
 import { afterEach, describe, expect, it } from "vitest"
-import { ProposalCard, type ProposalCardProps } from "./proposal-card"
+import { ProposalCard, type ProposalCardProps, ProposalCardSkeleton } from "./proposal-card"
 
 const props: ProposalCardProps = {
   author: { institution: "University of Example", name: "Dr Anna Tui" },
@@ -162,6 +162,27 @@ describe("ProposalCard", () => {
 
   it("passes the size through to the card", () => {
     render(<ProposalCard {...props} data-testid="card" size="sm" />)
+    expect(screen.getByTestId("card")).toHaveAttribute("data-size", "sm")
+  })
+})
+
+describe("ProposalCardSkeleton", () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it("hides its placeholders from screen readers", () => {
+    const { container } = render(<ProposalCardSkeleton />)
+    const placeholders = container.querySelectorAll('[data-slot="skeleton"]')
+
+    expect(placeholders.length).toBeGreaterThan(0)
+    for (const placeholder of placeholders) {
+      expect(placeholder).toHaveAttribute("aria-hidden", "true")
+    }
+  })
+
+  it("passes the size through to the card", () => {
+    render(<ProposalCardSkeleton data-testid="card" size="sm" />)
     expect(screen.getByTestId("card")).toHaveAttribute("data-size", "sm")
   })
 })

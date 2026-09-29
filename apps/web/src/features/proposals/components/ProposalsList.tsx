@@ -1,5 +1,5 @@
 import { ProposalTagLabels } from "@repo/shared/enums/proposals"
-import { PaginationNav, ProposalCard } from "@repo/ui/components/composite"
+import { PaginationNav, ProposalCard, ProposalCardSkeleton } from "@repo/ui/components/composite"
 import type { Route } from "next"
 import Link from "next/link"
 import type { SearchParams } from "nuqs/server"
@@ -13,6 +13,8 @@ import {
 } from "../proposals.search-params"
 
 const PAGE_SIZE = 10
+// Stable keys for the placeholder cards, which have no data of their own.
+const skeletonCardIds = Array.from({ length: PAGE_SIZE }, (_, i) => `proposal-skeleton-${i}`)
 
 export const ProposalsList = async ({ searchParams }: { searchParams: Promise<SearchParams> }) => {
   const params = await loadProposalSearchParams(searchParams)
@@ -85,3 +87,14 @@ export const ProposalsList = async ({ searchParams }: { searchParams: Promise<Se
     </div>
   )
 }
+
+// A full page of cards, so the footer stays out of view until the real list lands.
+export const ProposalsListSkeleton = () => (
+  <div className="flex w-full flex-col gap-8 p-10 md:p-12">
+    <div className="grid w-full gap-8 lg:grid-cols-2 lg:gap-10">
+      {skeletonCardIds.map((id) => (
+        <ProposalCardSkeleton key={id} />
+      ))}
+    </div>
+  </div>
+)

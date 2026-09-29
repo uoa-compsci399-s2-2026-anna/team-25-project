@@ -1,8 +1,8 @@
-import { Suspense } from "react"
+import { AnimatedSuspense } from "@repo/ui/components/ui"
 import { getCoursesTableDataCached, getMyCoursesSummary } from "../courses.queries"
-import { CoursesListClient } from "./CoursesListClient"
-import { CoursesPageHeader } from "./CoursesPageHeader"
-import { CoursesSummaryPanel } from "./CoursesSummaryPanel"
+import { CoursesListClient, CoursesListClientSkeleton } from "./CoursesListClient"
+import { CoursesPageHeader, CoursesPageHeaderSkeleton } from "./CoursesPageHeader"
+import { CoursesSummaryPanel, CoursesSummaryPanelSkeleton } from "./CoursesSummaryPanel"
 import type { CourseTableRow } from "./CoursesTable"
 import { CoursesYourEntriesPanel, CoursesYourEntriesPanelSkeleton } from "./CoursesYourEntriesPanel"
 
@@ -18,9 +18,9 @@ export async function CoursesList() {
       <CoursesListClient rows={rows} />
       <div className="grid w-full gap-4 px-10 pt-6 pb-10 md:grid-cols-2 md:px-12">
         <CoursesSummaryPanel summary={summary} />
-        <Suspense fallback={<CoursesYourEntriesPanelSkeleton />}>
+        <AnimatedSuspense fallback={<CoursesYourEntriesPanelSkeleton />}>
           <YourEntries rows={rows} />
-        </Suspense>
+        </AnimatedSuspense>
       </div>
     </>
   )
@@ -29,4 +29,17 @@ export async function CoursesList() {
 async function YourEntries({ rows }: { rows: CourseTableRow[] }) {
   const myCourses = await getMyCoursesSummary(rows)
   return <CoursesYourEntriesPanel myCourses={myCourses} />
+}
+
+export function CoursesListSkeleton() {
+  return (
+    <>
+      <CoursesPageHeaderSkeleton />
+      <CoursesListClientSkeleton />
+      <div className="grid w-full gap-4 px-10 pt-6 pb-10 md:grid-cols-2 md:px-12">
+        <CoursesSummaryPanelSkeleton />
+        <CoursesYourEntriesPanelSkeleton />
+      </div>
+    </>
+  )
 }

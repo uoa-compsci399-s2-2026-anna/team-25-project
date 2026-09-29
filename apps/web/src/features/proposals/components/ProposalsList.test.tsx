@@ -3,7 +3,7 @@ import type { Proposal } from "@repo/shared/payload-types"
 import { cleanup, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { loadProposalsPage } from "../proposals.queries"
-import { ProposalsList } from "./ProposalsList"
+import { ProposalsList, ProposalsListSkeleton } from "./ProposalsList"
 
 vi.mock("../proposals.queries", () => ({ loadProposalsPage: vi.fn() }))
 
@@ -148,5 +148,16 @@ describe("ProposalsList", () => {
     expect(screen.getByText("Unknown author")).toBeInTheDocument()
     expect(screen.getByText("Hemi Rangi")).toBeInTheDocument()
     expect(screen.getAllByText("Assessment")).toHaveLength(2)
+  })
+})
+
+describe("ProposalsListSkeleton", () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it("renders a full page of placeholder cards", () => {
+    const { container } = render(<ProposalsListSkeleton />)
+    expect(container.querySelectorAll('[data-slot="proposal-card-skeleton"]')).toHaveLength(10)
   })
 })

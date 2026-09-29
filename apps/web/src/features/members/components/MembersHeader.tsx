@@ -1,4 +1,4 @@
-import { Heading } from "@repo/ui/components/ui"
+import { Heading, Skeleton } from "@repo/ui/components/ui"
 import type { SearchParams } from "nuqs/server"
 import { getInstitutionOptionsCached } from "@/features/institutions/institutions.queries"
 import { getMemberCounts, MEMBERS_PAGE_SIZE } from "../members.queries"
@@ -31,3 +31,17 @@ export const MembersHeader = async ({ searchParams }: { searchParams: Promise<Se
     </div>
   )
 }
+
+// The heading is static, so only the counts wait.
+export const MembersHeaderSkeleton = () => (
+  <div className="flex flex-col gap-4 px-10 pt-12 pb-8 md:px-12">
+    <Heading level="h1">Members</Heading>
+    <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-8">
+      <div className="flex w-full max-w-2xl flex-col gap-2">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-2/3" />
+      </div>
+      <Skeleton className="h-3 w-32 shrink-0" />
+    </div>
+  </div>
+)

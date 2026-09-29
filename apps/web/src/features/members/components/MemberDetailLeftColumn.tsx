@@ -1,4 +1,4 @@
-import { Suspense } from "react"
+import { AnimatedSuspense } from "@repo/ui/components/ui"
 import type { MembersRouteParams } from "../members.params"
 import { MemberBio } from "./MemberDetailBio"
 import { MemberProposals, MemberProposalsSkeleton } from "./MemberDetailProposals"
@@ -6,12 +6,12 @@ import { MemberPublications } from "./MemberDetailPublications"
 
 export const MemberDetailLeftColumn = ({ params }: { params: MembersRouteParams }) => (
   <div className="flex min-w-0 flex-col gap-8">
-    <Suspense>
+    <AnimatedSuspense>
       <MemberBio params={params} />
-    </Suspense>
-    <Suspense fallback={<MemberProposalsSkeleton />}>
+    </AnimatedSuspense>
+    <AnimatedSuspense fallback={<MemberProposalsSkeleton />}>
       <MemberProposals params={params} />
-    </Suspense>
+    </AnimatedSuspense>
     <MemberPublications />
   </div>
 )

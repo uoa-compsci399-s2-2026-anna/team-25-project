@@ -10,7 +10,10 @@ import {
   serializeMemberSearchParams,
   toMemberFilters,
 } from "../members.search-params"
-import { MemberCard } from "./MemberCard"
+import { MemberCard, MemberCardSkeleton } from "./MemberCard"
+
+// Stable keys for the placeholder cards, which have no data of their own.
+const skeletonCardIds = Array.from({ length: MEMBERS_PAGE_SIZE }, (_, i) => `member-skeleton-${i}`)
 
 export const MembersList = async ({ searchParams }: { searchParams: Promise<SearchParams> }) => {
   const params = await loadMemberSearchParams(searchParams)
@@ -80,3 +83,14 @@ export const MembersList = async ({ searchParams }: { searchParams: Promise<Sear
     </div>
   )
 }
+
+// A full page of cards, so the footer stays out of view until the real list lands.
+export const MembersListSkeleton = () => (
+  <div className="flex w-full flex-col gap-8 p-10 md:p-12">
+    <div className="grid w-full gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {skeletonCardIds.map((id) => (
+        <MemberCardSkeleton key={id} />
+      ))}
+    </div>
+  </div>
+)

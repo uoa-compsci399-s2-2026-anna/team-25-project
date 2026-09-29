@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import { getInstitutionOptionsCached } from "@/features/institutions/institutions.queries"
 import { loadProposalStatusCounts } from "../proposals.queries"
-import { ProposalsFilterServer } from "./ProposalsFilterServer"
+import { ProposalsFilterBarSkeleton, ProposalsFilterServer } from "./ProposalsFilterServer"
 
 vi.mock("@/features/institutions/institutions.queries", () => ({
   getInstitutionOptionsCached: vi.fn(),
@@ -37,5 +37,14 @@ describe("ProposalsFilterServer", () => {
     })
     expect(getInstitutionOptionsCached).toHaveBeenCalledOnce()
     expect(screen.getByText(/University of Auckland/)).toBeInTheDocument()
+  })
+})
+
+describe("ProposalsFilterBarSkeleton", () => {
+  it("renders a filter bar placeholder with status tabs and the bar's two filters", () => {
+    const { container } = render(<ProposalsFilterBarSkeleton />)
+
+    expect(container.querySelector('[data-slot="filter-bar-skeleton-status"]')).toBeInTheDocument()
+    expect(container.querySelectorAll('[data-slot="filter-bar-skeleton-filter"]')).toHaveLength(2)
   })
 })
