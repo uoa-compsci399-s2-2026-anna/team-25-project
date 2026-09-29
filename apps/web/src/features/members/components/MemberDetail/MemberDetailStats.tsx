@@ -2,9 +2,12 @@ import { Badge, Card, CardContent, CardHeader, Skeleton } from "@repo/ui/compone
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { formatDate } from "@/features/courses/courses.format"
+import { getCurrentUser } from "@/lib/payload/getCurrentUser"
+import { Slugs } from "@/lib/payload/slugs"
 import { Routes } from "@/lib/routes"
-import { type MembersRouteParams, parseMemberId } from "../members.params"
-import { getMemberCoursesCached, getMemberDetailsCached } from "../members.queries"
+import { type MembersRouteParams, parseMemberId } from "../../members.params"
+import { getMemberCoursesCached, getMemberDetailsCached } from "../../members.queries"
+import { MemberResearchInterestEditor } from "../MemberEditor/ResearchInterestEditor"
 
 const StatCard = ({ label, children }: { label: string; children: ReactNode }) => (
   <Card>
@@ -17,13 +20,15 @@ const StatCard = ({ label, children }: { label: string; children: ReactNode }) =
 
 export const MemberStats = async ({ params }: { params: MembersRouteParams }) => {
   const memberId = await parseMemberId(params)
-  const [member, courses] = await Promise.all([
+  const [member, courses, { collection, user }] = await Promise.all([
     getMemberDetailsCached(memberId),
     getMemberCoursesCached(memberId),
+    getCurrentUser(),
   ])
   // The header 404s a missing member, so there's nothing to show here.
   if (!member) return null
 
+  const isOwnProfile = collection === Slugs.Collections.MEMBERS && user.id === member.id
   const memberSince = formatDate(member.registrationCompletedAt ?? member.createdAt)
 
   return (
@@ -55,7 +60,9 @@ export const MemberStats = async ({ params }: { params: MembersRouteParams }) =>
         )}
       </StatCard>
       <StatCard label="Research interests">
-        {member.researchInterests?.length ? (
+        {isOwnProfile ? (
+          <MemberResearchInterestEditor interests={member.researchInterests} />
+        ) : member.researchInterests?.length ? (
           <ul className="flex flex-wrap gap-1">
             {member.researchInterests.map((interest) => (
               <li key={interest}>
@@ -64,7 +71,7 @@ export const MemberStats = async ({ params }: { params: MembersRouteParams }) =>
             ))}
           </ul>
         ) : (
-          <span className="text-muted-foreground">Not added yet</span>
+          <span className="text-muted-foreground">No interests yet.</span>
         )}
       </StatCard>
       {memberSince && (

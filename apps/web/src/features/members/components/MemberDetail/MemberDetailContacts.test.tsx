@@ -1,10 +1,10 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
-import { getMemberDetailsCached } from "../members.queries"
+import { getMemberDetailsCached } from "../../members.queries"
 import { MemberContacts, MemberContactsSkeleton } from "./MemberDetailContacts"
 
-vi.mock("../members.queries", () => ({ getMemberDetailsCached: vi.fn() }))
+vi.mock("../../members.queries", () => ({ getMemberDetailsCached: vi.fn() }))
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
 
 const member = (showEmailPublicly: boolean, links: { label: string; url: string }[] = []) => ({

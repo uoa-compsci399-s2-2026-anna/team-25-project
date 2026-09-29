@@ -18,7 +18,7 @@ function AvatarUpload({
   fallback: React.ReactNode
   image?: { alt: string; src: string }
   onFileSelect?: (file: File) => void
-  size?: "default" | "sm" | "lg" | "xl"
+  size?: "default" | "sm" | "lg" | "xl" | "xxl"
 }) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [localPreview, setLocalPreview] = React.useState<string | undefined>(undefined)

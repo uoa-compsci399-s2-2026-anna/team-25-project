@@ -1,8 +1,8 @@
 import { Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
-import { type MembersRouteParams, parseMemberId } from "../members.params"
-import { getMemberDetailsCached } from "../members.queries"
+import { type MembersRouteParams, parseMemberId } from "../../members.params"
+import { getMemberDetailsCached } from "../../members.queries"
 
 export const MemberContacts = async ({ params }: { params: MembersRouteParams }) => {
   const memberId = await parseMemberId(params)

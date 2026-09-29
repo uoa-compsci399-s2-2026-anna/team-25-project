@@ -1,19 +1,28 @@
 import { cleanup, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, it, vi } from "vitest"
-import { getMemberCoursesCached, getMemberDetailsCached } from "../members.queries"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { getCurrentUser } from "@/lib/payload/getCurrentUser"
+import { getMemberCoursesCached, getMemberDetailsCached } from "../../members.queries"
 import { MemberStats, MemberStatsSkeleton } from "./MemberDetailStats"
 
-vi.mock("../members.queries", () => ({
+vi.mock("../../members.queries", () => ({
   getMemberCoursesCached: vi.fn(),
   getMemberDetailsCached: vi.fn(),
 }))
+vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
+vi.mock("../../actions/updateMemberResearchInterests", () => ({
+  updateMemberResearchInterests: vi.fn(),
+}))
 
-const member = { createdAt: "2026-03-01T00:00:00.000Z" }
+const member = { id: 7, createdAt: "2026-03-01T00:00:00.000Z" }
 
 const renderStats = async () =>
   render(await MemberStats({ params: Promise.resolve({ memberId: "7" }) }))
 
 describe("MemberStats", () => {
+  beforeEach(() => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: null, user: null })
+  })
+
   afterEach(() => {
     cleanup()
   })
@@ -58,7 +67,7 @@ describe("MemberStats", () => {
     await renderStats()
     expect(screen.getByText("Code review")).toBeInTheDocument()
     expect(screen.getByText("Generative AI")).toBeInTheDocument()
-    expect(screen.queryByText("Not added yet")).not.toBeInTheDocument()
+    expect(screen.queryByText("No interests yet.")).not.toBeInTheDocument()
   })
 
   it("shows the research interests filler when there are none", async () => {
@@ -66,7 +75,38 @@ describe("MemberStats", () => {
     vi.mocked(getMemberCoursesCached).mockResolvedValue([])
 
     await renderStats()
-    expect(screen.getByText("Not added yet")).toBeInTheDocument()
+    expect(screen.getByText("No interests yet.")).toBeInTheDocument()
+  })
+
+  it("lets the member edit their own research interests", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue({
+      ...member,
+      researchInterests: ["Code review"],
+    } as never)
+    vi.mocked(getMemberCoursesCached).mockResolvedValue([])
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      user: { id: 7 },
+    } as never)
+
+    await renderStats()
+    expect(screen.getByText("Code review")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument()
+  })
+
+  it("hides the edit control on someone else's profile", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue({
+      ...member,
+      researchInterests: ["Code review"],
+    } as never)
+    vi.mocked(getMemberCoursesCached).mockResolvedValue([])
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      user: { id: 8 },
+    } as never)
+
+    await renderStats()
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument()
   })
 
   it("dates membership from registration completion when there is one", async () => {

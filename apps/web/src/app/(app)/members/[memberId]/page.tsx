@@ -3,9 +3,9 @@ import { PageContainer } from "@/features/layout/components"
 import {
   MemberHeader,
   MemberHeaderSkeleton,
-} from "@/features/members/components/MemberDetailHeader"
-import { MemberDetailLeftColumn } from "@/features/members/components/MemberDetailLeftColumn"
-import { MemberDetailRightColumn } from "@/features/members/components/MemberDetailRightColumn"
+} from "@/features/members/components/MemberDetail/MemberDetailHeader"
+import { MemberDetailLeftColumn } from "@/features/members/components/MemberDetail/MemberDetailLeftColumn"
+import { MemberDetailRightColumn } from "@/features/members/components/MemberDetail/MemberDetailRightColumn"
 import type { MembersRouteParams } from "@/features/members/members.params"
 
 export default function Page({ params }: { params: MembersRouteParams }) {

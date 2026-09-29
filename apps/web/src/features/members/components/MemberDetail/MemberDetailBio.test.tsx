@@ -1,12 +1,12 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
-import { getMemberDetailsCached } from "../members.queries"
+import { getMemberDetailsCached } from "../../members.queries"
 import { MemberBio, MemberBioSkeleton } from "./MemberDetailBio"
 
-vi.mock("../members.queries", () => ({ getMemberDetailsCached: vi.fn() }))
+vi.mock("../../members.queries", () => ({ getMemberDetailsCached: vi.fn() }))
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
-vi.mock("../actions/updateMemberBio", () => ({ updateMemberBio: vi.fn() }))
+vi.mock("../../actions/updateMemberBio", () => ({ updateMemberBio: vi.fn() }))
 
 const renderBio = async () =>
   render(await MemberBio({ params: Promise.resolve({ memberId: "7" }) }))

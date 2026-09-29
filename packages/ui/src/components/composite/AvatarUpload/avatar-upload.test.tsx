@@ -41,4 +41,9 @@ describe("AvatarUpload", () => {
     fireEvent.change(input, { target: { files: [] } })
     expect(onFileSelect).not.toHaveBeenCalled()
   })
+
+  it("forwards the xxl size to the avatar", () => {
+    const { container } = render(<AvatarUpload fallback="JD" size="xxl" />)
+    expect(container.querySelector('[data-size="xxl"]')).toBeInTheDocument()
+  })
 })

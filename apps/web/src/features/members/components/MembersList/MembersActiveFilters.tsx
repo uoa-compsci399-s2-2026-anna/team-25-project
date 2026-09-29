@@ -7,7 +7,7 @@ import { XIcon } from "lucide-react"
 import { useQueryStates } from "nuqs"
 import type * as React from "react"
 import type { InstitutionOption } from "@/features/institutions/institutions.queries"
-import { memberSearchParams } from "../members.search-params"
+import { memberSearchParams } from "../../members.search-params"
 
 type MembersActiveFiltersProps = React.ComponentProps<"div"> & {
   institutions: InstitutionOption[]

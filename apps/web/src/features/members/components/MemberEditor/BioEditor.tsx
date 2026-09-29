@@ -3,7 +3,7 @@
 import type { Member } from "@repo/shared/payload-types"
 import { Button, TextArea } from "@repo/ui/components/ui"
 import { useEffect, useRef, useState, useTransition } from "react"
-import { updateMemberBio } from "../actions/updateMemberBio"
+import { updateMemberBio } from "../../actions/updateMemberBio"
 
 export const MemberBioEditor = ({ bio }: { bio: Member["bio"] }) => {
   const [isEditing, setIsEditing] = useState(false)
