@@ -1,6 +1,6 @@
 import { cleanup, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { CoursesListClient } from "./CoursesListClient"
+import { CoursesListClient, CoursesListClientSkeleton } from "./CoursesListClient"
 import type { CourseTableRow } from "./CoursesTable"
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }))
@@ -38,5 +38,25 @@ describe("CoursesListClient", () => {
     render(<CoursesListClient rows={[]} />)
 
     expect(screen.getByText("No courses match these filters.")).toBeInTheDocument()
+  })
+})
+
+describe("CoursesListClientSkeleton", () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it("renders a filter bar placeholder with the toolbar's three filters and status tabs", () => {
+    const { container } = render(<CoursesListClientSkeleton />)
+
+    expect(container.querySelector('[data-slot="filter-bar-skeleton-status"]')).toBeInTheDocument()
+    expect(container.querySelectorAll('[data-slot="filter-bar-skeleton-filter"]')).toHaveLength(3)
+  })
+
+  it("renders the table's real column headers above placeholder rows", () => {
+    render(<CoursesListClientSkeleton />)
+
+    expect(screen.getByRole("columnheader", { name: "Course" })).toBeInTheDocument()
+    expect(within(screen.getAllByRole("rowgroup")[1]).getAllByRole("row").length).toBeGreaterThan(0)
   })
 })

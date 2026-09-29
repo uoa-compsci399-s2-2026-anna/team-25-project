@@ -5,6 +5,7 @@ import Page from "./page"
 
 vi.mock("@/features/courses/components/CoursesList", () => ({
   CoursesList: vi.fn(() => <div>Courses list</div>),
+  CoursesListSkeleton: () => null,
 }))
 
 describe("courses page", () => {

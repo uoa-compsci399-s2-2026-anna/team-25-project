@@ -182,8 +182,17 @@ export interface Member {
   firstName: string;
   lastName: string;
   institution: number | Institution;
-  position?: string | null;
+  title?: ('dr' | 'prof' | 'assocProf' | 'mr' | 'ms' | 'mrs' | 'mx') | null;
+  position: string;
   bio?: string | null;
+  researchInterests?: string[] | null;
+  links?:
+    | {
+        label: string;
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
   avatar?: (number | null) | Media;
   showEmailPublicly?: boolean | null;
   lastReviewedAt?: string | null;
@@ -222,6 +231,11 @@ export interface Institution {
     domain: string;
     id?: string | null;
   }[];
+  /**
+   * PNG, JPG, WebP, or GIF. Prefer a transparent background - it'll be shown at a small, fixed height.
+   */
+  logo?: (number | null) | Media;
+  showLogo?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -551,8 +565,17 @@ export interface MembersSelect<T extends boolean = true> {
   firstName?: T;
   lastName?: T;
   institution?: T;
+  title?: T;
   position?: T;
   bio?: T;
+  researchInterests?: T;
+  links?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+        id?: T;
+      };
   avatar?: T;
   showEmailPublicly?: T;
   lastReviewedAt?: T;
@@ -587,6 +610,8 @@ export interface InstitutionsSelect<T extends boolean = true> {
         domain?: T;
         id?: T;
       };
+  logo?: T;
+  showLogo?: T;
   updatedAt?: T;
   createdAt?: T;
 }

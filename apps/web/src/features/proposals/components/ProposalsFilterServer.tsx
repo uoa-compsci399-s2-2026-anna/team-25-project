@@ -1,7 +1,12 @@
+import { FilterBarSkeleton } from "@repo/ui/components/composite"
 import type { SearchParams } from "nuqs/server"
 import { getInstitutionOptionsCached } from "@/features/institutions/institutions.queries"
 import { loadProposalStatusCounts } from "../proposals.queries"
-import { loadProposalSearchParams, toProposalFilters } from "../proposals.search-params"
+import {
+  loadProposalSearchParams,
+  proposalStatusFilters,
+  toProposalFilters,
+} from "../proposals.search-params"
 import { ProposalsFilterBar } from "./ProposalsFilterBar"
 
 export const ProposalsFilterServer = async ({
@@ -20,3 +25,7 @@ export const ProposalsFilterServer = async ({
 
   return <ProposalsFilterBar counts={counts} institutions={institutions} />
 }
+
+export const ProposalsFilterBarSkeleton = () => (
+  <FilterBarSkeleton filterCount={2} statusCount={proposalStatusFilters.length} />
+)

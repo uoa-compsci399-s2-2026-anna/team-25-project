@@ -1,6 +1,5 @@
-import { Avatar, AvatarFallback, Heading, Skeleton } from "@repo/ui/components/ui"
+import { AnimatedSuspense, Avatar, AvatarFallback, Heading, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
-import { Suspense } from "react"
 import { Routes } from "@/lib/routes"
 import { NavAuthStatus } from "./NavAuthStatus"
 import { NavLinks } from "./NavLinks"
@@ -20,7 +19,7 @@ export const Navbar = () => {
       </Link>
 
       <nav aria-label="Main" className="flex items-center gap-5">
-        <Suspense
+        <AnimatedSuspense
           fallback={
             // One bar per guest link - the signed-in set is longer, but the
             // flex-1 sides keep the nav centered as it grows.
@@ -33,13 +32,13 @@ export const Navbar = () => {
           }
         >
           <NavLinks />
-        </Suspense>
+        </AnimatedSuspense>
       </nav>
 
       <div className="flex flex-1 justify-end">
-        <Suspense
+        <AnimatedSuspense
           fallback={
-            // Matches NavAuthStatus's signed-out layout exactly (same
+            // Matches NavGuestLinks's layout exactly (same
             // container, same gap-4) so nothing shifts vertically once the
             // real content streams in - both bars share the real Join CCCA
             // button's h-6 height for a uniform placeholder.
@@ -50,7 +49,7 @@ export const Navbar = () => {
           }
         >
           <NavAuthStatus />
-        </Suspense>
+        </AnimatedSuspense>
       </div>
     </header>
   )

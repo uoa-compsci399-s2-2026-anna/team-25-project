@@ -1,10 +1,13 @@
-import { Suspense } from "react"
-import { CoursesList } from "@/features/courses/components/CoursesList"
+import { AnimatedSuspense } from "@repo/ui/components/ui"
+import { CoursesList, CoursesListSkeleton } from "@/features/courses/components/CoursesList"
+import { PageContainer } from "@/features/layout/components"
 
 export default function Page() {
   return (
-    <Suspense fallback={<div>loading..</div>}>
-      <CoursesList />
-    </Suspense>
+    <PageContainer>
+      <AnimatedSuspense fallback={<CoursesListSkeleton />}>
+        <CoursesList />
+      </AnimatedSuspense>
+    </PageContainer>
   )
 }

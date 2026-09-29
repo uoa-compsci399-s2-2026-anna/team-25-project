@@ -23,6 +23,7 @@ describe("member cache revalidation", () => {
       const result = await hook({ doc, req: { context: {} } } as never)
 
       expect(revalidateTag).toHaveBeenCalledWith("proposals", "max")
+      expect(revalidateTag).toHaveBeenCalledWith("members", "max")
       expect(revalidateTag).toHaveBeenCalledWith("member:1", "max")
       expect(result).toBe(doc)
     },

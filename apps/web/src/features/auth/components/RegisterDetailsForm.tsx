@@ -1,6 +1,8 @@
 "use client"
 
+import { type MemberTitle, MemberTitleLabels } from "@repo/shared/enums/members"
 import { registerDetailsSchema } from "@repo/shared/schemas/register"
+import { toSelectOptions } from "@repo/shared/utils/select-options"
 import {
   Button,
   Checkbox,
@@ -9,17 +11,26 @@ import {
   FieldGroup,
   FieldLabel,
   Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@repo/ui/components/ui"
 import { useForm } from "@tanstack/react-form"
 import { Check } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useQueryState } from "nuqs"
 import { useState } from "react"
 import { Routes } from "@/lib/routes"
 import { registerMember } from "../actions/register"
 import { isRecognisedEmail } from "../helpers/recognisedEmail"
+import { parseAsRedirect, REDIRECT_PARAM, withRedirect } from "../redirect"
 import { type InstitutionOption, InstitutionSelect } from "./InstitutionSelect"
 import { PasswordField } from "./PasswordField"
+
+const titleOptions = toSelectOptions(MemberTitleLabels)
 
 const RequiredMark = () => (
   <span aria-hidden="true" className="text-destructive">
@@ -29,6 +40,7 @@ const RequiredMark = () => (
 
 export const RegisterDetailsForm = ({ institutions }: { institutions: InstitutionOption[] }) => {
   const router = useRouter()
+  const [redirect] = useQueryState(REDIRECT_PARAM, parseAsRedirect)
   const [formError, setFormError] = useState<string | undefined>(undefined)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
@@ -40,6 +52,8 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
       institution: "",
       lastName: "",
       password: "",
+      position: "",
+      title: null as MemberTitle | null,
     },
     onSubmit: async ({ value }) => {
       setFieldErrors({})
@@ -49,7 +63,7 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
         const result = await registerMember(value)
 
         if (result.ok) {
-          router.push(Routes.REGISTER.PROFILE)
+          router.push(withRedirect(Routes.REGISTER.PROFILE, redirect))
           return
         }
 
@@ -72,6 +86,38 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
       }}
     >
       <FieldGroup>
+        <form.Field name="title">
+          {(field) => (
+            <Field
+              className="sm:max-w-40"
+              data-invalid={field.state.meta.errors.length > 0 || undefined}
+            >
+              <FieldLabel htmlFor={field.name}>Title</FieldLabel>
+              <Select
+                name={field.name}
+                onValueChange={(value) => field.handleChange(value as MemberTitle | null)}
+                value={field.state.value}
+              >
+                <SelectTrigger className="h-10 w-full" id={field.name}>
+                  <SelectValue placeholder="None">
+                    {(value: MemberTitle | null) => (value ? MemberTitleLabels[value] : "None")}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent align="start" alignItemWithTrigger={false}>
+                  <SelectItem value={null}>None</SelectItem>
+                  {titleOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError errors={field.state.meta.errors} />
+              {fieldErrors.title && <FieldError>{fieldErrors.title}</FieldError>}
+            </Field>
+          )}
+        </form.Field>
+
         <div className="grid gap-6 sm:grid-cols-2">
           <form.Field name="firstName">
             {(field) => (
@@ -132,6 +178,28 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
               />
               <FieldError errors={field.state.meta.errors} />
               {fieldErrors.institution && <FieldError>{fieldErrors.institution}</FieldError>}
+            </Field>
+          )}
+        </form.Field>
+
+        <form.Field name="position">
+          {(field) => (
+            <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+              <FieldLabel htmlFor={field.name}>
+                Position <RequiredMark />
+              </FieldLabel>
+              <Input
+                autoComplete="organization-title"
+                className="h-10"
+                id={field.name}
+                name={field.name}
+                onBlur={field.handleBlur}
+                onChange={(event) => field.handleChange(event.target.value)}
+                placeholder="Senior Lecturer"
+                value={field.state.value}
+              />
+              <FieldError errors={field.state.meta.errors} />
+              {fieldErrors.position && <FieldError>{fieldErrors.position}</FieldError>}
             </Field>
           )}
         </form.Field>

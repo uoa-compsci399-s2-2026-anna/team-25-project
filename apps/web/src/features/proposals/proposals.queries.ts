@@ -58,7 +58,7 @@ export const getProposals = async (filters: ProposalFilters, pagination: Paginat
 const getProposalsCached = async (filters: ProposalFilters, pagination: Pagination) => {
   "use cache"
   cacheLife("max")
-  cacheTag(QueryKeys.PROPOSALS)
+  cacheTag(QueryKeys.PROPOSALS.ROOT)
   return getProposals(filters, pagination)
 }
 
@@ -74,7 +74,8 @@ export const getProposalById = async (id: number) => {
 export const getProposalByIdCached = async (id: number) => {
   "use cache"
   cacheLife("max")
-  cacheTag(QueryKeys.PROPOSALS)
+  // The detail page shows each author's profile and institution, so it goes stale with them too.
+  cacheTag(QueryKeys.PROPOSALS.ID(id), QueryKeys.MEMBERS.ROOT, QueryKeys.INSTITUTIONS)
   return getProposalById(id)
 }
 
@@ -101,7 +102,7 @@ export const getProposalStatusCounts = async (
 const getProposalStatusCountsCached = async (filters: ProposalStatusCountFilters) => {
   "use cache"
   cacheLife("max")
-  cacheTag(QueryKeys.PROPOSALS)
+  cacheTag(QueryKeys.PROPOSALS.ROOT)
   return getProposalStatusCounts(filters)
 }
 

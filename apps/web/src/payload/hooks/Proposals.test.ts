@@ -43,6 +43,7 @@ describe("proposal cache revalidation", () => {
       } as never)
 
       expect(revalidateTag).toHaveBeenCalledWith("proposals", "max")
+      expect(revalidateTag).toHaveBeenCalledWith("proposals:1", "max")
       expect(result).toBe(doc)
     },
   )

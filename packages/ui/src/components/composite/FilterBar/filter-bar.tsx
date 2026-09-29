@@ -9,6 +9,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Skeleton,
   Tabs,
   TabsList,
   TabsTrigger,
@@ -152,11 +153,54 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
   )
 }
 
+type FilterBarSkeletonProps = React.ComponentProps<"div"> & {
+  /** How many status tabs the real bar shows. Omit or pass 0 when it has none. */
+  statusCount?: number
+  /** How many select filters the real bar shows, not counting sort. */
+  filterCount?: number
+}
+
+/** Holds the same space as `FilterBar` while its options load, so nothing shifts. */
+function FilterBarSkeleton({
+  className,
+  filterCount = 0,
+  statusCount = 0,
+  ...props
+}: FilterBarSkeletonProps) {
+  return (
+    <div
+      className={cn("flex flex-wrap items-center gap-3", className)}
+      data-slot="filter-bar-skeleton"
+      {...props}
+    >
+      {statusCount > 0 && (
+        <Skeleton
+          className="h-10 rounded-full"
+          data-slot="filter-bar-skeleton-status"
+          // About one tab label ("Active - 12") per status.
+          style={{ width: `${statusCount * 6}rem` }}
+        />
+      )}
+      <Skeleton className="h-10 w-full rounded-full sm:w-80" />
+      {Array.from({ length: filterCount }, (_, index) => `filter-${index}`).map((id) => (
+        <Skeleton
+          className="h-10 w-32 rounded-full"
+          data-slot="filter-bar-skeleton-filter"
+          key={id}
+        />
+      ))}
+      <Skeleton className="h-10 w-36 rounded-full sm:ml-auto" />
+    </div>
+  )
+}
+
 export {
   FilterBar,
   type FilterBarFilter,
   type FilterBarOption,
   type FilterBarProps,
+  FilterBarSkeleton,
+  type FilterBarSkeletonProps,
   type FilterBarStatusOption,
   type FilterBarValue,
 }

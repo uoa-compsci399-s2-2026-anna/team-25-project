@@ -1,6 +1,5 @@
-import { Heading } from "@repo/ui/components/ui"
+import { AnimatedSuspense, Heading } from "@repo/ui/components/ui"
 import { notFound } from "next/navigation"
-import { Suspense } from "react"
 import { RichTextContent } from "@/components/RichTextContent"
 import { AuthorByline } from "@/features/proposals/components/AuthorByline/AuthorByline"
 import { ProposalMeta } from "@/features/proposals/components/ProposalMeta/ProposalMeta"
@@ -51,9 +50,9 @@ export const ProposalPage = async ({ params }: { params: Promise<{ idSlug: strin
       </div>
 
       <div className="flex flex-col gap-6">
-        <Suspense fallback={null}>
+        <AnimatedSuspense fallback={null}>
           <StatusAuthorCardServer id={id} />
-        </Suspense>
+        </AnimatedSuspense>
         <TagsCard tags={proposal.tags} />
       </div>
     </>

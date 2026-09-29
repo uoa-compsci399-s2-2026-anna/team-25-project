@@ -1,15 +1,15 @@
-import { Suspense } from "react"
+import { AnimatedSuspense } from "@repo/ui/components/ui"
 import type { MembersRouteParams } from "../members.params"
 import { MemberContacts, MemberContactsSkeleton } from "./MemberDetailContacts"
 import { MemberStats, MemberStatsSkeleton } from "./MemberDetailStats"
 
 export const MemberDetailRightColumn = ({ params }: { params: MembersRouteParams }) => (
   <aside className="flex flex-col gap-4">
-    <Suspense fallback={<MemberContactsSkeleton />}>
+    <AnimatedSuspense fallback={<MemberContactsSkeleton />}>
       <MemberContacts params={params} />
-    </Suspense>
-    <Suspense fallback={<MemberStatsSkeleton />}>
+    </AnimatedSuspense>
+    <AnimatedSuspense fallback={<MemberStatsSkeleton />}>
       <MemberStats params={params} />
-    </Suspense>
+    </AnimatedSuspense>
   </aside>
 )

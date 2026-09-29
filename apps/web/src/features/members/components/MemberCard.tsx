@@ -7,6 +7,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Skeleton,
 } from "@repo/ui/components/ui"
 import Link from "next/link"
 import type { AppRoute } from "@/lib/routes"
@@ -66,3 +67,16 @@ export const MemberCard = ({
     </Link>
   )
 }
+
+export const MemberCardSkeleton = () => (
+  <Card className="h-full">
+    <CardHeader className="gap-4">
+      <Skeleton className="size-10 rounded-full" />
+      <div className="flex flex-col gap-1.5">
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-3 w-28" />
+        <Skeleton className="h-3 w-36" />
+      </div>
+    </CardHeader>
+  </Card>
+)

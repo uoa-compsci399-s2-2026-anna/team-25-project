@@ -5,10 +5,12 @@ import { ProposalsList } from "@/features/proposals/components/ProposalsList"
 import Page from "./page"
 
 vi.mock("@/features/proposals/components/ProposalsFilterServer", () => ({
+  ProposalsFilterBarSkeleton: () => null,
   ProposalsFilterServer: vi.fn(() => <div>Proposal filters</div>),
 }))
 vi.mock("@/features/proposals/components/ProposalsList", () => ({
   ProposalsList: vi.fn(() => <div>Proposal results</div>),
+  ProposalsListSkeleton: () => null,
 }))
 
 describe("proposals page", () => {

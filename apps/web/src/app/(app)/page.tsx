@@ -1,17 +1,24 @@
 import {
+  AboutSection,
+  BenefitsSection,
   HeroSection,
-  MembersSection,
-  ProposalsSection,
+  JoinCommunityBand,
   TickerPlaceholder,
 } from "@/features/home/components"
+import { PageContainer } from "@/features/layout/components"
 
 export default function Page() {
   return (
     <>
-      <HeroSection />
+      <PageContainer>
+        <HeroSection />
+      </PageContainer>
       <TickerPlaceholder />
-      <MembersSection />
-      <ProposalsSection />
+      <PageContainer>
+        <AboutSection />
+        <BenefitsSection />
+        <JoinCommunityBand />
+      </PageContainer>
     </>
   )
 }
