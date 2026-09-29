@@ -7,17 +7,18 @@ import { Slugs } from "@/lib/payload/slugs"
 
 const MAX_SLUG_LENGTH = 80
 
+const revalidateProposal = (proposalId: number) => {
+  revalidateTag(QueryKeys.PROPOSALS.ROOT, "max")
+  revalidateTag(QueryKeys.PROPOSALS.ID(proposalId), "max")
+}
+
 export const revalidateProposals: CollectionAfterChangeHook<Proposal> = ({ doc, req }) => {
-  if (!req.context.disableRevalidate) {
-    revalidateTag(QueryKeys.PROPOSALS, "max")
-  }
+  if (!req.context.disableRevalidate) revalidateProposal(doc.id)
   return doc
 }
 
 export const revalidateDeletedProposal: CollectionAfterDeleteHook<Proposal> = ({ doc, req }) => {
-  if (!req.context.disableRevalidate) {
-    revalidateTag(QueryKeys.PROPOSALS, "max")
-  }
+  if (!req.context.disableRevalidate) revalidateProposal(doc.id)
   return doc
 }
 
