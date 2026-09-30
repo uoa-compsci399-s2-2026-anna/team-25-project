@@ -10,6 +10,10 @@ describe("Routes", () => {
     expect(Routes.MEMBERS.MEMBER("456")).toBe("/members/456")
   })
 
+  it("builds a resource route from an id", () => {
+    expect(Routes.RESOURCES.RESOURCE("abc")).toBe("/resources/abc")
+  })
+
   it.each([undefined, null, ""])(
     "builds a proposal route from an id when the slug is %j",
     (slug) => {

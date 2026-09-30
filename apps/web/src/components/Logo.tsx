@@ -11,7 +11,7 @@ const colours = {
   tassel: "#E0D3B4",
 }
 
-export const HeroGraphic = ({ className }: { className?: string }) => (
+export const Logo = ({ className }: { className?: string }) => (
   <svg
     aria-hidden
     className={cn("h-auto w-full", className)}

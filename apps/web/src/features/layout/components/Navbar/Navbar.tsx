@@ -1,5 +1,6 @@
-import { AnimatedSuspense, Avatar, AvatarFallback, Heading, Skeleton } from "@repo/ui/components/ui"
+import { AnimatedSuspense, Heading, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
+import { Logo } from "@/components/Logo"
 import { Routes } from "@/lib/routes"
 import { NavAuthStatus } from "./NavAuthStatus"
 import { NavLinks } from "./NavLinks"
@@ -12,9 +13,7 @@ export const Navbar = () => {
           signed-out and the skeleton are all different widths, and none of
           them should be able to nudge the links left or right. */}
       <Link className="flex flex-1 items-center gap-2" href={Routes.HOME}>
-        <Avatar>
-          <AvatarFallback />
-        </Avatar>
+        <Logo className="w-10 shrink-0" />
         <Heading level="h4">CCCA</Heading>
       </Link>
 
