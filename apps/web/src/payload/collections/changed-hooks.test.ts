@@ -6,9 +6,15 @@ import {
   revalidateMemberProposals,
 } from "../hooks/Members"
 import { revalidateDeletedProposal, revalidateProposals } from "../hooks/Proposals"
+import {
+  requireLinkedAuthor,
+  revalidateDeletedPublication,
+  revalidatePublications,
+} from "../hooks/Publications"
 import { Institutions } from "./Institutions"
 import { Members } from "./Members"
 import { Proposals } from "./Proposals"
+import { Publications } from "./Publications"
 
 describe("changed collection hooks", () => {
   it("registers institution cache invalidation", () => {
@@ -33,6 +39,14 @@ describe("changed collection hooks", () => {
     expect(Proposals.hooks).toEqual({
       afterChange: [revalidateProposals],
       afterDelete: [revalidateDeletedProposal],
+    })
+  })
+
+  it("registers publication validation and cache invalidation", () => {
+    expect(Publications.hooks).toEqual({
+      afterChange: [revalidatePublications],
+      afterDelete: [revalidateDeletedPublication],
+      beforeChange: [requireLinkedAuthor],
     })
   })
 })

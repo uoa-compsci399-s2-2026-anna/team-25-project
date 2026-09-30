@@ -4,7 +4,11 @@ import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { isSignedIn } from "../access"
 import { isAdminOrLinkedAuthor } from "../access/Publications"
-import { requireLinkedAuthor } from "../hooks/Publications"
+import {
+  requireLinkedAuthor,
+  revalidateDeletedPublication,
+  revalidatePublications,
+} from "../hooks/Publications"
 
 const DOI_PATTERN = /^10\.\d{4,9}\/\S+$/
 
@@ -15,6 +19,8 @@ export const Publications: CollectionConfig = {
     defaultColumns: ["title", "type", "year", "doi"],
   },
   hooks: {
+    afterChange: [revalidatePublications],
+    afterDelete: [revalidateDeletedPublication],
     beforeChange: [requireLinkedAuthor],
   },
   access: {

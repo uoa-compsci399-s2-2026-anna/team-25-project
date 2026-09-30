@@ -1,8 +1,15 @@
 import type { Publication } from "@repo/shared/payload-types"
+import { revalidateTag } from "next/cache"
 import { type PayloadRequest, ValidationError } from "payload"
-import { describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { Slugs } from "@/lib/payload/slugs"
-import { requireLinkedAuthor } from "./Publications"
+import {
+  requireLinkedAuthor,
+  revalidateDeletedPublication,
+  revalidatePublications,
+} from "./Publications"
+
+vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }))
 
 type Authors = Publication["authors"]
 
@@ -47,4 +54,53 @@ describe("requireLinkedAuthor", () => {
       data: { errors: [{ path: "authors" }] },
     })
   })
+})
+
+describe("publication cache revalidation", () => {
+  beforeEach(() => {
+    vi.mocked(revalidateTag).mockReset()
+  })
+
+  const doc = { id: 1, authors: [{ name: "A", member: 42 }, { name: "B" }] }
+
+  it.each([revalidatePublications, revalidateDeletedPublication])(
+    "marks publication queries and linked author profiles stale after a write",
+    async (hook) => {
+      const result = await hook({ doc, req: { context: {} } } as never)
+
+      expect(revalidateTag).toHaveBeenCalledWith("publications", "max")
+      expect(revalidateTag).toHaveBeenCalledWith("publications:1", "max")
+      expect(revalidateTag).toHaveBeenCalledWith("member:42", "max")
+      expect(revalidateTag).toHaveBeenCalledTimes(3)
+      expect(result).toBe(doc)
+    },
+  )
+
+  it("marks an unlinked author's profile stale, once per member", async () => {
+    await revalidatePublications({
+      doc,
+      previousDoc: {
+        id: 1,
+        authors: [
+          { name: "A", member: { id: 42 } },
+          { name: "C", member: 7 },
+        ],
+      },
+      req: { context: {} },
+    } as never)
+
+    expect(revalidateTag).toHaveBeenCalledWith("member:7", "max")
+    expect(vi.mocked(revalidateTag).mock.calls.filter(([tag]) => tag === "member:42")).toHaveLength(
+      1,
+    )
+  })
+
+  it.each([revalidatePublications, revalidateDeletedPublication])(
+    "can skip revalidation through request context",
+    async (hook) => {
+      await hook({ doc, req: { context: { disableRevalidate: true } } } as never)
+
+      expect(revalidateTag).not.toHaveBeenCalled()
+    },
+  )
 })
