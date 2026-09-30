@@ -38,6 +38,7 @@ describe("requireLinkedAuthor", () => {
   it.each([
     ["a create without them", [{ name: "A", member: 7 }], undefined],
     ["an update that removes them", [{ name: "A" }], [{ name: "Me", member: 42 }]],
+    ["a save with no authors at all", undefined, undefined],
   ])("rejects %s", async (_, authors, originalAuthors) => {
     const result = run(memberReq, authors, originalAuthors)
     await expect(result).rejects.toBeInstanceOf(ValidationError)
