@@ -2,15 +2,15 @@ import Link from "next/link"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Routes } from "@/lib/routes"
 
-// Courses and Proposals are in proxy.ts's memberRoutes, so a guest following
-// either would only be redirected home.
+// Courses, Proposals and Resources are in proxy.ts's memberRoutes, so a guest
+// following any of them would only be redirected to login.
 const links = [
-  { name: "About", href: Routes.ABOUT, membersOnly: false },
+  { name: "Home", href: Routes.HOME, membersOnly: false },
   { name: "Members", href: Routes.MEMBERS.ROOT, membersOnly: false },
   { name: "Courses", href: Routes.COURSES.ROOT, membersOnly: true },
   { name: "Proposals", href: Routes.PROPOSALS.ROOT, membersOnly: true },
-  { name: "Resources", href: Routes.RESOURCES.ROOT, membersOnly: false },
-  { name: "News", href: Routes.NEWS, membersOnly: false },
+  { name: "Publications", href: Routes.ABOUT, membersOnly: false },
+  { name: "Resources", href: Routes.RESOURCES.ROOT, membersOnly: true },
 ]
 
 // Isolated from Navbar for the same reason as NavAuthStatus - only this piece

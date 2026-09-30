@@ -21,15 +21,15 @@ const signInAs = (collection: "admin" | "members") => {
 const renderNavLinks = async () => render(await NavLinks())
 
 const publicLinks = [
-  ["About", Routes.ABOUT],
+  ["Home", Routes.HOME],
   ["Members", Routes.MEMBERS.ROOT],
-  ["Resources", Routes.RESOURCES.ROOT],
-  ["News", Routes.NEWS],
+  ["Publications", Routes.ABOUT],
 ] as const
 
 const memberLinks = [
   ["Courses", Routes.COURSES.ROOT],
   ["Proposals", Routes.PROPOSALS.ROOT],
+  ["Resources", Routes.RESOURCES.ROOT],
 ] as const
 
 describe("NavLinks", () => {
@@ -63,12 +63,12 @@ describe("NavLinks", () => {
     signInAs("members")
     await renderNavLinks()
     expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual([
-      "About",
+      "Home",
       "Members",
       "Courses",
       "Proposals",
+      "Publications",
       "Resources",
-      "News",
     ])
   })
 })
