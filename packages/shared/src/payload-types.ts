@@ -75,6 +75,7 @@ export interface Config {
     proposals: Proposal;
     courses: Course;
     courseVersions: CourseVersion;
+    publications: Publication;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -89,6 +90,7 @@ export interface Config {
     proposals: ProposalsSelect<false> | ProposalsSelect<true>;
     courses: CoursesSelect<false> | CoursesSelect<true>;
     courseVersions: CourseVersionsSelect<false> | CourseVersionsSelect<true>;
+    publications: PublicationsSelect<false> | PublicationsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -431,6 +433,68 @@ export interface CourseVersion {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "publications".
+ */
+export interface Publication {
+  id: number;
+  /**
+   * BibTeX key, e.g. smith2024learning
+   */
+  citationKey?: string | null;
+  type:
+    | 'article'
+    | 'book'
+    | 'booklet'
+    | 'inbook'
+    | 'incollection'
+    | 'inproceedings'
+    | 'manual'
+    | 'mastersthesis'
+    | 'phdthesis'
+    | 'proceedings'
+    | 'techreport'
+    | 'unpublished'
+    | 'misc';
+  title: string;
+  /**
+   * In citation order
+   */
+  authors: {
+    /**
+     * As printed in the publication
+     */
+    name: string;
+    /**
+     * Optional. Links this author to a member profile
+     */
+    member?: (number | null) | Member;
+    id?: string | null;
+  }[];
+  year: number;
+  month?: number | null;
+  /**
+   * Without the https://doi.org/ prefix, e.g. 10.1145/3313831.3376518
+   */
+  doi?: string | null;
+  url?: string | null;
+  /**
+   * Journal, conference, school, institution or repository, e.g. arXiv
+   */
+  venue?: string | null;
+  volume?: string | null;
+  issue?: string | null;
+  /**
+   * e.g. 123-145
+   */
+  pages?: string | null;
+  publisher?: string | null;
+  abstract?: string | null;
+  tags?: string[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -480,6 +544,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'courseVersions';
         value: number | CourseVersion;
+      } | null)
+    | ({
+        relationTo: 'publications';
+        value: number | Publication;
       } | null);
   globalSlug?: string | null;
   user:
@@ -717,6 +785,35 @@ export interface CourseVersionsSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "publications_select".
+ */
+export interface PublicationsSelect<T extends boolean = true> {
+  citationKey?: T;
+  type?: T;
+  title?: T;
+  authors?:
+    | T
+    | {
+        name?: T;
+        member?: T;
+        id?: T;
+      };
+  year?: T;
+  month?: T;
+  doi?: T;
+  url?: T;
+  venue?: T;
+  volume?: T;
+  issue?: T;
+  pages?: T;
+  publisher?: T;
+  abstract?: T;
+  tags?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

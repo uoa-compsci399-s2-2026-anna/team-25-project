@@ -13,6 +13,7 @@ import { Institutions } from "./payload/collections/Institutions"
 import { Media } from "./payload/collections/Media"
 import { Members } from "./payload/collections/Members"
 import { Proposals } from "./payload/collections/Proposals"
+import { Publications } from "./payload/collections/Publication"
 import { richTextFeatures } from "./payload/richText"
 
 declare module "payload" {
@@ -35,7 +36,16 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Admin, Members, Institutions, Media, Proposals, Courses, CourseVersions],
+  collections: [
+    Admin,
+    Members,
+    Institutions,
+    Media,
+    Proposals,
+    Courses,
+    CourseVersions,
+    Publications,
+  ],
   editor: lexicalEditor({ features: richTextFeatures }),
   graphQL: {
     disable: true,
