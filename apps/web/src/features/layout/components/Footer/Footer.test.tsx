@@ -1,9 +1,19 @@
 import { cleanup, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { Routes } from "@/lib/routes"
+import type { SiteLink } from "@/features/layout/links"
 import { Footer } from "./Footer"
 
-vi.mock("next/navigation", () => ({ useRouter: vi.fn() }))
+// FooterLinkList is async, so stub it here to a sync list of every link it
+// was given. FooterLinkList.test.tsx covers hiding members-only links.
+vi.mock("./FooterLinkList", () => ({
+  FooterLinkList: ({ links }: { links: readonly SiteLink[] }) => (
+    <ul data-testid="footer-link-list">
+      {links.map((link) => (
+        <li key={link.name}>{link.name}</li>
+      ))}
+    </ul>
+  ),
+}))
 
 describe("Footer", () => {
   afterEach(() => {
@@ -36,32 +46,26 @@ describe("Footer", () => {
   })
 
   it.each([
-    ["Members", Routes.MEMBERS.ROOT],
-    ["Courses", Routes.COURSES.ROOT],
-    ["Proposals", Routes.PROPOSALS.ROOT],
-    ["About", Routes.ABOUT],
-    ["Privacy", Routes.PRIVACY],
-  ])("links %s to %s", (name, href) => {
+    ["Explore", ["Members", "Courses", "Proposals"]],
+    ["Community", ["About", "Resources", "News"]],
+    ["Contact", ["Privacy"]],
+  ])("passes the %s links to FooterLinkList under their heading", (category, names) => {
     render(<Footer />)
-    expect(screen.getByRole("link", { name })).toHaveAttribute("href", href)
-  })
-
-  it("renders every link inside a list item", () => {
-    render(<Footer />)
-    const links = screen.getAllByRole("link")
-    expect(links).toHaveLength(5)
-    for (const link of links) {
-      expect(link.closest("li")).not.toBeNull()
-    }
-  })
-
-  it("groups the Explore links under the Explore heading", () => {
-    render(<Footer />)
-    const group = screen.getByRole("heading", { level: 6, name: "Explore" })
+    const group = screen.getByRole("heading", { level: 6, name: category })
       .parentElement as HTMLElement
-    const names = within(group)
-      .getAllByRole("link")
-      .map((link) => link.textContent)
-    expect(names).toEqual(["Members", "Courses", "Proposals"])
+    // Going through FooterLinkList is what hides the members-only links from
+    // guests, so a group that rendered its links itself would leak them.
+    expect(
+      within(within(group).getByTestId("footer-link-list"))
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual(names)
+  })
+
+  it("renders the groups inside the footer navigation landmark", () => {
+    render(<Footer />)
+    expect(screen.getByRole("navigation", { name: "Footer" })).toContainElement(
+      screen.getByRole("heading", { level: 6, name: "Explore" }),
+    )
   })
 })
