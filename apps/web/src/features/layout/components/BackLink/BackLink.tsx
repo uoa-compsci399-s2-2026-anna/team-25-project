@@ -14,7 +14,7 @@ export function BackLink({ href, children }: BackLinkProps) {
   return (
     <div className="px-10 pt-10 md:px-12">
       <Link
-        className="inline-flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground"
+        className="inline-flex items-center gap-2 text-muted-foreground text-sm transition-opacity hover:opacity-70"
         href={href}
       >
         <ArrowLeft aria-hidden className="size-4" />
