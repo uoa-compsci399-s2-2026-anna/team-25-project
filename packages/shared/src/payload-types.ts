@@ -456,9 +456,6 @@ export interface Publication {
     | 'unpublished'
     | 'misc';
   title: string;
-  /**
-   * In citation order
-   */
   authors: {
     /**
      * As printed in the publication
