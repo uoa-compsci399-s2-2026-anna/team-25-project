@@ -9,11 +9,15 @@ import {
   CourseOfferingMetaSkeleton,
 } from "@/features/courses/components/CourseOfferingMeta"
 import type { CourseRouteParams } from "@/features/courses/courses.params"
-import { PageContainer } from "@/features/layout/components"
+import { BackLink, PageContainer } from "@/features/layout/components"
+import { Routes } from "@/lib/routes"
 
 export default function Page({ params }: { params: CourseRouteParams }) {
   return (
     <PageContainer>
+      <div className="px-10 pt-10 md:px-12">
+        <BackLink href={Routes.COURSES.ROOT}>Courses</BackLink>
+      </div>
       <article className="grid w-full gap-x-10 gap-y-4 p-10 md:p-12 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-12">
         <AnimatedSuspense fallback={<CourseOfferingMetaSkeleton />}>
           <CourseOfferingMeta params={params} />
