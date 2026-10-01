@@ -1,5 +1,4 @@
 import { QueryKeys } from "@repo/shared/constants/query-keys"
-import type { PublicationType } from "@repo/shared/enums/publications"
 import type { Pagination } from "@repo/shared/types/pagination"
 import { cacheLife, cacheTag } from "next/cache"
 import { connection } from "next/server"
@@ -7,15 +6,7 @@ import type { Sort, Where } from "payload"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
 import type { PublicationSort } from "./publications.search-params"
-
-export type PublicationFilters = {
-  search?: string
-  sort?: PublicationSort
-  /** A publication matches when it has any one of these tags. */
-  tags?: string[]
-  type?: PublicationType
-  year?: number
-}
+import type { PublicationFilters } from "./publications.types"
 
 const publicationFiltersToWhere = (filters: PublicationFilters): Where => {
   const where: Where = {}

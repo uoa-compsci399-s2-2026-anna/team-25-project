@@ -9,7 +9,7 @@ import {
   parseAsStringLiteral,
 } from "nuqs/server"
 import { parseAsPositiveInteger } from "@/lib/search-params"
-import type { PublicationFilters } from "./publications.queries"
+import type { PublicationFilters } from "./publications.types"
 
 export const publicationSorts = ["newest", "oldest", "titleAsc"] as const
 export type PublicationSort = (typeof publicationSorts)[number]
