@@ -21,10 +21,15 @@ describe("QueryKeys", () => {
         ROOT: "publications",
         ID: expect.any(Function),
       },
+      RESOURCES: {
+        ROOT: "resources",
+        ID: expect.any(Function),
+      },
     })
     expect(QueryKeys.PROPOSALS.ID(7)).toBe("proposals:7")
     expect(QueryKeys.COURSES.ID(7)).toBe("courses:7")
     expect(QueryKeys.MEMBERS.ID(7)).toBe("member:7")
     expect(QueryKeys.PUBLICATIONS.ID(7)).toBe("publications:7")
+    expect(QueryKeys.RESOURCES.ID(7)).toBe("resources:7")
   })
 })

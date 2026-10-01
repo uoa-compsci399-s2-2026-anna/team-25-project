@@ -16,4 +16,8 @@ export const QueryKeys = {
     ROOT: "publications",
     ID: (id: number) => `publications:${id}`,
   } as const,
+  RESOURCES: {
+    ROOT: "resources",
+    ID: (id: number) => `resources:${id}`,
+  } as const,
 } as const
