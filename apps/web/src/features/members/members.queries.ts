@@ -15,6 +15,7 @@ export const MEMBERS_PAGE_SIZE = 12
 export type MemberFilters = {
   institutionId?: Institution["id"]
   country?: InstitutionCountry
+  researchInterest?: string
   search?: string
   sort?: MemberSort
 }
@@ -44,6 +45,14 @@ const memberFiltersToWhere = (filters: MemberFilters): Where => {
     }
   }
 
+  // Interests are free text, so the options offered are the stored values themselves
+  // and an exact match is right. hasMany makes this "any interest equals".
+  if (filters.researchInterest) {
+    where.researchInterests = {
+      equals: filters.researchInterest,
+    }
+  }
+
   return where
 }
 
@@ -65,6 +74,7 @@ export const getMembers = async (filters: MemberFilters, pagination: Pagination)
       institution: true,
       lastName: true,
       position: true,
+      researchInterests: true,
     },
     // id breaks surname ties; without it paging can repeat or skip a member.
     sort: filters.sort === "surnameDesc" ? ["-lastName", "id"] : ["lastName", "id"],
@@ -81,6 +91,42 @@ export const countMembers = async (filters: MemberFilters) => {
     where: memberFiltersToWhere(filters),
   })
   return totalDocs
+}
+
+export type ResearchInterestOption = { value: string; label: string }
+
+/**
+ * The filter's options are the interests members actually entered, since the field is free
+ * text with no fixed vocabulary. Each option is the stored string exactly, because the
+ * filter matches on equality and Postgres compares case-sensitively - folding "Generative AI"
+ * and "generative AI" into one option here would hide every member who spelled it the other way.
+ */
+export const getResearchInterestOptions = async (): Promise<ResearchInterestOption[]> => {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: Slugs.Collections.MEMBERS,
+    depth: 0,
+    pagination: false,
+    select: { researchInterests: true },
+  })
+
+  const stored = new Set<string>()
+  for (const { researchInterests } of docs) {
+    for (const interest of researchInterests ?? []) {
+      if (interest.trim()) stored.add(interest)
+    }
+  }
+
+  return [...stored]
+    .sort((a, b) => a.localeCompare(b))
+    .map((interest) => ({ label: interest.trim(), value: interest }))
+}
+
+export const getResearchInterestOptionsCached = async () => {
+  "use cache"
+  cacheLife("max")
+  cacheTag(QueryKeys.MEMBERS.ROOT)
+  return getResearchInterestOptions()
 }
 
 /** What the header reports: how many members these filters leave, out of the whole directory. */

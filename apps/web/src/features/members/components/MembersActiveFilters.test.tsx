@@ -62,7 +62,7 @@ describe("MembersActiveFilters", () => {
   it("clears every filter, the search included", async () => {
     const user = userEvent.setup()
     const onUrlUpdate = renderActiveFilters(
-      "?institution=12&country=NZ&q=tui&sort=surnameDesc&page=4",
+      "?institution=12&country=NZ&interest=Teamwork&q=tui&sort=surnameDesc&page=4",
     )
 
     await user.click(screen.getByRole("button", { name: "Clear all" }))
@@ -70,10 +70,31 @@ describe("MembersActiveFilters", () => {
     const { queryString } = onUrlUpdate.mock.lastCall?.[0] ?? {}
     expect(queryString).not.toContain("institution")
     expect(queryString).not.toContain("country")
+    expect(queryString).not.toContain("interest")
     expect(queryString).not.toContain("q=")
     expect(queryString).not.toContain("page")
     // Sort is an ordering, not a filter, so "clear all" leaves it where the reader put it.
     expect(queryString).toContain("sort=surnameDesc")
+  })
+
+  it("names and removes a research interest", async () => {
+    const user = userEvent.setup()
+    const onUrlUpdate = renderActiveFilters("?interest=Teamwork&country=NZ")
+
+    expect(screen.getByText("Teamwork")).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Remove Teamwork filter" }))
+
+    const { queryString } = onUrlUpdate.mock.lastCall?.[0] ?? {}
+    expect(queryString).not.toContain("interest")
+    expect(queryString).toContain("country=NZ")
+  })
+
+  // "?interest=" parses to "", which is not null and would otherwise show a blank chip.
+  it.each(["?interest=", "?interest=%20%20"])("ignores an empty interest in %s", (search) => {
+    renderActiveFilters(search)
+
+    expect(screen.queryByText("Active filters")).not.toBeInTheDocument()
   })
 
   it("still offers to remove an institution id that matches nothing", async () => {

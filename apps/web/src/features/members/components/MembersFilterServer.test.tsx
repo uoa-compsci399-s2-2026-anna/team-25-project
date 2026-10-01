@@ -6,10 +6,10 @@ import { MembersFilterServerSkeleton } from "./MembersFilterServer"
 vi.mock("@/features/institutions/institutions.queries", () => ({}))
 
 describe("MembersFilterServerSkeleton", () => {
-  it("renders a filter bar placeholder with the bar's two filters and no status tabs", () => {
+  it("renders a filter bar placeholder with the bar's three filters and no status tabs", () => {
     const { container } = render(<MembersFilterServerSkeleton />)
 
-    expect(container.querySelectorAll('[data-slot="filter-bar-skeleton-filter"]')).toHaveLength(2)
+    expect(container.querySelectorAll('[data-slot="filter-bar-skeleton-filter"]')).toHaveLength(3)
     expect(container.querySelector('[data-slot="filter-bar-skeleton-status"]')).toBeNull()
   })
 })

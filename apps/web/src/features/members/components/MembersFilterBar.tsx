@@ -5,6 +5,7 @@ import { toSelectOptions } from "@repo/shared/utils/select-options"
 import { FilterBar, type FilterBarFilter } from "@repo/ui/components/composite"
 import { debounce, useQueryStates } from "nuqs"
 import type { InstitutionOption } from "@/features/institutions/institutions.queries"
+import type { ResearchInterestOption } from "../members.queries"
 import { type MemberSort, memberSearchParams, memberSorts } from "../members.search-params"
 
 const sortLabels: Record<MemberSort, string> = {
@@ -15,7 +16,12 @@ const sortLabels: Record<MemberSort, string> = {
 const sortOptions = memberSorts.map((value) => ({ label: sortLabels[value], value }))
 const countryOptions = toSelectOptions(InstitutionCountryLabels)
 
-export const MembersFilterBar = ({ institutions }: { institutions: InstitutionOption[] }) => {
+type MembersFilterBarProps = {
+  institutions: InstitutionOption[]
+  researchInterests: ResearchInterestOption[]
+}
+
+export const MembersFilterBar = ({ institutions, researchInterests }: MembersFilterBarProps) => {
   // shallow: false re-runs the server component, which owns the query.
   const [params, setParams] = useQueryStates(memberSearchParams, {
     history: "replace",
@@ -43,6 +49,13 @@ export const MembersFilterBar = ({ institutions }: { institutions: InstitutionOp
           placeholder: "Country",
           value: params.country,
         } satisfies FilterBarFilter<InstitutionCountry>,
+        {
+          id: "interest",
+          onValueChange: (interest) => update({ interest }),
+          options: researchInterests,
+          placeholder: "Research interest",
+          value: params.interest,
+        } satisfies FilterBarFilter<string>,
       ]}
       // The input updates at once; only the URL waits. Clearing it skips the wait.
       onSearchChange={(q) => update({ q }, { limitUrlUpdates: q ? debounce(300) : undefined })}

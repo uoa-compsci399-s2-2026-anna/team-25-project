@@ -17,6 +17,7 @@ export const memberSearchParams = {
   q: parseAsString.withDefault(""),
   institution: parseAsPositiveInteger,
   country: parseAsStringLiteral(Object.values(InstitutionCountry)),
+  interest: parseAsString,
   sort: parseAsStringLiteral(memberSorts).withDefault("surnameAsc"),
   page: parseAsPositiveInteger.withDefault(1),
 }
@@ -32,11 +33,15 @@ export const serializeMemberSearchParams = createSerializer(memberSearchParams)
 export const toMemberFilters = ({
   country,
   institution,
+  interest,
   q,
   sort,
 }: MemberSearchParams): MemberFilters => ({
   country: country ?? undefined,
   institutionId: institution ?? undefined,
+  // Trimmed only to test for emptiness: the value has to reach the query exactly as stored,
+  // or an interest saved with surrounding spaces would never match its own filter option.
+  researchInterest: interest?.trim() ? interest : undefined,
   search: q.trim() || undefined,
   sort,
 })

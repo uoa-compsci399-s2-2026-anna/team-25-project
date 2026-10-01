@@ -70,6 +70,7 @@ export const MembersList = async ({ searchParams }: { searchParams: Promise<Sear
               key={member.id}
               lastName={member.lastName}
               position={member.position}
+              researchInterests={member.researchInterests}
             />
           )
         })}

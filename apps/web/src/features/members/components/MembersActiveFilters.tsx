@@ -43,6 +43,13 @@ export const MembersActiveFilters = ({
       label: InstitutionCountryLabels[params.country],
       remove: () => update({ country: null }),
     },
+    // Guards on content, not presence: a hand-edited "?interest=" parses to "" and would
+    // otherwise show a blank chip that filters nothing.
+    !!params.interest?.trim() && {
+      key: "interest",
+      label: params.interest.trim(),
+      remove: () => update({ interest: null }),
+    },
   ].filter((chip) => chip !== false)
 
   if (chips.length === 0) return null
@@ -74,7 +81,7 @@ export const MembersActiveFilters = ({
       {/* Also clears the search, so nothing is left quietly narrowing the list. */}
       <Button
         className="text-primary text-sm hover:underline"
-        onClick={() => update({ country: null, institution: null, q: null })}
+        onClick={() => update({ country: null, institution: null, interest: null, q: null })}
         size="sm"
         variant="button-unstyled"
       >

@@ -11,6 +11,7 @@ describe("loadMemberSearchParams", () => {
     expect(loadMemberSearchParams("")).toEqual({
       country: null,
       institution: null,
+      interest: null,
       page: 1,
       q: "",
       sort: "surnameAsc",
@@ -19,10 +20,13 @@ describe("loadMemberSearchParams", () => {
 
   it("parses every param", () => {
     expect(
-      loadMemberSearchParams("?q=tui&institution=12&country=NZ&sort=surnameDesc&page=3"),
+      loadMemberSearchParams(
+        "?q=tui&institution=12&country=NZ&interest=Teamwork&sort=surnameDesc&page=3",
+      ),
     ).toEqual({
       country: InstitutionCountry.NZ,
       institution: 12,
+      interest: "Teamwork",
       page: 3,
       q: "tui",
       sort: "surnameDesc",
@@ -33,6 +37,7 @@ describe("loadMemberSearchParams", () => {
     expect(loadMemberSearchParams("?institution=abc&country=FR&sort=random&page=0")).toEqual({
       country: null,
       institution: null,
+      interest: null,
       page: 1,
       q: "",
       sort: "surnameAsc",
@@ -78,6 +83,7 @@ describe("toMemberFilters", () => {
       toMemberFilters({
         country: null,
         institution: null,
+        interest: null,
         page: 2,
         q: "  tui  ",
         sort: "surnameAsc",
@@ -85,6 +91,7 @@ describe("toMemberFilters", () => {
     ).toEqual({
       country: undefined,
       institutionId: undefined,
+      researchInterest: undefined,
       search: "tui",
       sort: "surnameAsc",
     })
@@ -92,8 +99,42 @@ describe("toMemberFilters", () => {
 
   it("treats a whitespace-only search as no search", () => {
     expect(
-      toMemberFilters({ country: null, institution: null, page: 1, q: "   ", sort: "surnameAsc" }),
+      toMemberFilters({
+        country: null,
+        institution: null,
+        interest: null,
+        page: 1,
+        q: "   ",
+        sort: "surnameAsc",
+      }),
     ).toMatchObject({ search: undefined })
+  })
+
+  it("treats a whitespace-only interest as no interest", () => {
+    expect(
+      toMemberFilters({
+        country: null,
+        institution: null,
+        interest: "   ",
+        page: 1,
+        q: "",
+        sort: "surnameAsc",
+      }),
+    ).toMatchObject({ researchInterest: undefined })
+  })
+
+  // The option value is the stored string, so trimming here would stop it matching its own row.
+  it("passes an interest through exactly as stored", () => {
+    expect(
+      toMemberFilters({
+        country: null,
+        institution: null,
+        interest: "  Teamwork  ",
+        page: 1,
+        q: "",
+        sort: "surnameAsc",
+      }),
+    ).toMatchObject({ researchInterest: "  Teamwork  " })
   })
 
   it("carries every set filter through", () => {
@@ -101,6 +142,7 @@ describe("toMemberFilters", () => {
       toMemberFilters({
         country: InstitutionCountry.AU,
         institution: 7,
+        interest: "Teamwork",
         page: 4,
         q: "anna",
         sort: "surnameDesc",
@@ -108,6 +150,7 @@ describe("toMemberFilters", () => {
     ).toEqual({
       country: InstitutionCountry.AU,
       institutionId: 7,
+      researchInterest: "Teamwork",
       search: "anna",
       sort: "surnameDesc",
     })
