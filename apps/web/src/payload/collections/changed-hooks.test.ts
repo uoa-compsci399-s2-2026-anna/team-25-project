@@ -11,10 +11,12 @@ import {
   revalidateDeletedPublication,
   revalidatePublications,
 } from "../hooks/Publications"
+import { revalidateDeletedResource, revalidateResources } from "../hooks/Resources"
 import { Institutions } from "./Institutions"
 import { Members } from "./Members"
 import { Proposals } from "./Proposals"
 import { Publications } from "./Publications"
+import { Resources } from "./Resources"
 
 describe("changed collection hooks", () => {
   it("registers institution cache invalidation", () => {
@@ -47,6 +49,13 @@ describe("changed collection hooks", () => {
       afterChange: [revalidatePublications],
       afterDelete: [revalidateDeletedPublication],
       beforeChange: [requireLinkedAuthor],
+    })
+  })
+
+  it("registers resource cache invalidation", () => {
+    expect(Resources.hooks).toEqual({
+      afterChange: [revalidateResources],
+      afterDelete: [revalidateDeletedResource],
     })
   })
 })

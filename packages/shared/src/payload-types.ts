@@ -76,6 +76,7 @@ export interface Config {
     courses: Course;
     courseVersions: CourseVersion;
     publications: Publication;
+    resources: Resource;
     resourceAttachments: ResourceAttachment;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -92,6 +93,7 @@ export interface Config {
     courses: CoursesSelect<false> | CoursesSelect<true>;
     courseVersions: CourseVersionsSelect<false> | CourseVersionsSelect<true>;
     publications: PublicationsSelect<false> | PublicationsSelect<true>;
+    resources: ResourcesSelect<false> | ResourcesSelect<true>;
     resourceAttachments: ResourceAttachmentsSelect<false> | ResourceAttachmentsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -494,6 +496,40 @@ export interface Publication {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "resources".
+ */
+export interface Resource {
+  id: number;
+  owner: number | Member;
+  title: string;
+  description: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Optional. Links the resource to the course it was written for.
+   */
+  course?: (number | null) | Course;
+  /**
+   * PDFs, slides, documents and spreadsheets for members to download.
+   */
+  attachments?: (number | ResourceAttachment)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "resourceAttachments".
  */
 export interface ResourceAttachment {
@@ -566,6 +602,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'publications';
         value: number | Publication;
+      } | null)
+    | ({
+        relationTo: 'resources';
+        value: number | Resource;
       } | null)
     | ({
         relationTo: 'resourceAttachments';
@@ -834,6 +874,19 @@ export interface PublicationsSelect<T extends boolean = true> {
   publisher?: T;
   abstract?: T;
   tags?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "resources_select".
+ */
+export interface ResourcesSelect<T extends boolean = true> {
+  owner?: T;
+  title?: T;
+  description?: T;
+  course?: T;
+  attachments?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -15,6 +15,7 @@ import { Members } from "./payload/collections/Members"
 import { Proposals } from "./payload/collections/Proposals"
 import { Publications } from "./payload/collections/Publications"
 import { ResourceAttachments } from "./payload/collections/ResourceAttachments"
+import { Resources } from "./payload/collections/Resources"
 import { richTextFeatures } from "./payload/richText"
 
 declare module "payload" {
@@ -46,6 +47,7 @@ export default buildConfig({
     Courses,
     CourseVersions,
     Publications,
+    Resources,
     ResourceAttachments,
   ],
   editor: lexicalEditor({ features: richTextFeatures }),
