@@ -69,6 +69,8 @@ function PublicationCard({
   ...props
 }: PublicationCardProps) {
   const { abstract, authors, doi, month, tags, title, type, url, venue, year } = publication
+  const doiHref = doi ? `https://doi.org/${doi}` : undefined
+  const titleHref = url || doiHref
 
   return (
     <Card className={cn("relative", className)} size={size} {...props}>
@@ -84,10 +86,10 @@ function PublicationCard({
 
         <div className="col-span-full flex flex-col gap-1.5">
           <CardTitle>
-            {url ? (
+            {titleHref ? (
               <a
                 className="inline-flex items-baseline gap-1.5 hover:underline"
-                href={url}
+                href={titleHref}
                 rel="noopener noreferrer"
                 target="_blank"
               >
@@ -155,10 +157,10 @@ function PublicationCard({
               )
             })}
           </p>
-          {doi && (
+          {doiHref && (
             <a
               className="text-muted-foreground text-xs hover:underline"
-              href={`https://doi.org/${doi}`}
+              href={doiHref}
               rel="noopener noreferrer"
               target="_blank"
             >

@@ -74,9 +74,25 @@ describe("PublicationCard", () => {
     expect(screen.getByText("Published 2026")).toBeInTheDocument()
   })
 
-  it("renders the title as plain text when there is no url", () => {
+  it("renders the title as plain text when there is no url or DOI", () => {
     renderCard()
     expect(screen.queryByRole("link")).not.toBeInTheDocument()
+  })
+
+  it("links the title to doi.org when there is a DOI but no url", () => {
+    renderCard({ doi: "10.1145/3313831.3376518" })
+    expect(screen.getByRole("link", { name: /^Team assessment fairness/ })).toHaveAttribute(
+      "href",
+      "https://doi.org/10.1145/3313831.3376518",
+    )
+  })
+
+  it("prefers the url over the DOI for the title link", () => {
+    renderCard({ doi: "10.1145/3313831.3376518", url: "https://example.com/paper" })
+    expect(screen.getByRole("link", { name: /^Team assessment fairness/ })).toHaveAttribute(
+      "href",
+      "https://example.com/paper",
+    )
   })
 
   it("links the title to the research website in a new tab", () => {
