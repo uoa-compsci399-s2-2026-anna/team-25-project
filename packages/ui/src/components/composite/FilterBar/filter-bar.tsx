@@ -47,6 +47,23 @@ type FilterBarFilter<TValue extends FilterBarValue = FilterBarValue> = {
   onValueChange(value: TValue | null): void
 }
 
+/** A filter that holds any number of options at once. An empty array means no filter. */
+type FilterBarMultiFilter<TValue extends FilterBarValue = FilterBarValue> = Omit<
+  FilterBarFilter<TValue>,
+  "onValueChange" | "value"
+> & {
+  multiple: true
+  value: TValue[]
+  onValueChange(value: TValue[]): void
+}
+
+// One pick shows its label; more show a count, so the trigger keeps a steady width.
+const multiFilterLabel = ({ options, placeholder, value }: FilterBarMultiFilter) => {
+  if (value.length === 0) return placeholder
+  if (value.length > 1) return `${placeholder} - ${value.length}`
+  return options.find((option) => option.value === value[0])?.label ?? String(value[0])
+}
+
 type FilterBarProps<
   TStatus extends string = string,
   TSort extends string = string,
@@ -58,7 +75,7 @@ type FilterBarProps<
   search: string
   onSearchChange: (search: string) => void
   searchPlaceholder?: string
-  filters?: FilterBarFilter[]
+  filters?: (FilterBarFilter | FilterBarMultiFilter)[]
   sortOptions: FilterBarOption<TSort>[]
   sort: TSort
   onSortChange: (sort: TSort) => void
@@ -124,30 +141,56 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
         />
       </InputGroup>
 
-      {filters.map((filter) => (
-        <Select<FilterBarValue>
-          items={filter.options}
-          key={filter.id}
-          onValueChange={(value) => filter.onValueChange(value)}
-          value={filter.value}
-        >
-          <SelectTrigger
-            aria-label={filter.placeholder}
-            className="h-10 shrink-0 px-4"
-            variant="pill"
+      {filters.map((filter) =>
+        "multiple" in filter ? (
+          <Select<FilterBarValue, true>
+            items={filter.options}
+            key={filter.id}
+            multiple
+            onValueChange={(value) => filter.onValueChange(value)}
+            value={filter.value}
           >
-            <SelectValue placeholder={filter.placeholder} />
-          </SelectTrigger>
-          <SelectContent alignItemWithTrigger={false}>
-            <SelectItem value={null}>Any {filter.placeholder.toLowerCase()}</SelectItem>
-            {filter.options.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ))}
+            <SelectTrigger
+              aria-label={filter.placeholder}
+              className="h-10 shrink-0 px-4"
+              variant="pill"
+            >
+              <SelectValue>{() => multiFilterLabel(filter)}</SelectValue>
+            </SelectTrigger>
+            {/* The trigger is narrower than a long option, so the list sets its own width. */}
+            <SelectContent alignItemWithTrigger={false} className="w-auto min-w-(--anchor-width)">
+              {filter.options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Select<FilterBarValue>
+            items={filter.options}
+            key={filter.id}
+            onValueChange={(value) => filter.onValueChange(value)}
+            value={filter.value}
+          >
+            <SelectTrigger
+              aria-label={filter.placeholder}
+              className="h-10 shrink-0 px-4"
+              variant="pill"
+            >
+              <SelectValue placeholder={filter.placeholder} />
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger={false}>
+              <SelectItem value={null}>Any {filter.placeholder.toLowerCase()}</SelectItem>
+              {filter.options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ),
+      )}
 
       <Select
         items={sortOptions}
@@ -216,6 +259,7 @@ function FilterBarSkeleton({
 export {
   FilterBar,
   type FilterBarFilter,
+  type FilterBarMultiFilter,
   type FilterBarOption,
   type FilterBarProps,
   FilterBarSkeleton,

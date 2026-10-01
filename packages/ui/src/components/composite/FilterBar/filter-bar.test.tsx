@@ -1,18 +1,36 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { FilterBar, type FilterBarProps, FilterBarSkeleton } from "../index"
+import {
+  FilterBar,
+  type FilterBarFilter,
+  type FilterBarMultiFilter,
+  type FilterBarProps,
+  FilterBarSkeleton,
+} from "../index"
+
+const universityFilter = (): FilterBarFilter => ({
+  id: "institution",
+  onValueChange: vi.fn(),
+  options: [{ label: "University of Example", value: "1" }],
+  placeholder: "University",
+  value: null,
+})
+
+const tagsFilter = (value: string[] = []): FilterBarMultiFilter => ({
+  id: "tags",
+  multiple: true,
+  onValueChange: vi.fn(),
+  options: [
+    { label: "Assessment", value: "assessment" },
+    { label: "Teamwork", value: "teamwork" },
+  ],
+  placeholder: "Tags",
+  value,
+})
 
 const props = (): FilterBarProps => ({
-  filters: [
-    {
-      id: "institution",
-      onValueChange: vi.fn(),
-      options: [{ label: "University of Example", value: "1" }],
-      placeholder: "University",
-      value: null,
-    },
-  ],
+  filters: [universityFilter()],
   onSearchChange: vi.fn(),
   onSortChange: vi.fn(),
   onStatusChange: vi.fn(),
@@ -72,7 +90,7 @@ describe("FilterBar", () => {
 
   it("shows the label of a picked filter", () => {
     const p = props()
-    render(<FilterBar {...p} filters={p.filters?.map((filter) => ({ ...filter, value: "1" }))} />)
+    render(<FilterBar {...p} filters={[{ ...universityFilter(), value: "1" }]} />)
 
     expect(screen.getByRole("combobox", { name: "University" })).toHaveTextContent(
       "University of Example",
@@ -94,6 +112,33 @@ describe("FilterBar", () => {
     await screen.findByRole("listbox")
     await user.click(screen.getByRole("option", { name: "Any university" }))
     expect(filter?.onValueChange).toHaveBeenLastCalledWith(null)
+  })
+
+  it.each([
+    [[], "Tags"],
+    [["teamwork"], "Teamwork"],
+    [["assessment", "teamwork"], "Tags - 2"],
+    [["retired"], "retired"],
+  ])("labels a multi-select filter that holds %j as %s", (value, label) => {
+    render(<FilterBar {...props()} filters={[tagsFilter(value)]} />)
+
+    expect(screen.getByRole("combobox", { name: "Tags" })).toHaveTextContent(label)
+  })
+
+  it("adds to and removes from a multi-select filter", async () => {
+    const user = userEvent.setup()
+    const filter = tagsFilter(["assessment"])
+    render(<FilterBar {...props()} filters={[filter]} />)
+
+    await user.click(screen.getByRole("combobox", { name: "Tags" }))
+    await screen.findByRole("listbox")
+    expect(screen.queryByRole("option", { name: "Any tags" })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole("option", { name: "Teamwork" }))
+    expect(filter.onValueChange).toHaveBeenLastCalledWith(["assessment", "teamwork"])
+
+    await user.click(screen.getByRole("option", { name: "Assessment" }))
+    expect(filter.onValueChange).toHaveBeenLastCalledWith([])
   })
 
   it("reports a sort selection", async () => {

@@ -1,6 +1,11 @@
 import type { Meta, StoryFn } from "@storybook/nextjs-vite"
 import { useState } from "react"
-import { FilterBar, type FilterBarFilter, FilterBarSkeleton } from "./filter-bar"
+import {
+  FilterBar,
+  type FilterBarFilter,
+  type FilterBarMultiFilter,
+  FilterBarSkeleton,
+} from "./filter-bar"
 
 const meta: Meta<typeof FilterBar> = {
   title: "composite/FilterBar",
@@ -62,6 +67,39 @@ export const Primary: StoryFn<typeof FilterBar> = () => {
           { count: 27, label: "Active", value: "active" },
           { count: 14, label: "Closed", value: "closed" },
           { label: "All", value: "all" },
+        ]}
+      />
+    </div>
+  )
+}
+
+/** A filter with `multiple` holds any number of options at once. */
+export const MultiSelect: StoryFn<typeof FilterBar> = () => {
+  const [search, setSearch] = useState("")
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [sort, setSort] = useState("newest")
+
+  return (
+    <div className="bg-brand-cream/60 p-5">
+      <FilterBar
+        filters={[
+          {
+            id: "tags",
+            multiple: true,
+            onValueChange: (value) => setSelectedTags(value),
+            options: tags,
+            placeholder: "Tags",
+            value: selectedTags,
+          } satisfies FilterBarMultiFilter<string>,
+        ]}
+        onSearchChange={setSearch}
+        onSortChange={setSort}
+        search={search}
+        searchPlaceholder="Search publications..."
+        sort={sort}
+        sortOptions={[
+          { label: "Newest first", value: "newest" },
+          { label: "Oldest first", value: "oldest" },
         ]}
       />
     </div>
