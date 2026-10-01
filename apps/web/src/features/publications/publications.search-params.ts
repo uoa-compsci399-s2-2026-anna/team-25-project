@@ -44,10 +44,15 @@ export const toPublicationFilters = ({
   tags,
   type,
   year,
-}: PublicationSearchParams): PublicationFilters => ({
-  search: q.trim() || undefined,
-  sort,
-  tags: tags.length > 0 ? tags : undefined,
-  type: type ?? undefined,
-  year: year ?? undefined,
-})
+}: PublicationSearchParams): PublicationFilters => {
+  // `?tags=,` parses to empty strings, which no publication has.
+  const namedTags = tags.filter((tag) => tag.trim() !== "")
+
+  return {
+    search: q.trim() || undefined,
+    sort,
+    tags: namedTags.length > 0 ? namedTags : undefined,
+    type: type ?? undefined,
+    year: year ?? undefined,
+  }
+}

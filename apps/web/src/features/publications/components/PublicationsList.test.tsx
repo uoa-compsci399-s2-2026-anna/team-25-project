@@ -60,6 +60,33 @@ describe("PublicationsList", () => {
     )
   })
 
+  it("links to the unfiltered list when no publication matches the filters", async () => {
+    vi.mocked(loadPublicationsPage).mockResolvedValue({
+      docs: [],
+      totalDocs: 0,
+      totalPages: 0,
+    } as unknown as PublicationsPage)
+
+    render(await PublicationsList({ searchParams: Promise.resolve({ tags: "Renamed" }) }))
+
+    expect(screen.getByRole("link", { name: "Clear filters" })).toHaveAttribute(
+      "href",
+      "/publications",
+    )
+  })
+
+  it("has no clear link when no filter is set", async () => {
+    vi.mocked(loadPublicationsPage).mockResolvedValue({
+      docs: [],
+      totalDocs: 0,
+      totalPages: 0,
+    } as unknown as PublicationsPage)
+
+    render(await PublicationsList({ searchParams: Promise.resolve({}) }))
+
+    expect(screen.queryByRole("link", { name: "Clear filters" })).not.toBeInTheDocument()
+  })
+
   it("links each page with the current filters", async () => {
     vi.mocked(loadPublicationsPage).mockResolvedValue({
       docs: [publication()],

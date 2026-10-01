@@ -127,4 +127,11 @@ describe("toPublicationFilters", () => {
       year: undefined,
     })
   })
+
+  it("drops empty tags", () => {
+    expect(toPublicationFilters(loadPublicationSearchParams("?tags=,")).tags).toBeUndefined()
+    expect(toPublicationFilters(loadPublicationSearchParams("?tags=Teamwork,,%20")).tags).toEqual([
+      "Teamwork",
+    ])
+  })
 })
