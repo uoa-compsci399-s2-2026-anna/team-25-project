@@ -19,15 +19,21 @@ const steps = [
 ]
 
 export const WhoCanJoinSection = () => {
+  // The last section on the page, so its own bottom padding is what keeps the
+  // footer off it - the footer belongs to the layout, not here.
   return (
-    <section className="grid gap-8 px-8 py-10 md:grid-cols-2 md:px-16">
+    <section className="grid gap-8 px-8 pt-12 pb-20 md:grid-cols-2 md:px-16 md:pb-24">
       <div className="flex flex-col gap-6">
         <Heading level="h2">Who can join</Heading>
 
         <ul className="flex flex-col gap-3 text-muted-foreground">
           {criteria.map((criterion) => (
             <li className="flex items-start gap-3" key={criterion}>
-              <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
+              {/* Centred against the first line's height rather than nudged down,
+                  so it stays aligned if the text size changes. */}
+              <span aria-hidden className="flex h-6 shrink-0 items-center">
+                <span className="size-1.5 rounded-full bg-primary" />
+              </span>
               {criterion}
             </li>
           ))}
