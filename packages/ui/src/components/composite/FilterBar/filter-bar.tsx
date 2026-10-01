@@ -99,8 +99,6 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
 }: FilterBarProps<TStatus, TSort>) {
   return (
     <div
-      // Below md the search takes the first row and the other controls centre under it.
-      // From md the bar is one row: the search narrows first so the other controls fit.
       className={cn(
         "flex flex-wrap items-center justify-center gap-3 md:flex-nowrap md:justify-start",
         className,
