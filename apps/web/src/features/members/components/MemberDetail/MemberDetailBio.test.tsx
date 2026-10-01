@@ -1,21 +1,27 @@
 import { cleanup, render, screen } from "@testing-library/react"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { getCurrentUser } from "@/lib/payload/getCurrentUser"
+import userEvent from "@testing-library/user-event"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { getMemberDetailsCached } from "../../members.queries"
+import { EditButton } from "../MemberEditor/EditButton"
+import { EditProvider } from "../MemberEditor/EditContext"
 import { MemberBio, MemberBioSkeleton } from "./MemberDetailBio"
 
 vi.mock("../../members.queries", () => ({ getMemberDetailsCached: vi.fn() }))
-vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
-vi.mock("../../actions/updateMemberBio", () => ({ updateMemberBio: vi.fn() }))
+vi.mock("../../actions/updateMemberProfile", () => ({ updateMemberProfile: vi.fn() }))
 
+// The page's Edit button lives in the header, so it's rendered alongside here.
+// The component itself goes in its own element so tests can check just its output.
 const renderBio = async () =>
-  render(await MemberBio({ params: Promise.resolve({ memberId: "7" }) }))
+  render(
+    <EditProvider>
+      <div data-testid="subject">
+        {await MemberBio({ params: Promise.resolve({ memberId: "7" }) })}
+      </div>
+      <EditButton />
+    </EditProvider>,
+  )
 
 describe("MemberBio", () => {
-  beforeEach(() => {
-    vi.mocked(getCurrentUser).mockResolvedValue({ collection: null, user: null })
-  })
-
   afterEach(() => {
     cleanup()
   })
@@ -30,34 +36,21 @@ describe("MemberBio", () => {
     expect(screen.getByText("Researches peer assessment.")).toBeInTheDocument()
   })
 
-  it("hides the edit control on someone else's profile", async () => {
-    vi.mocked(getMemberDetailsCached).mockResolvedValue({ id: 7, bio: "Bio" } as never)
-    vi.mocked(getCurrentUser).mockResolvedValue({
-      collection: "members",
-      user: { id: 8 },
-    } as never)
+  it("swaps the bio for a text area seeded with it when editing", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue({ id: 7, bio: "My bio" } as never)
+    const user = userEvent.setup()
 
     await renderBio()
-    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument()
-  })
+    await user.click(screen.getByRole("button", { name: "Edit" }))
 
-  it("shows the edit control on the member's own profile", async () => {
-    vi.mocked(getMemberDetailsCached).mockResolvedValue({ id: 7, bio: "Bio" } as never)
-    vi.mocked(getCurrentUser).mockResolvedValue({
-      collection: "members",
-      user: { id: 7 },
-    } as never)
-
-    await renderBio()
-    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument()
-    expect(screen.getByText("Bio")).toBeInTheDocument()
+    expect(screen.getByRole("textbox", { name: "Bio" })).toHaveValue("My bio")
   })
 
   it("renders nothing when the member doesn't exist", async () => {
     vi.mocked(getMemberDetailsCached).mockResolvedValue(null)
 
-    const { container } = await renderBio()
-    expect(container).toBeEmptyDOMElement()
+    await renderBio()
+    expect(screen.getByTestId("subject")).toBeEmptyDOMElement()
   })
 })
 

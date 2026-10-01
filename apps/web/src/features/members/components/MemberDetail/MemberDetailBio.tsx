@@ -1,26 +1,23 @@
 import { Skeleton } from "@repo/ui/components/ui"
-import { getCurrentUser } from "@/lib/payload/getCurrentUser"
-import { Slugs } from "@/lib/payload/slugs"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberDetailsCached } from "../../members.queries"
-import { MemberBioEditor } from "../MemberEditor/BioEditor"
+import { EditInput } from "../MemberEditor/EditInput"
 
 export const MemberBio = async ({ params }: { params: MembersRouteParams }) => {
   const memberId = await parseMemberId(params)
-  const [member, { collection, user }] = await Promise.all([
-    getMemberDetailsCached(memberId),
-    getCurrentUser(),
-  ])
+  const member = await getMemberDetailsCached(memberId)
   if (!member) return null
 
-  const isOwnProfile = collection === Slugs.Collections.MEMBERS && user.id === member.id
-
-  return isOwnProfile ? (
-    <MemberBioEditor bio={member.bio} />
-  ) : (
-    <div className="flex flex-col">
-      <h1 className="font-bold text-muted-foreground text-sm">ABOUT</h1>
-      <span className="text-black">{member.bio}</span>
+  return (
+    <div className="flex flex-col gap-1">
+      <h2 className="font-bold text-muted-foreground text-sm">ABOUT</h2>
+      <EditInput
+        label="Bio"
+        multiline
+        name="bio"
+        value={member.bio}
+        view={<p className="text-foreground">{member.bio}</p>}
+      />
     </div>
   )
 }

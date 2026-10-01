@@ -9,7 +9,6 @@ export const MemberContacts = async ({ params }: { params: MembersRouteParams })
   const [member, { user }] = await Promise.all([getMemberDetailsCached(memberId), getCurrentUser()])
   if (!member) return null
 
-  // Mirrors canReadEmail: `showEmailPublicly` only governs signed-out visitors.
   const showEmail = user !== null || member.showEmailPublicly
 
   return (

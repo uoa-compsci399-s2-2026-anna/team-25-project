@@ -21,6 +21,10 @@ export const LINK_LABEL_MAX_LENGTH = 50
 // deliberately - an SVG can carry an embedded <script>.
 export const ALLOWED_AVATAR_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
 
+// Matches next.config.ts's serverActions.bodySizeLimit - a bigger upload is rejected
+// before the action runs, so the client checks it too to give a clear message.
+export const MAX_AVATAR_BYTES = 4 * 1024 * 1024
+
 export const registerDetailsSchema = z.object({
   title: z.enum(MemberTitle).nullable(),
   firstName: z.string().trim().min(1, "First name is required"),
