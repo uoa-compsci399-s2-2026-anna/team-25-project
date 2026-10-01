@@ -1,7 +1,7 @@
 import { Button, Eyebrow, Heading } from "@repo/ui/components/ui"
 import Link from "next/link"
-import { Logo } from "@/components/Logo"
 import { Routes } from "@/lib/routes"
+import { HeroGlobe } from "../HeroGlobe/HeroGlobe"
 
 export const HeroSection = () => {
   return (
@@ -33,7 +33,7 @@ export const HeroSection = () => {
       {/* Takes the space the copy leaves and centres the cap in it, rather than
           pinning it to the section's right edge. */}
       <div className="flex justify-center md:flex-1">
-        <Logo className="w-64 shrink-0 md:w-80 lg:w-96" />
+        <HeroGlobe />
       </div>
     </section>
   )
