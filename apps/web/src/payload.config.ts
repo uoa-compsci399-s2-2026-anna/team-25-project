@@ -14,6 +14,7 @@ import { Media } from "./payload/collections/Media"
 import { Members } from "./payload/collections/Members"
 import { Proposals } from "./payload/collections/Proposals"
 import { Publications } from "./payload/collections/Publications"
+import { ResourceAttachments } from "./payload/collections/ResourceAttachments"
 import { richTextFeatures } from "./payload/richText"
 
 declare module "payload" {
@@ -45,6 +46,7 @@ export default buildConfig({
     Courses,
     CourseVersions,
     Publications,
+    ResourceAttachments,
   ],
   editor: lexicalEditor({ features: richTextFeatures }),
   graphQL: {
@@ -73,6 +75,7 @@ export default buildConfig({
       alwaysInsertFields: true,
       collections: {
         media: { prefix: "media" },
+        resourceAttachments: { prefix: "resourceAttachments" },
       },
       bucket: process.env.S3_BUCKET ?? "",
       config: {
