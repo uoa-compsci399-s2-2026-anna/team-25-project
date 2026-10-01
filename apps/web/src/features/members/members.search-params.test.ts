@@ -2,6 +2,7 @@ import { InstitutionCountry } from "@repo/shared/enums/institutions"
 import { describe, expect, it } from "vitest"
 import {
   loadMemberSearchParams,
+  MEMBER_INTEREST_FILTER_MAX,
   serializeMemberSearchParams,
   toMemberFilters,
 } from "./members.search-params"
@@ -11,7 +12,7 @@ describe("loadMemberSearchParams", () => {
     expect(loadMemberSearchParams("")).toEqual({
       country: null,
       institution: null,
-      interest: null,
+      interest: [],
       page: 1,
       q: "",
       sort: "surnameAsc",
@@ -26,7 +27,7 @@ describe("loadMemberSearchParams", () => {
     ).toEqual({
       country: InstitutionCountry.NZ,
       institution: 12,
-      interest: "Teamwork",
+      interest: ["Teamwork"],
       page: 3,
       q: "tui",
       sort: "surnameDesc",
@@ -37,7 +38,7 @@ describe("loadMemberSearchParams", () => {
     expect(loadMemberSearchParams("?institution=abc&country=FR&sort=random&page=0")).toEqual({
       country: null,
       institution: null,
-      interest: null,
+      interest: [],
       page: 1,
       q: "",
       sort: "surnameAsc",
@@ -83,7 +84,7 @@ describe("toMemberFilters", () => {
       toMemberFilters({
         country: null,
         institution: null,
-        interest: null,
+        interest: [],
         page: 2,
         q: "  tui  ",
         sort: "surnameAsc",
@@ -91,7 +92,7 @@ describe("toMemberFilters", () => {
     ).toEqual({
       country: undefined,
       institutionId: undefined,
-      researchInterest: undefined,
+      researchInterests: [],
       search: "tui",
       sort: "surnameAsc",
     })
@@ -102,7 +103,7 @@ describe("toMemberFilters", () => {
       toMemberFilters({
         country: null,
         institution: null,
-        interest: null,
+        interest: [],
         page: 1,
         q: "   ",
         sort: "surnameAsc",
@@ -115,12 +116,12 @@ describe("toMemberFilters", () => {
       toMemberFilters({
         country: null,
         institution: null,
-        interest: "   ",
+        interest: ["   "],
         page: 1,
         q: "",
         sort: "surnameAsc",
       }),
-    ).toMatchObject({ researchInterest: undefined })
+    ).toMatchObject({ researchInterests: [] })
   })
 
   // The option value is the stored string, so trimming here would stop it matching its own row.
@@ -129,12 +130,28 @@ describe("toMemberFilters", () => {
       toMemberFilters({
         country: null,
         institution: null,
-        interest: "  Teamwork  ",
+        interest: ["  Teamwork  "],
         page: 1,
         q: "",
         sort: "surnameAsc",
       }),
-    ).toMatchObject({ researchInterest: "  Teamwork  " })
+    ).toMatchObject({ researchInterests: ["  Teamwork  "] })
+  })
+
+  it("caps how many interests reach the query, whatever the URL asks for", () => {
+    const seven = ["a", "b", "c", "d", "e", "f", "g"]
+
+    const { researchInterests } = toMemberFilters({
+      country: null,
+      institution: null,
+      interest: seven,
+      page: 1,
+      q: "",
+      sort: "surnameAsc",
+    })
+
+    expect(researchInterests).toHaveLength(MEMBER_INTEREST_FILTER_MAX)
+    expect(researchInterests).toEqual(seven.slice(0, MEMBER_INTEREST_FILTER_MAX))
   })
 
   it("carries every set filter through", () => {
@@ -142,7 +159,7 @@ describe("toMemberFilters", () => {
       toMemberFilters({
         country: InstitutionCountry.AU,
         institution: 7,
-        interest: "Teamwork",
+        interest: ["Teamwork"],
         page: 4,
         q: "anna",
         sort: "surnameDesc",
@@ -150,7 +167,7 @@ describe("toMemberFilters", () => {
     ).toEqual({
       country: InstitutionCountry.AU,
       institutionId: 7,
-      researchInterest: "Teamwork",
+      researchInterests: ["Teamwork"],
       search: "anna",
       sort: "surnameDesc",
     })

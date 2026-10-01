@@ -15,7 +15,7 @@ export const MEMBERS_PAGE_SIZE = 12
 export type MemberFilters = {
   institutionId?: Institution["id"]
   country?: InstitutionCountry
-  researchInterest?: string
+  researchInterests?: string[]
   search?: string
   sort?: MemberSort
 }
@@ -45,11 +45,11 @@ const memberFiltersToWhere = (filters: MemberFilters): Where => {
     }
   }
 
-  // Interests are free text, so the options offered are the stored values themselves
-  // and an exact match is right. hasMany makes this "any interest equals".
-  if (filters.researchInterest) {
+  // Options are the stored values themselves, so matching is exact. On a hasMany field
+  // `in` holds a member when any one of their interests is among those picked.
+  if (filters.researchInterests?.length) {
     where.researchInterests = {
-      equals: filters.researchInterest,
+      in: filters.researchInterests,
     }
   }
 

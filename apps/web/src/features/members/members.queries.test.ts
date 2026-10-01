@@ -137,11 +137,11 @@ describe("getMembers", () => {
     expect(find).toHaveBeenCalledWith(expect.objectContaining({ sort: expected }))
   })
 
-  it("filters on an exact interest, since the options are the stored values", async () => {
-    await getMembers({ researchInterest: "Generative AI" }, { limit: 12, page: 1 })
+  it("matches any of the chosen interests, each exactly as stored", async () => {
+    await getMembers({ researchInterests: ["Generative AI"] }, { limit: 12, page: 1 })
 
     expect(find).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { researchInterests: { equals: "Generative AI" } } }),
+      expect.objectContaining({ where: { researchInterests: { in: ["Generative AI"] } } }),
     )
   })
 

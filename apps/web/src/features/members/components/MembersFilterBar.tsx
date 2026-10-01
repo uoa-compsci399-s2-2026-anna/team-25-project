@@ -6,7 +6,12 @@ import { FilterBar, type FilterBarFilter } from "@repo/ui/components/composite"
 import { debounce, useQueryStates } from "nuqs"
 import type { InstitutionOption } from "@/features/institutions/institutions.queries"
 import type { ResearchInterestOption } from "../members.queries"
-import { type MemberSort, memberSearchParams, memberSorts } from "../members.search-params"
+import {
+  MEMBER_INTEREST_FILTER_MAX,
+  type MemberSort,
+  memberSearchParams,
+  memberSorts,
+} from "../members.search-params"
 
 const sortLabels: Record<MemberSort, string> = {
   surnameAsc: "Surname A-Z",
@@ -51,6 +56,9 @@ export const MembersFilterBar = ({ institutions, researchInterests }: MembersFil
         } satisfies FilterBarFilter<InstitutionCountry>,
         {
           id: "interest",
+          maxSelected: MEMBER_INTEREST_FILTER_MAX,
+          multiple: true,
+          // Each pick adds to the selection; the chips below remove them one at a time.
           onValueChange: (interest) => update({ interest }),
           options: researchInterests,
           placeholder: "Research interest",

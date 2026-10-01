@@ -7,7 +7,7 @@ import { XIcon } from "lucide-react"
 import { useQueryStates } from "nuqs"
 import type * as React from "react"
 import type { InstitutionOption } from "@/features/institutions/institutions.queries"
-import { memberSearchParams } from "../members.search-params"
+import { MEMBER_INTEREST_FILTER_MAX, memberSearchParams } from "../members.search-params"
 
 type MembersActiveFiltersProps = React.ComponentProps<"div"> & {
   institutions: InstitutionOption[]
@@ -43,14 +43,21 @@ export const MembersActiveFilters = ({
       label: InstitutionCountryLabels[params.country],
       remove: () => update({ country: null }),
     },
-    // Guards on content, not presence: a hand-edited "?interest=" parses to "" and would
-    // otherwise show a blank chip that filters nothing.
-    !!params.interest?.trim() && {
-      key: "interest",
-      label: params.interest.trim(),
-      remove: () => update({ interest: null }),
-    },
   ].filter((chip) => chip !== false)
+
+  // One chip per interest, each dropping only itself. A blank value filters nothing, so it
+  // gets no chip - a hand-edited "?interest=" would otherwise show an empty one.
+  const interestChips = params.interest
+    .filter((interest) => interest.trim())
+    // Same cap the query applies, so the chips never claim more is filtering than is.
+    .slice(0, MEMBER_INTEREST_FILTER_MAX)
+    .map((interest) => ({
+      key: `interest:${interest}`,
+      label: interest.trim(),
+      remove: () => update({ interest: params.interest.filter((value) => value !== interest) }),
+    }))
+
+  chips.push(...interestChips)
 
   if (chips.length === 0) return null
 
@@ -81,7 +88,7 @@ export const MembersActiveFilters = ({
       {/* Also clears the search, so nothing is left quietly narrowing the list. */}
       <Button
         className="text-primary text-sm hover:underline"
-        onClick={() => update({ country: null, institution: null, interest: null, q: null })}
+        onClick={() => update({ country: null, institution: null, interest: [], q: null })}
         size="sm"
         variant="button-unstyled"
       >
