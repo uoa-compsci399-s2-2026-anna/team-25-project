@@ -8,14 +8,16 @@ const about = [
     title: "Member directory",
   },
   {
-    description: "Host research proposals for members seeking co-investigators.",
+    // Course comparison was its own card until the design merged it in here.
+    description:
+      "Record course data annually so designs can be compared across institutions, and host research proposals for members seeking co-investigators.",
     number: "02",
     title: "Research proposals",
   },
   {
-    description: "Record course data annually so designs can be compared across institutions.",
+    description: "Convene a workshop alongside ACE each year.",
     number: "03",
-    title: "Course comparison",
+    title: "Workshop",
   },
 ]
 
