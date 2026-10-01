@@ -34,7 +34,7 @@ type FilterBarStatusOption<TValue extends string = string> = FilterBarOption<TVa
  * Each filter keeps its own value type. Write it as `{ ... } satisfies FilterBarFilter<number>`
  * inside `filters` so the callback gets that type rather than the wider default.
  */
-type FilterBarFilter<TValue extends FilterBarValue = FilterBarValue> = {
+type FilterBarFilterBase<TValue extends FilterBarValue = FilterBarValue> = {
   id: string
   /**
    * Shown while nothing is picked, and names the control for screen readers.
@@ -42,10 +42,27 @@ type FilterBarFilter<TValue extends FilterBarValue = FilterBarValue> = {
    */
   placeholder: string
   options: FilterBarOption<TValue>[]
-  value: TValue | null
-  // Method syntax on purpose: it lets a FilterBarFilter<number> sit in a FilterBarFilter[].
-  onValueChange(value: TValue | null): void
 }
+
+/**
+ * Picking one value replaces the last, or with `multiple` each pick adds to the selection.
+ * A multiple filter keeps the trigger on its placeholder: what is picked belongs beside the
+ * bar, where each value can be removed on its own.
+ */
+type FilterBarFilter<TValue extends FilterBarValue = FilterBarValue> =
+  | (FilterBarFilterBase<TValue> & {
+      multiple?: false
+      value: TValue | null
+      // Method syntax on purpose: it lets a FilterBarFilter<number> sit in a FilterBarFilter[].
+      onValueChange(value: TValue | null): void
+    })
+  | (FilterBarFilterBase<TValue> & {
+      multiple: true
+      value: TValue[]
+      onValueChange(value: TValue[]): void
+      /** Once this many are picked the rest are disabled, so the cap is visible before it bites. */
+      maxSelected?: number
+    })
 
 type FilterBarProps<
   TStatus extends string = string,
@@ -112,26 +129,62 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
         />
       </InputGroup>
 
-      {filters.map((filter) => (
-        <Select<FilterBarValue>
-          items={filter.options}
-          key={filter.id}
-          onValueChange={(value) => filter.onValueChange(value)}
-          value={filter.value}
-        >
-          <SelectTrigger aria-label={filter.placeholder} className="h-10 px-4" variant="pill">
-            <SelectValue placeholder={filter.placeholder} />
-          </SelectTrigger>
-          <SelectContent alignItemWithTrigger={false}>
-            <SelectItem value={null}>Any {filter.placeholder.toLowerCase()}</SelectItem>
-            {filter.options.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ))}
+      {filters.map((filter) =>
+        filter.multiple ? (
+          <Select<FilterBarValue, true>
+            items={filter.options}
+            key={filter.id}
+            multiple
+            onValueChange={(value) =>
+              filter.onValueChange(filter.maxSelected ? value.slice(0, filter.maxSelected) : value)
+            }
+            value={filter.value}
+          >
+            <SelectTrigger aria-label={filter.placeholder} className="h-10 px-4" variant="pill">
+              {/* Not SelectValue: the chips beside the bar already show what is picked, so the
+                  trigger stays on its placeholder rather than restating it. */}
+              <span className="flex flex-1 text-left text-muted-foreground">
+                {filter.placeholder}
+              </span>
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger={false}>
+              {filter.options.map((option) => (
+                <SelectItem
+                  // At the cap only the picked ones stay live, so they can still be unpicked.
+                  disabled={
+                    filter.maxSelected !== undefined &&
+                    filter.value.length >= filter.maxSelected &&
+                    !filter.value.includes(option.value)
+                  }
+                  key={option.value}
+                  value={option.value}
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Select<FilterBarValue>
+            items={filter.options}
+            key={filter.id}
+            onValueChange={(value) => filter.onValueChange(value)}
+            value={filter.value}
+          >
+            <SelectTrigger aria-label={filter.placeholder} className="h-10 px-4" variant="pill">
+              <SelectValue placeholder={filter.placeholder} />
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger={false}>
+              <SelectItem value={null}>Any {filter.placeholder.toLowerCase()}</SelectItem>
+              {filter.options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ),
+      )}
 
       <Select
         items={sortOptions}
