@@ -32,7 +32,7 @@ export const WhoCanJoinSection = () => {
               {/* Centred against the first line's height rather than nudged down,
                   so it stays aligned if the text size changes. */}
               <span aria-hidden className="flex h-6 shrink-0 items-center">
-                <span className="size-1.5 rounded-full bg-primary" />
+                <span className="size-1.5 rounded-xs bg-primary" />
               </span>
               {criterion}
             </li>
