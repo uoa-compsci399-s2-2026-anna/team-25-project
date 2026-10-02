@@ -40,6 +40,25 @@ export type AddCapstoneCourseDialogValues = {
   role: string
 }
 
+const requiredFields: Partial<Record<keyof AddCapstoneCourseDialogValues, true>> = {
+  code: true,
+  deliveryFormat: true,
+  endDate: true,
+  name: true,
+  period: true,
+  programme: true,
+  projectType: true,
+  startDate: true,
+  learningOutcomes: true,
+  assessments: true,
+}
+
+const RequiredAsterisk = () => (
+  <span aria-hidden="true" className="text-destructive">
+    *
+  </span>
+)
+
 type RichTextField = "learningOutcomes" | "assessments" | "additionalInfo"
 
 export type AddCapstoneCourseDialogFieldErrors = Partial<
@@ -111,7 +130,9 @@ export function AddCapstoneCourseDialog({
     className?: string,
   ) => (
     <Field className={className}>
-      <FieldLabel htmlFor={ids[field]}>{label}</FieldLabel>
+      <FieldLabel htmlFor={ids[field]}>
+        {label} {requiredFields[field] && <RequiredAsterisk />}
+      </FieldLabel>
       <Input
         aria-invalid={Boolean(fieldErrors?.[field]) || undefined}
         id={ids[field]}
@@ -128,7 +149,7 @@ export function AddCapstoneCourseDialog({
   const richTextField = (field: RichTextField, label: string) => (
     <Field>
       <FieldLabel htmlFor={ids[field]} id={`${ids[field]}-label`}>
-        {label}
+        {label} {requiredFields[field] && <RequiredAsterisk />}
       </FieldLabel>
       <RichTextEditor
         aria-invalid={Boolean(fieldErrors?.[field]) || undefined}
@@ -185,7 +206,10 @@ export function AddCapstoneCourseDialog({
 
           <FieldGroup className="grid gap-4 md:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor={ids.deliveryFormat}>Delivery format</FieldLabel>
+              <FieldLabel htmlFor={ids.deliveryFormat}>
+                Delivery format
+                <RequiredAsterisk />
+              </FieldLabel>
               <Select
                 items={deliveryFormatOptions}
                 onValueChange={(next) => onValueChange("deliveryFormat", next ?? "")}
