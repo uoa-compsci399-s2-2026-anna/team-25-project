@@ -2,13 +2,10 @@
 
 import { type PublicationType, PublicationTypeLabels } from "@repo/shared/enums/publications"
 import { toSelectOptions } from "@repo/shared/utils/select-options"
-import {
-  FilterBar,
-  type FilterBarFilter,
-  type FilterBarMultiFilter,
-} from "@repo/ui/components/composite"
+import { FilterBar, type FilterBarFilter } from "@repo/ui/components/composite"
 import { debounce, useQueryStates } from "nuqs"
 import {
+  PUBLICATION_TAG_FILTER_MAX,
   type PublicationSort,
   publicationSearchParams,
   publicationSorts,
@@ -58,12 +55,14 @@ export const PublicationsFilterBar = ({ tags, years }: PublicationsFilterBarProp
         } satisfies FilterBarFilter<number>,
         {
           id: "tags",
+          maxSelected: PUBLICATION_TAG_FILTER_MAX,
           multiple: true,
+          // Each pick adds to the selection; the chips below remove them one at a time.
           onValueChange: (tags) => update({ tags }),
           options: tags.map((tag) => ({ label: tag, value: tag })),
           placeholder: "Tags",
           value: params.tags,
-        } satisfies FilterBarMultiFilter<string>,
+        } satisfies FilterBarFilter<string>,
       ]}
       // The input updates at once; only the URL, and so the server fetch, waits for a pause.
       // Clearing the search skips the wait, so the full list comes back at once.

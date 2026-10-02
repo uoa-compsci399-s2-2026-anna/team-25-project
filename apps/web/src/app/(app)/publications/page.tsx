@@ -2,8 +2,8 @@ import { AnimatedSuspense } from "@repo/ui/components/ui"
 import type { SearchParams } from "nuqs/server"
 import { PageContainer, PageHeader } from "@/features/layout/components"
 import {
-  PublicationsFilterBarSkeleton,
   PublicationsFilterServer,
+  PublicationsFilterServerSkeleton,
 } from "@/features/publications/components/PublicationsFilterServer"
 import {
   PublicationsList,
@@ -19,13 +19,9 @@ export default function Page({ searchParams }: { searchParams: Promise<SearchPar
           title="Publications"
         />
       </PageContainer>
-      <div className="w-full bg-brand-cream/60">
-        <PageContainer className="px-10 py-5 md:px-12">
-          <AnimatedSuspense fallback={<PublicationsFilterBarSkeleton />}>
-            <PublicationsFilterServer />
-          </AnimatedSuspense>
-        </PageContainer>
-      </div>
+      <AnimatedSuspense fallback={<PublicationsFilterServerSkeleton />}>
+        <PublicationsFilterServer />
+      </AnimatedSuspense>
       <PageContainer>
         <AnimatedSuspense fallback={<PublicationsListSkeleton />}>
           <PublicationsList searchParams={searchParams} />

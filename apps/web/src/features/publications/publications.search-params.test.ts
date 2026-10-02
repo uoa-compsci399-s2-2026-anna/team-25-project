@@ -128,6 +128,12 @@ describe("toPublicationFilters", () => {
     })
   })
 
+  it("caps the tags a hand-edited URL can filter on", () => {
+    expect(toPublicationFilters(loadPublicationSearchParams("?tags=a,b,c,d,e,f,g,h")).tags).toEqual(
+      ["a", "b", "c", "d", "e", "f"],
+    )
+  })
+
   it("drops empty tags", () => {
     expect(toPublicationFilters(loadPublicationSearchParams("?tags=,")).tags).toBeUndefined()
     expect(toPublicationFilters(loadPublicationSearchParams("?tags=Teamwork,,%20")).tags).toEqual([

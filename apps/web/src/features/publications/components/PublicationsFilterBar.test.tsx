@@ -26,7 +26,8 @@ describe("PublicationsFilterBar", () => {
     )
     expect(screen.getByRole("combobox", { name: "Type" })).toHaveTextContent("PhD thesis")
     expect(screen.getByRole("combobox", { name: "Year" })).toHaveTextContent("2024")
-    expect(screen.getByRole("combobox", { name: "Tags" })).toHaveTextContent("Teamwork")
+    // The chips below the bar name the picked tags; the trigger keeps its placeholder.
+    expect(screen.getByRole("combobox", { name: "Tags" })).toHaveTextContent("Tags")
     expect(screen.getByRole("combobox", { name: "Sort" })).toHaveTextContent("Title A-Z")
 
     await user.click(screen.getByRole("combobox", { name: "Year" }))
@@ -78,6 +79,18 @@ describe("PublicationsFilterBar", () => {
 
     await user.click(screen.getByRole("option", { name: "Assessment" }))
     expect(onUrlUpdate).toHaveBeenLastCalledWith(expect.objectContaining({ queryString: "" }))
+  })
+
+  it("disables the unpicked tags once the cap is reached", async () => {
+    const user = userEvent.setup()
+    render(<PublicationsFilterBar tags={["a", "b", "c", "d", "e", "f", "g"]} years={[]} />, {
+      wrapper: withNuqsTestingAdapter({ searchParams: "?tags=a,b,c,d,e,f" }),
+    })
+
+    await user.click(screen.getByRole("combobox", { name: "Tags" }))
+    await screen.findByRole("listbox")
+    expect(screen.getByRole("option", { name: "a" })).not.toHaveAttribute("data-disabled")
+    expect(screen.getByRole("option", { name: "g" })).toHaveAttribute("data-disabled")
   })
 
   it("applies search text after the debounce", async () => {

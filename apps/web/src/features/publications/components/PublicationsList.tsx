@@ -38,8 +38,7 @@ export const PublicationsList = async ({
   const getPageHref = (page: number) =>
     serializePublicationSearchParams(Routes.PUBLICATIONS, { ...params, page }) as Route
 
-  // The serializer leaves out defaults, so any query string means a filter is set. The filter
-  // bar cannot remove a tag that is not one of its options, such as a renamed tag in an old link.
+  // The serializer leaves out defaults, so any query string means a filter is set.
   const hasFilters = getPageHref(1) !== Routes.PUBLICATIONS
 
   if (publications.length === 0) {

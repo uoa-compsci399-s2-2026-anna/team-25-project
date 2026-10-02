@@ -4,8 +4,8 @@ import { PublicationsList } from "@/features/publications/components/Publication
 import Page from "./page"
 
 vi.mock("@/features/publications/components/PublicationsFilterServer", () => ({
-  PublicationsFilterBarSkeleton: () => null,
   PublicationsFilterServer: () => <div>Publication filters</div>,
+  PublicationsFilterServerSkeleton: () => null,
 }))
 vi.mock("@/features/publications/components/PublicationsList", () => ({
   PublicationsList: vi.fn(() => <div>Publication results</div>),

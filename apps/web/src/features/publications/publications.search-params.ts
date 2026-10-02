@@ -11,6 +11,9 @@ import {
 import { parseAsPositiveInteger } from "@/lib/search-params"
 import type { PublicationFilters } from "./publications.types"
 
+/** Enough to cast a wide net without the chips swamping the row or the URL. */
+export const PUBLICATION_TAG_FILTER_MAX = 6
+
 export const publicationSorts = ["newest", "oldest", "titleAsc"] as const
 export type PublicationSort = (typeof publicationSorts)[number]
 
@@ -46,7 +49,8 @@ export const toPublicationFilters = ({
   year,
 }: PublicationSearchParams): PublicationFilters => {
   // `?tags=,` parses to empty strings, which no publication has.
-  const namedTags = tags.filter((tag) => tag.trim() !== "")
+  // Capped here as well as in the bar, so a hand-edited URL cannot widen the query.
+  const namedTags = tags.filter((tag) => tag.trim() !== "").slice(0, PUBLICATION_TAG_FILTER_MAX)
 
   return {
     search: q.trim() || undefined,
