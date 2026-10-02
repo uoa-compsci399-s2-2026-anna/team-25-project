@@ -39,4 +39,10 @@ describe("WhoCanJoinSection", () => {
       Routes.REGISTER.ROOT,
     )
   })
+
+  // The navbar is otherwise the only way in from this page.
+  it("links Log in to the login flow", () => {
+    render(<WhoCanJoinSection />)
+    expect(screen.getByRole("button", { name: "Log in" })).toHaveAttribute("href", Routes.LOGIN)
+  })
 })
