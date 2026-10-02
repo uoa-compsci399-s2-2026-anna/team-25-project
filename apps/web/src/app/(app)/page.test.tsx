@@ -29,11 +29,9 @@ describe("Home page", () => {
     ).toBeInTheDocument()
   })
 
-  it("renders JoinCommunityBand", () => {
+  it("renders WhoCanJoinSection", () => {
     render(<Page />)
-    expect(
-      screen.getByRole("heading", { level: 2, name: "Want to be a part of the community?" }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole("heading", { level: 2, name: "Who can join" })).toBeInTheDocument()
   })
 
   // The order the design lays them out in.
@@ -42,7 +40,7 @@ describe("Home page", () => {
     expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual([
       "About us",
       "Benefits of being a member",
-      "Want to be a part of the community?",
+      "Who can join",
     ])
   })
 })
