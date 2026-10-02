@@ -34,7 +34,7 @@ type FilterBarStatusOption<TValue extends string = string> = FilterBarOption<TVa
  * Each filter keeps its own value type. Write it as `{ ... } satisfies FilterBarFilter<number>`
  * inside `filters` so the callback gets that type rather than the wider default.
  */
-type FilterBarFilter<TValue extends FilterBarValue = FilterBarValue> = {
+type FilterBarFilterBase<TValue extends FilterBarValue = FilterBarValue> = {
   id: string
   /**
    * Shown while nothing is picked, and names the control for screen readers.
@@ -42,27 +42,27 @@ type FilterBarFilter<TValue extends FilterBarValue = FilterBarValue> = {
    */
   placeholder: string
   options: FilterBarOption<TValue>[]
-  value: TValue | null
-  // Method syntax on purpose: it lets a FilterBarFilter<number> sit in a FilterBarFilter[].
-  onValueChange(value: TValue | null): void
 }
 
-/** A filter that holds any number of options at once. An empty array means no filter. */
-type FilterBarMultiFilter<TValue extends FilterBarValue = FilterBarValue> = Omit<
-  FilterBarFilter<TValue>,
-  "onValueChange" | "value"
-> & {
-  multiple: true
-  value: TValue[]
-  onValueChange(value: TValue[]): void
-}
-
-// One pick shows its label; more show a count, so the trigger keeps a steady width.
-const multiFilterLabel = ({ options, placeholder, value }: FilterBarMultiFilter) => {
-  if (value.length === 0) return placeholder
-  if (value.length > 1) return `${placeholder} - ${value.length}`
-  return options.find((option) => option.value === value[0])?.label ?? String(value[0])
-}
+/**
+ * Picking one value replaces the last, or with `multiple` each pick adds to the selection.
+ * A multiple filter keeps the trigger on its placeholder: what is picked belongs beside the
+ * bar, where each value can be removed on its own.
+ */
+type FilterBarFilter<TValue extends FilterBarValue = FilterBarValue> =
+  | (FilterBarFilterBase<TValue> & {
+      multiple?: false
+      value: TValue | null
+      // Method syntax on purpose: it lets a FilterBarFilter<number> sit in a FilterBarFilter[].
+      onValueChange(value: TValue | null): void
+    })
+  | (FilterBarFilterBase<TValue> & {
+      multiple: true
+      value: TValue[]
+      onValueChange(value: TValue[]): void
+      /** Once this many are picked the rest are disabled, so the cap is visible before it bites. */
+      maxSelected?: number
+    })
 
 type FilterBarProps<
   TStatus extends string = string,
@@ -75,7 +75,7 @@ type FilterBarProps<
   search: string
   onSearchChange: (search: string) => void
   searchPlaceholder?: string
-  filters?: (FilterBarFilter | FilterBarMultiFilter)[]
+  filters?: FilterBarFilter[]
   sortOptions: FilterBarOption<TSort>[]
   sort: TSort
   onSortChange: (sort: TSort) => void
@@ -140,12 +140,14 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
       </InputGroup>
 
       {filters.map((filter) =>
-        "multiple" in filter ? (
+        filter.multiple ? (
           <Select<FilterBarValue, true>
             items={filter.options}
             key={filter.id}
             multiple
-            onValueChange={(value) => filter.onValueChange(value)}
+            onValueChange={(value) =>
+              filter.onValueChange(filter.maxSelected ? value.slice(0, filter.maxSelected) : value)
+            }
             value={filter.value}
           >
             <SelectTrigger
@@ -153,12 +155,25 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
               className="h-10 shrink-0 px-4"
               variant="pill"
             >
-              <SelectValue>{() => multiFilterLabel(filter)}</SelectValue>
+              {/* Not SelectValue: the chips beside the bar already show what is picked, so the
+                  trigger stays on its placeholder rather than restating it. */}
+              <span className="flex flex-1 text-left text-muted-foreground">
+                {filter.placeholder}
+              </span>
             </SelectTrigger>
             {/* The trigger is narrower than a long option, so the list sets its own width. */}
             <SelectContent alignItemWithTrigger={false} className="w-auto min-w-(--anchor-width)">
               {filter.options.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
+                <SelectItem
+                  // At the cap only the picked ones stay live, so they can still be unpicked.
+                  disabled={
+                    filter.maxSelected !== undefined &&
+                    filter.value.length >= filter.maxSelected &&
+                    !filter.value.includes(option.value)
+                  }
+                  key={option.value}
+                  value={option.value}
+                >
                   {option.label}
                 </SelectItem>
               ))}
@@ -257,7 +272,6 @@ function FilterBarSkeleton({
 export {
   FilterBar,
   type FilterBarFilter,
-  type FilterBarMultiFilter,
   type FilterBarOption,
   type FilterBarProps,
   FilterBarSkeleton,

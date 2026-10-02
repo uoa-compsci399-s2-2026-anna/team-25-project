@@ -1,11 +1,6 @@
 import type { Meta, StoryFn } from "@storybook/nextjs-vite"
 import { useState } from "react"
-import {
-  FilterBar,
-  type FilterBarFilter,
-  type FilterBarMultiFilter,
-  FilterBarSkeleton,
-} from "./filter-bar"
+import { FilterBar, type FilterBarFilter, FilterBarSkeleton } from "./filter-bar"
 
 const meta: Meta<typeof FilterBar> = {
   title: "composite/FilterBar",
@@ -73,7 +68,7 @@ export const Primary: StoryFn<typeof FilterBar> = () => {
   )
 }
 
-/** A filter with `multiple` holds any number of options at once. */
+/** A filter with `multiple` holds several options at once, up to `maxSelected`. */
 export const MultiSelect: StoryFn<typeof FilterBar> = () => {
   const [search, setSearch] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
@@ -85,12 +80,13 @@ export const MultiSelect: StoryFn<typeof FilterBar> = () => {
         filters={[
           {
             id: "tags",
+            maxSelected: 2,
             multiple: true,
             onValueChange: (value) => setSelectedTags(value),
             options: tags,
             placeholder: "Tags",
             value: selectedTags,
-          } satisfies FilterBarMultiFilter<string>,
+          } satisfies FilterBarFilter<string>,
         ]}
         onSearchChange={setSearch}
         onSortChange={setSort}
