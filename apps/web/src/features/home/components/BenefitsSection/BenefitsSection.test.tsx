@@ -21,7 +21,7 @@ describe("BenefitsSection", () => {
   })
 
   // The pair that used to sit under the list moved to Who can join.
-  it("asks for nothing - it only lists", () => {
+  it("asks for nothing, it only lists", () => {
     render(<BenefitsSection />)
     expect(screen.queryAllByRole("button")).toHaveLength(0)
   })

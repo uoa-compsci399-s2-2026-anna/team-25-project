@@ -3,7 +3,6 @@ import { Eyebrow, Heading } from "@repo/ui/components/ui"
 export const HeroSection = () => {
   return (
     <section className="flex flex-col items-center gap-12 px-8 pt-20 pb-32 md:flex-row md:px-16 md:pt-25 md:pb-25">
-      {/* Capped so the headline wraps as the design does, rather than running the page width. */}
       <div className="flex max-w-3xl flex-col gap-8">
         <Eyebrow>Computing Capstone Community Australasia</Eyebrow>
 
@@ -17,8 +16,8 @@ export const HeroSection = () => {
         </p>
       </div>
 
-      {/* Holds the space the interactive map will take - that is its own
-          ticket. Same stopgap pattern as TickerPlaceholder. */}
+      {/* Holds the space the interactive map will take, which is its own ticket.
+          Same stopgap pattern as TickerPlaceholder. */}
       <div className="flex justify-center md:flex-1">
         <div
           className="flex aspect-4/5 w-full max-w-sm items-center justify-center rounded-2xl bg-muted text-muted-foreground text-sm"

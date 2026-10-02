@@ -22,8 +22,8 @@ const about = [
 ]
 
 export const AboutSection = () => {
-  // More above than below: this sits right under the ticker band, which has
-  // padding of its own but no breathing room against the heading.
+  // More above than below: this meets the ticker band, which leaves the heading
+  // no room of its own.
   return (
     <section className="flex flex-col gap-8 px-8 pt-16 pb-12 md:px-16 md:pt-20">
       <Heading level="h2">About us</Heading>

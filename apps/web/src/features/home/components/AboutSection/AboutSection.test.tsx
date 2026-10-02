@@ -24,7 +24,7 @@ describe("AboutSection", () => {
     }
   })
 
-  // The card it used to have its own slot for - it reads as part of 02 now.
+  // The card it used to have its own slot for. It reads as part of 02 now.
   it("keeps course comparison on the proposals card", () => {
     render(<AboutSection />)
     expect(screen.getByText(/Record course data annually/)).toBeInTheDocument()
