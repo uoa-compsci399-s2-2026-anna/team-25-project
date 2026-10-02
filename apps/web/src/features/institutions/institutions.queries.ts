@@ -17,6 +17,21 @@ export const getInstitutionOptions = async (): Promise<InstitutionOption[]> => {
   return docs.map(({ id, name }) => ({ label: name, value: id }))
 }
 
+export const getActiveInstitutionOptions = async (): Promise<InstitutionOption[]> => {
+  const payload = await getPayloadClient()
+  const { values } = await payload.findDistinct({
+    collection: Slugs.Collections.MEMBERS,
+    field: "institution",
+    depth: 1,
+    populate: { [Slugs.Collections.INSTITUTIONS]: { name: true } },
+  })
+  return values
+    .map(({ institution }) => institution)
+    .filter((institution) => typeof institution === "object")
+    .map(({ id, name }) => ({ label: name, value: id }))
+    .sort((a, b) => a.label.localeCompare(b.label))
+}
+
 export type InstitutionName = Pick<Institution, "id" | "name">
 
 // Only the name is read, so the result is the pair the page renders rather than
@@ -53,6 +68,13 @@ export const getInstitutionOptionsCached = async () => {
   cacheLife("max")
   cacheTag(QueryKeys.INSTITUTIONS)
   return getInstitutionOptions()
+}
+
+export const getActiveInstitutionOptionsCached = async () => {
+  "use cache"
+  cacheLife("max")
+  cacheTag(QueryKeys.INSTITUTIONS, QueryKeys.MEMBERS.ROOT)
+  return getActiveInstitutionOptions()
 }
 
 export const getInstitutionNameCached = async (institutionId: number) => {
