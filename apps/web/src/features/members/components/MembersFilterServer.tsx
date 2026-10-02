@@ -1,12 +1,12 @@
 import { FilterBarSkeleton } from "@repo/ui/components/composite"
-import { getInstitutionOptionsCached } from "@/features/institutions/institutions.queries"
+import { getActiveInstitutionOptionsCached } from "@/features/institutions/institutions.queries"
 import { PageContainer } from "@/features/layout/components"
 import { MembersActiveFilters } from "./MembersActiveFilters"
 import { MembersFilterBar } from "./MembersFilterBar"
 
 // Two strips on the page, but one institutions fetch and one Suspense boundary.
 export const MembersFilterServer = async () => {
-  const institutions = await getInstitutionOptionsCached()
+  const institutions = await getActiveInstitutionOptionsCached()
 
   return (
     <>
