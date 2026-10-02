@@ -36,6 +36,7 @@ export const InstitutionsTicker = async () => {
         play={animate}
       >
         {institutions.map((institution) => (
+          // biome-ignore lint/performance/noImgElement: needs images.remotePatterns for the S3 bucket hostname first - revisit once S3 is working
           <img
             alt=""
             className="mx-6 h-14 w-auto shrink-0 object-contain lg:mx-24"
