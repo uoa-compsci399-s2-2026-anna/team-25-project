@@ -1,5 +1,5 @@
 import { AnimatedSuspense, Separator } from "@repo/ui/components/ui"
-import { PageContainer } from "@/features/layout/components"
+import { BackLink, PageContainer } from "@/features/layout/components"
 import {
   MemberHeader,
   MemberHeaderSkeleton,
@@ -8,10 +8,12 @@ import { MemberDetailLeftColumn } from "@/features/members/components/MemberDeta
 import { MemberDetailRightColumn } from "@/features/members/components/MemberDetail/MemberDetailRightColumn"
 import { EditProvider } from "@/features/members/components/MemberEditor/EditContext"
 import type { MembersRouteParams } from "@/features/members/members.params"
+import { Routes } from "@/lib/routes"
 
 export default function Page({ params }: { params: MembersRouteParams }) {
   return (
     <PageContainer>
+      <BackLink href={Routes.MEMBERS.ROOT}>Members</BackLink>
       <article className="grid w-full gap-x-10 gap-y-8 p-10 md:p-12 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-12">
         <EditProvider>
           <div className="lg:col-span-2">

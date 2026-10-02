@@ -36,6 +36,13 @@ describe("MemberBio", () => {
     expect(screen.getByText("Researches peer assessment.")).toBeInTheDocument()
   })
 
+  it.each([null, undefined, "", "   "])("renders nothing when the bio is %j", async (bio) => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue({ bio } as never)
+
+    await renderBio()
+    expect(screen.getByTestId("subject")).toBeEmptyDOMElement()
+  })
+
   it("swaps the bio for a text area seeded with it when editing", async () => {
     vi.mocked(getMemberDetailsCached).mockResolvedValue({ id: 7, bio: "My bio" } as never)
     const user = userEvent.setup()

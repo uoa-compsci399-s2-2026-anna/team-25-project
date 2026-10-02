@@ -28,7 +28,7 @@ export const MemberProposals = async ({ params }: { params: MembersRouteParams }
   return (
     <Tabs className="gap-4" defaultValue={ProposalStatus.ACTIVE} render={<section />}>
       <div className="flex flex-row justify-between">
-        <Heading level="h1">Proposals</Heading>
+        <Heading level="h2">Proposals</Heading>
         <TabsList className="w-80" variant="pill">
           <TabsTrigger value={ProposalStatus.ACTIVE}>
             {`${ProposalStatusLabels.active} - ${active.length}`}

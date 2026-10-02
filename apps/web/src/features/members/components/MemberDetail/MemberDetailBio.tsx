@@ -6,7 +6,7 @@ import { EditInput } from "../MemberEditor/EditInput"
 export const MemberBio = async ({ params }: { params: MembersRouteParams }) => {
   const memberId = await parseMemberId(params)
   const member = await getMemberDetailsCached(memberId)
-  if (!member) return null
+  if (!member?.bio?.trim()) return null
 
   return (
     <div className="flex flex-col gap-1">
