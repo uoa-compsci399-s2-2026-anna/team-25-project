@@ -69,6 +69,11 @@ export default buildConfig({
     push: false,
   }),
   sharp,
+  upload: {
+    limits: { fileSize: 50 * 1024 * 1024 },
+    // Without this an oversized file is cut off at the limit and saved truncated.
+    abortOnLimit: true,
+  },
   plugins: [
     s3Storage({
       enabled: Boolean(process.env.S3_BUCKET && process.env.S3_REGION),
