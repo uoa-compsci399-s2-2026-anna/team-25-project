@@ -8,6 +8,7 @@ import {
   ProposalTimeframeEndPeriod,
   ProposalTimeframeStartPeriod,
 } from "@repo/shared/enums/proposals"
+import { PublicationType } from "@repo/shared/enums/publications"
 import type { Proposal } from "@repo/shared/payload-types"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
@@ -197,6 +198,186 @@ const offerings = [
     assessments: "Four team project milestones (40%) and final exam (60%).",
     additionalInfo: undefined,
     teachingTeam: [["liam.wilson@otago.ac.nz", "Course coordinator"]],
+  },
+] as const
+
+// DOIs use 10.5555, the prefix reserved for examples, so none resolves to a real paper.
+const publications = [
+  {
+    citationKey: "nair2026genai",
+    type: PublicationType.IN_PROCEEDINGS,
+    title: "How capstone students judge generative AI feedback in code review",
+    authors: [
+      ["Priya Nair", "priya.nair@unimelb.edu.au"],
+      ["Maya Chen", "maya.chen@auckland.ac.nz"],
+      ["J. Okafor"],
+    ],
+    year: 2026,
+    month: 2,
+    doi: "10.5555/capstone.2026.001",
+    url: "https://example.com/publications/nair2026genai",
+    venue: "Australasian Computing Education Conference",
+    pages: "41-50",
+    publisher: "Example Press",
+    abstract:
+      "We interviewed 38 capstone students at two universities about the AI feedback they received during code review. Students trusted comments on style more than comments on design, and few checked a suggestion before they applied it. We give four guidelines for teaching teams.",
+    tags: ["Generative AI", "Code review"],
+  },
+  {
+    citationKey: "patel2025review",
+    type: PublicationType.ARTICLE,
+    title: "Peer code review as assessment in team capstones",
+    authors: [
+      ["Arohan Patel", "arohan.patel@auckland.ac.nz"],
+      ["Liam Wilson", "liam.wilson@otago.ac.nz"],
+    ],
+    year: 2025,
+    month: 9,
+    doi: "10.5555/capstone.2025.014",
+    venue: "Journal of Computing Capstone Education",
+    volume: "12",
+    issue: "3",
+    pages: "201-219",
+    abstract:
+      "Marking review comments, not only the code, changed how students reviewed. Comments became longer and more specific across three course offerings.",
+    tags: ["Code review", "Assessment"],
+  },
+  {
+    citationKey: "rangi2025partners",
+    type: PublicationType.ARTICLE,
+    title: "What industry partners want from a capstone project",
+    authors: [
+      ["Hana Rangi", "hana.rangi@otago.ac.nz"],
+      ["Noah Taylor", "noah.taylor@unsw.edu.au"],
+      ["S. Whitfield"],
+    ],
+    year: 2025,
+    month: 4,
+    doi: "10.5555/capstone.2025.006",
+    url: "https://example.com/publications/rangi2025partners",
+    venue: "Journal of Computing Capstone Education",
+    volume: "12",
+    issue: "1",
+    pages: "33-52",
+    abstract:
+      "A survey of 61 industry clients in Aotearoa New Zealand and Australia. Clients put communication and reliability above technical skill.",
+    tags: ["Industry partnerships", "Authentic assessment"],
+  },
+  {
+    citationKey: "chen2025belonging",
+    type: PublicationType.IN_PROCEEDINGS,
+    title: "Belonging from first year to capstone: a four-year cohort study",
+    authors: [
+      ["Maya Chen", "maya.chen@auckland.ac.nz"],
+      ["Arohan Patel", "arohan.patel@auckland.ac.nz"],
+    ],
+    year: 2025,
+    month: 1,
+    doi: "10.5555/capstone.2025.002",
+    venue: "Australasian Computing Education Conference",
+    pages: "112-121",
+    tags: ["Belonging"],
+  },
+  {
+    citationKey: "wilson2024teams",
+    type: PublicationType.MASTERS_THESIS,
+    title: "Team formation methods in year-long software projects",
+    authors: [["Liam Wilson", "liam.wilson@otago.ac.nz"]],
+    year: 2024,
+    month: 11,
+    url: "https://example.com/publications/wilson2024teams",
+    venue: "University of Otago",
+    abstract:
+      "Compares self-selected, random and skill-balanced teams across four cohorts. Skill-balanced teams had fewer conflicts but no better marks.",
+    tags: ["Teamwork"],
+  },
+  {
+    citationKey: "nair2024rubrics",
+    type: PublicationType.ARTICLE,
+    title: "Rubrics that survive generative AI",
+    authors: [
+      ["Priya Nair", "priya.nair@unimelb.edu.au"],
+      ["Hana Rangi", "hana.rangi@otago.ac.nz"],
+    ],
+    year: 2024,
+    month: 6,
+    doi: "10.5555/capstone.2024.021",
+    venue: "Computing Education Review",
+    volume: "8",
+    issue: "2",
+    pages: "77-95",
+    tags: ["Generative AI", "Assessment"],
+  },
+  {
+    citationKey: "taylor2024handbook",
+    type: PublicationType.MANUAL,
+    title: "A handbook for capstone client meetings",
+    authors: [["Noah Taylor", "noah.taylor@unsw.edu.au"]],
+    year: 2024,
+    url: "https://example.com/publications/taylor2024handbook",
+    venue: "UNSW Sydney",
+    tags: ["Industry partnerships"],
+  },
+  {
+    citationKey: "patel2023contribution",
+    type: PublicationType.TECH_REPORT,
+    title: "Measuring individual contribution from version control data",
+    authors: [["Arohan Patel", "arohan.patel@auckland.ac.nz"], ["R. Singh"], ["T. Faleolo"]],
+    year: 2023,
+    month: 8,
+    venue: "University of Auckland",
+    abstract:
+      "Commit counts mislead. We test five measures against peer ratings from 54 teams and recommend that markers use none of them alone.",
+    tags: ["Teamwork", "Assessment"],
+  },
+  {
+    citationKey: "rangi2023chapter",
+    type: PublicationType.IN_BOOK,
+    title: "Assessment that looks like work",
+    authors: [["Hana Rangi", "hana.rangi@otago.ac.nz"]],
+    year: 2023,
+    doi: "10.5555/capstone.2023.009",
+    venue: "Teaching Software Engineering in Practice",
+    pages: "145-168",
+    publisher: "Example Press",
+    tags: ["Authentic assessment"],
+  },
+  {
+    citationKey: "chen2022reflection",
+    type: PublicationType.IN_PROCEEDINGS,
+    title: "Do individual reflections show who did the work?",
+    authors: [["Maya Chen", "maya.chen@auckland.ac.nz"], ["A. Lindqvist"]],
+    year: 2022,
+    month: 7,
+    doi: "10.5555/capstone.2022.017",
+    venue: "Conference on Innovation in Computing Education",
+    pages: "301-307",
+    tags: ["Assessment", "Qualitative methods"],
+  },
+  {
+    citationKey: "nair2021thesis",
+    type: PublicationType.PHD_THESIS,
+    title: "Feedback practices in project-based computing courses",
+    authors: [["Priya Nair", "priya.nair@unimelb.edu.au"]],
+    year: 2021,
+    month: 12,
+    url: "https://example.com/publications/nair2021thesis",
+    venue: "University of Melbourne",
+    abstract:
+      "Three studies of how teachers give feedback on team software projects, and how students use it.",
+    tags: ["Assessment", "Qualitative methods"],
+  },
+  {
+    citationKey: "wilson2021remote",
+    type: PublicationType.MISC,
+    title: "Running a capstone showcase online",
+    authors: [
+      ["Liam Wilson", "liam.wilson@otago.ac.nz"],
+      ["Noah Taylor", "noah.taylor@unsw.edu.au"],
+    ],
+    year: 2021,
+    url: "https://example.com/publications/wilson2021remote",
+    venue: "arXiv",
   },
 ] as const
 
@@ -392,8 +573,31 @@ export const seed = async () => {
     }
   }
 
+  for (const { authors, ...fixture } of publications) {
+    const existing = await payload.find({
+      collection: Slugs.Collections.PUBLICATIONS,
+      where: { citationKey: { equals: fixture.citationKey } },
+      depth: 0,
+      limit: 1,
+    })
+    if (existing.docs.length === 0) {
+      await payload.create({
+        collection: Slugs.Collections.PUBLICATIONS,
+        data: {
+          ...fixture,
+          tags: "tags" in fixture ? [...fixture.tags] : undefined,
+          authors: authors.map(([name, email]) => ({
+            name,
+            member: email ? requiredID(memberIds, email) : undefined,
+          })),
+        },
+        context: SEED_CONTEXT,
+      })
+    }
+  }
+
   payload.logger.info(
-    `Seed complete: ${institutions.length} institutions, ${members.length} members, ${proposals.length} proposals, ${courses.length} courses and ${offerings.length} course offerings. Mock member password: ${MEMBER_PASSWORD}.`,
+    `Seed complete: ${institutions.length} institutions, ${members.length} members, ${proposals.length} proposals, ${publications.length} publications, ${courses.length} courses and ${offerings.length} course offerings. Mock member password: ${MEMBER_PASSWORD}.`,
   )
 }
 
