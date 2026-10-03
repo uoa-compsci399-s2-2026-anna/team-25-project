@@ -7,6 +7,7 @@ export const Slugs = {
     PROPOSALS: "proposals",
     COURSES: "courses",
     COURSE_VERSIONS: "courseVersions",
+    PUBLICATIONS: "publications",
   },
 } as const
 
