@@ -1,10 +1,15 @@
 import { cleanup, render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getInstitutionCached } from "@/features/institutions/institutions.queries"
-import { getMemberDetailsCached } from "../members.queries"
+import { getCurrentUser } from "@/lib/payload/getCurrentUser"
+import { getMemberDetailsCached } from "../../members.queries"
+import { EditProvider } from "../MemberEditor/EditContext"
 import { MemberHeader, MemberHeaderSkeleton } from "./MemberDetailHeader"
 
-vi.mock("../members.queries", () => ({ getMemberDetailsCached: vi.fn() }))
+vi.mock("../../members.queries", () => ({ getMemberDetailsCached: vi.fn() }))
+vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
+vi.mock("../../actions/updateMemberProfile", () => ({ updateMemberProfile: vi.fn() }))
 vi.mock("@/features/institutions/institutions.queries", () => ({
   getInstitutionCached: vi.fn(),
 }))
@@ -26,14 +31,20 @@ const member = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 })
 
+// The page wraps everything in EditProvider, so the header is rendered the same way.
 const renderHeader = async () =>
-  render(await MemberHeader({ params: Promise.resolve({ memberId: "7" }) }))
+  render(
+    <EditProvider>
+      {await MemberHeader({ params: Promise.resolve({ memberId: "7" }) })}
+    </EditProvider>,
+  )
 
 describe("MemberHeader", () => {
   beforeEach(() => {
     vi.mocked(getInstitutionCached)
       .mockReset()
       .mockResolvedValue(institution as never)
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: null, user: null })
   })
 
   afterEach(() => {
@@ -49,10 +60,10 @@ describe("MemberHeader", () => {
   it("shows the name and looks up the institution by id", async () => {
     vi.mocked(getMemberDetailsCached).mockResolvedValue(member() as never)
 
-    await renderHeader()
+    const { container } = await renderHeader()
     expect(screen.getByRole("heading", { level: 1, name: "Anna Tui" })).toBeInTheDocument()
     expect(getInstitutionCached).toHaveBeenCalledWith(12)
-    expect(screen.getByText("Senior Lecturer - University of Auckland - NZ")).toBeInTheDocument()
+    expect(container).toHaveTextContent("Senior Lecturer - University of Auckland - NZ")
   })
 
   it("puts the member's title before their name", async () => {
@@ -69,9 +80,10 @@ describe("MemberHeader", () => {
       member({ institution, position: null }) as never,
     )
 
-    await renderHeader()
+    const { container } = await renderHeader()
     expect(getInstitutionCached).not.toHaveBeenCalled()
-    expect(screen.getByText("University of Auckland - NZ")).toBeInTheDocument()
+    expect(container).toHaveTextContent("University of Auckland - NZ")
+    expect(container).not.toHaveTextContent("- University")
   })
 
   it("leaves out the affiliation line when there's nothing to show", async () => {
@@ -80,6 +92,51 @@ describe("MemberHeader", () => {
 
     const { container } = await renderHeader()
     expect(container.querySelector("p")).toBeNull()
+  })
+
+  it("hides the edit control on someone else's profile", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue(member() as never)
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      user: { id: 8 },
+    } as never)
+
+    await renderHeader()
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Upload photo" })).not.toBeInTheDocument()
+  })
+
+  it("shows one Edit button on the member's own profile", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue(member() as never)
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      user: { id: 7 },
+    } as never)
+
+    await renderHeader()
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { level: 1, name: "Anna Tui" })).toBeInTheDocument()
+    // Inputs only appear once editing starts.
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
+  })
+
+  it("swaps the photo, name, title and position for inputs when editing", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue(member() as never)
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      user: { id: 7 },
+    } as never)
+    const user = userEvent.setup()
+
+    await renderHeader()
+    await user.click(screen.getByRole("button", { name: "Edit" }))
+
+    expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Upload photo" })).toBeInTheDocument()
+    expect(screen.getByRole("combobox", { name: "Title" })).toBeInTheDocument()
+    expect(screen.getByRole("textbox", { name: "First name" })).toHaveValue("Anna")
+    expect(screen.getByRole("textbox", { name: "Last name" })).toHaveValue("Tui")
+    expect(screen.getByRole("textbox", { name: "Position" })).toHaveValue("Senior Lecturer")
   })
 
   it("falls back to initials without a populated avatar", async () => {

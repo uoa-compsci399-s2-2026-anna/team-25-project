@@ -14,8 +14,8 @@ import {
 import Link from "next/link"
 import { formatDate } from "@/features/courses/courses.format"
 import { Routes } from "@/lib/routes"
-import { type MembersRouteParams, parseMemberId } from "../members.params"
-import { getMemberProposalsCached } from "../members.queries"
+import { type MembersRouteParams, parseMemberId } from "../../members.params"
+import { getMemberProposalsCached } from "../../members.queries"
 
 type MemberProposal = Awaited<ReturnType<typeof getMemberProposalsCached>>[number]
 
