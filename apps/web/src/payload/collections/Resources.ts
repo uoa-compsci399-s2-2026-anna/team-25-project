@@ -1,6 +1,7 @@
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { isAdmin, isSignedIn } from "../access"
+import { courseWrite } from "../access/Courses/Courses"
 import { admin } from "../access/helpers"
 import { isAdminOrOwner } from "../access/Resources"
 import {
@@ -52,6 +53,7 @@ export const Resources: CollectionConfig = {
       name: "course",
       type: "relationship",
       relationTo: Slugs.Collections.COURSES,
+      filterOptions: ({ req }) => courseWrite({ req }),
       admin: {
         description: "Optional. Links the resource to the course it was written for.",
       },
