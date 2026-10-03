@@ -7,6 +7,7 @@ const findField = (name: string) =>
   Resources.fields.find((field) => "name" in field && field.name === name)
 
 const ownerField = findField("owner") as RelationshipField
+const courseField = findField("course") as RelationshipField
 
 describe("Resources collection", () => {
   it.each(["course", "attachments"])("keeps %s optional", (name) => {
@@ -28,5 +29,16 @@ describe("Resources collection", () => {
 
     expect(await update?.({ req: member })).toBe(false)
     expect(await update?.({ req: admin })).toBe(true)
+  })
+
+  it("offers only the courses the user can write to", async () => {
+    const filterOptions = courseField.filterOptions as (args: { req: PayloadRequest }) => unknown
+    const member = { user: { id: 7, collection: Slugs.Collections.MEMBERS } } as PayloadRequest
+    const admin = { user: { id: 1, collection: Slugs.Collections.ADMIN } } as PayloadRequest
+
+    expect(await filterOptions({ req: member })).toEqual({
+      or: [{ owner: { equals: 7 } }, { editors: { contains: 7 } }],
+    })
+    expect(await filterOptions({ req: admin })).toBe(true)
   })
 })
