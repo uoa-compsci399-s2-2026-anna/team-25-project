@@ -77,7 +77,7 @@ describe("AddCourseTriggerWithDefaultRole", () => {
     await openDialog()
 
     expect(screen.getByRole("dialog", { name: "Add a capstone course" })).toBeInTheDocument()
-    fireEvent.change(screen.getByLabelText("Course code"), { target: { value: "CS399" } })
+    fireEvent.change(screen.getByLabelText(/^Course code/), { target: { value: "CS399" } })
 
     await act(async () => {
       resolveUser({
@@ -88,7 +88,7 @@ describe("AddCourseTriggerWithDefaultRole", () => {
     })
 
     // Same dialog instance throughout - the typed code survives the role arriving.
-    expect(screen.getByLabelText("Course code")).toHaveValue("CS399")
+    expect(screen.getByLabelText(/^Course code/)).toHaveValue("CS399")
     expect(screen.getByLabelText("Your role")).toHaveValue("Senior Lecturer")
   })
 })
