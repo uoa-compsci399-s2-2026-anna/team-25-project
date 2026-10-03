@@ -381,6 +381,105 @@ const publications = [
   },
 ] as const
 
+// More than one page of the resources list, so its paging can be tried. Each is created
+// as its owner, who must own or edit the linked course for the course filter to accept it.
+const resources = [
+  {
+    title: "Individual contribution rubric for team projects",
+    owner: "arohan.patel@auckland.ac.nz",
+    course: "COMPSCI 399",
+    description:
+      "Four-criterion rubric with moderation notes, used to turn a team mark into individual marks for a 180-student cohort since 2022.",
+  },
+  {
+    title: "Industry partner agreement template",
+    owner: "arohan.patel@auckland.ac.nz",
+    course: "COMPSCI 399",
+    description:
+      "Plain-language agreement covering IP, confidentiality and weekly client time, reviewed by the university's legal team.",
+  },
+  {
+    title: "Team formation survey",
+    owner: "maya.chen@auckland.ac.nz",
+    course: "COMPSCI 399",
+    description:
+      "Survey on skills, timetables and working styles that feeds the team allocation spreadsheet.",
+  },
+  {
+    title: "Sprint retrospective prompts",
+    owner: "maya.chen@auckland.ac.nz",
+    course: "SOFTENG 770",
+    description:
+      "Twelve prompts for fortnightly retrospectives, ordered from easy openers to harder questions about team conflict.",
+  },
+  {
+    title: "Final presentation marking sheet",
+    owner: "maya.chen@auckland.ac.nz",
+    course: "SOFTENG 770",
+    description:
+      "One-page sheet for markers and clients, with descriptors for the demo, the technical talk and the questions.",
+  },
+  {
+    title: "Client kickoff meeting checklist",
+    owner: "liam.wilson@otago.ac.nz",
+    course: "COSC 345",
+    description:
+      "What to settle in the first client meeting: scope, contact hours, access to systems and what done looks like.",
+  },
+  {
+    title: "Peer assessment moderation guide",
+    owner: "hana.rangi@otago.ac.nz",
+    course: "COSC 345",
+    description:
+      "How we spot and moderate outlying peer marks, with worked examples from three semesters.",
+  },
+  {
+    title: "Code review guidelines for student teams",
+    owner: "priya.nair@unimelb.edu.au",
+    course: "COMP30022",
+    description:
+      "Short guide to reviewing a teammate's pull request, including how to use AI review tools without trusting them blindly.",
+  },
+  {
+    title: "Project proposal template",
+    owner: "priya.nair@unimelb.edu.au",
+    course: "COMP30022",
+    description:
+      "Template clients fill in to pitch a project, with examples of a well-scoped and a badly scoped proposal.",
+  },
+  {
+    title: "Ethics approval walkthrough",
+    owner: "noah.taylor@unsw.edu.au",
+    course: "COMP3900",
+    description:
+      "Step-by-step notes on getting low-risk ethics approval for projects that collect data from users.",
+  },
+  {
+    title: "Conflict resolution playbook",
+    owner: "noah.taylor@unsw.edu.au",
+    course: "COMP3900",
+    description:
+      "Escalation steps for team conflict, from a facilitated conversation to a change of team, with email templates.",
+  },
+  {
+    title: "Reading list: software engineering capstones",
+    owner: "hana.rangi@otago.ac.nz",
+    description:
+      "Papers and book chapters we give new capstone coordinators, grouped by assessment, teamwork and industry partners.",
+  },
+  {
+    title: "Weekly status report template",
+    owner: "liam.wilson@otago.ac.nz",
+    description: "Half-page template teams send their client each week: done, next, blocked.",
+  },
+  {
+    title: "Capstone coordinator onboarding notes",
+    owner: "noah.taylor@unsw.edu.au",
+    description:
+      "What a new coordinator needs in their first month, from booking rooms to recruiting clients.",
+  },
+] as const
+
 const richText = (text: string): Proposal["body"] => ({
   root: {
     type: "root",
@@ -596,8 +695,35 @@ export const seed = async () => {
     }
   }
 
+  for (const fixture of resources) {
+    const existing = await payload.find({
+      collection: Slugs.Collections.RESOURCES,
+      where: { title: { equals: fixture.title } },
+      depth: 0,
+      limit: 1,
+    })
+    if (existing.docs.length === 0) {
+      const owner = await payload.findByID({
+        collection: Slugs.Collections.MEMBERS,
+        id: requiredID(memberIds, fixture.owner),
+        depth: 0,
+      })
+      await payload.create({
+        collection: Slugs.Collections.RESOURCES,
+        data: {
+          title: fixture.title,
+          owner: owner.id,
+          course: "course" in fixture ? requiredID(courseIds, fixture.course) : undefined,
+          description: richText(fixture.description),
+        },
+        user: { ...owner, collection: Slugs.Collections.MEMBERS },
+        context: SEED_CONTEXT,
+      })
+    }
+  }
+
   payload.logger.info(
-    `Seed complete: ${institutions.length} institutions, ${members.length} members, ${proposals.length} proposals, ${publications.length} publications, ${courses.length} courses and ${offerings.length} course offerings. Mock member password: ${MEMBER_PASSWORD}.`,
+    `Seed complete: ${institutions.length} institutions, ${members.length} members, ${proposals.length} proposals, ${publications.length} publications, ${courses.length} courses, ${offerings.length} course offerings and ${resources.length} resources. Mock member password: ${MEMBER_PASSWORD}.`,
   )
 }
 
