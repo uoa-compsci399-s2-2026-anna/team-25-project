@@ -13,6 +13,7 @@ import { canReadEmail, isAdmin, isAdminOrSelf } from "../access"
 import { admin } from "../access/helpers"
 import {
   enforceInstitutionDomain,
+  normaliseStoredResearchInterests,
   revalidateDeletedMemberProposals,
   revalidateMemberProposals,
 } from "../hooks/Members"
@@ -75,6 +76,7 @@ export const Members: CollectionConfig = {
       maxRows: RESEARCH_INTERESTS_MAX,
       // With hasMany, maxLength applies to each interest rather than the list.
       maxLength: RESEARCH_INTEREST_MAX_LENGTH,
+      hooks: { beforeValidate: [normaliseStoredResearchInterests] },
     },
     {
       name: "links",

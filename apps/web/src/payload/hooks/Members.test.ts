@@ -5,6 +5,7 @@ import { ValidationError } from "payload"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import {
   enforceInstitutionDomain,
+  normaliseStoredResearchInterests,
   revalidateDeletedMemberProposals,
   revalidateMemberProposals,
 } from "./Members"
@@ -153,5 +154,19 @@ describe("enforceInstitutionDomain", () => {
     )
     await enforceInstitutionDomain(args)
     expect(findByID).toHaveBeenCalledWith(expect.objectContaining({ id: institution.id }))
+  })
+})
+
+describe("normaliseStoredResearchInterests", () => {
+  it("stores interests trimmed, without blanks or repeats", () => {
+    expect(
+      normaliseStoredResearchInterests({
+        value: ["  Teamwork  ", "", "Teamwork", "Ethics"],
+      } as never),
+    ).toEqual(["Teamwork", "Ethics"])
+  })
+
+  it.each([null, undefined])("leaves %s alone", (value) => {
+    expect(normaliseStoredResearchInterests({ value } as never)).toBe(value)
   })
 })
