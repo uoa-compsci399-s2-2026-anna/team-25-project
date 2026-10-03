@@ -5,11 +5,13 @@ import { revalidateTag } from "next/cache"
 import type {
   CollectionAfterChangeHook,
   CollectionAfterDeleteHook,
+  CollectionBeforeDeleteHook,
   CollectionBeforeValidateHook,
   FieldHook,
 } from "payload"
 import { ValidationError } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
+import { fail } from "./helpers"
 
 // Cached proposal lists and details show each author's name, avatar and institution, and lists filter
 // on the institution. Details depend on the members tag; the member's own profile uses its id tag.
@@ -32,6 +34,23 @@ export const revalidateDeletedMemberProposals: CollectionAfterDeleteHook<Member>
     revalidateTag(QueryKeys.MEMBERS.ID(doc.id), "max")
   }
   return doc
+}
+
+// A resource's owner is required, so deleting its owner would fail on the
+// database constraint. Refuse up front with something an admin can act on.
+export const assertMemberDeletable: CollectionBeforeDeleteHook = async ({ id, req }) => {
+  const { totalDocs } = await req.payload.count({
+    collection: Slugs.Collections.RESOURCES,
+    where: { owner: { equals: id } },
+    req,
+    overrideAccess: true,
+  })
+
+  if (totalDocs)
+    fail(
+      `This member owns ${totalDocs} ${totalDocs === 1 ? "resource" : "resources"}. Delete or reassign them first.`,
+      409,
+    )
 }
 
 // split() never returns [], so at(-1) is always safe; trim() guards whitespace Payload never strips for us.
