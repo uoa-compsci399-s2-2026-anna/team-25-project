@@ -5,12 +5,12 @@ import { Slugs } from "@/lib/payload/slugs"
 import { isSignedIn } from "../access"
 import { isAdminOrLinkedAuthor } from "../access/Publications"
 import {
+  blankToNull,
   requireLinkedAuthor,
   revalidateDeletedPublication,
   revalidatePublications,
 } from "../hooks/Publications"
-
-const DOI_PATTERN = /^10\.\d{4,9}\/\S+$/
+import { validateDoi } from "../validation/Publications"
 
 export const Publications: CollectionConfig = {
   slug: Slugs.Collections.PUBLICATIONS,
@@ -35,6 +35,7 @@ export const Publications: CollectionConfig = {
       type: "text",
       unique: true,
       admin: { description: "BibTeX key, e.g. smith2024learning" },
+      hooks: { beforeValidate: [blankToNull] },
     },
     {
       name: "type",
@@ -81,8 +82,8 @@ export const Publications: CollectionConfig = {
       type: "text",
       unique: true,
       admin: { description: "Without the https://doi.org/ prefix, e.g. 10.1145/3313831.3376518" },
-      validate: (value: string | null | undefined) =>
-        !value || DOI_PATTERN.test(value) || "Enter a DOI that starts with 10.",
+      hooks: { beforeValidate: [blankToNull] },
+      validate: validateDoi,
     },
     { name: "url", type: "text" },
     {

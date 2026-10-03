@@ -4,6 +4,7 @@ import { type PayloadRequest, ValidationError } from "payload"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { Slugs } from "@/lib/payload/slugs"
 import {
+  blankToNull,
   requireLinkedAuthor,
   revalidateDeletedPublication,
   revalidatePublications,
@@ -22,6 +23,19 @@ const run = async (req: PayloadRequest, authors?: Authors, originalAuthors?: Aut
     originalDoc: originalAuthors && ({ authors: originalAuthors } as Publication),
     req,
   } as Parameters<typeof requireLinkedAuthor>[0])
+
+describe("blankToNull", () => {
+  const run = (value: unknown) => blankToNull({ value } as Parameters<typeof blankToNull>[0])
+
+  it.each(["", "   "])("stores a blank value (%j) as null", (value) => {
+    expect(run(value)).toBeNull()
+  })
+
+  // Partial updates leave the field undefined, which must not clear the stored value.
+  it.each([undefined, null, "10.1145/3313831.3376518"])("keeps %j", (value) => {
+    expect(run(value)).toBe(value)
+  })
+})
 
 describe("requireLinkedAuthor", () => {
   it("lets admins save without being linked", async () => {

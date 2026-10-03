@@ -5,10 +5,16 @@ import {
   type CollectionAfterChangeHook,
   type CollectionAfterDeleteHook,
   type CollectionBeforeChangeHook,
+  type FieldHook,
   ValidationError,
 } from "payload"
 import { relationID } from "../access/Courses/helpers"
 import { member } from "../access/helpers"
+
+// Postgres allows many NULLs in a unique index but only one "",
+// so a cleared optional unique field must be stored as NULL.
+export const blankToNull: FieldHook = ({ value }) =>
+  typeof value === "string" && !value.trim() ? null : value
 
 // Members can only edit publications that link them as an author,
 // so a member must stay linked after every save.
