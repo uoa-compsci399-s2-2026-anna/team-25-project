@@ -23,6 +23,7 @@
     "@lexical/selection": "0.41.0",
     "@lexical/table": "0.41.0",
     "@lexical/utils": "0.41.0",
+    "@repo/shared": "workspace:*",
     "@tanstack/react-table": "^9.2.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

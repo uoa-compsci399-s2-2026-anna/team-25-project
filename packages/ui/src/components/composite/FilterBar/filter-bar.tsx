@@ -99,12 +99,19 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
 }: FilterBarProps<TStatus, TSort>) {
   return (
     <div
-      className={cn("flex flex-wrap items-center gap-3", className)}
+      className={cn(
+        "flex flex-wrap items-center justify-center gap-3 md:flex-nowrap md:justify-start",
+        className,
+      )}
       data-slot="filter-bar"
       {...props}
     >
       {statusOptions.length > 0 && (
-        <Tabs onValueChange={(value) => onStatusChange?.(value as TStatus)} value={status}>
+        <Tabs
+          className="shrink-0"
+          onValueChange={(value) => onStatusChange?.(value as TStatus)}
+          value={status}
+        >
           <TabsList className="h-10" variant="pill">
             {statusOptions.map((option) => (
               <TabsTrigger className="px-4" key={option.value} value={option.value}>
@@ -116,7 +123,10 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
         </Tabs>
       )}
 
-      <InputGroup className="h-10 w-full sm:w-80" variant="pill">
+      <InputGroup
+        className="order-first h-10 w-full md:order-none md:w-80 md:min-w-32"
+        variant="pill"
+      >
         <InputGroupAddon className="pl-4">
           <SearchIcon />
         </InputGroupAddon>
@@ -140,14 +150,19 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
             }
             value={filter.value}
           >
-            <SelectTrigger aria-label={filter.placeholder} className="h-10 px-4" variant="pill">
+            <SelectTrigger
+              aria-label={filter.placeholder}
+              className="h-10 shrink-0 px-4"
+              variant="pill"
+            >
               {/* Not SelectValue: the chips beside the bar already show what is picked, so the
                   trigger stays on its placeholder rather than restating it. */}
               <span className="flex flex-1 text-left text-muted-foreground">
                 {filter.placeholder}
               </span>
             </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
+            {/* The trigger is narrower than a long option, so the list sets its own width. */}
+            <SelectContent alignItemWithTrigger={false} className="w-auto min-w-(--anchor-width)">
               {filter.options.map((option) => (
                 <SelectItem
                   // At the cap only the picked ones stay live, so they can still be unpicked.
@@ -171,7 +186,11 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
             onValueChange={(value) => filter.onValueChange(value)}
             value={filter.value}
           >
-            <SelectTrigger aria-label={filter.placeholder} className="h-10 px-4" variant="pill">
+            <SelectTrigger
+              aria-label={filter.placeholder}
+              className="h-10 shrink-0 px-4"
+              variant="pill"
+            >
               <SelectValue placeholder={filter.placeholder} />
             </SelectTrigger>
             <SelectContent alignItemWithTrigger={false}>
@@ -191,7 +210,7 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
         onValueChange={(value) => value !== null && onSortChange(value as TSort)}
         value={sort}
       >
-        <SelectTrigger aria-label="Sort" className="h-10 px-4 sm:ml-auto" variant="pill">
+        <SelectTrigger aria-label="Sort" className="h-10 shrink-0 px-4 md:ml-auto" variant="pill">
           <SelectValue />
         </SelectTrigger>
         <SelectContent alignItemWithTrigger={false}>
@@ -222,27 +241,30 @@ function FilterBarSkeleton({
 }: FilterBarSkeletonProps) {
   return (
     <div
-      className={cn("flex flex-wrap items-center gap-3", className)}
+      className={cn(
+        "flex flex-wrap items-center justify-center gap-3 md:flex-nowrap md:justify-start",
+        className,
+      )}
       data-slot="filter-bar-skeleton"
       {...props}
     >
       {statusCount > 0 && (
         <Skeleton
-          className="h-10 rounded-full"
+          className="h-10 shrink-0 rounded-full"
           data-slot="filter-bar-skeleton-status"
           // About one tab label ("Active - 12") per status.
           style={{ width: `${statusCount * 6}rem` }}
         />
       )}
-      <Skeleton className="h-10 w-full rounded-full sm:w-80" />
+      <Skeleton className="order-first h-10 w-full rounded-full md:order-none md:w-80 md:min-w-32" />
       {Array.from({ length: filterCount }, (_, index) => `filter-${index}`).map((id) => (
         <Skeleton
-          className="h-10 w-32 rounded-full"
+          className="h-10 w-32 shrink-0 rounded-full"
           data-slot="filter-bar-skeleton-filter"
           key={id}
         />
       ))}
-      <Skeleton className="h-10 w-36 rounded-full sm:ml-auto" />
+      <Skeleton className="h-10 w-36 shrink-0 rounded-full md:ml-auto" />
     </div>
   )
 }

@@ -3,16 +3,29 @@ import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { FilterBar, type FilterBarFilter, type FilterBarProps, FilterBarSkeleton } from "../index"
 
-const props = (): FilterBarProps => ({
-  filters: [
-    {
-      id: "institution",
-      onValueChange: vi.fn(),
-      options: [{ label: "University of Example", value: "1" }],
-      placeholder: "University",
-      value: null,
-    },
+const universityFilter = (value: string | null = null): FilterBarFilter => ({
+  id: "institution",
+  onValueChange: vi.fn(),
+  options: [{ label: "University of Example", value: "1" }],
+  placeholder: "University",
+  value,
+})
+
+const tagsFilter = (value: string[] = [], maxSelected?: number): FilterBarFilter => ({
+  id: "tags",
+  maxSelected,
+  multiple: true,
+  onValueChange: vi.fn(),
+  options: [
+    { label: "Assessment", value: "assessment" },
+    { label: "Teamwork", value: "teamwork" },
   ],
+  placeholder: "Tags",
+  value,
+})
+
+const props = (): FilterBarProps => ({
+  filters: [universityFilter()],
   onSearchChange: vi.fn(),
   onSortChange: vi.fn(),
   onStatusChange: vi.fn(),
@@ -71,14 +84,8 @@ describe("FilterBar", () => {
   })
 
   it("shows the label of a picked filter", () => {
-    const picked: FilterBarFilter = {
-      id: "institution",
-      onValueChange: vi.fn(),
-      options: [{ label: "University of Example", value: "1" }],
-      placeholder: "University",
-      value: "1",
-    }
-    render(<FilterBar {...props()} filters={[picked]} />)
+    const p = props()
+    render(<FilterBar {...p} filters={[universityFilter("1")]} />)
 
     expect(screen.getByRole("combobox", { name: "University" })).toHaveTextContent(
       "University of Example",
@@ -100,6 +107,51 @@ describe("FilterBar", () => {
     await screen.findByRole("listbox")
     await user.click(screen.getByRole("option", { name: "Any university" }))
     expect(filter?.onValueChange).toHaveBeenLastCalledWith(null)
+  })
+
+  // The chips beside the bar name what is picked, so the trigger does not restate it.
+  it("keeps a multiple filter on its placeholder whatever is picked", () => {
+    render(<FilterBar {...props()} filters={[tagsFilter(["assessment", "teamwork"])]} />)
+
+    expect(screen.getByRole("combobox", { name: "Tags" })).toHaveTextContent("Tags")
+    expect(screen.getByRole("combobox", { name: "Tags" })).not.toHaveTextContent("Assessment")
+  })
+
+  it("leaves unpicked options selectable below the cap", async () => {
+    const user = userEvent.setup()
+    render(<FilterBar {...props()} filters={[tagsFilter(["assessment"], 2)]} />)
+
+    await user.click(screen.getByRole("combobox", { name: "Tags" }))
+    await screen.findByRole("listbox")
+    expect(screen.getByRole("option", { name: "Teamwork" })).not.toHaveAttribute("data-disabled")
+  })
+
+  it("disables the rest at the cap, but not what is already picked", async () => {
+    const user = userEvent.setup()
+    render(<FilterBar {...props()} filters={[tagsFilter(["assessment"], 1)]} />)
+
+    await user.click(screen.getByRole("combobox", { name: "Tags" }))
+    await screen.findByRole("listbox")
+
+    // The picked one stays live so it can still be unpicked.
+    expect(screen.getByRole("option", { name: "Assessment" })).not.toHaveAttribute("data-disabled")
+    expect(screen.getByRole("option", { name: "Teamwork" })).toHaveAttribute("data-disabled")
+  })
+
+  it("adds to and removes from a multi-select filter", async () => {
+    const user = userEvent.setup()
+    const filter = tagsFilter(["assessment"])
+    render(<FilterBar {...props()} filters={[filter]} />)
+
+    await user.click(screen.getByRole("combobox", { name: "Tags" }))
+    await screen.findByRole("listbox")
+    expect(screen.queryByRole("option", { name: "Any tags" })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole("option", { name: "Teamwork" }))
+    expect(filter.onValueChange).toHaveBeenLastCalledWith(["assessment", "teamwork"])
+
+    await user.click(screen.getByRole("option", { name: "Assessment" }))
+    expect(filter.onValueChange).toHaveBeenLastCalledWith([])
   })
 
   it("reports a sort selection", async () => {
@@ -134,52 +186,6 @@ describe("FilterBar", () => {
     expect(screen.getByRole("searchbox", { name: "Search proposals..." })).toBeInTheDocument()
     expect(screen.getByRole("combobox", { name: "University" })).toBeInTheDocument()
     expect(screen.getByRole("combobox", { name: "Sort" })).toBeInTheDocument()
-  })
-
-  const interestFilter = (value: string[], maxSelected?: number): FilterBarFilter => ({
-    id: "interest",
-    maxSelected,
-    multiple: true,
-    onValueChange: vi.fn(),
-    options: [
-      { label: "Assessment", value: "assessment" },
-      { label: "Teamwork", value: "teamwork" },
-    ],
-    placeholder: "Research interest",
-    value,
-  })
-
-  // The chips beside the bar name what is picked, so the trigger does not restate it.
-  it("keeps a multiple filter on its placeholder whatever is picked", () => {
-    render(<FilterBar {...props()} filters={[interestFilter(["assessment", "teamwork"])]} />)
-
-    expect(screen.getByRole("combobox", { name: "Research interest" })).toHaveTextContent(
-      "Research interest",
-    )
-    expect(screen.getByRole("combobox", { name: "Research interest" })).not.toHaveTextContent(
-      "Assessment",
-    )
-  })
-
-  it("leaves unpicked options selectable below the cap", async () => {
-    const user = userEvent.setup()
-    render(<FilterBar {...props()} filters={[interestFilter(["assessment"], 2)]} />)
-
-    await user.click(screen.getByRole("combobox", { name: "Research interest" }))
-    await screen.findByRole("listbox")
-    expect(screen.getByRole("option", { name: "Teamwork" })).not.toHaveAttribute("data-disabled")
-  })
-
-  it("disables the rest at the cap, but not what is already picked", async () => {
-    const user = userEvent.setup()
-    render(<FilterBar {...props()} filters={[interestFilter(["assessment"], 1)]} />)
-
-    await user.click(screen.getByRole("combobox", { name: "Research interest" }))
-    await screen.findByRole("listbox")
-
-    // The picked one stays live so it can still be unpicked.
-    expect(screen.getByRole("option", { name: "Assessment" })).not.toHaveAttribute("data-disabled")
-    expect(screen.getByRole("option", { name: "Teamwork" })).toHaveAttribute("data-disabled")
   })
 
   it("renders no status tabs when the status options are empty", () => {
