@@ -1,3 +1,4 @@
+import { RESOURCE_ATTACHMENT_MIME_TYPES } from "@repo/shared/constants/resource-attachments"
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { isAdmin, isSignedIn } from "../access"
@@ -17,18 +18,6 @@ export const ResourceAttachments: CollectionConfig = {
   },
   fields: [],
   upload: {
-    // Excludes text/html and image/svg+xml deliberately - both can carry an
-    // embedded <script> and are served from our own origin.
-    mimeTypes: [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/vnd.ms-powerpoint",
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "text/plain",
-      "text/csv",
-    ],
+    mimeTypes: [...RESOURCE_ATTACHMENT_MIME_TYPES],
   },
 }
