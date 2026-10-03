@@ -1,10 +1,12 @@
 import { QueryKeys } from "@repo/shared/constants/query-keys"
 import type { Member } from "@repo/shared/payload-types"
+import { normaliseResearchInterests } from "@repo/shared/utils/research-interests"
 import { revalidateTag } from "next/cache"
 import type {
   CollectionAfterChangeHook,
   CollectionAfterDeleteHook,
   CollectionBeforeValidateHook,
+  FieldHook,
 } from "payload"
 import { ValidationError } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
@@ -98,3 +100,9 @@ export const enforceInstitutionDomain: CollectionBeforeValidateHook<Member> = as
 
   return data
 }
+
+// The directory filter matches interests exactly, so a stored " Teamwork" would never match the
+// trimmed value readers filter by. Runs before validation so maxRows counts what is kept.
+export const normaliseStoredResearchInterests: FieldHook<Member, Member["researchInterests"]> = ({
+  value,
+}) => (Array.isArray(value) ? normaliseResearchInterests(value) : value)
