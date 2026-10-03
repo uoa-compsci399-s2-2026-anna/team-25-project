@@ -232,6 +232,9 @@ importers:
       '@lexical/utils':
         specifier: 0.41.0
         version: 0.41.0
+      '@repo/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@tanstack/react-table':
         specifier: ^9.2.4
         version: 9.2.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
