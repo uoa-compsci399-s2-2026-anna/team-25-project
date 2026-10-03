@@ -76,6 +76,7 @@ export interface Config {
     courses: Course;
     courseVersions: CourseVersion;
     publications: Publication;
+    resourceAttachments: ResourceAttachment;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -91,6 +92,7 @@ export interface Config {
     courses: CoursesSelect<false> | CoursesSelect<true>;
     courseVersions: CourseVersionsSelect<false> | CourseVersionsSelect<true>;
     publications: PublicationsSelect<false> | PublicationsSelect<true>;
+    resourceAttachments: ResourceAttachmentsSelect<false> | ResourceAttachmentsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -492,6 +494,25 @@ export interface Publication {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "resourceAttachments".
+ */
+export interface ResourceAttachment {
+  id: number;
+  prefix?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -545,6 +566,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'publications';
         value: number | Publication;
+      } | null)
+    | ({
+        relationTo: 'resourceAttachments';
+        value: number | ResourceAttachment;
       } | null);
   globalSlug?: string | null;
   user:
@@ -811,6 +836,24 @@ export interface PublicationsSelect<T extends boolean = true> {
   tags?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "resourceAttachments_select".
+ */
+export interface ResourceAttachmentsSelect<T extends boolean = true> {
+  prefix?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
