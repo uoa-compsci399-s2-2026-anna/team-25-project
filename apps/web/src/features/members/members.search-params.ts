@@ -1,4 +1,5 @@
 import { InstitutionCountry } from "@repo/shared/enums/institutions"
+import { normaliseResearchInterests } from "@repo/shared/utils/research-interests"
 // `nuqs/server` carries no "use client" boundary, so these parsers work in server and client code.
 import {
   createLoader,
@@ -43,10 +44,8 @@ export const toMemberFilters = ({
 }: MemberSearchParams): MemberFilters => ({
   country: country ?? undefined,
   institutionId: institution ?? undefined,
-  // Blanks are dropped, but a kept value reaches the query exactly as stored, or an interest
-  // saved with surrounding spaces would never match its own filter option.
   // Capped here as well as in the bar, so a hand-edited URL cannot widen the query.
-  researchInterests: interest.filter((value) => value.trim()).slice(0, MEMBER_INTEREST_FILTER_MAX),
+  researchInterests: normaliseResearchInterests(interest).slice(0, MEMBER_INTEREST_FILTER_MAX),
   search: q.trim() || undefined,
   sort,
 })

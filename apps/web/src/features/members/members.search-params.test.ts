@@ -124,18 +124,18 @@ describe("toMemberFilters", () => {
     ).toMatchObject({ researchInterests: [] })
   })
 
-  // The option value is the stored string, so trimming here would stop it matching its own row.
-  it("passes an interest through exactly as stored", () => {
+  // Stored interests are saved trimmed, so the trimmed value is the one that matches.
+  it("trims each interest and drops repeats", () => {
     expect(
       toMemberFilters({
         country: null,
         institution: null,
-        interest: ["  Teamwork  "],
+        interest: ["  Teamwork  ", "Teamwork", "Ethics"],
         page: 1,
         q: "",
         sort: "surnameAsc",
       }),
-    ).toMatchObject({ researchInterests: ["  Teamwork  "] })
+    ).toMatchObject({ researchInterests: ["Teamwork", "Ethics"] })
   })
 
   it("caps how many interests reach the query, whatever the URL asks for", () => {

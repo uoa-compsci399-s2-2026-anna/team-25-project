@@ -1,6 +1,7 @@
 "use client"
 
 import { InstitutionCountryLabels } from "@repo/shared/enums/institutions"
+import { normaliseResearchInterests } from "@repo/shared/utils/research-interests"
 import { Badge, Button, Eyebrow } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import { XIcon } from "lucide-react"
@@ -45,16 +46,16 @@ export const MembersActiveFilters = ({
     },
   ].filter((chip) => chip !== false)
 
-  // One chip per interest, each dropping only itself. A blank value filters nothing, so it
-  // gets no chip - a hand-edited "?interest=" would otherwise show an empty one.
-  const interestChips = params.interest
-    .filter((interest) => interest.trim())
+  // One chip per interest, each dropping only itself. Normalised as the query is, so a
+  // hand-edited "?interest=" shows no empty chip and a repeat shows no second one.
+  const interests = normaliseResearchInterests(params.interest)
+  const interestChips = interests
     // Same cap the query applies, so the chips never claim more is filtering than is.
     .slice(0, MEMBER_INTEREST_FILTER_MAX)
     .map((interest) => ({
       key: `interest:${interest}`,
-      label: interest.trim(),
-      remove: () => update({ interest: params.interest.filter((value) => value !== interest) }),
+      label: interest,
+      remove: () => update({ interest: interests.filter((value) => value !== interest) }),
     }))
 
   chips.push(...interestChips)

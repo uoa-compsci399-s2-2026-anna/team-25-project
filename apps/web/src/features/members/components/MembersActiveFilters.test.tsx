@@ -117,6 +117,19 @@ describe("MembersActiveFilters", () => {
     expect(screen.queryByText("Active filters")).not.toBeInTheDocument()
   })
 
+  it("shows one chip for an interest repeated in the URL, and removes every copy", async () => {
+    const user = userEvent.setup()
+    const onUrlUpdate = renderActiveFilters("?interest=Teamwork,%20Teamwork%20,Assessment")
+
+    expect(screen.getAllByText("Teamwork")).toHaveLength(1)
+
+    await user.click(screen.getByRole("button", { name: "Remove Teamwork filter" }))
+
+    const { queryString } = onUrlUpdate.mock.lastCall?.[0] ?? {}
+    expect(queryString).not.toContain("Teamwork")
+    expect(queryString).toContain("Assessment")
+  })
+
   // The query takes only the first six, so showing more would overstate what is filtering.
   it("shows no more interest chips than the query applies", () => {
     renderActiveFilters("?interest=a,b,c,d,e,f,g,h")

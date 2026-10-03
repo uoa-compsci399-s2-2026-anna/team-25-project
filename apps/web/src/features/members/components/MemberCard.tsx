@@ -1,4 +1,5 @@
 import { initials } from "@repo/shared/utils/initials"
+import { normaliseResearchInterests } from "@repo/shared/utils/research-interests"
 import {
   Avatar,
   AvatarFallback,
@@ -42,9 +43,7 @@ export const MemberCard = ({
 }: MemberCardProps) => {
   const affiliation = [institution, country].filter(Boolean).join(" - ")
   // Free text, so blanks and repeats are possible; both would render as noise.
-  const interests = [
-    ...new Set((researchInterests ?? []).map((interest) => interest.trim()).filter(Boolean)),
-  ]
+  const interests = normaliseResearchInterests(researchInterests ?? [])
   const shown = interests.slice(0, INTERESTS_SHOWN)
   const hidden = interests.length - shown.length
 

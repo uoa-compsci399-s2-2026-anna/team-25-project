@@ -184,12 +184,11 @@ describe("getResearchInterestOptions", () => {
     await expect(getResearchInterestOptions()).resolves.toHaveLength(2)
   })
 
-  it("matches the stored string even when it carries surrounding spaces", async () => {
-    withInterests(["  Teamwork  "])
+  it("offers an interest saved with surrounding spaces as its trimmed self, once", async () => {
+    withInterests(["  Teamwork  "], ["Teamwork"])
 
-    // The label is tidied for display, but the value has to be what the row holds.
     await expect(getResearchInterestOptions()).resolves.toEqual([
-      { label: "Teamwork", value: "  Teamwork  " },
+      { label: "Teamwork", value: "Teamwork" },
     ])
   })
 

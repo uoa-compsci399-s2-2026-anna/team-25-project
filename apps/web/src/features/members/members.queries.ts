@@ -2,6 +2,7 @@ import { QueryKeys } from "@repo/shared/constants/query-keys"
 import type { InstitutionCountry } from "@repo/shared/enums/institutions"
 import type { Institution, Member } from "@repo/shared/payload-types"
 import type { Pagination } from "@repo/shared/types/pagination"
+import { normaliseResearchInterests } from "@repo/shared/utils/research-interests"
 import { cacheLife, cacheTag } from "next/cache"
 import { connection } from "next/server"
 import type { Where } from "payload"
@@ -97,9 +98,9 @@ export type ResearchInterestOption = { value: string; label: string }
 
 /**
  * The filter's options are the interests members actually entered, since the field is free
- * text with no fixed vocabulary. Each option is the stored string exactly, because the
- * filter matches on equality and Postgres compares case-sensitively - folding "Generative AI"
- * and "generative AI" into one option here would hide every member who spelled it the other way.
+ * text with no fixed vocabulary. Case is kept, because the filter matches on equality and
+ * Postgres compares case-sensitively - folding "Generative AI" and "generative AI" into one
+ * option here would hide every member who spelled it the other way.
  */
 export const getResearchInterestOptions = async (): Promise<ResearchInterestOption[]> => {
   const payload = await getPayloadClient()
@@ -110,16 +111,11 @@ export const getResearchInterestOptions = async (): Promise<ResearchInterestOpti
     select: { researchInterests: true },
   })
 
-  const stored = new Set<string>()
-  for (const { researchInterests } of docs) {
-    for (const interest of researchInterests ?? []) {
-      if (interest.trim()) stored.add(interest)
-    }
-  }
-
-  return [...stored]
+  return normaliseResearchInterests(
+    docs.flatMap(({ researchInterests }) => researchInterests ?? []),
+  )
     .sort((a, b) => a.localeCompare(b))
-    .map((interest) => ({ label: interest.trim(), value: interest }))
+    .map((interest) => ({ label: interest, value: interest }))
 }
 
 export const getResearchInterestOptionsCached = async () => {
