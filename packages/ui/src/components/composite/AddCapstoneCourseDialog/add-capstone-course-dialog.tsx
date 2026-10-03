@@ -42,6 +42,23 @@ export type AddCapstoneCourseDialogValues = {
 
 type RichTextField = "learningOutcomes" | "assessments" | "additionalInfo"
 
+// Every field publishing needs. A draft only needs code and name, but marking
+// those two differently would say nothing about the nine that block publishing,
+// which is the failure people actually hit.
+const requiredToPublish = new Set<keyof AddCapstoneCourseDialogValues>([
+  "assessments",
+  "code",
+  "deliveryFormat",
+  "endDate",
+  "learningOutcomes",
+  "name",
+  "period",
+  "programme",
+  "projectType",
+  "role",
+  "startDate",
+])
+
 export type AddCapstoneCourseDialogFieldErrors = Partial<
   Record<keyof AddCapstoneCourseDialogValues, string>
 >
@@ -101,6 +118,20 @@ export function AddCapstoneCourseDialog({
     startDate: React.useId(),
   }
 
+  // Marked on the label and announced by aria-required, so the asterisk is not
+  // the only thing carrying the meaning.
+  const requiredLabel = (field: keyof AddCapstoneCourseDialogValues, label: string) =>
+    requiredToPublish.has(field) ? (
+      <>
+        {label}{" "}
+        <span aria-hidden="true" className="text-destructive">
+          *
+        </span>
+      </>
+    ) : (
+      label
+    )
+
   // A field error colors only the input's border and the message below it -
   // never the label - so `Field`'s own `data-invalid` (which would also tint
   // the label text) is never set here.
@@ -111,9 +142,10 @@ export function AddCapstoneCourseDialog({
     className?: string,
   ) => (
     <Field className={className}>
-      <FieldLabel htmlFor={ids[field]}>{label}</FieldLabel>
+      <FieldLabel htmlFor={ids[field]}>{requiredLabel(field, label)}</FieldLabel>
       <Input
         aria-invalid={Boolean(fieldErrors?.[field]) || undefined}
+        aria-required={requiredToPublish.has(field) || undefined}
         id={ids[field]}
         onChange={(event) => onValueChange(field, event.target.value)}
         value={values[field]}
@@ -128,11 +160,12 @@ export function AddCapstoneCourseDialog({
   const richTextField = (field: RichTextField, label: string) => (
     <Field>
       <FieldLabel htmlFor={ids[field]} id={`${ids[field]}-label`}>
-        {label}
+        {requiredLabel(field, label)}
       </FieldLabel>
       <RichTextEditor
         aria-invalid={Boolean(fieldErrors?.[field]) || undefined}
         aria-labelledby={`${ids[field]}-label`}
+        aria-required={requiredToPublish.has(field) || undefined}
         defaultValue={values[field]}
         id={ids[field]}
         onChange={(value) => onValueChange(field, value)}
@@ -151,9 +184,11 @@ export function AddCapstoneCourseDialog({
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1">
             <DialogTitle className="font-bold text-2xl">Add a capstone course</DialogTitle>
+            {/* The asterisk is described in words rather than shown inline, so this
+                still reads as a sentence with the decorative marks stripped out. */}
             <DialogDescription>
-              Course code and name are all a draft needs - everything else here is for when you
-              publish.
+              Course code and name are all a draft needs - fields marked with an asterisk are
+              required to publish.
             </DialogDescription>
           </div>
           <DialogClose render={<Button size="sm" variant="button-transparent" />}>
@@ -185,7 +220,9 @@ export function AddCapstoneCourseDialog({
 
           <FieldGroup className="grid gap-4 md:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor={ids.deliveryFormat}>Delivery format</FieldLabel>
+              <FieldLabel htmlFor={ids.deliveryFormat}>
+                {requiredLabel("deliveryFormat", "Delivery format")}
+              </FieldLabel>
               <Select
                 items={deliveryFormatOptions}
                 onValueChange={(next) => onValueChange("deliveryFormat", next ?? "")}

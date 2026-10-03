@@ -36,7 +36,7 @@ describe("AddCourseTriggerWithDefaultRole", () => {
     await openDialog()
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Your role")).toHaveValue("Senior Lecturer")
+      expect(screen.getByLabelText(/^Your role/)).toHaveValue("Senior Lecturer")
     })
   })
 
@@ -50,7 +50,7 @@ describe("AddCourseTriggerWithDefaultRole", () => {
     await openDialog()
     await settle()
 
-    expect(screen.getByLabelText("Your role")).toHaveValue("")
+    expect(screen.getByLabelText(/^Your role/)).toHaveValue("")
   })
 
   it("leaves Your role blank for an admin, who has no profile position", async () => {
@@ -63,7 +63,7 @@ describe("AddCourseTriggerWithDefaultRole", () => {
     await openDialog()
     await settle()
 
-    expect(screen.getByLabelText("Your role")).toHaveValue("")
+    expect(screen.getByLabelText(/^Your role/)).toHaveValue("")
   })
 
   it("does not wait for the member lookup before the dialog can be opened and typed into", async () => {
@@ -77,7 +77,7 @@ describe("AddCourseTriggerWithDefaultRole", () => {
     await openDialog()
 
     expect(screen.getByRole("dialog", { name: "Add a capstone course" })).toBeInTheDocument()
-    fireEvent.change(screen.getByLabelText("Course code"), { target: { value: "CS399" } })
+    fireEvent.change(screen.getByLabelText(/^Course code/), { target: { value: "CS399" } })
 
     await act(async () => {
       resolveUser({
@@ -88,7 +88,7 @@ describe("AddCourseTriggerWithDefaultRole", () => {
     })
 
     // Same dialog instance throughout - the typed code survives the role arriving.
-    expect(screen.getByLabelText("Course code")).toHaveValue("CS399")
-    expect(screen.getByLabelText("Your role")).toHaveValue("Senior Lecturer")
+    expect(screen.getByLabelText(/^Course code/)).toHaveValue("CS399")
+    expect(screen.getByLabelText(/^Your role/)).toHaveValue("Senior Lecturer")
   })
 })
