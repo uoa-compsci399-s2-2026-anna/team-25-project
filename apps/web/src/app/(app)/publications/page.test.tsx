@@ -3,6 +3,9 @@ import { describe, expect, it, vi } from "vitest"
 import { PublicationsList } from "@/features/publications/components/PublicationsList"
 import Page from "./page"
 
+vi.mock("@/features/publications/components/AddPublicationTrigger", () => ({
+  AddPublicationTrigger: () => null,
+}))
 vi.mock("@/features/publications/components/PublicationsFilterServer", () => ({
   PublicationsFilterServer: () => <div>Publication filters</div>,
   PublicationsFilterServerSkeleton: () => null,
