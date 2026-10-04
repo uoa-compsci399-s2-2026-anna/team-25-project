@@ -12,11 +12,17 @@ import {
   revalidateDeletedPublication,
   revalidatePublications,
 } from "../hooks/Publications"
-import { revalidateDeletedResource, revalidateResources } from "../hooks/Resources"
+import {
+  revalidateAttachmentResources,
+  revalidateDeletedAttachmentResources,
+  revalidateDeletedResource,
+  revalidateResources,
+} from "../hooks/Resources"
 import { Institutions } from "./Institutions"
 import { Members } from "./Members"
 import { Proposals } from "./Proposals"
 import { Publications } from "./Publications"
+import { ResourceAttachments } from "./ResourceAttachments"
 import { Resources } from "./Resources"
 
 describe("changed collection hooks", () => {
@@ -58,6 +64,13 @@ describe("changed collection hooks", () => {
     expect(Resources.hooks).toEqual({
       afterChange: [revalidateResources],
       afterDelete: [revalidateDeletedResource],
+    })
+  })
+
+  it("registers resource cache invalidation on attachments", () => {
+    expect(ResourceAttachments.hooks).toEqual({
+      afterChange: [revalidateAttachmentResources],
+      afterDelete: [revalidateDeletedAttachmentResources],
     })
   })
 })

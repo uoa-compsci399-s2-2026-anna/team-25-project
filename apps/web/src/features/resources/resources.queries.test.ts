@@ -1,20 +1,28 @@
 import { connection } from "next/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
-import { getResourceCourseOptions, getResources, loadResourcesPage } from "./resources.queries"
+import {
+  getResourceById,
+  getResourceCourseOptions,
+  getResources,
+  loadResourcesPage,
+} from "./resources.queries"
 
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
 vi.mock("next/server", () => ({ connection: vi.fn() }))
 
 const find = vi.fn()
+const findByID = vi.fn()
 const findDistinct = vi.fn()
 
 beforeEach(() => {
   find.mockReset()
+  findByID.mockReset()
   findDistinct.mockReset()
   vi.mocked(connection).mockClear()
   vi.mocked(getPayloadClient).mockResolvedValue({
     find,
+    findByID,
     findDistinct,
   } as unknown as Awaited<ReturnType<typeof getPayloadClient>>)
 })
@@ -110,5 +118,25 @@ describe("getResourceCourseOptions", () => {
 
     await expect(getResourceCourseOptions()).resolves.toEqual([])
     expect(find).not.toHaveBeenCalled()
+  })
+})
+
+describe("getResourceById", () => {
+  it("loads the resource with only what the detail page draws, returning null when missing", async () => {
+    findByID.mockResolvedValue(null)
+
+    await expect(getResourceById(5)).resolves.toBeNull()
+    expect(findByID).toHaveBeenCalledWith({
+      collection: "resources",
+      depth: 2,
+      disableErrors: true,
+      id: 5,
+      populate: {
+        courses: { code: true, hasPublishedVersion: true, institution: true },
+        institutions: { name: true },
+        members: { avatar: true, firstName: true, institution: true, lastName: true },
+        resourceAttachments: { filename: true, filesize: true, mimeType: true, url: true },
+      },
+    })
   })
 })

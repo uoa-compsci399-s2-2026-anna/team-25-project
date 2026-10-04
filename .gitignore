@@ -25,6 +25,9 @@ dist
 # turbo
 .turbo
 
+# local Payload uploads (written here when S3 is not configured, e.g. by the seed)
+apps/web/resourceAttachments/
+
 # misc
 .DS_Store
 *.pem

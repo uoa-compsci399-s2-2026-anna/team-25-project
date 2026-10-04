@@ -1,4 +1,6 @@
 /** Seeds the local database with an admin account and development fixtures. */
+import path from "node:path"
+import { fileURLToPath } from "node:url"
 import { CourseDeliveryFormat } from "@repo/shared/enums/courses"
 import { MemberTitle } from "@repo/shared/enums/members"
 import {
@@ -21,6 +23,7 @@ const ADMIN_FIRST_NAME = process.env.SEED_ADMIN_FIRST_NAME || "Admin"
 const ADMIN_LAST_NAME = process.env.SEED_ADMIN_LAST_NAME || "User"
 const MEMBER_PASSWORD = "changeme"
 const SEED_CONTEXT = { disableRevalidate: true }
+const SEED_FILES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "seed-files")
 
 const institutions = [
   { name: "University of Auckland", country: "NZ", domain: "auckland.ac.nz" },
@@ -383,11 +386,13 @@ const publications = [
 
 // More than one page of the resources list, so its paging can be tried. Each is created
 // as its owner, who must own or edit the linked course for the course filter to accept it.
+// Attachments name PDFs in seed-files/.
 const resources = [
   {
     title: "Individual contribution rubric for team projects",
     owner: "arohan.patel@auckland.ac.nz",
     course: "COMPSCI 399",
+    attachments: ["individual-contribution-rubric.pdf", "moderation-notes.pdf"],
     description:
       "Four-criterion rubric with moderation notes, used to turn a team mark into individual marks for a 180-student cohort since 2022.",
   },
@@ -395,6 +400,7 @@ const resources = [
     title: "Industry partner agreement template",
     owner: "arohan.patel@auckland.ac.nz",
     course: "COMPSCI 399",
+    attachments: ["industry-partner-agreement-template.pdf"],
     description:
       "Plain-language agreement covering IP, confidentiality and weekly client time, reviewed by the university's legal team.",
   },
@@ -416,6 +422,7 @@ const resources = [
     title: "Final presentation marking sheet",
     owner: "maya.chen@auckland.ac.nz",
     course: "SOFTENG 770",
+    attachments: ["final-presentation-marking-sheet.pdf"],
     description:
       "One-page sheet for markers and clients, with descriptors for the demo, the technical talk and the questions.",
   },
@@ -696,18 +703,43 @@ export const seed = async () => {
   }
 
   for (const fixture of resources) {
+    const owner = await payload.findByID({
+      collection: Slugs.Collections.MEMBERS,
+      id: requiredID(memberIds, fixture.owner),
+      depth: 0,
+    })
+    const user = { ...owner, collection: Slugs.Collections.MEMBERS }
+
+    const attachments: number[] = []
+    for (const filename of "attachments" in fixture ? fixture.attachments : []) {
+      // Matched on the stem: Payload saves "notes-1.pdf" when "notes.pdf" is still in the local
+      // upload folder, which outlives a database reset, so an exact match would upload a copy each run.
+      const existing = await payload.find({
+        collection: Slugs.Collections.RESOURCE_ATTACHMENTS,
+        where: { filename: { like: path.parse(filename).name } },
+        depth: 0,
+        limit: 1,
+      })
+      const attachment =
+        existing.docs[0] ??
+        (await payload.create({
+          collection: Slugs.Collections.RESOURCE_ATTACHMENTS,
+          data: {},
+          filePath: path.join(SEED_FILES_DIR, filename),
+          user,
+          context: SEED_CONTEXT,
+        }))
+      attachments.push(attachment.id)
+    }
+
     const existing = await payload.find({
       collection: Slugs.Collections.RESOURCES,
       where: { title: { equals: fixture.title } },
       depth: 0,
       limit: 1,
     })
-    if (existing.docs.length === 0) {
-      const owner = await payload.findByID({
-        collection: Slugs.Collections.MEMBERS,
-        id: requiredID(memberIds, fixture.owner),
-        depth: 0,
-      })
+    const resource = existing.docs[0]
+    if (!resource) {
       await payload.create({
         collection: Slugs.Collections.RESOURCES,
         data: {
@@ -715,8 +747,18 @@ export const seed = async () => {
           owner: owner.id,
           course: "course" in fixture ? requiredID(courseIds, fixture.course) : undefined,
           description: richText(fixture.description),
+          attachments,
         },
-        user: { ...owner, collection: Slugs.Collections.MEMBERS },
+        user,
+        context: SEED_CONTEXT,
+      })
+    } else if (attachments.length > 0 && !resource.attachments?.length) {
+      // Databases seeded before attachments were added still pick them up on the next run.
+      await payload.update({
+        collection: Slugs.Collections.RESOURCES,
+        id: resource.id,
+        data: { attachments },
+        user,
         context: SEED_CONTEXT,
       })
     }
