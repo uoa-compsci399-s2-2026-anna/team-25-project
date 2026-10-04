@@ -9,6 +9,7 @@ import {
   revalidateDeletedResource,
   revalidateResources,
 } from "../hooks/Resources"
+import { validateResourceCourse } from "../validation/Resources"
 
 export const Resources: CollectionConfig = {
   slug: Slugs.Collections.RESOURCES,
@@ -53,7 +54,9 @@ export const Resources: CollectionConfig = {
       name: "course",
       type: "relationship",
       relationTo: Slugs.Collections.COURSES,
+      // Narrows the picker; saving is checked by validateResourceCourse.
       filterOptions: ({ req }) => courseWrite({ req }),
+      validate: validateResourceCourse,
       admin: {
         description: "Optional. Links the resource to the course it was written for.",
       },

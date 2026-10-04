@@ -1,6 +1,7 @@
 import type { PayloadRequest, RelationshipField } from "payload"
 import { describe, expect, it } from "vitest"
 import { Slugs } from "@/lib/payload/slugs"
+import { validateResourceCourse } from "../validation/Resources"
 import { Resources } from "./Resources"
 
 const findField = (name: string) =>
@@ -40,5 +41,9 @@ describe("Resources collection", () => {
       or: [{ owner: { equals: 7 } }, { editors: { contains: 7 } }],
     })
     expect(await filterOptions({ req: admin })).toBe(true)
+  })
+
+  it("checks the course on save only when it changes", () => {
+    expect(courseField.validate).toBe(validateResourceCourse)
   })
 })
