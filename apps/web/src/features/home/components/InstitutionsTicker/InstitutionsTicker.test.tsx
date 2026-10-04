@@ -94,6 +94,25 @@ describe("InstitutionsTicker", () => {
   })
 })
 
+// The skeleton is swapped for the ticker once logos load, so the two bars must share
+// their layout classes or the page shifts.
+const BAR_CLASSES = ["flex", "w-full", "items-center", "bg-muted", "py-3"]
+
+describe("ticker bar layout", () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it("gives the ticker and its skeleton the same bar layout", async () => {
+    vi.mocked(getInstitutionsWithLogosCached).mockResolvedValue([logo(1, "uoa")])
+
+    const { container: ticker } = render(await InstitutionsTicker())
+    const { container: skeleton } = render(<InstitutionsTickerSkeleton />)
+    expect(ticker.querySelector('[data-slot="ticker"]')).toHaveClass(...BAR_CLASSES)
+    expect(skeleton.firstElementChild).toHaveClass(...BAR_CLASSES)
+  })
+})
+
 describe("InstitutionsTickerSkeleton", () => {
   it("renders placeholders", () => {
     const { container } = render(<InstitutionsTickerSkeleton />)

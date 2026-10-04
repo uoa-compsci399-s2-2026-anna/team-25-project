@@ -7,7 +7,7 @@ const MIN_INSTITUTIONS_TO_ANIMATE = 3
 // Shared between the real ticker and its skeleton so they can't drift out of sync -
 // they must match exactly or swapping one for the other shifts the page layout.
 // Deliberately left outside PageContainer in page.tsx so this stays full-bleed.
-const BAR_CLASSNAME = "bg-muted py-3"
+const BAR_CLASSNAME = "flex w-full items-center bg-muted py-3"
 
 export const InstitutionsTicker = async () => {
   const institutions = await getInstitutionsWithLogosCached()
@@ -26,7 +26,6 @@ export const InstitutionsTicker = async () => {
         aria-hidden="true"
         autoFill={animate}
         className={cn(
-          "flex w-full items-center",
           BAR_CLASSNAME,
           // react-fast-marquee defaults to left-aligned, so i recenter when there's not enough to scroll
           !animate && "[&_.rfm-marquee]:justify-center",
@@ -54,7 +53,7 @@ export const InstitutionsTicker = async () => {
 const skeletonPills = Array.from({ length: 8 }, (_, index) => index)
 
 export const InstitutionsTickerSkeleton = () => (
-  <div className={cn("flex w-full items-center justify-center gap-6", BAR_CLASSNAME)}>
+  <div className={cn(BAR_CLASSNAME, "justify-center gap-6")}>
     {skeletonPills.map((pill) => (
       <Skeleton className="h-8 w-20 shrink-0 rounded-full bg-foreground/15" key={pill} />
     ))}
