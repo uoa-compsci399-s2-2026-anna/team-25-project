@@ -5,7 +5,10 @@ import { addPublicationFormSchema, createPublicationSchema } from "./publication
 const validForm = {
   type: PublicationType.ARTICLE,
   title: "Teamwork in capstone courses",
-  coAuthors: [{ name: "Ben Lee" }],
+  authors: [
+    { id: "1", kind: "self" },
+    { id: "2", kind: "coAuthor", name: "Ben Lee" },
+  ],
   year: 2025,
   month: "",
   doi: "",
@@ -55,14 +58,45 @@ describe("addPublicationFormSchema", () => {
   })
 
   it("accepts a form with no co-authors", () => {
-    expect(errorPaths({ ...validForm, coAuthors: [] })).toEqual([])
+    expect(errorPaths({ ...validForm, authors: [{ id: "3", kind: "self" }] })).toEqual([])
+  })
+
+  it("accepts the signed-in member in any position", () => {
+    expect(
+      errorPaths({
+        ...validForm,
+        authors: [
+          { id: "4", kind: "coAuthor", name: "Ben Lee" },
+          { id: "5", kind: "self" },
+        ],
+      }),
+    ).toEqual([])
+  })
+
+  it.each([
+    ["no", []],
+    [
+      "two",
+      [
+        { id: "6", kind: "self" },
+        { id: "7", kind: "self" },
+      ],
+    ],
+  ])("rejects %s signed-in member entries", (_, authors) => {
+    expect(errorPaths({ ...validForm, authors })).toEqual(["authors"])
   })
 
   it("requires a title and co-author names", () => {
-    expect(errorPaths({ ...validForm, title: " ", coAuthors: [{ name: "" }] })).toEqual([
-      "title",
-      "coAuthors.0.name",
-    ])
+    expect(
+      errorPaths({
+        ...validForm,
+        title: " ",
+        authors: [
+          { id: "8", kind: "self" },
+          { id: "9", kind: "coAuthor", name: "" },
+        ],
+      }),
+    ).toEqual(["title", "authors.1.name"])
   })
 
   it.each([999, 10000, 2025.5])("rejects year %s", (year) => {

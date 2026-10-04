@@ -36,11 +36,26 @@ export type CreatePublicationInput = z.infer<typeof createPublicationSchema>
 // The form sends every optional field, so a blank one arrives as "".
 const blankOr = <T extends z.ZodType>(schema: T) => z.union([z.literal(""), schema])
 
+export const authorNameSchema = z.string().trim().min(1, "Author name is required")
+
+// `id` is a stable key for drag-and-drop - the server ignores it. The signed-in
+// member's entry has no name - the server fills it from their profile, so the
+// client cannot send a different name for a linked author.
+const formAuthorSchema = z.discriminatedUnion("kind", [
+  z.object({ id: z.string(), kind: z.literal("self") }),
+  z.object({ id: z.string(), kind: z.literal("coAuthor"), name: authorNameSchema }),
+])
+
 export const addPublicationFormSchema = z.object({
   type: z.enum(PublicationType),
   title: z.string().trim().min(1, "Title is required"),
-  // The signed-in member is always the first author, so the form sends only the rest.
-  coAuthors: z.array(z.object({ name: z.string().trim().min(1, "Author name is required") })),
+  // Ordered as cited. The signed-in member appears exactly once, in any position.
+  authors: z
+    .array(formAuthorSchema)
+    .refine(
+      (authors) => authors.filter((author) => author.kind === "self").length === 1,
+      "Include yourself as one of the authors.",
+    ),
   year: z.number({ error: "Year is required" }).int().min(1000).max(9999),
   month: blankOr(z.string().regex(/^([1-9]|1[0-2])$/, "Choose a month")),
   doi: blankOr(z.string().trim().regex(DOI_PATTERN, doiError)),

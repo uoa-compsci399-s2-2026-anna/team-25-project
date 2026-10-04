@@ -24,13 +24,44 @@ describe("AddPublicationForm", () => {
     cleanup()
   })
 
-  it("shows the signed-in member as a fixed first author", () => {
+  it("shows the signed-in member as a reorderable first author", () => {
     renderForm()
 
     const self = screen.getByRole("textbox", { name: "Author 1 name" })
     expect(self).toHaveValue("Anna Smith")
     expect(self).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Reorder author 1" })).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Remove author 1" })).not.toBeInTheDocument()
+  })
+
+  it("moves an author with the keyboard", async () => {
+    const { user } = renderForm()
+    await user.click(screen.getByRole("button", { name: "+ Add author" }))
+    await user.type(screen.getByRole("textbox", { name: "Author 2 name" }), "Ben Lee")
+
+    // jsdom lays nothing out, so give the list and each row a size and position
+    // for the keyboard sensor and the restrict-to-list modifier.
+    const handles = screen.getAllByRole("button", { name: /^Reorder/ })
+    for (const [index, handle] of handles.entries()) {
+      const row = handle.parentElement as HTMLElement
+      vi.spyOn(row, "getBoundingClientRect").mockReturnValue(
+        DOMRect.fromRect({ height: 40, width: 300, x: 0, y: index * 50 }),
+      )
+    }
+    const list = handles[0]?.parentElement?.parentElement as HTMLElement
+    vi.spyOn(list, "getBoundingClientRect").mockReturnValue(
+      DOMRect.fromRect({ height: handles.length * 50, width: 300, x: 0, y: 0 }),
+    )
+
+    screen.getByRole("button", { name: "Reorder author 1" }).focus()
+    await user.keyboard(" ")
+    await user.keyboard("{ArrowDown}")
+    await user.keyboard(" ")
+
+    await waitFor(() =>
+      expect(screen.getByRole("textbox", { name: "Author 2 name" })).toHaveValue("Anna Smith"),
+    )
+    expect(screen.getByRole("textbox", { name: "Author 1 name" })).toHaveValue("Ben Lee")
   })
 
   it("shows required errors and does not call the action", async () => {
@@ -69,7 +100,10 @@ describe("AddPublicationForm", () => {
     await waitFor(() => expect(onSuccess).toHaveBeenCalled())
     expect(createPublication).toHaveBeenCalledWith(
       expect.objectContaining({
-        coAuthors: [{ name: "Ben Lee" }],
+        authors: [
+          { id: expect.any(String), kind: "self" },
+          { id: expect.any(String), kind: "coAuthor", name: "Ben Lee" },
+        ],
         tags: "Teamwork, Assessment",
         title: "Teamwork in capstones",
         type: "article",
