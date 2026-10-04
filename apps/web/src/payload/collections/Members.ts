@@ -12,6 +12,7 @@ import { Slugs } from "@/lib/payload/slugs"
 import { canReadEmail, isAdmin, isAdminOrSelf } from "../access"
 import { admin } from "../access/helpers"
 import {
+  assertMemberDeletable,
   enforceInstitutionDomain,
   normaliseStoredResearchInterests,
   revalidateDeletedMemberProposals,
@@ -28,6 +29,7 @@ export const Members: CollectionConfig = {
     beforeValidate: [enforceInstitutionDomain],
     afterChange: [revalidateMemberProposals],
     afterDelete: [revalidateDeletedMemberProposals],
+    beforeDelete: [assertMemberDeletable],
   },
   auth: {
     maxLoginAttempts: 5,

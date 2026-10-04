@@ -1,9 +1,11 @@
 import { mockInstitution } from "@repo/shared/mocks/institution"
 import type { Institution, Member } from "@repo/shared/payload-types"
 import { revalidateTag } from "next/cache"
-import { ValidationError } from "payload"
+import { type PayloadRequest, ValidationError } from "payload"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { Slugs } from "@/lib/payload/slugs"
 import {
+  assertMemberDeletable,
   enforceInstitutionDomain,
   normaliseStoredResearchInterests,
   revalidateDeletedMemberProposals,
@@ -168,5 +170,40 @@ describe("normaliseStoredResearchInterests", () => {
 
   it.each([null, undefined])("leaves %s alone", (value) => {
     expect(normaliseStoredResearchInterests({ value } as never)).toBe(value)
+  })
+})
+
+describe("assertMemberDeletable", () => {
+  const remove = (totalDocs: number) => {
+    const count = vi.fn().mockResolvedValue({ totalDocs })
+    const req = { payload: { count } } as unknown as PayloadRequest
+    const result = assertMemberDeletable({ id: 42, req } as unknown as Parameters<
+      typeof assertMemberDeletable
+    >[0])
+    return { count, result }
+  }
+
+  it("counts the member's resources regardless of who is asking", async () => {
+    const { count, result } = remove(0)
+    await result
+    expect(count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: Slugs.Collections.RESOURCES,
+        where: { owner: { equals: 42 } },
+        overrideAccess: true,
+      }),
+    )
+  })
+
+  it("allows a member with no resources", async () => {
+    await expect(remove(0).result).resolves.toBeUndefined()
+  })
+
+  it.each([
+    [1, "This member owns 1 resource."],
+    [3, "This member owns 3 resources."],
+  ])("refuses a member who owns %i, asking for them to be dealt with first", async (n, message) => {
+    await expect(remove(n).result).rejects.toThrow(`${message} Delete or reassign them first.`)
+    await expect(remove(n).result).rejects.toMatchObject({ status: 409 })
   })
 })

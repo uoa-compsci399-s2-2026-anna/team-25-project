@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { revalidateDeletedInstitution, revalidateInstitutions } from "../hooks/Institutions"
 import {
+  assertMemberDeletable,
   enforceInstitutionDomain,
   revalidateDeletedMemberProposals,
   revalidateMemberProposals,
@@ -11,10 +12,12 @@ import {
   revalidateDeletedPublication,
   revalidatePublications,
 } from "../hooks/Publications"
+import { revalidateDeletedResource, revalidateResources } from "../hooks/Resources"
 import { Institutions } from "./Institutions"
 import { Members } from "./Members"
 import { Proposals } from "./Proposals"
 import { Publications } from "./Publications"
+import { Resources } from "./Resources"
 
 describe("changed collection hooks", () => {
   it("registers institution cache invalidation", () => {
@@ -29,6 +32,7 @@ describe("changed collection hooks", () => {
     expect(Members.hooks).toEqual({
       afterChange: [revalidateMemberProposals],
       afterDelete: [revalidateDeletedMemberProposals],
+      beforeDelete: [assertMemberDeletable],
       beforeValidate: [enforceInstitutionDomain],
     })
     expect(Members.access?.create?.({} as never)).toBe(true)
@@ -47,6 +51,13 @@ describe("changed collection hooks", () => {
       afterChange: [revalidatePublications],
       afterDelete: [revalidateDeletedPublication],
       beforeChange: [requireLinkedAuthor],
+    })
+  })
+
+  it("registers resource cache invalidation", () => {
+    expect(Resources.hooks).toEqual({
+      afterChange: [revalidateResources],
+      afterDelete: [revalidateDeletedResource],
     })
   })
 })
