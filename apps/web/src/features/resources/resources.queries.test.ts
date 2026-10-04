@@ -1,8 +1,10 @@
+import { connection } from "next/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { getResourceCourseOptions, getResources, loadResourcesPage } from "./resources.queries"
 
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
+vi.mock("next/server", () => ({ connection: vi.fn() }))
 
 const find = vi.fn()
 const findDistinct = vi.fn()
@@ -10,6 +12,7 @@ const findDistinct = vi.fn()
 beforeEach(() => {
   find.mockReset()
   findDistinct.mockReset()
+  vi.mocked(connection).mockClear()
   vi.mocked(getPayloadClient).mockResolvedValue({
     find,
     findDistinct,
@@ -70,6 +73,9 @@ describe("getResources", () => {
 describe("loadResourcesPage", () => {
   it("queries directly when searching, skipping the cache", async () => {
     await loadResourcesPage({ search: "rubric" }, { limit: 10, page: 1 })
+
+    // The owner-name join takes a random alias, which only a request render may hold.
+    expect(connection).toHaveBeenCalled()
 
     expect(find).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ or: expect.any(Array) }) }),

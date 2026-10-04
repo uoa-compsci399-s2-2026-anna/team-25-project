@@ -2,6 +2,7 @@ import { QueryKeys } from "@repo/shared/constants/query-keys"
 import type { Course } from "@repo/shared/payload-types"
 import type { Pagination } from "@repo/shared/types/pagination"
 import { cacheLife, cacheTag } from "next/cache"
+import { connection } from "next/server"
 import type { Sort, Where } from "payload"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
@@ -73,8 +74,14 @@ const getResourcesCached = async (filters: ResourceFilters, pagination: Paginati
 const hasSearch = (filters: Pick<ResourceFilters, "search">) => Boolean(filters.search?.trim())
 
 /** Loads one page of resources, cached unless the filters include a search. */
-export const loadResourcesPage = (filters: ResourceFilters, pagination: Pagination) =>
-  hasSearch(filters) ? getResources(filters, pagination) : getResourcesCached(filters, pagination)
+export const loadResourcesPage = async (filters: ResourceFilters, pagination: Pagination) => {
+  if (!hasSearch(filters)) return getResourcesCached(filters, pagination)
+
+  // connection() because searching on the owner's name joins under a randomUUID() alias, which
+  // cacheComponents refuses to prerender. It stays out of getResources, which "use cache" also runs.
+  await connection()
+  return getResources(filters, pagination)
+}
 
 export type ResourceCourseOption = { value: Course["id"]; label: string }
 
