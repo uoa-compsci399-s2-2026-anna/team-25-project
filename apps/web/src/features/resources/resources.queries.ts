@@ -83,6 +83,47 @@ export const loadResourcesPage = async (filters: ResourceFilters, pagination: Pa
   return getResources(filters, pagination)
 }
 
+export const getResourceById = async (id: number) => {
+  const payload = await getPayloadClient()
+  return payload.findByID({
+    collection: Slugs.Collections.RESOURCES,
+    id,
+    // Depth 2 reaches the owner's avatar and institution, and the course's institution.
+    depth: 2,
+    disableErrors: true,
+    // The Local API overrides access, so ask only for what the page draws.
+    populate: {
+      [Slugs.Collections.COURSES]: { code: true, hasPublishedVersion: true, institution: true },
+      [Slugs.Collections.INSTITUTIONS]: { name: true },
+      [Slugs.Collections.MEMBERS]: {
+        avatar: true,
+        firstName: true,
+        institution: true,
+        lastName: true,
+      },
+      [Slugs.Collections.RESOURCE_ATTACHMENTS]: {
+        filename: true,
+        filesize: true,
+        mimeType: true,
+        url: true,
+      },
+    },
+  })
+}
+
+export const getResourceByIdCached = async (id: number) => {
+  "use cache"
+  cacheLife("max")
+  // The page shows the owner, the course and their institutions, so it goes stale with them too.
+  cacheTag(
+    QueryKeys.RESOURCES.ID(id),
+    QueryKeys.MEMBERS.ROOT,
+    QueryKeys.COURSES.ROOT,
+    QueryKeys.INSTITUTIONS,
+  )
+  return getResourceById(id)
+}
+
 export type ResourceCourseOption = { value: Course["id"]; label: string }
 
 /**
