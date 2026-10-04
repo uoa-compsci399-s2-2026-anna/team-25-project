@@ -6,6 +6,7 @@ import {
   getCoursesTableData,
   getLatestPublishedOffering,
   getMyCoursesSummary,
+  getMyDraftCourseRows,
   getPublishedCourse,
   getPublishedOffering,
   getPublishedOfferings,
@@ -174,6 +175,95 @@ describe("getMyCoursesSummary", () => {
     find.mockResolvedValueOnce({ docs: [{ id: 1 }] })
 
     expect(await getMyCoursesSummary(rows)).toEqual({ total: 1, upToDate: 1, year: currentYear })
+  })
+})
+
+describe("getMyDraftCourseRows", () => {
+  const member = { id: 1 } as Member
+
+  beforeEach(() => {
+    find.mockReset()
+    vi.mocked(getPayloadClient).mockResolvedValue({
+      find,
+    } as unknown as Awaited<ReturnType<typeof getPayloadClient>>)
+  })
+
+  it("returns nothing, and queries nothing, when nobody's signed in", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: null, user: null })
+
+    expect(await getMyDraftCourseRows()).toEqual([])
+    expect(find).not.toHaveBeenCalled()
+  })
+
+  it("returns nothing for an admin, whose id could match an unrelated member's", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "admin", user: { id: 1 } as Admin })
+
+    expect(await getMyDraftCourseRows()).toEqual([])
+    expect(find).not.toHaveBeenCalled()
+  })
+
+  it("looks up only the member's own never-published courses, as the member", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: member })
+    find.mockResolvedValueOnce({ docs: [course({ id: 4 })] }).mockResolvedValueOnce({ docs: [] })
+
+    await getMyDraftCourseRows()
+
+    expect(find).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        collection: "courses",
+        where: {
+          and: [
+            { hasPublishedVersion: { not_equals: true } },
+            { or: [{ owner: { equals: 1 } }, { editors: { contains: 1 } }] },
+          ],
+        },
+        overrideAccess: false,
+        user: member,
+      }),
+    )
+    expect(find).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        collection: "courseVersions",
+        where: { course: { in: [4] } },
+        overrideAccess: false,
+        user: member,
+      }),
+    )
+  })
+
+  it("skips the offerings lookup when the member has no drafts", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: member })
+    find.mockResolvedValueOnce({ docs: [] })
+
+    expect(await getMyDraftCourseRows()).toEqual([])
+    expect(find).toHaveBeenCalledTimes(1)
+  })
+
+  it("turns each draft course into a draft row using its newest offering", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: member })
+    const newer = version({
+      id: 2,
+      course: 4,
+      name: "Newer draft",
+      period: "2026 Semester 2",
+      _status: "draft",
+    })
+    const older = version({ id: 1, course: 4, name: "Older draft", _status: "draft" })
+    find
+      .mockResolvedValueOnce({ docs: [course({ id: 4, code: "COSC 345" })] })
+      .mockResolvedValueOnce({ docs: [newer, older] })
+
+    expect(await getMyDraftCourseRows()).toEqual([
+      expect.objectContaining({
+        id: "4",
+        code: "COSC 345",
+        title: "Newer draft",
+        status: "draft",
+        year: 2026,
+      }),
+    ])
   })
 })
 
