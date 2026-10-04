@@ -712,9 +712,11 @@ export const seed = async () => {
 
     const attachments: number[] = []
     for (const filename of "attachments" in fixture ? fixture.attachments : []) {
+      // Matched on the stem: Payload saves "notes-1.pdf" when "notes.pdf" is still in the local
+      // upload folder, which outlives a database reset, so an exact match would upload a copy each run.
       const existing = await payload.find({
         collection: Slugs.Collections.RESOURCE_ATTACHMENTS,
-        where: { filename: { equals: filename } },
+        where: { filename: { like: path.parse(filename).name } },
         depth: 0,
         limit: 1,
       })
