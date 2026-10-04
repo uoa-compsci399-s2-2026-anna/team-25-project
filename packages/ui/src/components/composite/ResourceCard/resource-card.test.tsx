@@ -96,8 +96,22 @@ describe("ResourceCard", () => {
 })
 
 describe("ResourceCardSkeleton", () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   it("renders a placeholder card", () => {
     render(<ResourceCardSkeleton data-testid="skeleton" />)
     expect(screen.getByTestId("skeleton")).toHaveAttribute("data-slot", "resource-card-skeleton")
+  })
+
+  it("hides the placeholder from screen readers", () => {
+    const { container } = render(<ResourceCardSkeleton />)
+
+    // A loading card has nothing to read out, not even its divider.
+    expect(screen.queryByRole("separator")).not.toBeInTheDocument()
+    for (const box of container.querySelectorAll("[data-slot=skeleton]")) {
+      expect(box).toHaveAttribute("aria-hidden", "true")
+    }
   })
 })

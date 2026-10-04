@@ -131,7 +131,14 @@ function ResourceCardSkeleton({
   ...props
 }: React.ComponentProps<"div"> & Pick<ResourceCardProps, "size">) {
   return (
-    <Card className={className} data-slot="resource-card-skeleton" size={size} {...props}>
+    // Hidden as a whole, so the divider isn't read out along with the empty boxes.
+    <Card
+      aria-hidden="true"
+      className={className}
+      data-slot="resource-card-skeleton"
+      size={size}
+      {...props}
+    >
       <CardHeader className="gap-3">
         <Skeleton className="h-5 w-20 rounded-full" />
         <div className="col-span-full flex flex-col gap-1.5">
