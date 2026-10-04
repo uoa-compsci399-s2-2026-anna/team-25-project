@@ -2,7 +2,13 @@ import { revalidateTag } from "next/cache"
 import type { FieldHook, PayloadRequest } from "payload"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { Slugs } from "@/lib/payload/slugs"
-import { defaultResourceOwner, revalidateDeletedResource, revalidateResources } from "./Resources"
+import {
+  defaultResourceOwner,
+  revalidateAttachmentResources,
+  revalidateDeletedAttachmentResources,
+  revalidateDeletedResource,
+  revalidateResources,
+} from "./Resources"
 
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }))
 
@@ -20,6 +26,32 @@ const args: Parameters<FieldHook>[0] = {
   siblingData: {},
   siblingFields: [],
 }
+
+describe("attachment cache revalidation", () => {
+  beforeEach(() => {
+    vi.mocked(revalidateTag).mockReset()
+  })
+
+  it.each([revalidateAttachmentResources, revalidateDeletedAttachmentResources])(
+    "marks every resource query stale, as an attachment does not know its resources",
+    async (hook) => {
+      const doc = { id: 3 }
+      const result = await hook({ doc, req: { context: {} } } as never)
+
+      expect(revalidateTag).toHaveBeenCalledExactlyOnceWith("resources", "max")
+      expect(result).toBe(doc)
+    },
+  )
+
+  it.each([revalidateAttachmentResources, revalidateDeletedAttachmentResources])(
+    "can skip revalidation through request context",
+    async (hook) => {
+      await hook({ doc: { id: 3 }, req: { context: { disableRevalidate: true } } } as never)
+
+      expect(revalidateTag).not.toHaveBeenCalled()
+    },
+  )
+})
 
 describe("resource cache revalidation", () => {
   beforeEach(() => {

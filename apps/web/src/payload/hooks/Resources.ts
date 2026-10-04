@@ -19,6 +19,17 @@ export const revalidateDeletedResource: CollectionAfterDeleteHook<Resource> = ({
   return doc
 }
 
+// An attachment does not know which resources link to it, so every resource query goes stale.
+export const revalidateAttachmentResources: CollectionAfterChangeHook = ({ doc, req }) => {
+  if (!req.context.disableRevalidate) revalidateTag(QueryKeys.RESOURCES.ROOT, "max")
+  return doc
+}
+
+export const revalidateDeletedAttachmentResources: CollectionAfterDeleteHook = ({ doc, req }) => {
+  if (!req.context.disableRevalidate) revalidateTag(QueryKeys.RESOURCES.ROOT, "max")
+  return doc
+}
+
 /**
  * Makes the member creating a resource its owner, ignoring any owner they sent.
  * Admins keep the ability to set one directly, since they are not members and

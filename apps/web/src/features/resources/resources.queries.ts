@@ -115,7 +115,9 @@ export const getResourceByIdCached = async (id: number) => {
   "use cache"
   cacheLife("max")
   // The page shows the owner, the course and their institutions, so it goes stale with them too.
+  // The root tag is how a replaced or deleted attachment reaches it (see revalidateAttachmentResources).
   cacheTag(
+    QueryKeys.RESOURCES.ROOT,
     QueryKeys.RESOURCES.ID(id),
     QueryKeys.MEMBERS.ROOT,
     QueryKeys.COURSES.ROOT,

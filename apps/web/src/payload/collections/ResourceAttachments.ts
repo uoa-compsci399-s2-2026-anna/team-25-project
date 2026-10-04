@@ -2,6 +2,10 @@ import { RESOURCE_ATTACHMENT_MIME_TYPES } from "@repo/shared/constants/resource-
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { isAdmin, isSignedIn } from "../access"
+import {
+  revalidateAttachmentResources,
+  revalidateDeletedAttachmentResources,
+} from "../hooks/Resources"
 
 // Documents members share on resources. Kept apart from media so the public
 // image store stays images-only and these stay behind a sign-in.
@@ -15,6 +19,10 @@ export const ResourceAttachments: CollectionConfig = {
     // file by unlinking it from their resource and uploading another.
     update: isAdmin,
     delete: isAdmin,
+  },
+  hooks: {
+    afterChange: [revalidateAttachmentResources],
+    afterDelete: [revalidateDeletedAttachmentResources],
   },
   fields: [],
   upload: {
