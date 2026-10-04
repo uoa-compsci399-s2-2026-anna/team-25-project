@@ -69,16 +69,18 @@ describe("AddCapstoneCourseDialog", () => {
     expect(dialog).toHaveAccessibleDescription(
       "Course code and name are all a draft needs - everything else here is for when you publish.",
     )
-    expect(screen.getByLabelText("Course code")).toBeInTheDocument()
-    expect(screen.getByLabelText("Teaching period")).toBeInTheDocument()
-    expect(screen.getByLabelText("Start date")).toBeInTheDocument()
-    expect(screen.getByLabelText("End date")).toBeInTheDocument()
-    expect(screen.getByLabelText("Course name")).toBeInTheDocument()
-    expect(screen.getByLabelText("Course program")).toBeInTheDocument()
-    expect(screen.getByLabelText("Project type")).toBeInTheDocument()
+    // Required labels end in an aria-hidden asterisk, which getByLabelText still
+    // reads as label text - so those are matched by prefix rather than exactly.
+    expect(screen.getByLabelText(/^Course code/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Teaching period/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Start date/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^End date/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Course name/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Course program/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Project type/)).toBeInTheDocument()
     expect(screen.getByLabelText("Your role")).toBeInTheDocument()
-    expect(screen.getByLabelText("Learning outcomes")).toBeInTheDocument()
-    expect(screen.getByLabelText("Assessments")).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Learning outcomes/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Assessments/)).toBeInTheDocument()
     expect(screen.getByLabelText("Additional information")).toBeInTheDocument()
   })
 
@@ -96,7 +98,7 @@ describe("AddCapstoneCourseDialog", () => {
     const onValueChange = vi.fn()
     renderDialog({ onValueChange })
 
-    fireEvent.change(screen.getByLabelText("Course code"), { target: { value: "CS399" } })
+    fireEvent.change(screen.getByLabelText(/^Course code/), { target: { value: "CS399" } })
 
     expect(onValueChange).toHaveBeenCalledWith("code", "CS399")
   })
@@ -135,7 +137,7 @@ describe("AddCapstoneCourseDialog", () => {
   it("marks only the input as invalid, not the field wrapper that colors the title, on a field error", () => {
     renderDialog({ fieldErrors: { code: "Course code is required" } })
 
-    const input = screen.getByLabelText("Course code")
+    const input = screen.getByLabelText(/^Course code/)
     expect(input).toHaveAttribute("aria-invalid", "true")
     expect(input.closest('[data-slot="field"]')).not.toHaveAttribute("data-invalid", "true")
   })
