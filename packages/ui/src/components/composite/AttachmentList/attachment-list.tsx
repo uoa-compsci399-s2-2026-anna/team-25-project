@@ -32,7 +32,11 @@ const formatSize = (bytes: number) => {
 
 function AttachmentList({ attachments, className, ...props }: AttachmentListProps) {
   return (
-    <ul className={cn("flex flex-col divide-y rounded-lg border", className)} {...props}>
+    // Only as wide as its longest row, but never wider than its container, so long names still truncate.
+    <ul
+      className={cn("flex w-fit max-w-full flex-col divide-y rounded-lg border", className)}
+      {...props}
+    >
       {attachments.map((attachment) => {
         const details = [
           attachment.type,
@@ -42,7 +46,7 @@ function AttachmentList({ attachments, className, ...props }: AttachmentListProp
         return (
           <li className="flex items-center gap-3 px-4 py-3" key={attachment.id}>
             <FileText aria-hidden className="size-5 shrink-0 text-muted-foreground" />
-            <div className="flex min-w-0 flex-1 flex-col">
+            <div className="mr-auto flex min-w-0 flex-col pr-3">
               <p className="truncate font-medium text-sm">{attachment.name}</p>
               {details.length > 0 && (
                 <p className="text-muted-foreground text-xs">{details.join(" - ")}</p>
@@ -51,6 +55,7 @@ function AttachmentList({ attachments, className, ...props }: AttachmentListProp
             <Button
               aria-label={`Download ${attachment.name}`}
               borderColor="charcoal"
+              className="shrink-0"
               nativeButton={false}
               render={<a download={attachment.name} href={attachment.href} />}
               size="md"
