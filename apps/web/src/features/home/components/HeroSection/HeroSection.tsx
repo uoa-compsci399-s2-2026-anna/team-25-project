@@ -16,8 +16,7 @@ export const HeroSection = () => {
         </p>
       </div>
 
-      {/* Holds the space the interactive map will take, which is its own ticket.
-          Same stopgap pattern as TickerPlaceholder. */}
+      {/* Holds the space the interactive map will take, which is its own ticket. */}
       <div className="flex justify-center md:flex-1">
         <div
           className="flex aspect-4/5 w-full max-w-sm items-center justify-center rounded-2xl bg-muted text-muted-foreground text-sm"

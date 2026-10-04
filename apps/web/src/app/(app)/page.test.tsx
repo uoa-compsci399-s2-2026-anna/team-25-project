@@ -1,8 +1,19 @@
 import { cleanup, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { getInstitutionsWithLogosCached } from "@/features/institutions/institutions.queries"
 import Page from "./page"
 
+vi.mock("@/features/institutions/institutions.queries", () => ({
+  getInstitutionsWithLogosCached: vi.fn(),
+}))
+
 describe("Home page", () => {
+  // Some tests below override this to a never-resolving promise to inspect the
+  // Suspense fallback - reset it before every test so that doesn't leak across cases.
+  beforeEach(() => {
+    vi.mocked(getInstitutionsWithLogosCached).mockReset().mockResolvedValue([])
+  })
+
   afterEach(() => {
     cleanup()
   })
@@ -12,9 +23,10 @@ describe("Home page", () => {
     expect(screen.getByText("Computing Capstone Community Australasia")).toBeInTheDocument()
   })
 
-  it("renders TickerPlaceholder", () => {
-    render(<Page />)
-    expect(screen.getByTestId("ticker-placeholder")).toBeInTheDocument()
+  it("renders the institutions ticker's skeleton while logos load", () => {
+    vi.mocked(getInstitutionsWithLogosCached).mockReturnValue(new Promise(() => {}))
+    const { container } = render(<Page />)
+    expect(container.querySelectorAll(".animate-pulse")).toHaveLength(8)
   })
 
   it("renders AboutSection", () => {
