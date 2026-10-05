@@ -15,6 +15,7 @@ import {
   getMemberProposals,
   getMemberProposalsCached,
   getMembers,
+  getResearchInterestOptions,
 } from "./members.queries"
 
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
@@ -31,6 +32,7 @@ const selectedFields = {
   institution: true,
   lastName: true,
   position: true,
+  researchInterests: true,
 }
 
 beforeEach(() => {
@@ -135,6 +137,14 @@ describe("getMembers", () => {
     expect(find).toHaveBeenCalledWith(expect.objectContaining({ sort: expected }))
   })
 
+  it("matches any of the chosen interests, each exactly as stored", async () => {
+    await getMembers({ researchInterests: ["Generative AI"] }, { limit: 12, page: 1 })
+
+    expect(find).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { researchInterests: { in: ["Generative AI"] } } }),
+    )
+  })
+
   it("asks only for the fields the card draws, leaving gated ones behind", async () => {
     await getMembers({}, { limit: 12, page: 1 })
 
@@ -142,6 +152,64 @@ describe("getMembers", () => {
     expect(select).toEqual(selectedFields)
     expect(select).not.toHaveProperty("email")
     expect(select).not.toHaveProperty("bio")
+  })
+})
+
+describe("getResearchInterestOptions", () => {
+  const withInterests = (...researchInterests: (string[] | null)[]) =>
+    find.mockResolvedValue({ docs: researchInterests.map((r) => ({ researchInterests: r })) })
+
+  it("offers each distinct interest once, alphabetically", async () => {
+    withInterests(["Teamwork", "Assessment"], ["Assessment"], ["Generative AI"])
+
+    await expect(getResearchInterestOptions()).resolves.toEqual([
+      { label: "Assessment", value: "Assessment" },
+      { label: "Generative AI", value: "Generative AI" },
+      { label: "Teamwork", value: "Teamwork" },
+    ])
+  })
+
+  // Postgres compares these case-sensitively, so folding them into one option would hide
+  // every member who spelled it the other way.
+  it("keeps spellings that differ by case as separate options", async () => {
+    withInterests(["Teamwork"], ["teamwork"])
+
+    // Which of the two sorts first is down to the collator, so only membership is asserted.
+    await expect(getResearchInterestOptions()).resolves.toEqual(
+      expect.arrayContaining([
+        { label: "Teamwork", value: "Teamwork" },
+        { label: "teamwork", value: "teamwork" },
+      ]),
+    )
+    await expect(getResearchInterestOptions()).resolves.toHaveLength(2)
+  })
+
+  it("offers an interest saved with surrounding spaces as its trimmed self, once", async () => {
+    withInterests(["  Teamwork  "], ["Teamwork"])
+
+    await expect(getResearchInterestOptions()).resolves.toEqual([
+      { label: "Teamwork", value: "Teamwork" },
+    ])
+  })
+
+  it("skips members with no interests, and blank entries", async () => {
+    withInterests(null, [], ["   ", "Ethics"])
+
+    await expect(getResearchInterestOptions()).resolves.toEqual([
+      { label: "Ethics", value: "Ethics" },
+    ])
+  })
+
+  it("reads only the interests, across every member", async () => {
+    withInterests([])
+
+    await getResearchInterestOptions()
+    expect(find).toHaveBeenCalledWith({
+      collection: "members",
+      depth: 0,
+      pagination: false,
+      select: { researchInterests: true },
+    })
   })
 })
 

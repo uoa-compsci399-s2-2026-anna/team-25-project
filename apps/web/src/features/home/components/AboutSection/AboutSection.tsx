@@ -8,20 +8,24 @@ const about = [
     title: "Member directory",
   },
   {
-    description: "Host research proposals for members seeking co-investigators.",
+    // Course comparison was its own card until the design merged it in here.
+    description:
+      "Record course data annually so designs can be compared across institutions, and host research proposals for members seeking co-investigators.",
     number: "02",
     title: "Research proposals",
   },
   {
-    description: "Record course data annually so designs can be compared across institutions.",
+    description: "Convene a workshop alongside ACE each year.",
     number: "03",
-    title: "Course comparison",
+    title: "Workshop",
   },
 ]
 
 export const AboutSection = () => {
+  // More above than below: this meets the ticker band, which leaves the heading
+  // no room of its own.
   return (
-    <section className="flex flex-col gap-8 px-8 py-10 md:px-16">
+    <section className="flex flex-col gap-8 px-8 pt-16 pb-12 md:px-16 md:pt-20">
       <Heading level="h2">About us</Heading>
       <div className="grid gap-6 md:grid-cols-3">
         {about.map((item) => (

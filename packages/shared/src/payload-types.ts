@@ -75,6 +75,9 @@ export interface Config {
     proposals: Proposal;
     courses: Course;
     courseVersions: CourseVersion;
+    publications: Publication;
+    resources: Resource;
+    resourceAttachments: ResourceAttachment;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -89,6 +92,9 @@ export interface Config {
     proposals: ProposalsSelect<false> | ProposalsSelect<true>;
     courses: CoursesSelect<false> | CoursesSelect<true>;
     courseVersions: CourseVersionsSelect<false> | CourseVersionsSelect<true>;
+    publications: PublicationsSelect<false> | PublicationsSelect<true>;
+    resources: ResourcesSelect<false> | ResourcesSelect<true>;
+    resourceAttachments: ResourceAttachmentsSelect<false> | ResourceAttachmentsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -431,6 +437,118 @@ export interface CourseVersion {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "publications".
+ */
+export interface Publication {
+  id: number;
+  /**
+   * BibTeX key, e.g. smith2024learning
+   */
+  citationKey?: string | null;
+  type:
+    | 'article'
+    | 'book'
+    | 'booklet'
+    | 'inbook'
+    | 'incollection'
+    | 'inproceedings'
+    | 'manual'
+    | 'mastersthesis'
+    | 'phdthesis'
+    | 'proceedings'
+    | 'techreport'
+    | 'unpublished'
+    | 'misc';
+  title: string;
+  authors: {
+    /**
+     * As printed in the publication
+     */
+    name: string;
+    /**
+     * Optional. Links this author to a member profile
+     */
+    member?: (number | null) | Member;
+    id?: string | null;
+  }[];
+  year: number;
+  month?: number | null;
+  /**
+   * Without the https://doi.org/ prefix, e.g. 10.1145/3313831.3376518
+   */
+  doi?: string | null;
+  url?: string | null;
+  /**
+   * Journal, conference, school, institution or repository, e.g. arXiv
+   */
+  venue?: string | null;
+  volume?: string | null;
+  issue?: string | null;
+  /**
+   * e.g. 123-145
+   */
+  pages?: string | null;
+  publisher?: string | null;
+  abstract?: string | null;
+  tags?: string[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "resources".
+ */
+export interface Resource {
+  id: number;
+  owner: number | Member;
+  title: string;
+  description: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Optional. Links the resource to the course it was written for.
+   */
+  course?: (number | null) | Course;
+  /**
+   * PDFs, slides, documents and spreadsheets for members to download.
+   */
+  attachments?: (number | ResourceAttachment)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "resourceAttachments".
+ */
+export interface ResourceAttachment {
+  id: number;
+  prefix?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -480,6 +598,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'courseVersions';
         value: number | CourseVersion;
+      } | null)
+    | ({
+        relationTo: 'publications';
+        value: number | Publication;
+      } | null)
+    | ({
+        relationTo: 'resources';
+        value: number | Resource;
+      } | null)
+    | ({
+        relationTo: 'resourceAttachments';
+        value: number | ResourceAttachment;
       } | null);
   globalSlug?: string | null;
   user:
@@ -717,6 +847,66 @@ export interface CourseVersionsSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "publications_select".
+ */
+export interface PublicationsSelect<T extends boolean = true> {
+  citationKey?: T;
+  type?: T;
+  title?: T;
+  authors?:
+    | T
+    | {
+        name?: T;
+        member?: T;
+        id?: T;
+      };
+  year?: T;
+  month?: T;
+  doi?: T;
+  url?: T;
+  venue?: T;
+  volume?: T;
+  issue?: T;
+  pages?: T;
+  publisher?: T;
+  abstract?: T;
+  tags?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "resources_select".
+ */
+export interface ResourcesSelect<T extends boolean = true> {
+  owner?: T;
+  title?: T;
+  description?: T;
+  course?: T;
+  attachments?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "resourceAttachments_select".
+ */
+export interface ResourceAttachmentsSelect<T extends boolean = true> {
+  prefix?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

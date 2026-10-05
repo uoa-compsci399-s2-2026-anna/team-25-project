@@ -23,6 +23,13 @@ describe("MemberBio", () => {
     expect(screen.getByText("Researches peer assessment.")).toBeInTheDocument()
   })
 
+  it.each([null, undefined, "", "   "])("renders nothing when the bio is %j", async (bio) => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue({ bio } as never)
+
+    const { container } = await renderBio()
+    expect(container).toBeEmptyDOMElement()
+  })
+
   it("renders nothing when the member doesn't exist", async () => {
     vi.mocked(getMemberDetailsCached).mockResolvedValue(null)
 

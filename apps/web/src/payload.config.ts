@@ -13,6 +13,9 @@ import { Institutions } from "./payload/collections/Institutions"
 import { Media } from "./payload/collections/Media"
 import { Members } from "./payload/collections/Members"
 import { Proposals } from "./payload/collections/Proposals"
+import { Publications } from "./payload/collections/Publications"
+import { ResourceAttachments } from "./payload/collections/ResourceAttachments"
+import { Resources } from "./payload/collections/Resources"
 import { richTextFeatures } from "./payload/richText"
 
 declare module "payload" {
@@ -35,7 +38,18 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Admin, Members, Institutions, Media, Proposals, Courses, CourseVersions],
+  collections: [
+    Admin,
+    Members,
+    Institutions,
+    Media,
+    Proposals,
+    Courses,
+    CourseVersions,
+    Publications,
+    Resources,
+    ResourceAttachments,
+  ],
   editor: lexicalEditor({ features: richTextFeatures }),
   graphQL: {
     disable: true,
@@ -57,12 +71,18 @@ export default buildConfig({
     push: false,
   }),
   sharp,
+  upload: {
+    limits: { fileSize: 50 * 1024 * 1024 },
+    // Without this an oversized file is cut off at the limit and saved truncated.
+    abortOnLimit: true,
+  },
   plugins: [
     s3Storage({
       enabled: Boolean(process.env.S3_BUCKET && process.env.S3_REGION),
       alwaysInsertFields: true,
       collections: {
         media: { prefix: "media" },
+        resourceAttachments: { prefix: "resourceAttachments" },
       },
       bucket: process.env.S3_BUCKET ?? "",
       config: {

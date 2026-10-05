@@ -8,6 +8,8 @@ import {
   getInstitutionNameCached,
   getInstitutionOptions,
   getInstitutionOptionsCached,
+  getInstitutionsWithLogos,
+  getInstitutionsWithLogosCached,
 } from "./institutions.queries"
 
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
@@ -100,6 +102,61 @@ describe("getInstitution", () => {
 
   it("is cached under the institutions tag", async () => {
     await expect(getInstitutionCached(12)).resolves.toBeNull()
+    expect(cacheTag).toHaveBeenCalledWith("institutions")
+  })
+})
+
+describe("getInstitutionsWithLogos", () => {
+  it("loads only opted-in institutions that have a logo, sorted by name", async () => {
+    await getInstitutionsWithLogos()
+
+    // depth: 1 populates the logo upload so its url and dimensions are available.
+    expect(find).toHaveBeenCalledWith({
+      collection: "institutions",
+      where: { showLogo: { equals: true }, logo: { exists: true } },
+      select: { name: true, logo: true },
+      depth: 1,
+      pagination: false,
+      sort: "name",
+    })
+  })
+
+  it("maps each institution to its name and logo", async () => {
+    find.mockResolvedValue({
+      docs: [
+        {
+          id: 12,
+          name: "University of Auckland",
+          logo: { id: 7, url: "/media/uoa.png", width: 300, height: 150, alt: "UoA" },
+        },
+      ],
+    })
+
+    await expect(getInstitutionsWithLogos()).resolves.toEqual([
+      {
+        id: 12,
+        name: "University of Auckland",
+        logo: { id: 7, url: "/media/uoa.png", width: 300, height: 150 },
+      },
+    ])
+  })
+
+  it("skips institutions whose logo is unpopulated, missing, or has no url", async () => {
+    find.mockResolvedValue({
+      docs: [
+        { id: 1, name: "Unpopulated", logo: 7 },
+        { id: 2, name: "Missing", logo: null },
+        { id: 3, name: "No url", logo: { id: 8, url: null } },
+        { id: 4, name: "Shown", logo: { id: 9, url: "/media/shown.png" } },
+      ],
+    })
+
+    const institutions = await getInstitutionsWithLogos()
+    expect(institutions.map(({ name }) => name)).toEqual(["Shown"])
+  })
+
+  it("is cached under the institutions tag", async () => {
+    await expect(getInstitutionsWithLogosCached()).resolves.toEqual([])
     expect(cacheTag).toHaveBeenCalledWith("institutions")
   })
 })
