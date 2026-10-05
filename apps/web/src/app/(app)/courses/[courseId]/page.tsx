@@ -10,6 +10,10 @@ import {
 } from "@/features/courses/components/CourseOfferingMeta"
 import type { CourseRouteParams } from "@/features/courses/courses.params"
 import { BackLink, PageContainer } from "@/features/layout/components"
+import {
+  CourseResources,
+  CourseResourcesSkeleton,
+} from "@/features/resources/components/CourseResources"
 import { Routes } from "@/lib/routes"
 
 export default function Page({ params }: { params: CourseRouteParams }) {
@@ -25,6 +29,9 @@ export default function Page({ params }: { params: CourseRouteParams }) {
         </AnimatedSuspense>
         <AnimatedSuspense fallback={<CourseOfferingSkeleton />}>
           <CourseOffering params={params} />
+        </AnimatedSuspense>
+        <AnimatedSuspense fallback={<CourseResourcesSkeleton />}>
+          <CourseResources params={params} />
         </AnimatedSuspense>
       </article>
     </PageContainer>
