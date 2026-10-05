@@ -3,6 +3,7 @@
 import type { BibtexImportResult, PersonName } from "@repo/shared/utils/bibtex-import"
 import { Collapsible, CollapsiblePanel, FieldLabel, TextArea } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
+import { useDebouncedValue } from "@tanstack/react-pacer"
 import { CircleCheckIcon } from "lucide-react"
 import { useEffect, useEffectEvent, useId, useRef, useState } from "react"
 import { SectionTrigger } from "../SectionTrigger"
@@ -30,6 +31,7 @@ export const BibtexImport = ({ self, onImport }: BibtexImportProps) => {
   const [result, setResult] = useState<BibtexImportResult | null>(null)
   const lastParsed = useRef("")
   const textAreaId = useId()
+  const [debouncedText] = useDebouncedValue(text.trim(), { wait: BIBTEX_DEBOUNCE_MS })
 
   // An effect event reads the latest props without restarting the debounce when they change.
   const parse = useEffectEvent(async (trimmed: string) => {
@@ -71,12 +73,8 @@ export const BibtexImport = ({ self, onImport }: BibtexImportProps) => {
   }, [open])
 
   useEffect(() => {
-    const trimmed = text.trim()
-    if (trimmed === lastParsed.current) return
-
-    const timer = setTimeout(() => void parse(trimmed), BIBTEX_DEBOUNCE_MS)
-    return () => clearTimeout(timer)
-  }, [text])
+    if (debouncedText !== lastParsed.current) void parse(debouncedText)
+  }, [debouncedText])
 
   const succeeded = result && !result.messages.some((message) => message.level === "error")
 

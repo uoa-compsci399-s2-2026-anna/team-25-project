@@ -42,6 +42,7 @@
     "@repo/ui": "workspace:*",
     "@scalar/nextjs-api-reference": "^0.11.13",
     "@tanstack/react-form": "^1.33.5",
+    "@tanstack/react-pacer": "^0.24.0",
     "@tanstack/react-table": "^9.2.4",
     "dotenv": "16.4.7",
     "graphql": "^16.8.1",
