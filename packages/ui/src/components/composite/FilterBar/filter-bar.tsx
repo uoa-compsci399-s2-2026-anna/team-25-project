@@ -76,6 +76,8 @@ type FilterBarProps<
   onSearchChange: (search: string) => void
   searchPlaceholder?: string
   filters?: FilterBarFilter[]
+  /** Keeps the dropdowns and sort together, so they wrap to the next row as one group. */
+  groupControls?: boolean
   sortOptions: FilterBarOption<TSort>[]
   sort: TSort
   onSortChange: (sort: TSort) => void
@@ -86,6 +88,7 @@ type FilterBarProps<
 function FilterBar<TStatus extends string = string, TSort extends string = string>({
   className,
   filters = [],
+  groupControls = false,
   onSearchChange,
   onSortChange,
   onStatusChange,
@@ -97,48 +100,8 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
   statusOptions = [],
   ...props
 }: FilterBarProps<TStatus, TSort>) {
-  return (
-    <div
-      className={cn(
-        "flex flex-wrap items-center justify-center gap-3 md:flex-nowrap md:justify-start",
-        className,
-      )}
-      data-slot="filter-bar"
-      {...props}
-    >
-      {statusOptions.length > 0 && (
-        <Tabs
-          className="shrink-0"
-          onValueChange={(value) => onStatusChange?.(value as TStatus)}
-          value={status}
-        >
-          <TabsList className="h-10" variant="pill">
-            {statusOptions.map((option) => (
-              <TabsTrigger className="px-4" key={option.value} value={option.value}>
-                {option.label}
-                {option.count !== undefined && ` - ${option.count}`}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      )}
-
-      <InputGroup
-        className="order-first h-10 w-full md:order-none md:w-80 md:min-w-32"
-        variant="pill"
-      >
-        <InputGroupAddon className="pl-4">
-          <SearchIcon />
-        </InputGroupAddon>
-        <InputGroupInput
-          aria-label={searchPlaceholder}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder={searchPlaceholder}
-          type="search"
-          value={search}
-        />
-      </InputGroup>
-
+  const controls = (
+    <>
       {filters.map((filter) =>
         filter.multiple ? (
           <Select<FilterBarValue, true>
@@ -156,7 +119,7 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
               variant="pill"
             >
               {/* Not SelectValue: the chips beside the bar already show what is picked, so the
-                  trigger stays on its placeholder rather than restating it. */}
+              trigger stays on its placeholder rather than restating it. */}
               <span className="flex flex-1 text-left text-muted-foreground">
                 {filter.placeholder}
               </span>
@@ -221,6 +184,56 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
           ))}
         </SelectContent>
       </Select>
+    </>
+  )
+
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap items-center justify-center gap-3 md:flex-nowrap md:justify-start",
+        className,
+      )}
+      data-slot="filter-bar"
+      {...props}
+    >
+      {statusOptions.length > 0 && (
+        <Tabs
+          className="shrink-0"
+          onValueChange={(value) => onStatusChange?.(value as TStatus)}
+          value={status}
+        >
+          <TabsList className="h-10" variant="pill">
+            {statusOptions.map((option) => (
+              <TabsTrigger className="px-4" key={option.value} value={option.value}>
+                {option.label}
+                {option.count !== undefined && ` - ${option.count}`}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      )}
+
+      <InputGroup
+        className="order-first h-10 w-full md:order-none md:w-80 md:min-w-32"
+        variant="pill"
+      >
+        <InputGroupAddon className="pl-4">
+          <SearchIcon />
+        </InputGroupAddon>
+        <InputGroupInput
+          aria-label={searchPlaceholder}
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder={searchPlaceholder}
+          type="search"
+          value={search}
+        />
+      </InputGroup>
+
+      {groupControls ? (
+        <div className="flex flex-wrap items-center gap-3 md:mx-auto xl:ml-auto">{controls}</div>
+      ) : (
+        controls
+      )}
     </div>
   )
 }
