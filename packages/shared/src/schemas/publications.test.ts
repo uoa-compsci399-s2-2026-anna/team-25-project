@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { PublicationType } from "../enums/publications"
-import { addPublicationFormSchema, createPublicationSchema } from "./publications"
+import { addPublicationFormSchema } from "./publications"
 
 const validForm = {
   type: PublicationType.ARTICLE,
@@ -27,30 +27,6 @@ const errorPaths = (input: unknown) => {
   const result = addPublicationFormSchema.safeParse(input)
   return result.success ? [] : result.error.issues.map((issue) => issue.path.join("."))
 }
-
-describe("createPublicationSchema", () => {
-  it("accepts a minimal valid publication", () => {
-    expect(
-      createPublicationSchema.safeParse({
-        type: PublicationType.ARTICLE,
-        title: "Title",
-        authors: [{ name: "Anna Smith", member: 1 }],
-        year: 2025,
-      }).success,
-    ).toBe(true)
-  })
-
-  it("requires at least one author", () => {
-    expect(
-      createPublicationSchema.safeParse({
-        type: PublicationType.ARTICLE,
-        title: "Title",
-        authors: [],
-        year: 2025,
-      }).success,
-    ).toBe(false)
-  })
-})
 
 describe("addPublicationFormSchema", () => {
   it("accepts a form with blank optional fields", () => {
@@ -124,5 +100,13 @@ describe("addPublicationFormSchema", () => {
 
   it("rejects a URL that is not a full URL", () => {
     expect(errorPaths({ ...validForm, url: "example" })).toEqual(["url"])
+  })
+
+  it.each([
+    "javascript:alert(1)",
+    "data:text/html,<script>alert(1)</script>",
+    "ftp://example.com/paper",
+  ])("rejects the non-web URL %s", (url) => {
+    expect(errorPaths({ ...validForm, url })).toEqual(["url"])
   })
 })

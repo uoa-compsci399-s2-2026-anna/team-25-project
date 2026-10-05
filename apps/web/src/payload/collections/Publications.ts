@@ -10,7 +10,7 @@ import {
   revalidateDeletedPublication,
   revalidatePublications,
 } from "../hooks/Publications"
-import { validateDoi } from "../validation/Publications"
+import { validateDoi, validateUrl } from "../validation/Publications"
 
 export const Publications: CollectionConfig = {
   slug: Slugs.Collections.PUBLICATIONS,
@@ -85,7 +85,7 @@ export const Publications: CollectionConfig = {
       hooks: { beforeValidate: [blankToNull] },
       validate: validateDoi,
     },
-    { name: "url", type: "text" },
+    { name: "url", type: "text", validate: validateUrl },
     {
       name: "venue",
       type: "text",

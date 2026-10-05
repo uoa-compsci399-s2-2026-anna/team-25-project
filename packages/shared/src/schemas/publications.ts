@@ -1,39 +1,22 @@
 import { PublicationType } from "@repo/shared/enums/publications"
 import { z } from "zod"
-import type { Publication } from "../payload-types"
 
 export const DOI_PATTERN = /^10\.\d{4,9}\/\S+$/
 
-const doiError = "Enter a DOI that starts with 10."
+export const DOI_ERROR = "Enter a DOI that starts with 10."
 
-export const createPublicationSchema = z.object({
-  citationKey: z.string().optional(),
-  type: z.enum(PublicationType),
-  title: z.string().min(1, "Title is required"),
-  authors: z
-    .array(
-      z.object({
-        name: z.string().min(1, "Author name is required"),
-        member: z.number().optional(),
-      }),
-    )
-    .min(1, "At least one author is required"),
-  year: z.number().int().min(1000).max(9999),
-  month: z.number().int().min(1).max(12).optional(),
-  doi: z.string().regex(DOI_PATTERN, doiError).optional(),
-  url: z.url().optional(),
-  venue: z.string().optional(),
-  volume: z.string().optional(),
-  issue: z.string().optional(),
-  pages: z.string().optional(),
-  publisher: z.string().optional(),
-  abstract: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-}) satisfies z.ZodType<Omit<Publication, "id" | "createdAt" | "updatedAt">>
+export const URL_ERROR = "Enter a full URL that starts with https:// or http://"
 
-export type CreatePublicationInput = z.infer<typeof createPublicationSchema>
+// z.url() accepts any protocol, including javascript: and data:. Only allow web
+// links, because the URL is shown as a link.
+export const webUrlSchema = z.url({
+  protocol: /^https?$/,
+  hostname: z.regexes.domain,
+  error: URL_ERROR,
+})
 
-// The form sends every optional field, so a blank one arrives as "".
+// The form sends every optional field, so a blank one arrives as "". Only fields
+// with a format check need this, because the check would reject "".
 const blankOr = <T extends z.ZodType>(schema: T) => z.union([z.literal(""), schema])
 
 export const authorNameSchema = z.string().trim().min(1, "Author name is required")
@@ -58,8 +41,8 @@ export const addPublicationFormSchema = z.object({
     ),
   year: z.number({ error: "Year is required" }).int().min(1000).max(9999),
   month: blankOr(z.string().regex(/^([1-9]|1[0-2])$/, "Choose a month")),
-  doi: blankOr(z.string().trim().regex(DOI_PATTERN, doiError)),
-  url: blankOr(z.url("Enter a full URL, e.g. https://example.com")),
+  doi: blankOr(z.string().trim().regex(DOI_PATTERN, DOI_ERROR)),
+  url: blankOr(webUrlSchema),
   venue: z.string(),
   volume: z.string(),
   issue: z.string(),

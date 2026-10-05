@@ -73,6 +73,16 @@ describe("createPublication", () => {
     expect(payload.create).not.toHaveBeenCalled()
   })
 
+  it("rejects a non-web URL", async () => {
+    const payload = mockPayload()
+
+    expect(await createPublication({ ...input, url: "javascript:alert(1)" })).toEqual({
+      fieldErrors: { url: "Enter a full URL that starts with https:// or http://" },
+      ok: false,
+    })
+    expect(payload.create).not.toHaveBeenCalled()
+  })
+
   it.each([
     ["a guest", { collection: null, user: null }, "Sign in to add a publication."],
     [
