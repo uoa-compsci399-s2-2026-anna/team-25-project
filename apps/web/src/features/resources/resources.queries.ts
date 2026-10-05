@@ -126,6 +126,33 @@ export const getResourceByIdCached = async (id: number) => {
   return getResourceById(id)
 }
 
+/** A course's newest resources, up to `limit`, with the total so the page can link to the rest. */
+export const getCourseResources = async (courseId: number, limit: number) => {
+  const payload = await getPayloadClient()
+  const { docs, totalDocs } = await payload.find({
+    collection: Slugs.Collections.RESOURCES,
+    // Depth 2 reaches each owner's avatar.
+    depth: 2,
+    limit,
+    // The course is the page's own, so the cards leave it out.
+    populate: {
+      [Slugs.Collections.MEMBERS]: { avatar: true, firstName: true, lastName: true },
+    },
+    select: { createdAt: true, description: true, owner: true, title: true },
+    sort: ["-createdAt", "-id"],
+    where: { course: { equals: courseId } },
+  })
+  return { resources: docs, total: totalDocs }
+}
+
+export const getCourseResourcesCached = async (courseId: number, limit: number) => {
+  "use cache"
+  cacheLife("max")
+  // The cards show owner names and avatars, so they go stale with the members too.
+  cacheTag(QueryKeys.RESOURCES.ROOT, QueryKeys.MEMBERS.ROOT)
+  return getCourseResources(courseId, limit)
+}
+
 export type ResourceCourseOption = { value: Course["id"]; label: string }
 
 const toCourseOption = ({

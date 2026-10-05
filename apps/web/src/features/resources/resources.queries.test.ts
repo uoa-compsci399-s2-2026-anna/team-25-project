@@ -2,6 +2,7 @@ import { connection } from "next/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import {
+  getCourseResources,
   getEditableCourseOptions,
   getResourceById,
   getResourceCourseOptions,
@@ -159,5 +160,22 @@ describe("getEditableCourseOptions", () => {
         where: { or: [{ owner: { equals: 7 } }, { editors: { contains: 7 } }] },
       }),
     )
+  })
+})
+
+describe("getCourseResources", () => {
+  it("loads the course's newest resources up to the limit, with the total", async () => {
+    find.mockResolvedValue({ docs: [{ id: 3 }], totalDocs: 8 })
+
+    await expect(getCourseResources(4, 5)).resolves.toEqual({ resources: [{ id: 3 }], total: 8 })
+    expect(find).toHaveBeenCalledWith({
+      collection: "resources",
+      depth: 2,
+      limit: 5,
+      populate: { members: { avatar: true, firstName: true, lastName: true } },
+      select: { createdAt: true, description: true, owner: true, title: true },
+      sort: ["-createdAt", "-id"],
+      where: { course: { equals: 4 } },
+    })
   })
 })
