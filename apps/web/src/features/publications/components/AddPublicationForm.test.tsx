@@ -107,8 +107,8 @@ describe("AddPublicationForm", () => {
     await openManualEntry(user)
 
     const self = screen.getByLabelText("Author 1 name")
-    expect(self).toHaveValue("Anna Smith")
-    expect(self).toBeDisabled()
+    expect(self).toHaveValue("")
+    expect(self).toHaveAttribute("placeholder", "Anna Smith")
     expect(screen.getByRole("button", { name: "Reorder author 1" })).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Remove author 1" })).not.toBeInTheDocument()
   })
@@ -121,7 +121,9 @@ describe("AddPublicationForm", () => {
 
     await moveFirstAuthorDown(user)
 
-    await waitFor(() => expect(screen.getByLabelText("Author 2 name")).toHaveValue("Anna Smith"))
+    await waitFor(() =>
+      expect(screen.getByLabelText("Author 2 name")).toHaveAttribute("placeholder", "Anna Smith"),
+    )
     expect(screen.getByLabelText("Author 1 name")).toHaveValue("Ben Lee")
   })
 
@@ -140,7 +142,10 @@ describe("AddPublicationForm", () => {
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalled())
     expect(vi.mocked(createPublication).mock.calls[0]?.[0]).toMatchObject({
-      authors: [{ kind: "external", name: "Ben Lee" }, { kind: "self" }],
+      authors: [
+        { kind: "external", name: "Ben Lee" },
+        { kind: "self", name: "" },
+      ],
     })
   })
 
@@ -200,7 +205,7 @@ describe("AddPublicationForm", () => {
     expect(createPublication).toHaveBeenCalledWith(
       expect.objectContaining({
         authors: [
-          { id: expect.any(String), kind: "self" },
+          { id: expect.any(String), kind: "self", name: "" },
           { id: expect.any(String), kind: "external", name: "Ben Lee" },
         ],
         tags: "Teamwork, Assessment",
@@ -238,6 +243,7 @@ describe("AddPublicationForm", () => {
     expect(screen.getByLabelText("Pages")).toHaveValue("10-20")
     expect(screen.getByLabelText("Citation key")).toHaveValue("lee2023teams")
     expect(screen.getByLabelText("Author 1 name")).toHaveValue("Ben Lee")
+    // The member's row keeps the name as printed in the entry.
     expect(screen.getByLabelText("Author 2 name")).toHaveValue("Anna Smith")
 
     await submit(user)
@@ -247,7 +253,7 @@ describe("AddPublicationForm", () => {
       expect.objectContaining({
         authors: [
           { id: expect.any(String), kind: "external", name: "Ben Lee" },
-          { id: expect.any(String), kind: "self" },
+          { id: expect.any(String), kind: "self", name: "Anna Smith" },
         ],
         doi: "10.1145/1234567.7654321",
         month: "7",
@@ -282,7 +288,7 @@ describe("AddPublicationForm", () => {
     await user.paste("@article{k, title={T}, author={Ben Lee}, year={2020}, doi={not-a-doi}}")
 
     expect(await screen.findByText(/You must be an author of the publication/)).toBeInTheDocument()
-    expect(screen.getByLabelText("Author 1 name")).toHaveValue("Anna Smith")
+    expect(screen.getByLabelText("Author 1 name")).toHaveAttribute("placeholder", "Anna Smith")
     expect(screen.getByLabelText("Author 2 name")).toHaveValue("Ben Lee")
     // The imported DOI is validated the same as a typed one.
     expect(screen.getByText("Enter a DOI that starts with 10.")).toBeInTheDocument()
@@ -377,15 +383,21 @@ describe("AddPublicationForm", () => {
       await user.click(await screen.findByRole("option", { name: /Ben Lee/ }))
 
       expect(screen.getByText("University of Auckland · Lecturer")).toBeInTheDocument()
+      expect(screen.getByLabelText("Author 2 published as")).toHaveValue("Ben Lee")
+      await user.clear(screen.getByLabelText("Author 2 published as"))
+      await user.type(screen.getByLabelText("Author 2 published as"), "B. Lee")
       await submit(user)
 
       await waitFor(() => expect(onSuccess).toHaveBeenCalled())
       expect(vi.mocked(createPublication).mock.calls[0]?.[0]).toMatchObject({
-        authors: [{ kind: "self" }, { kind: "member", memberId: 12, name: "Ben Lee" }],
+        authors: [
+          { kind: "self", name: "" },
+          { kind: "member", memberId: 12, name: "B. Lee" },
+        ],
       })
     })
 
-    it("unlinks a member and keeps their name as an external author", async () => {
+    it("unlinks a member and keeps the printed name as an external author", async () => {
       vi.mocked(searchAuthorCandidates).mockResolvedValue([benLee])
       const { user } = renderForm()
       await openManualEntry(user)
@@ -408,6 +420,7 @@ describe("AddPublicationForm", () => {
       )
 
       expect(await screen.findByText("Matched from BibTeX")).toBeInTheDocument()
+      expect(screen.getByLabelText("Author 2 published as")).toHaveValue("B. Lee")
       expect(matchBibtexAuthors).toHaveBeenCalledWith([{ given: ["b"], family: "lee" }])
     })
 

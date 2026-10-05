@@ -103,7 +103,7 @@ export const createPublication = async (input: unknown): Promise<ActionResult> =
         // requireLinkedAuthor hook rejects a member who is not linked as an author.
         authors: authors.map((author) => {
           if (author.kind === "self") {
-            return { member: user.id, name: `${user.firstName} ${user.lastName}` }
+            return { member: user.id, name: author.name || `${user.firstName} ${user.lastName}` }
           }
           return author.kind === "member"
             ? { member: author.memberId, name: author.name }

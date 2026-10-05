@@ -135,12 +135,13 @@ const mapAuthors = (
   const coAuthorNames: BibtexImportResult["coAuthorNames"] = []
   const authors: AddPublicationFormInput["authors"] = named.map((creator, index) => {
     const id = crypto.randomUUID()
-    if (index === selfIndex) return { id, kind: "self" }
+    const name = formatCreator(creator)
+    if (index === selfIndex) return { id, kind: "self", name }
     coAuthorNames.push({ rowId: id, name: parsePrintedName(creator) })
-    return { id, kind: "external", name: formatCreator(creator) }
+    return { id, kind: "external", name }
   })
   if (selfIndex === -1) {
-    authors.unshift({ id: crypto.randomUUID(), kind: "self" })
+    authors.unshift({ id: crypto.randomUUID(), kind: "self", name: "" })
     messages.push({ level: "warning", text: SELF_NOT_FOUND_WARNING })
   }
   return { authors, coAuthorNames }

@@ -37,6 +37,7 @@ import {
   CollapsiblePanel,
   DialogFooter,
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -141,14 +142,12 @@ type FormAuthor = AddPublicationFormInput["authors"][number]
 // chose them. The schema strips both. They are optional so the schema fits the rows.
 type AuthorRow = FormAuthor & { member?: AuthorCandidate; matched?: boolean }
 
-const memberRow = (id: string, member: AuthorCandidate, matched?: boolean): AuthorRow => ({
-  id,
-  kind: "member",
-  memberId: member.id,
-  member,
-  name: candidateName(member),
-  matched,
-})
+const memberRow = (
+  id: string,
+  member: AuthorCandidate,
+  name: string,
+  matched?: boolean,
+): AuthorRow => ({ id, kind: "member", memberId: member.id, member, name, matched })
 
 type AddPublicationFormProps = {
   /** The signed-in member, shown on their own author row. */
@@ -176,7 +175,7 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
     defaultValues: {
       type: PublicationType.ARTICLE as PublicationType,
       title: "",
-      authors: [{ id: selfAuthorId, kind: "self" }] as AuthorRow[],
+      authors: [{ id: selfAuthorId, kind: "self", name: "" }] as AuthorRow[],
       year: new Date().getFullYear(),
       month: "",
       doi: "",
@@ -240,9 +239,10 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
     for (const [i, { rowId }] of coAuthorNames.entries()) {
       const member = matches[i]
       const index = rows.findIndex((row) => row.id === rowId)
-      // Skip a row the user already changed.
-      if (!member || rows[index]?.kind !== "external") continue
-      form.replaceFieldValue("authors", index, memberRow(rowId, member, true))
+      const row = rows[index]
+      // Skip a row the user already changed. Keep the name as printed in the entry.
+      if (!member || row?.kind !== "external") continue
+      form.replaceFieldValue("authors", index, memberRow(rowId, member, row.name, true))
     }
   }
 
@@ -348,7 +348,7 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                   const describe = (id: UniqueIdentifier) => {
                     const index = indexOf(id)
                     const row = rows[index]
-                    const name = row?.kind === "self" ? defaultAuthorName : row?.name
+                    const name = row?.kind === "self" ? row.name || defaultAuthorName : row?.name
                     return `author ${index + 1}${name ? `, ${name}` : ""}`
                   }
                   const announcements: Announcements = {
@@ -397,8 +397,15 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                                 authorsField.removeValue(index)
                                 setFieldErrors(withoutAuthorErrors)
                               }
+                              // The array field re-renders only when rows are added or
+                              // removed, so read the name the user typed from the form.
+                              const currentName = () =>
+                                form.getFieldValue(`authors[${index}].name`) ?? ""
                               const linkMember = (member: AuthorCandidate) => {
-                                authorsField.replaceValue(index, memberRow(row.id, member))
+                                authorsField.replaceValue(
+                                  index,
+                                  memberRow(row.id, member, candidateName(member)),
+                                )
                                 setFieldErrors(withoutAuthorErrors)
                               }
                               const removeButton = (
@@ -414,38 +421,36 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                               )
 
                               return (
-                                <SortableAuthorRow id={row.id} key={row.id} position={position}>
+                                <SortableAuthorRow
+                                  centerHandle={row.kind === "member"}
+                                  id={row.id}
+                                  key={row.id}
+                                  position={position}
+                                >
                                   {/* No Remove button: the schema needs the member exactly once. */}
                                   {row.kind === "self" ? (
-                                    <Field>
-                                      <Input
-                                        aria-label={`Author ${position} name`}
-                                        disabled
-                                        value={defaultAuthorName}
-                                      />
-                                      {serverError && <FieldError>{serverError}</FieldError>}
-                                    </Field>
-                                  ) : row.kind === "member" && row.member ? (
-                                    <Field>
-                                      <div className="flex items-center gap-3">
-                                        <div className="min-w-0 flex-1">
-                                          <LinkedAuthor
-                                            matched={row.matched}
-                                            member={row.member}
-                                            onUnlink={() =>
-                                              authorsField.replaceValue(index, {
-                                                id: row.id,
-                                                kind: "external",
-                                                name: row.name,
-                                              })
+                                    <form.Field name={`authors[${index}].name`}>
+                                      {(field) => (
+                                        <Field>
+                                          <Input
+                                            aria-label={`Author ${position} name`}
+                                            id={field.name}
+                                            name={field.name}
+                                            onBlur={field.handleBlur}
+                                            onChange={(event) =>
+                                              field.handleChange(event.target.value)
                                             }
-                                            position={position}
+                                            placeholder={defaultAuthorName}
+                                            value={field.state.value}
                                           />
-                                        </div>
-                                        {removeButton}
-                                      </div>
-                                      {serverError && <FieldError>{serverError}</FieldError>}
-                                    </Field>
+                                          <FieldDescription>
+                                            You. Change the name only if the publication prints it
+                                            differently.
+                                          </FieldDescription>
+                                          {serverError && <FieldError>{serverError}</FieldError>}
+                                        </Field>
+                                      )}
+                                    </form.Field>
                                   ) : (
                                     <form.Field
                                       name={`authors[${index}].name`}
@@ -455,20 +460,61 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                                         const invalid = isInvalid(field)
                                         return (
                                           <Field data-invalid={invalid || undefined}>
-                                            <div className="flex items-center gap-3">
-                                              <div className="min-w-0 flex-1">
-                                                <AuthorPicker
-                                                  id={field.name}
-                                                  invalid={invalid}
-                                                  label={`Author ${position} name`}
-                                                  onBlur={field.handleBlur}
-                                                  onChange={field.handleChange}
-                                                  onSelectMember={linkMember}
-                                                  value={field.state.value}
-                                                />
+                                            {row.kind === "member" && row.member ? (
+                                              <div className="flex flex-col gap-2 rounded-lg border p-2">
+                                                <div className="flex items-center gap-3">
+                                                  <div className="min-w-0 flex-1">
+                                                    <LinkedAuthor
+                                                      matched={row.matched}
+                                                      member={row.member}
+                                                      onUnlink={() =>
+                                                        authorsField.replaceValue(index, {
+                                                          id: row.id,
+                                                          kind: "external",
+                                                          name: currentName(),
+                                                        })
+                                                      }
+                                                      position={position}
+                                                    />
+                                                  </div>
+                                                  {removeButton}
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                  <label
+                                                    className="text-muted-foreground text-xs"
+                                                    htmlFor={field.name}
+                                                  >
+                                                    Published as
+                                                  </label>
+                                                  <Input
+                                                    aria-invalid={invalid}
+                                                    aria-label={`Author ${position} published as`}
+                                                    id={field.name}
+                                                    name={field.name}
+                                                    onBlur={field.handleBlur}
+                                                    onChange={(event) =>
+                                                      field.handleChange(event.target.value)
+                                                    }
+                                                    value={field.state.value}
+                                                  />
+                                                </div>
                                               </div>
-                                              {removeButton}
-                                            </div>
+                                            ) : (
+                                              <div className="flex items-center gap-3">
+                                                <div className="min-w-0 flex-1">
+                                                  <AuthorPicker
+                                                    id={field.name}
+                                                    invalid={invalid}
+                                                    label={`Author ${position} name`}
+                                                    onBlur={field.handleBlur}
+                                                    onChange={field.handleChange}
+                                                    onSelectMember={linkMember}
+                                                    value={field.state.value}
+                                                  />
+                                                </div>
+                                                {removeButton}
+                                              </div>
+                                            )}
                                             {invalid && (
                                               <FieldError errors={field.state.meta.errors} />
                                             )}
