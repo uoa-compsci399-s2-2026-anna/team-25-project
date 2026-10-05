@@ -11,6 +11,9 @@ export const Slugs = {
     RESOURCES: "resources",
     RESOURCE_ATTACHMENTS: "resourceAttachments",
   },
+  Globals: {
+    PRIVACY_POLICY: "privacy-policy",
+  },
 } as const
 
 export type CollectionSlug = (typeof Slugs.Collections)[keyof typeof Slugs.Collections]
