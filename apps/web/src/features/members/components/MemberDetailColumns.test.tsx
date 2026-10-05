@@ -5,7 +5,7 @@ import { MemberBio } from "./MemberDetailBio"
 import { MemberContacts, MemberContactsSkeleton } from "./MemberDetailContacts"
 import { MemberDetailLeftColumn } from "./MemberDetailLeftColumn"
 import { MemberProposals, MemberProposalsSkeleton } from "./MemberDetailProposals"
-import { MemberPublications } from "./MemberDetailPublications"
+import { MemberPublications, MemberPublicationsSkeleton } from "./MemberDetailPublications"
 import { MemberDetailRightColumn } from "./MemberDetailRightColumn"
 import { MemberStats, MemberStatsSkeleton } from "./MemberDetailStats"
 
@@ -33,14 +33,14 @@ const boundaries = (column: ReactElement<Props>) =>
 const params = Promise.resolve({ memberId: "7" })
 
 describe("MemberDetailLeftColumn", () => {
-  it("streams the bio and proposals, then the publications", () => {
+  it("streams the bio, proposals and publications, each with its skeleton", () => {
     const column = MemberDetailLeftColumn({ params }) as ReactElement<Props>
 
     expect(boundaries(column)).toEqual([
       [MemberBio, undefined],
       [MemberProposals, MemberProposalsSkeleton],
+      [MemberPublications, MemberPublicationsSkeleton],
     ])
-    expect(childrenOf(column).at(-1)?.type).toBe(MemberPublications)
   })
 
   it("passes the route params to each async section", () => {

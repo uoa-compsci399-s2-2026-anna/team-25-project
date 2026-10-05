@@ -57,6 +57,18 @@ const memberFiltersToWhere = (filters: MemberFilters): Where => {
   return where
 }
 
+export const getMemberPublications = async (memberId: number) => {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: Slugs.Collections.PUBLICATIONS,
+    where: { "authors.member": { equals: memberId } },
+    sort: "-createdAt",
+    depth: 0,
+    pagination: false,
+  })
+  return docs
+}
+
 /**
  * connection() because filtering on `institution` opens a Payload transaction, whose
  * randomUUID() id cacheComponents refuses to prerender. depth 1 resolves the card's data.
@@ -118,6 +130,12 @@ export const getResearchInterestOptions = async (): Promise<ResearchInterestOpti
     .map((interest) => ({ label: interest, value: interest }))
 }
 
+export const getMemberPublicationsCached = async (memberId: number) => {
+  "use cache"
+  cacheLife("max")
+  cacheTag(QueryKeys.PUBLICATIONS.ROOT, QueryKeys.MEMBERS.ID(memberId))
+  return getMemberPublications(memberId)
+}
 export const getResearchInterestOptionsCached = async () => {
   "use cache"
   cacheLife("max")

@@ -14,6 +14,8 @@ import {
   getMemberDetailsCached,
   getMemberProposals,
   getMemberProposalsCached,
+  getMemberPublications,
+  getMemberPublicationsCached,
   getMembers,
   getResearchInterestOptions,
 } from "./members.queries"
@@ -301,6 +303,32 @@ describe("getMemberProposals", () => {
   it("is cached under the proposals tag", async () => {
     await expect(getMemberProposalsCached(7)).resolves.toEqual([])
     expect(cacheTag).toHaveBeenCalledWith("proposals")
+  })
+})
+
+describe("getMemberPublications", () => {
+  it("reads every publication the member is linked to as an author", async () => {
+    await getMemberPublications(7)
+
+    expect(find).toHaveBeenCalledWith({
+      collection: "publications",
+      where: { "authors.member": { equals: 7 } },
+      sort: "-createdAt",
+      depth: 0,
+      pagination: false,
+    })
+  })
+
+  it("returns the publications", async () => {
+    const docs = [{ id: 2 }, { id: 1 }]
+    find.mockResolvedValue({ docs })
+    await expect(getMemberPublications(7)).resolves.toEqual(docs)
+  })
+
+  // Saving a publication revalidates the profile of each linked author, by member id.
+  it("is cached under the publications and member tags", async () => {
+    await expect(getMemberPublicationsCached(7)).resolves.toEqual([])
+    expect(cacheTag).toHaveBeenCalledWith("publications", "member:7")
   })
 })
 
