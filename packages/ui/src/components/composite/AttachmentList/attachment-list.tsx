@@ -19,7 +19,7 @@ type AttachmentListProps = React.ComponentProps<"ul"> & {
 
 const sizeUnits = ["B", "KB", "MB", "GB"] as const
 
-const formatSize = (bytes: number) => {
+const formatFileSize = (bytes: number) => {
   let size = bytes
   let unit = 0
   while (size >= 1024 && unit < sizeUnits.length - 1) {
@@ -40,7 +40,7 @@ function AttachmentList({ attachments, className, ...props }: AttachmentListProp
       {attachments.map((attachment) => {
         const details = [
           attachment.type,
-          attachment.size != null && formatSize(attachment.size),
+          attachment.size != null && formatFileSize(attachment.size),
         ].filter(Boolean)
 
         return (
@@ -71,4 +71,4 @@ function AttachmentList({ attachments, className, ...props }: AttachmentListProp
   )
 }
 
-export { AttachmentList, type AttachmentListItem, type AttachmentListProps }
+export { AttachmentList, type AttachmentListItem, type AttachmentListProps, formatFileSize }

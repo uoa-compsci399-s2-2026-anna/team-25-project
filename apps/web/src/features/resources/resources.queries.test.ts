@@ -2,6 +2,7 @@ import { connection } from "next/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import {
+  getEditableCourseOptions,
   getResourceById,
   getResourceCourseOptions,
   getResources,
@@ -138,5 +139,25 @@ describe("getResourceById", () => {
         resourceAttachments: { filename: true, filesize: true, mimeType: true, url: true },
       },
     })
+  })
+})
+
+describe("getEditableCourseOptions", () => {
+  it("lists the courses the member owns or edits, labelled with their university", async () => {
+    find.mockResolvedValue({
+      docs: [
+        { code: "COMPSCI 399", id: 9, institution: { id: 12, name: "University of Auckland" } },
+      ],
+    })
+
+    await expect(getEditableCourseOptions(7)).resolves.toEqual([
+      { label: "COMPSCI 399 - University of Auckland", value: 9 },
+    ])
+    expect(find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: "courses",
+        where: { or: [{ owner: { equals: 7 } }, { editors: { contains: 7 } }] },
+      }),
+    )
   })
 })
