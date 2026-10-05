@@ -30,8 +30,8 @@ import { Routes } from "@/lib/routes"
 import { completeProfile } from "../actions/register"
 import { parseAsRedirect, REDIRECT_PARAM } from "../redirect"
 
-// Matches next.config.ts's serverActions.bodySizeLimit - checked here too so a
-// large photo gets a clear message instead of the request failing silently.
+// Avatars are kept to 4 MB, below next.config.ts's serverActions.bodySizeLimit, and
+// checked here so a large photo gets a clear message before it is sent.
 const MAX_AVATAR_BYTES = 4 * 1024 * 1024
 
 export const RegisterProfileForm = ({ initials }: { initials: string }) => {
