@@ -32,3 +32,11 @@ export const resourceAttachmentTypeLabel = (mimeType: string | null | undefined)
   mimeType && mimeType in RESOURCE_ATTACHMENT_TYPE_LABELS
     ? RESOURCE_ATTACHMENT_TYPE_LABELS[mimeType as ResourceAttachmentMimeType]
     : undefined
+
+/**
+ * A resource's attachments travel to the server together in one request, so these cap the
+ * whole upload rather than each file. next.config.ts's serverActions.bodySizeLimit leaves
+ * room above the byte cap for the form's other fields.
+ */
+export const RESOURCE_ATTACHMENTS_MAX_FILES = 10
+export const RESOURCE_ATTACHMENTS_MAX_BYTES = 50 * 1024 * 1024
