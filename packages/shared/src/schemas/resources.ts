@@ -32,6 +32,10 @@ export const resourceAttachmentsError = (files: readonly AttachmentLike[]) => {
   if (files.length > RESOURCE_ATTACHMENTS_MAX_FILES) {
     return `Attach at most ${RESOURCE_ATTACHMENTS_MAX_FILES} files.`
   }
+  const empty = files.find((file) => file.size === 0)
+  if (empty) {
+    return `${empty.name} is empty. Remove it or attach the file again.`
+  }
   const unsupported = files.find(
     (file) => !(RESOURCE_ATTACHMENT_MIME_TYPES as readonly string[]).includes(file.type),
   )

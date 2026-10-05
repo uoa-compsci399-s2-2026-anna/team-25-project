@@ -55,6 +55,12 @@ describe("resourceAttachmentsError", () => {
     )
   })
 
+  it("names an empty file", () => {
+    expect(resourceAttachmentsError([pdf(), pdf("blank.pdf", 0)])).toBe(
+      "blank.pdf is empty. Remove it or attach the file again.",
+    )
+  })
+
   it("names a file of an unsupported type", () => {
     expect(
       resourceAttachmentsError([pdf(), { name: "page.html", size: 10, type: "text/html" }]),

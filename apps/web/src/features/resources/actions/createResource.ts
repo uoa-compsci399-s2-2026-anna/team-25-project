@@ -72,7 +72,7 @@ export const createResource = async (formData: FormData): Promise<ActionResult> 
 
   const attachments = formData
     .getAll("attachments")
-    .filter((value): value is File => value instanceof File && value.size > 0)
+    .filter((value): value is File => value instanceof File)
   const attachmentsError = resourceAttachmentsError(attachments)
   if (attachmentsError) {
     return { fieldErrors: { attachments: attachmentsError }, ok: false }

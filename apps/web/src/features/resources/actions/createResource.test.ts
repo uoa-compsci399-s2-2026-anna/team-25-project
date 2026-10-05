@@ -134,6 +134,20 @@ describe("createResource", () => {
     expect(payload.create).not.toHaveBeenCalled()
   })
 
+  it("refuses an empty attachment rather than dropping it", async () => {
+    const payload = mockPayload()
+
+    await expect(
+      createResource(
+        form({ attachments: [new File([], "blank.pdf", { type: "application/pdf" })] }),
+      ),
+    ).resolves.toEqual({
+      fieldErrors: { attachments: "blank.pdf is empty. Remove it or attach the file again." },
+      ok: false,
+    })
+    expect(payload.create).not.toHaveBeenCalled()
+  })
+
   it("refuses unsupported attachments before uploading anything", async () => {
     const payload = mockPayload()
     const page = new File(["<script>"], "page.html", { type: "text/html" })
