@@ -11,7 +11,7 @@ const validForm = {
   ],
   year: 2025,
   month: "",
-  doi: "",
+  doi: "10.1145/3313831.3376518",
   url: "",
   venue: "",
   volume: "",
@@ -29,6 +29,14 @@ const errorPaths = (input: unknown) => {
 }
 
 describe("addPublicationFormSchema", () => {
+  it("accepts a form with only a URL", () => {
+    expect(errorPaths({ ...validForm, doi: "", url: "https://example.com/paper" })).toEqual([])
+  })
+
+  it("rejects a form with no DOI and no URL", () => {
+    expect(errorPaths({ ...validForm, doi: "", url: "" })).toEqual(["doi", "url"])
+  })
+
   it("accepts a year up to next year", () => {
     const nextYear = new Date().getFullYear() + 1
     expect(errorPaths({ ...validForm, year: nextYear })).toEqual([])

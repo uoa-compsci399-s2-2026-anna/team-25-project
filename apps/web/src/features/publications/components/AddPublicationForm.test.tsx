@@ -92,6 +92,7 @@ describe("AddPublicationForm", () => {
     const { onSuccess, user } = renderForm()
 
     await user.type(screen.getByLabelText(/Title/), "Teamwork in capstones")
+    await user.type(screen.getByLabelText("DOI"), "10.1145/3313831.3376518")
     await user.click(screen.getByRole("button", { name: "+ Add author" }))
     await user.type(screen.getByRole("textbox", { name: "Author 2 name" }), "Ben Lee")
     await user.type(screen.getByLabelText("Tags"), "Teamwork, Assessment")
@@ -120,6 +121,7 @@ describe("AddPublicationForm", () => {
     const { onSuccess, user } = renderForm()
 
     await user.type(screen.getByLabelText(/Title/), "Teamwork in capstones")
+    await user.type(screen.getByLabelText("DOI"), "10.1145/3313831.3376518")
     await submit(user)
 
     expect(await screen.findByText("Value must be unique")).toBeInTheDocument()

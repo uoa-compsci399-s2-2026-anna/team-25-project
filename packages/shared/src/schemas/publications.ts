@@ -7,6 +7,8 @@ export const DOI_ERROR = "Enter a DOI that starts with 10."
 
 export const URL_ERROR = "Enter a full URL that starts with https:// or http://"
 
+export const DOI_OR_URL_ERROR = "Enter a DOI or a URL"
+
 // z.url() accepts any protocol, including javascript: and data:. Only allow web
 // links, because the URL is shown as a link.
 export const webUrlSchema = z.url({
@@ -33,35 +35,42 @@ const formAuthorSchema = z.discriminatedUnion("kind", [
   z.object({ id: z.string(), kind: z.literal("coAuthor"), name: authorNameSchema }),
 ])
 
-export const addPublicationFormSchema = z.object({
-  type: z.enum(PublicationType),
-  title: z.string().trim().min(1, "Title is required"),
-  // Ordered as cited. The signed-in member appears exactly once, in any position.
-  authors: z
-    .array(formAuthorSchema)
-    .refine(
-      (authors) => authors.filter((author) => author.kind === "self").length === 1,
-      "Include yourself as one of the authors.",
-    ),
-  year: z
-    .number({ error: "Year is required" })
-    .int()
-    .min(1000)
-    .refine((year) => year <= latestPublicationYear(), {
-      error: () => `Enter a year no later than ${latestPublicationYear()}`,
-    }),
-  month: blankOr(z.string().regex(/^([1-9]|1[0-2])$/, "Choose a month")),
-  doi: blankOr(z.string().trim().regex(DOI_PATTERN, DOI_ERROR)),
-  url: blankOr(webUrlSchema),
-  venue: z.string(),
-  volume: z.string(),
-  issue: z.string(),
-  pages: z.string(),
-  publisher: z.string(),
-  citationKey: z.string(),
-  abstract: z.string(),
-  // Comma-separated.
-  tags: z.string(),
-})
+export const addPublicationFormSchema = z
+  .object({
+    type: z.enum(PublicationType),
+    title: z.string().trim().min(1, "Title is required"),
+    // Ordered as cited. The signed-in member appears exactly once, in any position.
+    authors: z
+      .array(formAuthorSchema)
+      .refine(
+        (authors) => authors.filter((author) => author.kind === "self").length === 1,
+        "Include yourself as one of the authors.",
+      ),
+    year: z
+      .number({ error: "Year is required" })
+      .int()
+      .min(1000)
+      .refine((year) => year <= latestPublicationYear(), {
+        error: () => `Enter a year no later than ${latestPublicationYear()}`,
+      }),
+    month: blankOr(z.string().regex(/^([1-9]|1[0-2])$/, "Choose a month")),
+    doi: blankOr(z.string().trim().regex(DOI_PATTERN, DOI_ERROR)),
+    url: blankOr(webUrlSchema),
+    venue: z.string(),
+    volume: z.string(),
+    issue: z.string(),
+    pages: z.string(),
+    publisher: z.string(),
+    citationKey: z.string(),
+    abstract: z.string(),
+    // Comma-separated.
+    tags: z.string(),
+  })
+  .superRefine(({ doi, url }, ctx) => {
+    if (doi || url) return
+    for (const path of ["doi", "url"]) {
+      ctx.addIssue({ code: "custom", path: [path], message: DOI_OR_URL_ERROR })
+    }
+  })
 
 export type AddPublicationFormInput = z.infer<typeof addPublicationFormSchema>
