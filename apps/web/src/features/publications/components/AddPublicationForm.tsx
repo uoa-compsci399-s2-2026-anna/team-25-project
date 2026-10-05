@@ -451,7 +451,7 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
 
                               return (
                                 <SortableAuthorRow
-                                  centerHandle={row.kind === "member"}
+                                  centerHandle={row.kind !== "external"}
                                   id={row.id}
                                   key={row.id}
                                   position={position}
@@ -460,7 +460,7 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                                   {row.kind === "self" ? (
                                     <form.Field name={`authors[${index}].name`}>
                                       {(field) => (
-                                        <Field>
+                                        <Field className="gap-1.5 rounded-lg border p-2">
                                           <Input
                                             aria-label={`Author ${position} name`}
                                             id={field.name}
@@ -472,9 +472,8 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                                             placeholder={defaultAuthorName}
                                             value={field.state.value}
                                           />
-                                          <FieldDescription>
-                                            You. Change the name only if the publication prints it
-                                            differently.
+                                          <FieldDescription className="text-xs">
+                                            This is you.
                                           </FieldDescription>
                                           {serverError && <FieldError>{serverError}</FieldError>}
                                         </Field>
