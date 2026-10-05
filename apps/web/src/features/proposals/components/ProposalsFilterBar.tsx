@@ -44,6 +44,9 @@ export const ProposalsFilterBar = ({ counts, institutions }: ProposalsFilterBarP
 
   return (
     <FilterBar
+      // On phones the dropdowns shrink so all three fit on one line. Scoped here, so
+      // the shared FilterBar keeps its size on the other pages.
+      className="max-md:gap-2 md:flex-wrap md:justify-center xl:justify-start max-md:[&_[data-slot=select-trigger]]:px-2 max-md:[&_[data-slot=select-trigger]]:text-xs"
       filters={[
         {
           id: "institution",
@@ -60,6 +63,7 @@ export const ProposalsFilterBar = ({ counts, institutions }: ProposalsFilterBarP
           value: params.tag,
         } satisfies FilterBarFilter<ProposalTag>,
       ]}
+      groupControls
       // The input updates at once; only the URL, and so the server fetch, waits for a pause.
       // Clearing the search skips the wait, so the full list comes back at once.
       onSearchChange={(q) => update({ q }, { limitUrlUpdates: q ? debounce(300) : undefined })}
