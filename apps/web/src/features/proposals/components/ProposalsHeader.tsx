@@ -5,6 +5,7 @@ export const ProposalsHeader = () => {
   return (
     <PageHeader
       actions={<PostProposalDialog />}
+      centerOnMobile
       description="Research ideas posted by members looking for co-investigators, data access or a second institution."
       title="Research proposals"
     />
