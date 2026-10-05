@@ -128,6 +128,15 @@ export const getResourceByIdCached = async (id: number) => {
 
 export type ResourceCourseOption = { value: Course["id"]; label: string }
 
+const toCourseOption = ({
+  code,
+  id,
+  institution,
+}: Pick<Course, "code" | "id" | "institution">): ResourceCourseOption => ({
+  label: typeof institution === "object" ? `${code} - ${institution.name}` : code,
+  value: id,
+})
+
 /**
  * Every course that has a resource, for the course filter. Codes repeat across
  * universities, so each label carries its university.
@@ -153,10 +162,7 @@ export const getResourceCourseOptions = async (): Promise<ResourceCourseOption[]
     sort: "code",
     where: { id: { in: courseIds } },
   })
-  return docs.map(({ code, id, institution }) => ({
-    label: typeof institution === "object" ? `${code} - ${institution.name}` : code,
-    value: id,
-  }))
+  return docs.map(toCourseOption)
 }
 
 export const getResourceCourseOptionsCached = async () => {
@@ -164,4 +170,24 @@ export const getResourceCourseOptionsCached = async () => {
   cacheLife("max")
   cacheTag(QueryKeys.RESOURCES.ROOT, QueryKeys.COURSES.ROOT, QueryKeys.INSTITUTIONS)
   return getResourceCourseOptions()
+}
+
+/**
+ * The courses a member can link a resource to: the ones they own or edit, as `courseWrite`
+ * allows. Per member, so left uncached and read inside a request.
+ */
+export const getEditableCourseOptions = async (
+  memberId: number,
+): Promise<ResourceCourseOption[]> => {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: Slugs.Collections.COURSES,
+    depth: 1,
+    pagination: false,
+    populate: { [Slugs.Collections.INSTITUTIONS]: { name: true } },
+    select: { code: true, institution: true },
+    sort: "code",
+    where: { or: [{ owner: { equals: memberId } }, { editors: { contains: memberId } }] },
+  })
+  return docs.map(toCourseOption)
 }
