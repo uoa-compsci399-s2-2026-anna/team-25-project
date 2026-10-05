@@ -74,6 +74,9 @@ describe("AddResourceDialog", () => {
   it("opens the form from the trigger button", async () => {
     await openDialog()
     expect(screen.getByRole("dialog", { name: "Contribute a resource" })).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Attachments Add files" }),
+    ).toHaveAccessibleDescription(/Up to 10 files, 9 MB in total\./)
   })
 
   it("sends the title, description, course and attachments, then closes", async () => {

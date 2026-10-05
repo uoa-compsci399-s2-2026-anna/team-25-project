@@ -16,6 +16,7 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldTitle,
   Input,
   Select,
   SelectContent,
@@ -51,6 +52,9 @@ type AddResourceFormProps = {
 
 export const AddResourceForm = ({ courses, onSuccess }: AddResourceFormProps) => {
   const attachmentsId = useId()
+  const attachmentsLabelId = useId()
+  const attachmentsHintId = useId()
+  const attachmentsErrorId = useId()
   const [attachments, setAttachments] = useState<File[]>([])
   const [formError, setFormError] = useState<string | undefined>(undefined)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -200,11 +204,19 @@ export const AddResourceForm = ({ courses, onSuccess }: AddResourceFormProps) =>
         </form.Field>
 
         <Field data-invalid={Boolean(fieldErrors.attachments) || undefined}>
-          <FieldLabel htmlFor={attachmentsId}>Attachments</FieldLabel>
+          {/* Not a <label for>: on a button it would replace "Add files" in the accessible
+            name, so the picker is named by this title through aria-labelledby instead. */}
+          <FieldTitle id={attachmentsLabelId}>Attachments</FieldTitle>
           <form.Subscribe selector={(state) => state.isSubmitting}>
             {(isSubmitting) => (
               <AttachmentPicker
                 accept={RESOURCE_ATTACHMENT_MIME_TYPES.join(",")}
+                aria-describedby={
+                  fieldErrors.attachments
+                    ? `${attachmentsHintId} ${attachmentsErrorId}`
+                    : attachmentsHintId
+                }
+                aria-labelledby={attachmentsLabelId}
                 disabled={isSubmitting}
                 files={attachments}
                 id={attachmentsId}
@@ -216,11 +228,13 @@ export const AddResourceForm = ({ courses, onSuccess }: AddResourceFormProps) =>
               />
             )}
           </form.Subscribe>
-          <FieldDescription>
+          <FieldDescription id={attachmentsHintId}>
             PDF, Word, PowerPoint, Excel, text or CSV. Up to {RESOURCE_ATTACHMENTS_MAX_FILES} files,{" "}
             {RESOURCE_ATTACHMENTS_MAX_MB} MB in total.
           </FieldDescription>
-          {fieldErrors.attachments && <FieldError>{fieldErrors.attachments}</FieldError>}
+          {fieldErrors.attachments && (
+            <FieldError id={attachmentsErrorId}>{fieldErrors.attachments}</FieldError>
+          )}
         </Field>
       </FieldGroup>
 

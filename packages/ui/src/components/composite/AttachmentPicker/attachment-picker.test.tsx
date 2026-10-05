@@ -73,4 +73,23 @@ describe("AttachmentPicker", () => {
     expect(screen.getByRole("button", { name: "Add files" })).toBeDisabled()
     expect(screen.getByRole("button", { name: "Remove rubric.pdf" })).toBeDisabled()
   })
+
+  it("is named by the field's label and then its own text, with the hint linked", () => {
+    const [labelId, hintId] = ["label", "hint"]
+    render(
+      <>
+        <span id={labelId}>Attachments</span>
+        <p id={hintId}>PDF only.</p>
+        <AttachmentPicker
+          aria-describedby={hintId}
+          aria-labelledby={labelId}
+          files={[]}
+          onFilesChange={vi.fn()}
+        />
+      </>,
+    )
+
+    const button = screen.getByRole("button", { name: "Attachments Add files" })
+    expect(button).toHaveAccessibleDescription("PDF only.")
+  })
 })

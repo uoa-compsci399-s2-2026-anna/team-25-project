@@ -3,7 +3,7 @@
 import { Button } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import { FileText, Paperclip, X } from "lucide-react"
-import { useRef } from "react"
+import { useId, useRef } from "react"
 import { formatFileSize } from "../AttachmentList/attachment-list"
 
 type AttachmentPickerProps = {
@@ -16,12 +16,21 @@ type AttachmentPickerProps = {
   disabled?: boolean
   invalid?: boolean
   className?: string
+  /**
+   * The field's label. The button is named by it and then its own text ("Attachments, Add
+   * files"), since a `<label for>` would replace the button's text instead.
+   */
+  "aria-labelledby"?: string
+  /** The field's hint and error, so they are read out with the button. */
+  "aria-describedby"?: string
 }
 
 // Picking the same file twice adds nothing, since there is no way to tell the copies apart.
 const fileKey = (file: File) => `${file.name}:${file.size}:${file.lastModified}`
 
 function AttachmentPicker({
+  "aria-describedby": describedBy,
+  "aria-labelledby": labelledBy,
   accept,
   className,
   disabled,
@@ -31,6 +40,8 @@ function AttachmentPicker({
   onFilesChange,
 }: AttachmentPickerProps) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const fallbackId = useId()
+  const buttonId = id ?? fallbackId
 
   const addFiles = (picked: FileList | null) => {
     if (!picked) return
@@ -81,10 +92,12 @@ function AttachmentPicker({
         type="file"
       />
       <Button
+        aria-describedby={describedBy}
         aria-invalid={invalid}
+        aria-labelledby={labelledBy ? `${labelledBy} ${buttonId}` : undefined}
         borderColor="charcoal"
         disabled={disabled}
-        id={id}
+        id={buttonId}
         onClick={() => inputRef.current?.click()}
         size="md"
         type="button"
