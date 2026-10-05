@@ -147,7 +147,8 @@ export const AddResourceForm = ({ courses, onSuccess }: AddResourceFormProps) =>
                 >
                   <SelectValue placeholder="No course" />
                 </SelectTrigger>
-                <SelectContent>
+                {/* Opens below the trigger, as the filter bar's selects do, rather than over it. */}
+                <SelectContent alignItemWithTrigger={false}>
                   <SelectItem value={null}>No course</SelectItem>
                   {courses.map((course) => (
                     <SelectItem key={course.value} value={course.value}>
