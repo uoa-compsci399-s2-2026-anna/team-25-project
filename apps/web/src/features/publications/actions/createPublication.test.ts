@@ -70,24 +70,20 @@ describe("createPublication", () => {
     expect(payload.create).not.toHaveBeenCalled()
   })
 
-  it("rejects a guest", async () => {
+  it.each([
+    ["a guest", { collection: null, user: null }, "Sign in to add a publication."],
+    [
+      "an admin",
+      { collection: "admin", user: { id: 1 } },
+      "Only members can add a publication - admins manage publications, not add them.",
+    ],
+  ])("refuses %s", async (_label, currentUser, formError) => {
+    // biome-ignore lint/suspicious/noExplicitAny: only the fields the action reads
+    vi.mocked(getCurrentUser).mockResolvedValue(currentUser as any)
     const payload = mockPayload()
-    // biome-ignore lint/suspicious/noExplicitAny: guest result shape
-    vi.mocked(getCurrentUser).mockResolvedValue({ collection: null, user: null } as any)
 
-    expect(await createPublication(input)).toEqual({
-      formError: "Sign in as a member to add a publication.",
-      ok: false,
-    })
+    await expect(createPublication(input)).resolves.toEqual({ formError, ok: false })
     expect(payload.create).not.toHaveBeenCalled()
-  })
-
-  it("rejects an admin", async () => {
-    mockPayload()
-    // biome-ignore lint/suspicious/noExplicitAny: admin result shape
-    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "admin", user: { id: 1 } } as any)
-
-    expect(await createPublication(input)).toMatchObject({ ok: false })
   })
 
   it("adds the signed-in member as the linked first author and drops blank fields", async () => {

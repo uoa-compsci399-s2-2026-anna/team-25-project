@@ -62,8 +62,16 @@ export const createPublication = async (input: unknown): Promise<ActionResult> =
   }
 
   const { collection, user } = await getCurrentUser()
-  if (!user || collection !== Slugs.Collections.MEMBERS) {
-    return { formError: "Sign in as a member to add a publication.", ok: false }
+  if (!user) {
+    return { formError: "Sign in to add a publication.", ok: false }
+  }
+  // Admins can reach the page but own nothing, as on resources, so they get their own message
+  // rather than one implying they aren't signed in.
+  if (collection !== Slugs.Collections.MEMBERS) {
+    return {
+      formError: "Only members can add a publication - admins manage publications, not add them.",
+      ok: false,
+    }
   }
 
   const payload = await getPayloadClient()
