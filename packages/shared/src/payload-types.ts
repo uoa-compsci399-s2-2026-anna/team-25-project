@@ -241,6 +241,10 @@ export interface Institution {
     domain: string;
     id?: string | null;
   }[];
+  location: {
+    latitude: number;
+    longitude: number;
+  };
   /**
    * PNG, JPG, WebP, or GIF. Prefer a transparent background - it'll be shown at a small, fixed height.
    */
@@ -743,6 +747,12 @@ export interface InstitutionsSelect<T extends boolean = true> {
     | {
         domain?: T;
         id?: T;
+      };
+  location?:
+    | T
+    | {
+        latitude?: T;
+        longitude?: T;
       };
   logo?: T;
   showLogo?: T;
