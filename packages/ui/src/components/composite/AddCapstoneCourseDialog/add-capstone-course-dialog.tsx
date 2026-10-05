@@ -230,6 +230,7 @@ export function AddCapstoneCourseDialog({
               >
                 <SelectTrigger
                   aria-invalid={Boolean(fieldErrors?.deliveryFormat) || undefined}
+                  aria-required={requiredToPublish.has("deliveryFormat") || undefined}
                   className="w-full px-3 data-[size=default]:h-10"
                   id={ids.deliveryFormat}
                 >

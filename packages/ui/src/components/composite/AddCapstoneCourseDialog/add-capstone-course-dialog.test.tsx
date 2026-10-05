@@ -145,6 +145,34 @@ describe("AddCapstoneCourseDialog", () => {
     expect(input.closest('[data-slot="field"]')).not.toHaveAttribute("data-invalid", "true")
   })
 
+  // Screen readers get aria-required, sighted users get the asterisk. Both must
+  // reach every field publishing needs, including the rich text editors.
+  it("marks every field publishing needs as required, and leaves additional information unmarked", () => {
+    renderDialog()
+
+    for (const label of [
+      "Course name",
+      "Course code",
+      "Course program",
+      "Teaching period",
+      "Start date",
+      "End date",
+      "Project type",
+      "Your role",
+      "Learning outcomes",
+      "Assessments",
+    ]) {
+      expect(screen.getByLabelText(new RegExp(`^${label}`))).toHaveAttribute(
+        "aria-required",
+        "true",
+      )
+    }
+    expect(screen.getByLabelText(/^Delivery format/)).toHaveAttribute("aria-required", "true")
+    expect(screen.getByLabelText(/^Additional information/)).not.toHaveAttribute("aria-required")
+
+    expect(screen.getAllByText("*")).toHaveLength(11)
+  })
+
   it("shows a form-level error", () => {
     renderDialog({ formError: "Could not save this course. Try again." })
 
