@@ -36,7 +36,7 @@ describe("AddCourseTriggerWithDefaultRole", () => {
     await openDialog()
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Your role")).toHaveValue("Senior Lecturer")
+      expect(screen.getByLabelText(/^Your role/)).toHaveValue("Senior Lecturer")
     })
   })
 
@@ -50,7 +50,7 @@ describe("AddCourseTriggerWithDefaultRole", () => {
     await openDialog()
     await settle()
 
-    expect(screen.getByLabelText("Your role")).toHaveValue("")
+    expect(screen.getByLabelText(/^Your role/)).toHaveValue("")
   })
 
   it("leaves Your role blank for an admin, who has no profile position", async () => {
@@ -63,7 +63,7 @@ describe("AddCourseTriggerWithDefaultRole", () => {
     await openDialog()
     await settle()
 
-    expect(screen.getByLabelText("Your role")).toHaveValue("")
+    expect(screen.getByLabelText(/^Your role/)).toHaveValue("")
   })
 
   it("does not wait for the member lookup before the dialog can be opened and typed into", async () => {
@@ -89,6 +89,6 @@ describe("AddCourseTriggerWithDefaultRole", () => {
 
     // Same dialog instance throughout - the typed code survives the role arriving.
     expect(screen.getByLabelText(/^Course code/)).toHaveValue("CS399")
-    expect(screen.getByLabelText("Your role")).toHaveValue("Senior Lecturer")
+    expect(screen.getByLabelText(/^Your role/)).toHaveValue("Senior Lecturer")
   })
 })

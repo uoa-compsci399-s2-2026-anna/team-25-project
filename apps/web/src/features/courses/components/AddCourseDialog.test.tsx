@@ -36,7 +36,7 @@ describe("AddCourseDialog", () => {
   it("pre-fills Your role from the given default", async () => {
     openDialog("Senior Lecturer")
     await waitFor(() => {
-      expect(screen.getByLabelText("Your role")).toHaveValue("Senior Lecturer")
+      expect(screen.getByLabelText(/^Your role/)).toHaveValue("Senior Lecturer")
     })
   })
 
@@ -46,14 +46,14 @@ describe("AddCourseDialog", () => {
 
     expect(screen.getByRole("dialog", { name: "Add a capstone course" })).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText(/^Course code/), { target: { value: "CS399" } })
-    fireEvent.change(screen.getByLabelText("Your role"), { target: { value: "Tutor" } })
+    fireEvent.change(screen.getByLabelText(/^Your role/), { target: { value: "Tutor" } })
 
     await act(async () => {
       role.resolve("Senior Lecturer")
     })
 
     expect(screen.getByLabelText(/^Course code/)).toHaveValue("CS399")
-    expect(screen.getByLabelText("Your role")).toHaveValue("Tutor")
+    expect(screen.getByLabelText(/^Your role/)).toHaveValue("Tutor")
   })
 
   it("fills a still-blank Your role when the default arrives after opening", async () => {
@@ -67,14 +67,14 @@ describe("AddCourseDialog", () => {
     })
 
     expect(screen.getByLabelText(/^Course code/)).toHaveValue("CS399")
-    expect(screen.getByLabelText("Your role")).toHaveValue("Senior Lecturer")
+    expect(screen.getByLabelText(/^Your role/)).toHaveValue("Senior Lecturer")
   })
 
   it("resets Your role back to the default, not blank, on reopen", async () => {
     vi.mocked(createCourse).mockResolvedValue({ ok: true })
     openDialog("Senior Lecturer")
 
-    fireEvent.change(screen.getByLabelText("Your role"), { target: { value: "Editing this" } })
+    fireEvent.change(screen.getByLabelText(/^Your role/), { target: { value: "Editing this" } })
     fireEvent.change(screen.getByLabelText(/^Course code/), { target: { value: "CS399" } })
     fireEvent.click(screen.getByRole("button", { name: "Save draft" }))
 
@@ -84,7 +84,7 @@ describe("AddCourseDialog", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "+ Add your course" }))
     await waitFor(() => {
-      expect(screen.getByLabelText("Your role")).toHaveValue("Senior Lecturer")
+      expect(screen.getByLabelText(/^Your role/)).toHaveValue("Senior Lecturer")
     })
   })
 
@@ -118,7 +118,7 @@ describe("AddCourseDialog", () => {
     openDialog()
 
     fireEvent.change(screen.getByLabelText(/^Course code/), { target: { value: "CS399" } })
-    fireEvent.change(screen.getByLabelText("Your role"), {
+    fireEvent.change(screen.getByLabelText(/^Your role/), {
       target: { value: "Course Coordinator" },
     })
     fireEvent.click(screen.getByRole("button", { name: "Publish" }))

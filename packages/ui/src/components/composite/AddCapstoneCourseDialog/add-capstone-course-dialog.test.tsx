@@ -67,21 +67,24 @@ describe("AddCapstoneCourseDialog", () => {
     const dialog = screen.getByRole("dialog", { name: "Add a capstone course" })
     expect(dialog).toBeInTheDocument()
     expect(dialog).toHaveAccessibleDescription(
-      "Course code and name are all a draft needs - everything else here is for when you publish.",
+      "Course code and name are all a draft needs - fields marked with an asterisk are required to publish.",
     )
-    // Required labels end in an aria-hidden asterisk, which getByLabelText still
-    // reads as label text - so those are matched by prefix rather than exactly.
-    expect(screen.getByLabelText(/^Course code/)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^Teaching period/)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^Start date/)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^End date/)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^Course name/)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^Course program/)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^Project type/)).toBeInTheDocument()
-    expect(screen.getByLabelText("Your role")).toBeInTheDocument()
-    expect(screen.getByLabelText(/^Learning outcomes/)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^Assessments/)).toBeInTheDocument()
-    expect(screen.getByLabelText("Additional information")).toBeInTheDocument()
+    // Matched loosely because a required label carries a trailing asterisk.
+    for (const label of [
+      "Course code",
+      "Teaching period",
+      "Start date",
+      "End date",
+      "Course name",
+      "Course program",
+      "Project type",
+      "Your role",
+      "Learning outcomes",
+      "Assessments",
+      "Additional information",
+    ]) {
+      expect(screen.getByLabelText(new RegExp(`^${label}`))).toBeInTheDocument()
+    }
   })
 
   it("groups fields into separate blocks rather than one flat list", () => {
@@ -140,6 +143,34 @@ describe("AddCapstoneCourseDialog", () => {
     const input = screen.getByLabelText(/^Course code/)
     expect(input).toHaveAttribute("aria-invalid", "true")
     expect(input.closest('[data-slot="field"]')).not.toHaveAttribute("data-invalid", "true")
+  })
+
+  // Screen readers get aria-required, sighted users get the asterisk. Both must
+  // reach every field publishing needs, including the rich text editors.
+  it("marks every field publishing needs as required, and leaves additional information unmarked", () => {
+    renderDialog()
+
+    for (const label of [
+      "Course name",
+      "Course code",
+      "Course program",
+      "Teaching period",
+      "Start date",
+      "End date",
+      "Project type",
+      "Your role",
+      "Learning outcomes",
+      "Assessments",
+    ]) {
+      expect(screen.getByLabelText(new RegExp(`^${label}`))).toHaveAttribute(
+        "aria-required",
+        "true",
+      )
+    }
+    expect(screen.getByLabelText(/^Delivery format/)).toHaveAttribute("aria-required", "true")
+    expect(screen.getByLabelText(/^Additional information/)).not.toHaveAttribute("aria-required")
+
+    expect(screen.getAllByText("*")).toHaveLength(11)
   })
 
   it("shows a form-level error", () => {
