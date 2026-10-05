@@ -127,4 +127,9 @@ describe("addPublicationFormSchema", () => {
   ])("rejects the non-web URL %s", (url) => {
     expect(errorPaths({ ...validForm, url })).toEqual(["url"])
   })
+
+  it("says the year is required when the year input is empty", () => {
+    const result = addPublicationFormSchema.safeParse({ ...validForm, year: Number.NaN })
+    expect(result.error?.issues.map((issue) => issue.message)).toEqual(["Year is required"])
+  })
 })

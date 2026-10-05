@@ -46,10 +46,11 @@ export const addPublicationFormSchema = z
         (authors) => authors.filter((author) => author.kind === "self").length === 1,
         "Include yourself as one of the authors.",
       ),
+    // An empty year input gives NaN, which fails the number check.
     year: z
       .number({ error: "Year is required" })
-      .int()
-      .min(1000)
+      .int("Enter a whole year")
+      .min(1000, "Enter a 4-digit year")
       .refine((year) => year <= latestPublicationYear(), {
         error: () => `Enter a year no later than ${latestPublicationYear()}`,
       }),

@@ -8,7 +8,9 @@ import { AddPublicationDialog } from "./AddPublicationDialog"
 export async function AddPublicationTriggerForMember() {
   const { collection, user } = await getCurrentUser()
   if (collection !== Slugs.Collections.MEMBERS) return null
-  return <AddPublicationDialog defaultAuthorName={`${user.firstName} ${user.lastName}`} />
+  return (
+    <AddPublicationDialog currentUser={{ firstName: user.firstName, lastName: user.lastName }} />
+  )
 }
 
 export function AddPublicationTrigger() {
