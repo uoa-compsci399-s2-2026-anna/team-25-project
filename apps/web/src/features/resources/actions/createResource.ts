@@ -79,8 +79,16 @@ export const createResource = async (formData: FormData): Promise<ActionResult> 
   }
 
   const { collection, user } = await getCurrentUser()
-  if (!user || collection !== Slugs.Collections.MEMBERS) {
-    return { formError: "Sign in as a member to share a resource.", ok: false }
+  if (!user) {
+    return { formError: "Sign in to share a resource.", ok: false }
+  }
+  // Admins can reach the page but own nothing, as on courses, so they get their own message
+  // rather than one implying they aren't signed in.
+  if (collection !== Slugs.Collections.MEMBERS) {
+    return {
+      formError: "Only members can share a resource - admins manage resources, not share them.",
+      ok: false,
+    }
   }
 
   const payload = await getPayloadClient()

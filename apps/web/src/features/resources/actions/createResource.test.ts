@@ -150,17 +150,18 @@ describe("createResource", () => {
   })
 
   it.each([
-    ["a guest", { collection: null, user: null }],
-    ["an admin", { collection: "admin", user: { id: 1 } }],
-  ])("refuses %s", async (_label, currentUser) => {
+    ["a guest", { collection: null, user: null }, "Sign in to share a resource."],
+    [
+      "an admin",
+      { collection: "admin", user: { id: 1 } },
+      "Only members can share a resource - admins manage resources, not share them.",
+    ],
+  ])("refuses %s", async (_label, currentUser, formError) => {
     // biome-ignore lint/suspicious/noExplicitAny: only the fields the action reads
     vi.mocked(getCurrentUser).mockResolvedValue(currentUser as any)
     const payload = mockPayload()
 
-    await expect(createResource(form())).resolves.toEqual({
-      formError: "Sign in as a member to share a resource.",
-      ok: false,
-    })
+    await expect(createResource(form())).resolves.toEqual({ formError, ok: false })
     expect(payload.create).not.toHaveBeenCalled()
   })
 
