@@ -11,12 +11,14 @@ export const LOAD_ERROR: BibtexImportResult = {
       text: "Could not load the BibTeX reader. Reload the page, or fill in the form by hand.",
     },
   ],
+  coAuthorNames: [],
   filledCount: 0,
 }
 
 export const IMPORT_ERROR: BibtexImportResult = {
   values: {},
   messages: [{ level: "error", text: "Could not import this entry. Fill in the form by hand." }],
+  coAuthorNames: [],
   filledCount: 0,
 }
 

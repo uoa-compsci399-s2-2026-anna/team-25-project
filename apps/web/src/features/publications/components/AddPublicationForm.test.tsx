@@ -2,9 +2,22 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { createPublication } from "../actions/createPublication"
+import { matchBibtexAuthors } from "../actions/matchBibtexAuthors"
+import { searchAuthorCandidates } from "../actions/searchAuthorCandidates"
+import type { AuthorCandidate } from "../publications.types"
 import { AddPublicationForm } from "./AddPublicationForm"
 
 vi.mock("../actions/createPublication", () => ({ createPublication: vi.fn() }))
+vi.mock("../actions/matchBibtexAuthors", () => ({ matchBibtexAuthors: vi.fn() }))
+vi.mock("../actions/searchAuthorCandidates", () => ({ searchAuthorCandidates: vi.fn() }))
+
+const benLee: AuthorCandidate = {
+  id: 12,
+  firstName: "Ben",
+  lastName: "Lee",
+  position: "Lecturer",
+  institution: "University of Auckland",
+}
 
 const renderForm = () => {
   const onSuccess = vi.fn()
@@ -28,6 +41,16 @@ const pasteBibtex = async (user: ReturnType<typeof userEvent.setup>, text: strin
   await user.clear(textbox)
   await user.click(textbox)
   await user.paste(text)
+}
+
+// The name input suggests members in a popup. Escape closes it and keeps the name.
+const typeAuthor = async (
+  user: ReturnType<typeof userEvent.setup>,
+  label: string,
+  name: string,
+) => {
+  await user.type(screen.getByLabelText(label), name)
+  await user.keyboard("{Escape}")
 }
 
 // jsdom lays nothing out, so give the list and each row a size and position for
@@ -58,6 +81,10 @@ const moveFirstAuthorDown = async (user: ReturnType<typeof userEvent.setup>) => 
 describe("AddPublicationForm", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(searchAuthorCandidates).mockResolvedValue([])
+    vi.mocked(matchBibtexAuthors).mockImplementation(async (names) =>
+      (names as unknown[]).map(() => null),
+    )
   })
 
   afterEach(() => {
@@ -79,7 +106,7 @@ describe("AddPublicationForm", () => {
     const { user } = renderForm()
     await openManualEntry(user)
 
-    const self = screen.getByRole("textbox", { name: "Author 1 name" })
+    const self = screen.getByLabelText("Author 1 name")
     expect(self).toHaveValue("Anna Smith")
     expect(self).toBeDisabled()
     expect(screen.getByRole("button", { name: "Reorder author 1" })).toBeInTheDocument()
@@ -90,14 +117,12 @@ describe("AddPublicationForm", () => {
     const { user } = renderForm()
     await openManualEntry(user)
     await user.click(screen.getByRole("button", { name: "+ Add author" }))
-    await user.type(screen.getByRole("textbox", { name: "Author 2 name" }), "Ben Lee")
+    await typeAuthor(user, "Author 2 name", "Ben Lee")
 
     await moveFirstAuthorDown(user)
 
-    await waitFor(() =>
-      expect(screen.getByRole("textbox", { name: "Author 2 name" })).toHaveValue("Anna Smith"),
-    )
-    expect(screen.getByRole("textbox", { name: "Author 1 name" })).toHaveValue("Ben Lee")
+    await waitFor(() => expect(screen.getByLabelText("Author 2 name")).toHaveValue("Anna Smith"))
+    expect(screen.getByLabelText("Author 1 name")).toHaveValue("Ben Lee")
   })
 
   it("submits the authors in their new order after a move", async () => {
@@ -107,12 +132,10 @@ describe("AddPublicationForm", () => {
     await user.type(screen.getByLabelText(/Title/), "Teamwork in capstones")
     await user.type(screen.getByLabelText("DOI"), "10.1145/3313831.3376518")
     await user.click(screen.getByRole("button", { name: "+ Add author" }))
-    await user.type(screen.getByRole("textbox", { name: "Author 2 name" }), "Ben Lee")
+    await typeAuthor(user, "Author 2 name", "Ben Lee")
 
     await moveFirstAuthorDown(user)
-    await waitFor(() =>
-      expect(screen.getByRole("textbox", { name: "Author 1 name" })).toHaveValue("Ben Lee"),
-    )
+    await waitFor(() => expect(screen.getByLabelText("Author 1 name")).toHaveValue("Ben Lee"))
     await submit(user)
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalled())
@@ -154,11 +177,11 @@ describe("AddPublicationForm", () => {
 
     await user.click(screen.getByRole("button", { name: "+ Add author" }))
     await user.click(screen.getByRole("button", { name: "+ Add author" }))
-    await user.type(screen.getByRole("textbox", { name: "Author 3 name" }), "Cara Ngata")
+    await typeAuthor(user, "Author 3 name", "Cara Ngata")
     await user.click(screen.getByRole("button", { name: "Remove author 2" }))
 
-    expect(screen.queryByRole("textbox", { name: "Author 3 name" })).not.toBeInTheDocument()
-    expect(screen.getByRole("textbox", { name: "Author 2 name" })).toHaveValue("Cara Ngata")
+    expect(screen.queryByLabelText("Author 3 name")).not.toBeInTheDocument()
+    expect(screen.getByLabelText("Author 2 name")).toHaveValue("Cara Ngata")
   })
 
   it("submits the values and closes on success", async () => {
@@ -169,7 +192,7 @@ describe("AddPublicationForm", () => {
     await user.type(screen.getByLabelText(/Title/), "Teamwork in capstones")
     await user.type(screen.getByLabelText("DOI"), "10.1145/3313831.3376518")
     await user.click(screen.getByRole("button", { name: "+ Add author" }))
-    await user.type(screen.getByRole("textbox", { name: "Author 2 name" }), "Ben Lee")
+    await typeAuthor(user, "Author 2 name", "Ben Lee")
     await user.type(screen.getByLabelText("Tags"), "Teamwork, Assessment")
     await submit(user)
 
@@ -214,10 +237,8 @@ describe("AddPublicationForm", () => {
     expect(screen.getByLabelText("Venue")).toHaveValue("Proceedings of ITiCSE")
     expect(screen.getByLabelText("Pages")).toHaveValue("10-20")
     expect(screen.getByLabelText("Citation key")).toHaveValue("lee2023teams")
-    expect(screen.getByRole("textbox", { name: "Author 1 name" })).toHaveValue("Ben Lee")
-    const self = screen.getByRole("textbox", { name: "Author 2 name" })
-    expect(self).toHaveValue("Anna Smith")
-    expect(self).toBeDisabled()
+    expect(screen.getByLabelText("Author 1 name")).toHaveValue("Ben Lee")
+    expect(screen.getByLabelText("Author 2 name")).toHaveValue("Anna Smith")
 
     await submit(user)
 
@@ -261,8 +282,8 @@ describe("AddPublicationForm", () => {
     await user.paste("@article{k, title={T}, author={Ben Lee}, year={2020}, doi={not-a-doi}}")
 
     expect(await screen.findByText(/You must be an author of the publication/)).toBeInTheDocument()
-    expect(screen.getByRole("textbox", { name: "Author 1 name" })).toHaveValue("Anna Smith")
-    expect(screen.getByRole("textbox", { name: "Author 2 name" })).toHaveValue("Ben Lee")
+    expect(screen.getByLabelText("Author 1 name")).toHaveValue("Anna Smith")
+    expect(screen.getByLabelText("Author 2 name")).toHaveValue("Ben Lee")
     // The imported DOI is validated the same as a typed one.
     expect(screen.getByText("Enter a DOI that starts with 10.")).toBeInTheDocument()
   })
@@ -328,8 +349,9 @@ describe("AddPublicationForm", () => {
     await user.type(screen.getByLabelText("DOI"), "10.1145/3313831.3376518")
     for (const name of ["Ben Lee", "Cara Ngata", "Dan Park"]) {
       await user.click(screen.getByRole("button", { name: "+ Add author" }))
-      const rows = screen.getAllByRole("textbox", { name: /^Author \d+ name$/ })
+      const rows = screen.getAllByLabelText(/^Author \d+ name$/)
       await user.type(rows[rows.length - 1] as HTMLElement, name)
+      await user.keyboard("{Escape}")
     }
     await submit(user)
     expect(await screen.findByText("This name is too long.")).toBeInTheDocument()
@@ -337,7 +359,70 @@ describe("AddPublicationForm", () => {
     // Dan moves into the row the error was keyed to.
     await user.click(screen.getByRole("button", { name: "Remove author 2" }))
 
-    expect(screen.getByRole("textbox", { name: "Author 3 name" })).toHaveValue("Dan Park")
+    expect(screen.getByLabelText("Author 3 name")).toHaveValue("Dan Park")
     expect(screen.queryByText("This name is too long.")).not.toBeInTheDocument()
+  })
+
+  describe("linking members", () => {
+    it("links a co-author chosen from the member search", async () => {
+      vi.mocked(createPublication).mockResolvedValue({ ok: true })
+      vi.mocked(searchAuthorCandidates).mockResolvedValue([benLee])
+      const { onSuccess, user } = renderForm()
+      await openManualEntry(user)
+      await user.type(screen.getByLabelText(/Title/), "Teamwork in capstones")
+      await user.type(screen.getByLabelText("DOI"), "10.1145/3313831.3376518")
+      await user.click(screen.getByRole("button", { name: "+ Add author" }))
+
+      await user.type(screen.getByLabelText("Author 2 name"), "Ben")
+      await user.click(await screen.findByRole("option", { name: /Ben Lee/ }))
+
+      expect(screen.getByText("University of Auckland · Lecturer")).toBeInTheDocument()
+      await submit(user)
+
+      await waitFor(() => expect(onSuccess).toHaveBeenCalled())
+      expect(vi.mocked(createPublication).mock.calls[0]?.[0]).toMatchObject({
+        authors: [{ kind: "self" }, { kind: "member", memberId: 12, name: "Ben Lee" }],
+      })
+    })
+
+    it("unlinks a member and keeps their name as an external author", async () => {
+      vi.mocked(searchAuthorCandidates).mockResolvedValue([benLee])
+      const { user } = renderForm()
+      await openManualEntry(user)
+      await user.click(screen.getByRole("button", { name: "+ Add author" }))
+      await user.type(screen.getByLabelText("Author 2 name"), "Ben Lee")
+      await user.click(await screen.findByRole("option", { name: /Ben Lee/ }))
+
+      await user.click(screen.getByRole("button", { name: "Unlink author 2 from Ben Lee" }))
+
+      expect(screen.getByRole("combobox", { name: "Author 2 name" })).toHaveValue("Ben Lee")
+    })
+
+    it("links an imported author who matches one member", async () => {
+      vi.mocked(matchBibtexAuthors).mockResolvedValue([benLee])
+      const { user } = renderForm()
+
+      await pasteBibtex(
+        user,
+        "@article{k, title={T}, author={Smith, Anna and Lee, B.}, year={2020}}",
+      )
+
+      expect(await screen.findByText("Matched from BibTeX")).toBeInTheDocument()
+      expect(matchBibtexAuthors).toHaveBeenCalledWith([{ given: ["b"], family: "lee" }])
+    })
+
+    it("keeps imported authors external when matching fails", async () => {
+      vi.spyOn(console, "error").mockImplementation(() => {})
+      vi.mocked(matchBibtexAuthors).mockRejectedValue(new Error("network"))
+      const { user } = renderForm()
+
+      await pasteBibtex(
+        user,
+        "@article{k, title={T}, author={Smith, Anna and Lee, B.}, year={2020}}",
+      )
+
+      await waitFor(() => expect(matchBibtexAuthors).toHaveBeenCalled())
+      expect(screen.getByRole("combobox", { name: "Author 2 name" })).toHaveValue("B. Lee")
+    })
   })
 })

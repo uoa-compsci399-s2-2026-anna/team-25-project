@@ -1,7 +1,7 @@
 import { type Creator, type Entry, parse } from "@retorquere/bibtex-parser"
 import { PublicationType } from "../enums/publications"
 import { type AddPublicationFormInput, DOI_PATTERN, webUrlSchema } from "../schemas/publications"
-import { matchMember, parsePrintedName } from "./author-match"
+import { matchMember, type PrintedName, parsePrintedName } from "./author-match"
 
 export type BibtexImportMessage = { level: "error" | "warning" | "info"; text: string }
 
@@ -11,6 +11,8 @@ export type BibtexImportResult = {
   values: BibtexImportValues
   /** Only set when the entry has authors (or editors). Always includes the signed-in member. */
   authors?: AddPublicationFormInput["authors"]
+  /** The parsed name of each external author row, by row id, for matching to members. */
+  coAuthorNames: { rowId: string; name: PrintedName }[]
   messages: BibtexImportMessage[]
   /** Number of form fields filled. The author list counts as one field. */
   filledCount: number
@@ -27,6 +29,7 @@ const parseError = (): BibtexImportResult => ({
   messages: [
     { level: "error", text: "Could not read this BibTeX. Check that it starts with @type{key, …" },
   ],
+  coAuthorNames: [],
   filledCount: 0,
 })
 
@@ -106,7 +109,9 @@ const mapAuthors = (
   self: PersonName,
   used: Set<string>,
   messages: BibtexImportMessage[],
-): AddPublicationFormInput["authors"] | undefined => {
+):
+  | (Pick<BibtexImportResult, "coAuthorNames"> & { authors: AddPublicationFormInput["authors"] })
+  | undefined => {
   let creators = fields.author
   if (creators?.length) {
     used.add("author")
@@ -127,16 +132,18 @@ const mapAuthors = (
   }
 
   const selfIndex = named.findIndex((creator) => isSelf(creator, self))
-  const authors: AddPublicationFormInput["authors"] = named.map((creator, index) =>
-    index === selfIndex
-      ? { id: crypto.randomUUID(), kind: "self" }
-      : { id: crypto.randomUUID(), kind: "external", name: formatCreator(creator) },
-  )
+  const coAuthorNames: BibtexImportResult["coAuthorNames"] = []
+  const authors: AddPublicationFormInput["authors"] = named.map((creator, index) => {
+    const id = crypto.randomUUID()
+    if (index === selfIndex) return { id, kind: "self" }
+    coAuthorNames.push({ rowId: id, name: parsePrintedName(creator) })
+    return { id, kind: "external", name: formatCreator(creator) }
+  })
   if (selfIndex === -1) {
     authors.unshift({ id: crypto.randomUUID(), kind: "self" })
     messages.push({ level: "warning", text: SELF_NOT_FOUND_WARNING })
   }
-  return authors
+  return { authors, coAuthorNames }
 }
 
 const mapEntry = (entry: Entry, self: PersonName, messages: BibtexImportMessage[]) => {
@@ -156,7 +163,7 @@ const mapEntry = (entry: Entry, self: PersonName, messages: BibtexImportMessage[
   if (title) values.title = stripMarkup(title)
   else messages.push({ level: "warning", text: "The entry has no title. Add one." })
 
-  const authors = mapAuthors(fields, self, used, messages)
+  const mapped = mapAuthors(fields, self, used, messages)
 
   // biblatex uses `date` (YYYY, YYYY-MM or YYYY-MM-DD) in place of `year` and `month`.
   const date = take("date")?.match(/^(\d{4})(?:-(\d{1,2}))?/)
@@ -217,7 +224,7 @@ const mapEntry = (entry: Entry, self: PersonName, messages: BibtexImportMessage[
     messages.push({ level: "info", text: `Not imported: ${ignored.join(", ")}.` })
   }
 
-  return { values, authors }
+  return { values, authors: mapped?.authors, coAuthorNames: mapped?.coAuthorNames ?? [] }
 }
 
 /**
@@ -263,11 +270,11 @@ export const parseBibtexImport = (text: string, self: PersonName): BibtexImportR
     messages.push({ level: "info", text: "Only the first entry was imported." })
   }
 
-  const { values, authors } = mapEntry(entry, self, messages)
+  const { values, authors, coAuthorNames } = mapEntry(entry, self, messages)
   const filledCount = Object.keys(values).length + (authors ? 1 : 0)
   // Show the most important messages first.
   const order = { error: 0, warning: 1, info: 2 }
   messages.sort((a, b) => order[a.level] - order[b.level])
 
-  return { values, authors, messages, filledCount }
+  return { values, authors, coAuthorNames, messages, filledCount }
 }

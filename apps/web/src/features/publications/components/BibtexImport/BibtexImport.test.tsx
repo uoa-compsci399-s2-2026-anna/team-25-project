@@ -57,6 +57,7 @@ describe("BibtexImport", () => {
     expect(onImport.mock.calls[0]?.[0]).toMatchObject({
       values: { title: "Learning", year: 2024, citationKey: "smith2024" },
       authors: [{ kind: "self" }, { kind: "external", name: "Ben Lee" }],
+      coAuthorNames: [{ name: { given: ["ben"], family: "lee" } }],
     })
     expect(trigger()).toHaveAttribute("aria-expanded", "false")
     expect(screen.getByText(/Filled 5 fields from BibTeX/)).toBeInTheDocument()
