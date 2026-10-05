@@ -1,6 +1,7 @@
 import { type Creator, type Entry, parse } from "@retorquere/bibtex-parser"
 import { PublicationType } from "../enums/publications"
 import { type AddPublicationFormInput, DOI_PATTERN, webUrlSchema } from "../schemas/publications"
+import { matchMember, parsePrintedName } from "./author-match"
 
 export type BibtexImportMessage = { level: "error" | "warning" | "info"; text: string }
 
@@ -71,32 +72,14 @@ const asText = (value: string | string[] | undefined): string | undefined => {
   return text?.normalize("NFC").trim() || undefined
 }
 
-const normalise = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase()
-    .trim()
-
 const formatCreator = (creator: Creator) =>
   (
     creator.name ??
     [creator.firstName, creator.prefix, creator.lastName, creator.suffix].filter(Boolean).join(" ")
   ).normalize("NFC")
 
-const isSelf = (creator: Creator, self: PersonName) => {
-  const selfFirst = normalise(self.firstName)
-  const selfLast = normalise(self.lastName)
-  if (creator.name) return normalise(creator.name) === `${selfFirst} ${selfLast}`
-  if (!creator.lastName || normalise(creator.lastName) !== selfLast) return false
-
-  const first = normalise(creator.firstName ?? "")
-    .split(/\s+/)[0]
-    ?.replace(/\.$/, "")
-  if (!first) return false
-  // "M." or "M" matches by initial; a full first name must match in full.
-  return first.length === 1 ? selfFirst.startsWith(first) : first === selfFirst.split(/\s+/)[0]
-}
+const isSelf = (creator: Creator, self: PersonName) =>
+  matchMember(parsePrintedName(creator), self) !== null
 
 const parseMonth = (value: string): string | undefined => {
   const trimmed = value.trim().toLowerCase()
