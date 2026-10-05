@@ -15,6 +15,7 @@ import {
   getMemberProposals,
   getMemberProposalsCached,
   getMemberResources,
+  getMemberResourcesCached,
   getMembers,
   getResearchInterestOptions,
 } from "./members.queries"
@@ -401,5 +402,11 @@ describe("getMemberResources", () => {
       sort: ["-createdAt", "-id"],
       where: { owner: { equals: 7 } },
     })
+  })
+
+  it("goes stale with resources and the courses whose codes the cards show", async () => {
+    await getMemberResourcesCached(7)
+
+    expect(cacheTag).toHaveBeenCalledWith("resources", "courses")
   })
 })
