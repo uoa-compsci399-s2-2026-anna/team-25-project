@@ -221,7 +221,7 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
     // DOI shows on the field, the same as when the user types it.
     for (const name of names) void form.validateField(name, "blur")
     for (const [index, author] of (authors ?? []).entries()) {
-      if (author.kind === "coAuthor") void form.validateField(`authors[${index}].name`, "blur")
+      if (author.kind === "external") void form.validateField(`authors[${index}].name`, "blur")
     }
   }
 
@@ -414,7 +414,7 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                           onClick={() =>
                             authorsField.pushValue({
                               id: crypto.randomUUID(),
-                              kind: "coAuthor",
+                              kind: "external",
                               name: "",
                             })
                           }

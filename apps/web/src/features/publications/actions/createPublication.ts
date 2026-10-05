@@ -80,6 +80,17 @@ export const createPublication = async (input: unknown): Promise<ActionResult> =
     }
   }
 
+  // The member's own row must be the self row, so they are not linked twice.
+  const selfAsMember = parsed.data.authors.findIndex(
+    (author) => author.kind === "member" && author.memberId === user.id,
+  )
+  if (selfAsMember !== -1) {
+    return {
+      fieldErrors: { [`authors.${selfAsMember}.member`]: "You are already in the author list." },
+      ok: false,
+    }
+  }
+
   const payload = await getPayloadClient()
   const { authors, month, tags, type, title, year, ...optional } = parsed.data
 
@@ -90,11 +101,14 @@ export const createPublication = async (input: unknown): Promise<ActionResult> =
         abstract: blankToUndefined(optional.abstract),
         // The creator is linked to their profile at the position they chose - the
         // requireLinkedAuthor hook rejects a member who is not linked as an author.
-        authors: authors.map((author) =>
-          author.kind === "self"
-            ? { member: user.id, name: `${user.firstName} ${user.lastName}` }
-            : { name: author.name },
-        ),
+        authors: authors.map((author) => {
+          if (author.kind === "self") {
+            return { member: user.id, name: `${user.firstName} ${user.lastName}` }
+          }
+          return author.kind === "member"
+            ? { member: author.memberId, name: author.name }
+            : { name: author.name }
+        }),
         citationKey: blankToUndefined(optional.citationKey),
         doi: blankToUndefined(optional.doi),
         issue: blankToUndefined(optional.issue),

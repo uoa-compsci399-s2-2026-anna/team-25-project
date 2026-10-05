@@ -117,7 +117,7 @@ describe("AddPublicationForm", () => {
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalled())
     expect(vi.mocked(createPublication).mock.calls[0]?.[0]).toMatchObject({
-      authors: [{ kind: "coAuthor", name: "Ben Lee" }, { kind: "self" }],
+      authors: [{ kind: "external", name: "Ben Lee" }, { kind: "self" }],
     })
   })
 
@@ -178,7 +178,7 @@ describe("AddPublicationForm", () => {
       expect.objectContaining({
         authors: [
           { id: expect.any(String), kind: "self" },
-          { id: expect.any(String), kind: "coAuthor", name: "Ben Lee" },
+          { id: expect.any(String), kind: "external", name: "Ben Lee" },
         ],
         tags: "Teamwork, Assessment",
         title: "Teamwork in capstones",
@@ -225,7 +225,7 @@ describe("AddPublicationForm", () => {
     expect(createPublication).toHaveBeenCalledWith(
       expect.objectContaining({
         authors: [
-          { id: expect.any(String), kind: "coAuthor", name: "Ben Lee" },
+          { id: expect.any(String), kind: "external", name: "Ben Lee" },
           { id: expect.any(String), kind: "self" },
         ],
         doi: "10.1145/1234567.7654321",

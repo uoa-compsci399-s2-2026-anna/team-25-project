@@ -7,7 +7,7 @@ const validForm = {
   title: "Teamwork in capstone courses",
   authors: [
     { id: "1", kind: "self" },
-    { id: "2", kind: "coAuthor", name: "Ben Lee" },
+    { id: "2", kind: "external", name: "Ben Lee" },
   ],
   year: 2025,
   month: "",
@@ -60,7 +60,7 @@ describe("addPublicationFormSchema", () => {
       errorPaths({
         ...validForm,
         authors: [
-          { id: "4", kind: "coAuthor", name: "Ben Lee" },
+          { id: "4", kind: "external", name: "Ben Lee" },
           { id: "5", kind: "self" },
         ],
       }),
@@ -80,6 +80,32 @@ describe("addPublicationFormSchema", () => {
     expect(errorPaths({ ...validForm, authors })).toEqual(["authors"])
   })
 
+  it("accepts linked members", () => {
+    expect(
+      errorPaths({
+        ...validForm,
+        authors: [
+          { id: "10", kind: "self" },
+          { id: "11", kind: "member", memberId: 3, name: "B. Lee" },
+          { id: "12", kind: "member", memberId: 4, name: "Cara Doe" },
+        ],
+      }),
+    ).toEqual([])
+  })
+
+  it("rejects the same member twice", () => {
+    expect(
+      errorPaths({
+        ...validForm,
+        authors: [
+          { id: "13", kind: "self" },
+          { id: "14", kind: "member", memberId: 3, name: "B. Lee" },
+          { id: "15", kind: "member", memberId: 3, name: "Ben Lee" },
+        ],
+      }),
+    ).toEqual(["authors"])
+  })
+
   it("requires a title and co-author names", () => {
     expect(
       errorPaths({
@@ -87,7 +113,7 @@ describe("addPublicationFormSchema", () => {
         title: " ",
         authors: [
           { id: "8", kind: "self" },
-          { id: "9", kind: "coAuthor", name: "" },
+          { id: "9", kind: "external", name: "" },
         ],
       }),
     ).toEqual(["title", "authors.1.name"])

@@ -32,7 +32,13 @@ export const authorNameSchema = z.string().trim().min(1, "Author name is require
 // client cannot send a different name for a linked author.
 const formAuthorSchema = z.discriminatedUnion("kind", [
   z.object({ id: z.string(), kind: z.literal("self") }),
-  z.object({ id: z.string(), kind: z.literal("coAuthor"), name: authorNameSchema }),
+  z.object({
+    id: z.string(),
+    kind: z.literal("member"),
+    memberId: z.number().int().positive(),
+    name: authorNameSchema,
+  }),
+  z.object({ id: z.string(), kind: z.literal("external"), name: authorNameSchema }),
 ])
 
 export const addPublicationFormSchema = z
@@ -45,7 +51,11 @@ export const addPublicationFormSchema = z
       .refine(
         (authors) => authors.filter((author) => author.kind === "self").length === 1,
         "Include yourself as one of the authors.",
-      ),
+      )
+      .refine((authors) => {
+        const ids = authors.flatMap((author) => (author.kind === "member" ? [author.memberId] : []))
+        return new Set(ids).size === ids.length
+      }, "Each member can be an author only once."),
     // An empty year input gives NaN, which fails the number check.
     year: z
       .number({ error: "Year is required" })

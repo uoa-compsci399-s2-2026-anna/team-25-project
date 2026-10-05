@@ -130,7 +130,7 @@ const mapAuthors = (
   const authors: AddPublicationFormInput["authors"] = named.map((creator, index) =>
     index === selfIndex
       ? { id: crypto.randomUUID(), kind: "self" }
-      : { id: crypto.randomUUID(), kind: "coAuthor", name: formatCreator(creator) },
+      : { id: crypto.randomUUID(), kind: "external", name: formatCreator(creator) },
   )
   if (selfIndex === -1) {
     authors.unshift({ id: crypto.randomUUID(), kind: "self" })
