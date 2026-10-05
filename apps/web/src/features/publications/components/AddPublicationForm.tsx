@@ -55,7 +55,7 @@ import { type AnyFieldApi, useForm } from "@tanstack/react-form"
 import { type ComponentProps, type ReactNode, useId, useState } from "react"
 import type { ActionResult } from "@/features/auth/actions/types"
 import { createPublication } from "../actions/createPublication"
-import { BibtexImport } from "./BibtexImport"
+import { BibtexImport } from "./BibtexImport/BibtexImport"
 import { SectionTrigger } from "./SectionTrigger"
 import { SortableAuthorRow } from "./SortableAuthorRow"
 

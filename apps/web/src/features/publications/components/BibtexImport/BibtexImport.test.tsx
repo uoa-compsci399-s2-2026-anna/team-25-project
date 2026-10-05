@@ -1,7 +1,8 @@
 import { SELF_NOT_FOUND_WARNING } from "@repo/shared/utils/bibtex-import"
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { BIBTEX_DEBOUNCE_MS, BibtexImport } from "./BibtexImport"
+import { BibtexImport } from "./BibtexImport"
+import { BIBTEX_DEBOUNCE_MS } from "./BibtexImport.constants"
 
 const self = { firstName: "Anna", lastName: "Smith" }
 

@@ -1,46 +1,22 @@
 "use client"
 
-import type {
-  BibtexImportMessage,
-  BibtexImportResult,
-  PersonName,
-} from "@repo/shared/utils/bibtex-import"
+import type { BibtexImportResult, PersonName } from "@repo/shared/utils/bibtex-import"
 import { Collapsible, CollapsiblePanel, FieldLabel, TextArea } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
-import { CircleAlertIcon, CircleCheckIcon, InfoIcon } from "lucide-react"
+import { CircleCheckIcon } from "lucide-react"
 import { useEffect, useEffectEvent, useId, useRef, useState } from "react"
-import { SectionTrigger } from "./SectionTrigger"
-
-export const BIBTEX_DEBOUNCE_MS = 400
+import { SectionTrigger } from "../SectionTrigger"
+import {
+  BIBTEX_DEBOUNCE_MS,
+  IMPORT_ERROR,
+  LOAD_ERROR,
+  MESSAGE_STYLES,
+  PLACEHOLDER,
+} from "./BibtexImport.constants"
 
 // The parser is large, so keep it out of the page bundle. It loads when the
 // import section is open, which it is by default when the dialog opens.
 const loadParser = () => import("@repo/shared/utils/bibtex-import")
-
-const LOAD_ERROR: BibtexImportResult = {
-  values: {},
-  messages: [
-    {
-      level: "error",
-      text: "Could not load the BibTeX reader. Reload the page, or fill in the form by hand.",
-    },
-  ],
-  filledCount: 0,
-}
-
-const IMPORT_ERROR: BibtexImportResult = {
-  values: {},
-  messages: [{ level: "error", text: "Could not import this entry. Fill in the form by hand." }],
-  filledCount: 0,
-}
-
-const PLACEHOLDER = "@article{key,\n  title = {...},\n  author = {...},\n  year = {2024}\n}"
-
-const MESSAGE_STYLES = {
-  error: { icon: CircleAlertIcon, className: "text-destructive" },
-  warning: { icon: CircleAlertIcon, className: "text-amber-700" },
-  info: { icon: InfoIcon, className: "text-muted-foreground" },
-} satisfies Record<BibtexImportMessage["level"], { icon: unknown; className: string }>
 
 type BibtexImportProps = {
   /** The signed-in member, found in (or added to) the imported author list. */
