@@ -105,6 +105,7 @@ describe("AddPublicationForm", () => {
     const { onSuccess, user } = renderForm()
     await openManualEntry(user)
     await user.type(screen.getByLabelText(/Title/), "Teamwork in capstones")
+    await user.type(screen.getByLabelText("DOI"), "10.1145/3313831.3376518")
     await user.click(screen.getByRole("button", { name: "+ Add author" }))
     await user.type(screen.getByRole("textbox", { name: "Author 2 name" }), "Ben Lee")
 
@@ -292,6 +293,7 @@ describe("AddPublicationForm", () => {
     await openManualEntry(user)
 
     await user.type(screen.getByLabelText(/Title/), "Teamwork in capstones")
+    await user.type(screen.getByLabelText("DOI"), "10.1145/3313831.3376518")
     await submit(user)
 
     expect(
@@ -309,6 +311,7 @@ describe("AddPublicationForm", () => {
     await openManualEntry(user)
 
     await user.type(screen.getByLabelText(/Title/), "Teamwork in capstones")
+    await user.type(screen.getByLabelText("DOI"), "10.1145/3313831.3376518")
     await submit(user)
 
     expect(await screen.findByText("This member does not exist.")).toBeInTheDocument()
@@ -322,6 +325,7 @@ describe("AddPublicationForm", () => {
     const { user } = renderForm()
     await openManualEntry(user)
     await user.type(screen.getByLabelText(/Title/), "Teamwork in capstones")
+    await user.type(screen.getByLabelText("DOI"), "10.1145/3313831.3376518")
     for (const name of ["Ben Lee", "Cara Ngata", "Dan Park"]) {
       await user.click(screen.getByRole("button", { name: "+ Add author" }))
       const rows = screen.getAllByRole("textbox", { name: /^Author \d+ name$/ })
