@@ -172,6 +172,34 @@ export const getMemberProposalsCached = async (memberId: number) => {
   return getMemberProposals(memberId)
 }
 
+/** The resources the member shared, newest first, with only what the profile's cards draw. */
+export const getMemberResources = async (memberId: number) => {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: Slugs.Collections.RESOURCES,
+    where: { owner: { equals: memberId } },
+    // id breaks ties between resources shared in the same instant.
+    sort: ["-createdAt", "-id"],
+    // Depth 1 reaches the course's code; attachments are only counted.
+    depth: 1,
+    pagination: false,
+    populate: {
+      [Slugs.Collections.COURSES]: { code: true },
+      [Slugs.Collections.RESOURCE_ATTACHMENTS]: { filename: true },
+    },
+    select: { attachments: true, course: true, createdAt: true, title: true },
+  })
+  return docs
+}
+
+export const getMemberResourcesCached = async (memberId: number) => {
+  "use cache"
+  cacheLife("max")
+  // The cards show each course's code, so they go stale with the courses too.
+  cacheTag(QueryKeys.RESOURCES.ROOT, QueryKeys.COURSES.ROOT)
+  return getMemberResources(memberId)
+}
+
 export const getMemberCoursesConvenedCount = async (memberId: number) => {
   const payload = await getPayloadClient()
   const { totalDocs } = await payload.count({
