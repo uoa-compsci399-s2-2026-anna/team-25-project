@@ -5,8 +5,14 @@ import { AddPublicationTriggerForMember } from "./AddPublicationTrigger"
 
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
 vi.mock("./AddPublicationDialog", () => ({
-  AddPublicationDialog: ({ defaultAuthorName }: { defaultAuthorName: string }) => (
-    <button type="button">+ Add a publication as {defaultAuthorName}</button>
+  AddPublicationDialog: ({
+    currentUser,
+  }: {
+    currentUser: { firstName: string; lastName: string }
+  }) => (
+    <button type="button">
+      + Add a publication as {currentUser.firstName} {currentUser.lastName}
+    </button>
   ),
 }))
 

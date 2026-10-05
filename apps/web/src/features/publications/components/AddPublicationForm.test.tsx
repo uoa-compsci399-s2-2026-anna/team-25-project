@@ -8,9 +8,17 @@ vi.mock("../actions/createPublication", () => ({ createPublication: vi.fn() }))
 
 const renderForm = () => {
   const onSuccess = vi.fn()
-  render(<AddPublicationForm defaultAuthorName="Anna Smith" onSuccess={onSuccess} />)
+  render(
+    <AddPublicationForm
+      currentUser={{ firstName: "Anna", lastName: "Smith" }}
+      onSuccess={onSuccess}
+    />,
+  )
   return { onSuccess, user: userEvent.setup() }
 }
+
+const openManualEntry = (user: ReturnType<typeof userEvent.setup>) =>
+  user.click(screen.getByRole("button", { name: "Manual entry" }))
 
 const submit = (user: ReturnType<typeof userEvent.setup>) =>
   user.click(screen.getByRole("button", { name: "Add publication" }))
@@ -24,8 +32,20 @@ describe("AddPublicationForm", () => {
     cleanup()
   })
 
-  it("shows the signed-in member as a reorderable first author", () => {
+  it("opens with the BibTeX import and keeps manual entry collapsed", () => {
     renderForm()
+
+    expect(screen.getByRole("textbox", { name: "Paste a BibTeX entry" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Manual entry" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    )
+    expect(screen.queryByRole("textbox", { name: /Title/ })).not.toBeInTheDocument()
+  })
+
+  it("shows the signed-in member as a reorderable first author", async () => {
+    const { user } = renderForm()
+    await openManualEntry(user)
 
     const self = screen.getByRole("textbox", { name: "Author 1 name" })
     expect(self).toHaveValue("Anna Smith")
@@ -36,6 +56,7 @@ describe("AddPublicationForm", () => {
 
   it("moves an author with the keyboard", async () => {
     const { user } = renderForm()
+    await openManualEntry(user)
     await user.click(screen.getByRole("button", { name: "+ Add author" }))
     await user.type(screen.getByRole("textbox", { name: "Author 2 name" }), "Ben Lee")
 
@@ -64,19 +85,26 @@ describe("AddPublicationForm", () => {
     expect(screen.getByRole("textbox", { name: "Author 1 name" })).toHaveValue("Ben Lee")
   })
 
-  it("shows required errors and does not call the action", async () => {
+  it("opens manual entry to show required errors and does not call the action", async () => {
     const { user } = renderForm()
+
+    await submit(user)
+
+    expect(await screen.findByText("Title is required")).toBeVisible()
+    expect(screen.getByRole("button", { name: "Manual entry" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    )
 
     await user.click(screen.getByRole("button", { name: "+ Add author" }))
     await submit(user)
-
-    expect(await screen.findByText("Title is required")).toBeInTheDocument()
     expect(screen.getByText("Author name is required")).toBeInTheDocument()
     expect(createPublication).not.toHaveBeenCalled()
   })
 
   it("adds and removes co-author rows", async () => {
     const { user } = renderForm()
+    await openManualEntry(user)
 
     await user.click(screen.getByRole("button", { name: "+ Add author" }))
     await user.click(screen.getByRole("button", { name: "+ Add author" }))
@@ -90,6 +118,7 @@ describe("AddPublicationForm", () => {
   it("submits the values and closes on success", async () => {
     vi.mocked(createPublication).mockResolvedValue({ ok: true })
     const { onSuccess, user } = renderForm()
+    await openManualEntry(user)
 
     await user.type(screen.getByLabelText(/Title/), "Teamwork in capstones")
     await user.type(screen.getByLabelText("DOI"), "10.1145/3313831.3376518")
@@ -112,6 +141,69 @@ describe("AddPublicationForm", () => {
     )
   })
 
+  it("fills the form from a BibTeX entry and submits it", async () => {
+    vi.mocked(createPublication).mockResolvedValue({ ok: true })
+    const { onSuccess, user } = renderForm()
+
+    await user.click(screen.getByRole("textbox", { name: "Paste a BibTeX entry" }))
+    await user.paste(
+      `@inproceedings{lee2023teams,
+        author = {Lee, Ben and Smith, Anna},
+        title = {Teamwork in Capstones},
+        booktitle = {Proceedings of ITiCSE},
+        year = {2023}, month = jul,
+        pages = {10--20},
+        doi = {10.1145/1234567.7654321}
+      }`,
+    )
+
+    expect(await screen.findByText(/Filled 9 fields from BibTeX/)).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Manual entry" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    )
+    expect(screen.queryByRole("textbox", { name: "Paste a BibTeX entry" })).not.toBeInTheDocument()
+    expect(screen.getByLabelText(/Title/)).toHaveValue("Teamwork in Capstones")
+    expect(screen.getByLabelText(/Year/)).toHaveValue(2023)
+    expect(screen.getByLabelText("Venue")).toHaveValue("Proceedings of ITiCSE")
+    expect(screen.getByLabelText("Pages")).toHaveValue("10-20")
+    expect(screen.getByLabelText("Citation key")).toHaveValue("lee2023teams")
+    expect(screen.getByRole("textbox", { name: "Author 1 name" })).toHaveValue("Ben Lee")
+    const self = screen.getByRole("textbox", { name: "Author 2 name" })
+    expect(self).toHaveValue("Anna Smith")
+    expect(self).toBeDisabled()
+
+    await submit(user)
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled())
+    expect(createPublication).toHaveBeenCalledWith(
+      expect.objectContaining({
+        authors: [
+          { id: expect.any(String), kind: "coAuthor", name: "Ben Lee" },
+          { id: expect.any(String), kind: "self" },
+        ],
+        doi: "10.1145/1234567.7654321",
+        month: "7",
+        title: "Teamwork in Capstones",
+        type: "inproceedings",
+        year: 2023,
+      }),
+    )
+  })
+
+  it("adds the member and warns when they are not in the imported authors", async () => {
+    const { user } = renderForm()
+
+    await user.click(screen.getByRole("textbox", { name: "Paste a BibTeX entry" }))
+    await user.paste("@article{k, title={T}, author={Ben Lee}, doi={not-a-doi}}")
+
+    expect(await screen.findByText(/You must be an author of the publication/)).toBeInTheDocument()
+    expect(screen.getByRole("textbox", { name: "Author 1 name" })).toHaveValue("Anna Smith")
+    expect(screen.getByRole("textbox", { name: "Author 2 name" })).toHaveValue("Ben Lee")
+    // The imported DOI is validated the same as a typed one.
+    expect(screen.getByText("Enter a DOI that starts with 10.")).toBeInTheDocument()
+  })
+
   it("shows server field and form errors", async () => {
     vi.mocked(createPublication).mockResolvedValue({
       fieldErrors: { authors: "Link yourself as one of the authors.", doi: "Value must be unique" },
@@ -119,6 +211,7 @@ describe("AddPublicationForm", () => {
       ok: false,
     })
     const { onSuccess, user } = renderForm()
+    await openManualEntry(user)
 
     await user.type(screen.getByLabelText(/Title/), "Teamwork in capstones")
     await user.type(screen.getByLabelText("DOI"), "10.1145/3313831.3376518")

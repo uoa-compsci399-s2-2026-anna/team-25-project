@@ -1,5 +1,6 @@
 "use client"
 
+import type { PersonName } from "@repo/shared/utils/bibtex-import"
 import {
   Button,
   Dialog,
@@ -12,11 +13,11 @@ import { useState } from "react"
 import { AddPublicationForm } from "./AddPublicationForm"
 
 type AddPublicationDialogProps = {
-  /** The signed-in member's name, filled in as the first author. */
-  defaultAuthorName: string
+  /** The signed-in member, filled in as the first author. */
+  currentUser: PersonName
 }
 
-export const AddPublicationDialog = ({ defaultAuthorName }: AddPublicationDialogProps) => {
+export const AddPublicationDialog = ({ currentUser }: AddPublicationDialogProps) => {
   const [open, setOpen] = useState(false)
 
   return (
@@ -38,10 +39,7 @@ export const AddPublicationDialog = ({ defaultAuthorName }: AddPublicationDialog
             Cancel
           </DialogClose>
         </div>
-        <AddPublicationForm
-          defaultAuthorName={defaultAuthorName}
-          onSuccess={() => setOpen(false)}
-        />
+        <AddPublicationForm currentUser={currentUser} onSuccess={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   )
