@@ -3,6 +3,7 @@ import {
   RESOURCE_ATTACHMENT_MIME_TYPES,
   RESOURCE_ATTACHMENTS_MAX_BYTES,
   RESOURCE_ATTACHMENTS_MAX_FILES,
+  RESOURCE_ATTACHMENTS_MAX_MB,
 } from "../constants/resource-attachments"
 import { richTextHasText, richTextSchema } from "./shared"
 
@@ -39,7 +40,7 @@ export const resourceAttachmentsError = (files: readonly AttachmentLike[]) => {
   }
   const totalBytes = files.reduce((total, file) => total + file.size, 0)
   if (totalBytes > RESOURCE_ATTACHMENTS_MAX_BYTES) {
-    return "Attachments must be 50 MB or smaller in total."
+    return `Attachments must be ${RESOURCE_ATTACHMENTS_MAX_MB} MB or smaller in total.`
   }
   return undefined
 }

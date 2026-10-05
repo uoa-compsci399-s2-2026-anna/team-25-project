@@ -39,4 +39,5 @@ export const resourceAttachmentTypeLabel = (mimeType: string | null | undefined)
  * room above the byte cap for the form's other fields.
  */
 export const RESOURCE_ATTACHMENTS_MAX_FILES = 10
-export const RESOURCE_ATTACHMENTS_MAX_BYTES = 50 * 1024 * 1024
+export const RESOURCE_ATTACHMENTS_MAX_MB = 9
+export const RESOURCE_ATTACHMENTS_MAX_BYTES = RESOURCE_ATTACHMENTS_MAX_MB * 1024 * 1024

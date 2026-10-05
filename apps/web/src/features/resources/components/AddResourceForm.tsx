@@ -1,6 +1,10 @@
 "use client"
 
-import { RESOURCE_ATTACHMENT_MIME_TYPES } from "@repo/shared/constants/resource-attachments"
+import {
+  RESOURCE_ATTACHMENT_MIME_TYPES,
+  RESOURCE_ATTACHMENTS_MAX_FILES,
+  RESOURCE_ATTACHMENTS_MAX_MB,
+} from "@repo/shared/constants/resource-attachments"
 import { addResourceFormSchema, resourceAttachmentsError } from "@repo/shared/schemas/resources"
 import { validateField } from "@repo/shared/utils/validate-field"
 import { AttachmentPicker, RichTextEditor, type RichTextValue } from "@repo/ui/components/composite"
@@ -213,7 +217,8 @@ export const AddResourceForm = ({ courses, onSuccess }: AddResourceFormProps) =>
             )}
           </form.Subscribe>
           <FieldDescription>
-            PDF, Word, PowerPoint, Excel, text or CSV. Up to 10 files, 50 MB in total.
+            PDF, Word, PowerPoint, Excel, text or CSV. Up to {RESOURCE_ATTACHMENTS_MAX_FILES} files,{" "}
+            {RESOURCE_ATTACHMENTS_MAX_MB} MB in total.
           </FieldDescription>
           {fieldErrors.attachments && <FieldError>{fieldErrors.attachments}</FieldError>}
         </Field>

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   RESOURCE_ATTACHMENTS_MAX_BYTES,
   RESOURCE_ATTACHMENTS_MAX_FILES,
+  RESOURCE_ATTACHMENTS_MAX_MB,
 } from "../constants/resource-attachments"
 import { addResourceFormSchema, resourceAttachmentsError } from "./resources"
 
@@ -64,7 +65,7 @@ describe("resourceAttachmentsError", () => {
     const half = RESOURCE_ATTACHMENTS_MAX_BYTES / 2
     expect(resourceAttachmentsError([pdf("a.pdf", half), pdf("b.pdf", half)])).toBeUndefined()
     expect(resourceAttachmentsError([pdf("a.pdf", half), pdf("b.pdf", half + 1)])).toBe(
-      "Attachments must be 50 MB or smaller in total.",
+      `Attachments must be ${RESOURCE_ATTACHMENTS_MAX_MB} MB or smaller in total.`,
     )
   })
 })
