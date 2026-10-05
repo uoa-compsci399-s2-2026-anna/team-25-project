@@ -75,19 +75,20 @@ export const createPublication = async (input: unknown): Promise<ActionResult> =
   }
 
   const payload = await getPayloadClient()
-  const { coAuthors, month, tags, type, title, year, ...optional } = parsed.data
+  const { authors, month, tags, type, title, year, ...optional } = parsed.data
 
   try {
     await payload.create({
       collection: Slugs.Collections.PUBLICATIONS,
       data: {
         abstract: blankToUndefined(optional.abstract),
-        // The creator is always the first author, linked to their profile - the
+        // The creator is linked to their profile at the position they chose - the
         // requireLinkedAuthor hook rejects a member who is not linked as an author.
-        authors: [
-          { member: user.id, name: `${user.firstName} ${user.lastName}` },
-          ...coAuthors.map(({ name }) => ({ name })),
-        ],
+        authors: authors.map((author) =>
+          author.kind === "self"
+            ? { member: user.id, name: `${user.firstName} ${user.lastName}` }
+            : { name: author.name },
+        ),
         citationKey: blankToUndefined(optional.citationKey),
         doi: blankToUndefined(optional.doi),
         issue: blankToUndefined(optional.issue),

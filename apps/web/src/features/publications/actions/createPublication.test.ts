@@ -24,10 +24,13 @@ vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
 const input = {
   type: "article",
   title: "Teamwork in capstone courses",
-  coAuthors: [{ name: "Ben Lee" }],
+  authors: [
+    { id: "1", kind: "self" },
+    { id: "2", kind: "coAuthor", name: "Ben Lee" },
+  ],
   year: 2025,
   month: "",
-  doi: "",
+  doi: "10.1145/3313831.3376518",
   url: "",
   venue: "",
   volume: "",
@@ -70,6 +73,16 @@ describe("createPublication", () => {
     expect(payload.create).not.toHaveBeenCalled()
   })
 
+  it("rejects a non-web URL", async () => {
+    const payload = mockPayload()
+
+    expect(await createPublication({ ...input, url: "javascript:alert(1)" })).toEqual({
+      fieldErrors: { url: "Enter a full URL that starts with https:// or http://" },
+      ok: false,
+    })
+    expect(payload.create).not.toHaveBeenCalled()
+  })
+
   it.each([
     ["a guest", { collection: null, user: null }, "Sign in to add a publication."],
     [
@@ -96,12 +109,32 @@ describe("createPublication", () => {
         authors: [{ member: 7, name: "Anna Smith" }, { name: "Ben Lee" }],
         title: "Teamwork in capstone courses",
         type: "article",
+        doi: "10.1145/3313831.3376518",
         year: 2025,
       },
       overrideAccess: false,
       user: member.user,
     })
     expect(updateTag).toHaveBeenCalledWith(QueryKeys.PUBLICATIONS.ROOT)
+  })
+
+  it("keeps the signed-in member at the position they chose", async () => {
+    const payload = mockPayload()
+
+    await createPublication({
+      ...input,
+      authors: [
+        { id: "3", kind: "coAuthor", name: "Ben Lee" },
+        { id: "4", kind: "self" },
+        { id: "5", kind: "coAuthor", name: "Cara Ngata" },
+      ],
+    })
+
+    expect(payload.create.mock.calls[0]?.[0].data.authors).toEqual([
+      { name: "Ben Lee" },
+      { member: 7, name: "Anna Smith" },
+      { name: "Cara Ngata" },
+    ])
   })
 
   it("converts month and splits tags", async () => {
