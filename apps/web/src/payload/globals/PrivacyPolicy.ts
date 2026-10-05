@@ -15,4 +15,5 @@ export const PrivacyPolicy: GlobalConfig = {
       required: true,
     },
   ],
+  hooks: { afterChange: [revalidatePrivacyPolicy] },
 }
