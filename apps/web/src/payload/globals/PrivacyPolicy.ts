@@ -1,6 +1,7 @@
 import type { GlobalConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { isAdmin } from "../access"
+import { revalidatePrivacyPolicy } from "../hooks/PrivacyPolicy"
 
 export const PrivacyPolicy: GlobalConfig = {
   slug: Slugs.Globals.PRIVACY_POLICY,
