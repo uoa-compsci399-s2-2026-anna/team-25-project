@@ -19,6 +19,10 @@ export const webUrlSchema = z.url({
 // with a format check need this, because the check would reject "".
 const blankOr = <T extends z.ZodType>(schema: T) => z.union([z.literal(""), schema])
 
+// Allow next year for accepted papers that are not yet published. Read the year
+// at parse time, so a long-running server does not keep a stale limit.
+export const latestPublicationYear = () => new Date().getFullYear() + 1
+
 export const authorNameSchema = z.string().trim().min(1, "Author name is required")
 
 // `id` is a stable key for drag-and-drop - the server ignores it. The signed-in
@@ -39,7 +43,13 @@ export const addPublicationFormSchema = z.object({
       (authors) => authors.filter((author) => author.kind === "self").length === 1,
       "Include yourself as one of the authors.",
     ),
-  year: z.number({ error: "Year is required" }).int().min(1000).max(9999),
+  year: z
+    .number({ error: "Year is required" })
+    .int()
+    .min(1000)
+    .refine((year) => year <= latestPublicationYear(), {
+      error: () => `Enter a year no later than ${latestPublicationYear()}`,
+    }),
   month: blankOr(z.string().regex(/^([1-9]|1[0-2])$/, "Choose a month")),
   doi: blankOr(z.string().trim().regex(DOI_PATTERN, DOI_ERROR)),
   url: blankOr(webUrlSchema),

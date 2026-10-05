@@ -29,6 +29,16 @@ const errorPaths = (input: unknown) => {
 }
 
 describe("addPublicationFormSchema", () => {
+  it("accepts a year up to next year", () => {
+    const nextYear = new Date().getFullYear() + 1
+    expect(errorPaths({ ...validForm, year: nextYear })).toEqual([])
+  })
+
+  it("rejects a year after next year", () => {
+    const tooLate = new Date().getFullYear() + 2
+    expect(errorPaths({ ...validForm, year: tooLate })).toEqual(["year"])
+  })
+
   it("accepts a form with blank optional fields", () => {
     expect(addPublicationFormSchema.safeParse(validForm).success).toBe(true)
   })

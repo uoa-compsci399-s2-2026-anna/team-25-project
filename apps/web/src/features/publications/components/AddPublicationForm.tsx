@@ -22,6 +22,7 @@ import {
   type AddPublicationFormInput,
   addPublicationFormSchema,
   authorNameSchema,
+  latestPublicationYear,
 } from "@repo/shared/schemas/publications"
 import { toSelectOptions } from "@repo/shared/utils/select-options"
 import { validateField } from "@repo/shared/utils/validate-field"
@@ -360,6 +361,7 @@ export const AddPublicationForm = ({ defaultAuthorName, onSuccess }: AddPublicat
                   <Input
                     aria-invalid={invalid}
                     id={field.name}
+                    max={latestPublicationYear()}
                     name={field.name}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(Number(event.target.value))}
