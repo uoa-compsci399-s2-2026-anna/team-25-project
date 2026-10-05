@@ -1,6 +1,6 @@
 import { type Creator, type Entry, parse } from "@retorquere/bibtex-parser"
 import { PublicationType } from "../enums/publications"
-import { type AddPublicationFormInput, DOI_PATTERN } from "../schemas/publications"
+import { type AddPublicationFormInput, DOI_PATTERN, webUrlSchema } from "../schemas/publications"
 
 export type BibtexImportMessage = { level: "error" | "warning" | "info"; text: string }
 
@@ -20,20 +20,20 @@ export type PersonName = { firstName: string; lastName: string }
 export const SELF_NOT_FOUND_WARNING =
   "We could not find you in the author list, so we added you as the first author. You must be an author of the publication. Move yourself to the correct position."
 
-const PARSE_ERROR: BibtexImportResult = {
+// A new object each time, so a caller that changes one result cannot change the next.
+const parseError = (): BibtexImportResult => ({
   values: {},
   messages: [
     { level: "error", text: "Could not read this BibTeX. Check that it starts with @type{key, …" },
   ],
   filledCount: 0,
-}
+})
 
 const PARSE_OPTIONS = {
   // Keep titles as written. Sentence-casing is a guess and would change the user's data.
   sentenceCase: false,
   english: false,
   caseProtection: false,
-  unsupported: "ignore",
 } as const
 
 const TYPE_ALIASES: Record<string, PublicationType> = {
@@ -178,8 +178,11 @@ const mapEntry = (entry: Entry, self: PersonName, messages: BibtexImportMessage[
   // biblatex uses `date` (YYYY, YYYY-MM or YYYY-MM-DD) in place of `year` and `month`.
   const date = take("date")?.match(/^(\d{4})(?:-(\d{1,2}))?/)
   const year = take("year") ?? date?.[1]
-  if (year && /^\d{4}$/.test(year)) values.year = Number(year)
-  else if (year) messages.push({ level: "info", text: `Could not read the year "${year}".` })
+  // The form already holds a year (the current one), so say when the import keeps it.
+  if (!year) messages.push({ level: "warning", text: "The entry has no year. Check the year." })
+  else if (/^\d{4}$/.test(year)) values.year = Number(year)
+  else
+    messages.push({ level: "warning", text: `Could not read the year "${year}". Check the year.` })
 
   const month = take("month") ?? date?.[2]
   if (month) {
@@ -200,7 +203,12 @@ const mapEntry = (entry: Entry, self: PersonName, messages: BibtexImportMessage[
   const publisher = take("publisher")
   if (publisher) values.publisher = publisher
   const url = take("url")
-  if (url) values.url = url
+  if (url) {
+    values.url = url
+    if (!webUrlSchema.safeParse(url).success) {
+      messages.push({ level: "warning", text: `The URL "${url}" does not look correct. Check it.` })
+    }
+  }
   const abstract = take("abstract")
   if (abstract) values.abstract = stripMarkup(abstract)
 
@@ -231,21 +239,37 @@ const mapEntry = (entry: Entry, self: PersonName, messages: BibtexImportMessage[
 
 /**
  * Reads the first entry of a BibTeX string and maps it to the add publication
- * form. The signed-in member is always in the returned author list: matched by
- * name where possible, otherwise added first with a warning.
+ * form. When the entry has authors (or editors), the signed-in member is always
+ * in the returned list: matched by name where possible, otherwise added first
+ * with a warning.
  */
 export const parseBibtexImport = (text: string, self: PersonName): BibtexImportResult => {
+  // Commands the parser cannot convert, such as \foo{bar}, are dropped and only
+  // their argument is kept. Record them, so the user can check those fields.
+  const unsupported = new Set<string>()
   let library: ReturnType<typeof parse>
   try {
-    library = parse(text, PARSE_OPTIONS)
+    library = parse(text, {
+      ...PARSE_OPTIONS,
+      unsupported: (_node, tex) => {
+        unsupported.add(tex)
+        return ""
+      },
+    })
   } catch {
-    return PARSE_ERROR
+    return parseError()
   }
 
   const [entry, ...rest] = library.entries
-  if (!entry) return PARSE_ERROR
+  if (!entry) return parseError()
 
   const messages: BibtexImportMessage[] = []
+  if (unsupported.size) {
+    messages.push({
+      level: "warning",
+      text: `Some LaTeX commands could not be read and were removed: ${[...unsupported].join(", ")}. Check the fields.`,
+    })
+  }
   if (library.errors.length) {
     messages.push({
       level: "warning",

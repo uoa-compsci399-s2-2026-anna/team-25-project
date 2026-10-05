@@ -13,13 +13,24 @@ import { SectionTrigger } from "./SectionTrigger"
 
 export const BIBTEX_DEBOUNCE_MS = 400
 
-// The parser is large (about 550 KB minified), so keep it out of the page bundle
-// and load it only when the section is open.
+// The parser is large, so keep it out of the page bundle. It loads when the
+// import section is open, which it is by default when the dialog opens.
 const loadParser = () => import("@repo/shared/utils/bibtex-import")
 
 const LOAD_ERROR: BibtexImportResult = {
   values: {},
-  messages: [{ level: "error", text: "Could not load the BibTeX reader. Try again." }],
+  messages: [
+    {
+      level: "error",
+      text: "Could not load the BibTeX reader. Reload the page, or fill in the form by hand.",
+    },
+  ],
+  filledCount: 0,
+}
+
+const IMPORT_ERROR: BibtexImportResult = {
+  values: {},
+  messages: [{ level: "error", text: "Could not import this entry. Fill in the form by hand." }],
   filledCount: 0,
 }
 
@@ -55,7 +66,8 @@ export const BibtexImport = ({ self, onImport }: BibtexImportProps) => {
     let parser: Awaited<ReturnType<typeof loadParser>>
     try {
       parser = await loadParser()
-    } catch {
+    } catch (error) {
+      console.error("Could not load the BibTeX parser", error)
       // Let the next edit try again.
       lastParsed.current = ""
       setResult(LOAD_ERROR)
@@ -64,16 +76,22 @@ export const BibtexImport = ({ self, onImport }: BibtexImportProps) => {
     // The text changed while the parser loaded. That newer text gets its own parse.
     if (lastParsed.current !== trimmed) return
 
-    const parsed = parser.parseBibtexImport(trimmed, self)
-    setResult(parsed)
-    if (parsed.messages.some((message) => message.level === "error")) return
+    try {
+      const parsed = parser.parseBibtexImport(trimmed, self)
+      setResult(parsed)
+      if (parsed.messages.some((message) => message.level === "error")) return
 
-    onImport(parsed)
-    setOpen(false)
+      onImport(parsed)
+      setOpen(false)
+    } catch (error) {
+      console.error("BibTeX import failed", error)
+      setResult(IMPORT_ERROR)
+    }
   })
 
   useEffect(() => {
-    if (open) void loadParser()
+    // Only a preload: a failure shows when the user pastes BibTeX.
+    if (open) loadParser().catch(() => {})
   }, [open])
 
   useEffect(() => {

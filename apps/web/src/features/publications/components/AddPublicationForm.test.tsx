@@ -23,6 +23,13 @@ const openManualEntry = (user: ReturnType<typeof userEvent.setup>) =>
 const submit = (user: ReturnType<typeof userEvent.setup>) =>
   user.click(screen.getByRole("button", { name: "Add publication" }))
 
+const pasteBibtex = async (user: ReturnType<typeof userEvent.setup>, text: string) => {
+  const textbox = screen.getByRole("textbox", { name: "Paste a BibTeX entry" })
+  await user.clear(textbox)
+  await user.click(textbox)
+  await user.paste(text)
+}
+
 // jsdom lays nothing out, so give the list and each row a size and position for
 // the keyboard sensor and the restrictToParentElement modifier. The handle sits in
 // the row, and the row sits in the list.
@@ -229,11 +236,28 @@ describe("AddPublicationForm", () => {
     )
   })
 
+  it("clears fields from an earlier import when a new entry is imported", async () => {
+    const { user } = renderForm()
+
+    await pasteBibtex(
+      user,
+      "@article{a, title={First}, author={Anna Smith}, year={2020}, doi={10.1000/first}, journal={J}}",
+    )
+    await waitFor(() => expect(screen.getByLabelText("DOI")).toHaveValue("10.1000/first"))
+
+    await user.click(screen.getByRole("button", { name: "Import from BibTeX" }))
+    await pasteBibtex(user, "@misc{b, title={Second}, author={Anna Smith}, year={2021}}")
+
+    await waitFor(() => expect(screen.getByLabelText(/Title/)).toHaveValue("Second"))
+    expect(screen.getByLabelText("DOI")).toHaveValue("")
+    expect(screen.getByLabelText("Venue")).toHaveValue("")
+  })
+
   it("adds the member and warns when they are not in the imported authors", async () => {
     const { user } = renderForm()
 
     await user.click(screen.getByRole("textbox", { name: "Paste a BibTeX entry" }))
-    await user.paste("@article{k, title={T}, author={Ben Lee}, doi={not-a-doi}}")
+    await user.paste("@article{k, title={T}, author={Ben Lee}, year={2020}, doi={not-a-doi}}")
 
     expect(await screen.findByText(/You must be an author of the publication/)).toBeInTheDocument()
     expect(screen.getByRole("textbox", { name: "Author 1 name" })).toHaveValue("Anna Smith")

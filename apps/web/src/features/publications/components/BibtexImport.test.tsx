@@ -86,7 +86,7 @@ describe("BibtexImport", () => {
 
   it("shows the warning when the member is not an author", async () => {
     const { onImport } = renderImport()
-    enter("@article{k, title={T}, author={Ben Lee}}")
+    enter("@article{k, title={T}, author={Ben Lee}, year={2020}}")
     await advance(BIBTEX_DEBOUNCE_MS)
 
     expect(onImport).toHaveBeenCalledTimes(1)
@@ -115,5 +115,19 @@ describe("BibtexImport", () => {
     await advance(BIBTEX_DEBOUNCE_MS)
 
     expect(onImport).toHaveBeenCalledTimes(1)
+  })
+
+  it("shows an error and stays open when applying the import fails", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    const onImport = vi.fn(() => {
+      throw new Error("boom")
+    })
+    render(<BibtexImport onImport={onImport} self={self} />)
+    enter(ENTRY)
+    await advance(BIBTEX_DEBOUNCE_MS)
+
+    expect(screen.getByText(/Could not import this entry/)).toBeInTheDocument()
+    expect(screen.queryByText(/Filled/)).not.toBeInTheDocument()
+    expect(trigger()).toHaveAttribute("aria-expanded", "true")
   })
 })

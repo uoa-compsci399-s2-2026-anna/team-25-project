@@ -203,11 +203,13 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
   })
 
   const handleImport = ({ values, authors }: BibtexImportResult) => {
-    // Server errors describe the values that the import replaces.
+    // Clear server errors. They describe the values from before the import.
     setFieldErrors({})
     setFormError(undefined)
     setManualOpen(true)
 
+    // Start from a blank form, so no field keeps a value from an earlier import.
+    form.reset()
     const names = Object.keys(values) as (keyof BibtexImportValues)[]
     for (const name of names) {
       // setFieldValue marks the field as touched and runs its change validators.
@@ -215,7 +217,7 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
     }
     if (authors) form.setFieldValue("authors", authors)
 
-    // Most fields validate on blur, so run those too. Then a problem such as a bad
+    // Most validated fields use onBlur, so run those too. Then a problem such as a bad
     // DOI shows on the field, the same as when the user types it.
     for (const name of names) void form.validateField(name, "blur")
     for (const [index, author] of (authors ?? []).entries()) {

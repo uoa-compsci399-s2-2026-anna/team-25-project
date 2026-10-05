@@ -83,7 +83,10 @@ describe("parseBibtexImport", () => {
       ["initial and middle name", "M. J. Somerville"],
       ["different case and accents", "MIKAI Sómerville"],
     ])("matches by %s", (_, name) => {
-      const result = parseBibtexImport(`@article{k, title={T}, author={Ann Lee and ${name}}}`, self)
+      const result = parseBibtexImport(
+        `@article{k, title={T}, year={2020}, author={Ann Lee and ${name}}}`,
+        self,
+      )
       expect(authorNames(result)).toEqual(["Ann Lee", "<self>"])
       expect(texts(result, "warning")).toEqual([])
     })
@@ -94,7 +97,10 @@ describe("parseBibtexImport", () => {
     })
 
     it("adds the member first with a warning when they are not found", () => {
-      const result = parseBibtexImport("@article{k, title={T}, author={Ann Lee and Bo Chen}}", self)
+      const result = parseBibtexImport(
+        "@article{k, title={T}, year={2020}, author={Ann Lee and Bo Chen}}",
+        self,
+      )
       expect(authorNames(result)).toEqual(["<self>", "Ann Lee", "Bo Chen"])
       expect(texts(result, "warning")).toEqual([SELF_NOT_FOUND_WARNING])
     })
@@ -160,10 +166,28 @@ describe("parseBibtexImport", () => {
     expect(result.values.month).toBeUndefined()
   })
 
-  it("gives a hint for a year it cannot read", () => {
+  it("warns about a year it cannot read", () => {
     const result = parseBibtexImport("@article{k, title={T}, year={in press}}", self)
     expect(result.values.year).toBeUndefined()
-    expect(texts(result, "info")).toContain('Could not read the year "in press".')
+    expect(texts(result, "warning")).toEqual([
+      'Could not read the year "in press". Check the year.',
+    ])
+  })
+
+  it("warns when the year is missing", () => {
+    const result = parseBibtexImport("@article{k, title={T}}", self)
+    expect(result.values.year).toBeUndefined()
+    expect(texts(result, "warning")).toEqual(["The entry has no year. Check the year."])
+  })
+
+  it("prefers year and month over date", () => {
+    const result = parseBibtexImport(
+      "@article{k, title={T}, year={2020}, month={feb}, date={2019-05}}",
+      self,
+    )
+    expect(result.values.year).toBe(2020)
+    expect(result.values.month).toBe("2")
+    expect(texts(result, "info")).toEqual([])
   })
 
   it.each(["doi:10.1000/xyz", "https://dx.doi.org/10.1000/xyz", "http://doi.org/10.1000/xyz"])(
@@ -175,10 +199,27 @@ describe("parseBibtexImport", () => {
   )
 
   it("warns about a DOI that does not look correct", () => {
-    const result = parseBibtexImport("@article{k, title={T}, doi={not-a-doi}}", self)
+    const result = parseBibtexImport("@article{k, title={T}, year={2020}, doi={not-a-doi}}", self)
     expect(result.values.doi).toBe("not-a-doi")
     expect(texts(result, "warning")).toEqual([
       'The DOI "not-a-doi" does not look correct. Check it.',
+    ])
+  })
+
+  it.each(["javascript:alert(1)", "example.com/paper"])("warns about the URL %s", (url) => {
+    const result = parseBibtexImport(`@article{k, title={T}, year={2020}, url={${url}}}`, self)
+    expect(result.values.url).toBe(url)
+    expect(texts(result, "warning")).toEqual([`The URL "${url}" does not look correct. Check it.`])
+  })
+
+  it("warns about LaTeX commands it could not read and keeps their argument", () => {
+    const result = parseBibtexImport(
+      String.raw`@article{k, title={A \foo{bar} \unknowncmd b}, year={2020}}`,
+      self,
+    )
+    expect(result.values.title).toBe("A bar b")
+    expect(texts(result, "warning")).toEqual([
+      String.raw`Some LaTeX commands could not be read and were removed: \foo, \unknowncmd. Check the fields.`,
     ])
   })
 
@@ -226,7 +267,7 @@ describe("parseBibtexImport", () => {
   })
 
   it("puts warnings before hints", () => {
-    const result = parseBibtexImport("@dataset{k, author={Ann Lee}, isbn={1}}", self)
+    const result = parseBibtexImport("@dataset{k, author={Ann Lee}, year={2020}, isbn={1}}", self)
     expect(result.messages.map((message) => message.level)).toEqual([
       "warning",
       "warning",
