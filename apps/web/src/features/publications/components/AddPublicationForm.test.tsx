@@ -23,6 +23,31 @@ const openManualEntry = (user: ReturnType<typeof userEvent.setup>) =>
 const submit = (user: ReturnType<typeof userEvent.setup>) =>
   user.click(screen.getByRole("button", { name: "Add publication" }))
 
+// jsdom lays nothing out, so give the list and each row a size and position for
+// the keyboard sensor and the restrictToParentElement modifier. The handle sits in
+// the row, and the row sits in the list.
+const mockAuthorLayout = () => {
+  const handles = screen.getAllByRole("button", { name: /^Reorder/ })
+  for (const [index, handle] of handles.entries()) {
+    const row = handle.parentElement as HTMLElement
+    vi.spyOn(row, "getBoundingClientRect").mockReturnValue(
+      DOMRect.fromRect({ height: 40, width: 300, x: 0, y: index * 50 }),
+    )
+  }
+  const list = handles[0]?.parentElement?.parentElement as HTMLElement
+  vi.spyOn(list, "getBoundingClientRect").mockReturnValue(
+    DOMRect.fromRect({ height: handles.length * 50, width: 300, x: 0, y: 0 }),
+  )
+}
+
+const moveFirstAuthorDown = async (user: ReturnType<typeof userEvent.setup>) => {
+  mockAuthorLayout()
+  screen.getByRole("button", { name: "Reorder author 1" }).focus()
+  await user.keyboard(" ")
+  await user.keyboard("{ArrowDown}")
+  await user.keyboard(" ")
+}
+
 describe("AddPublicationForm", () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -60,29 +85,42 @@ describe("AddPublicationForm", () => {
     await user.click(screen.getByRole("button", { name: "+ Add author" }))
     await user.type(screen.getByRole("textbox", { name: "Author 2 name" }), "Ben Lee")
 
-    // jsdom lays nothing out, so give the list and each row a size and position
-    // for the keyboard sensor and the restrict-to-list modifier.
-    const handles = screen.getAllByRole("button", { name: /^Reorder/ })
-    for (const [index, handle] of handles.entries()) {
-      const row = handle.parentElement as HTMLElement
-      vi.spyOn(row, "getBoundingClientRect").mockReturnValue(
-        DOMRect.fromRect({ height: 40, width: 300, x: 0, y: index * 50 }),
-      )
-    }
-    const list = handles[0]?.parentElement?.parentElement as HTMLElement
-    vi.spyOn(list, "getBoundingClientRect").mockReturnValue(
-      DOMRect.fromRect({ height: handles.length * 50, width: 300, x: 0, y: 0 }),
-    )
-
-    screen.getByRole("button", { name: "Reorder author 1" }).focus()
-    await user.keyboard(" ")
-    await user.keyboard("{ArrowDown}")
-    await user.keyboard(" ")
+    await moveFirstAuthorDown(user)
 
     await waitFor(() =>
       expect(screen.getByRole("textbox", { name: "Author 2 name" })).toHaveValue("Anna Smith"),
     )
     expect(screen.getByRole("textbox", { name: "Author 1 name" })).toHaveValue("Ben Lee")
+  })
+
+  it("submits the authors in their new order after a move", async () => {
+    vi.mocked(createPublication).mockResolvedValue({ ok: true })
+    const { onSuccess, user } = renderForm()
+    await openManualEntry(user)
+    await user.type(screen.getByLabelText(/Title/), "Teamwork in capstones")
+    await user.click(screen.getByRole("button", { name: "+ Add author" }))
+    await user.type(screen.getByRole("textbox", { name: "Author 2 name" }), "Ben Lee")
+
+    await moveFirstAuthorDown(user)
+    await waitFor(() =>
+      expect(screen.getByRole("textbox", { name: "Author 1 name" })).toHaveValue("Ben Lee"),
+    )
+    await submit(user)
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled())
+    expect(vi.mocked(createPublication).mock.calls[0]?.[0]).toMatchObject({
+      authors: [{ kind: "coAuthor", name: "Ben Lee" }, { kind: "self" }],
+    })
+  })
+
+  it("says the year is required when the year is cleared", async () => {
+    const { user } = renderForm()
+    await openManualEntry(user)
+
+    await user.clear(screen.getByLabelText(/Year/))
+    await user.tab()
+
+    expect(await screen.findByText("Year is required")).toBeInTheDocument()
   })
 
   it("opens manual entry to show required errors and does not call the action", async () => {
@@ -221,5 +259,57 @@ describe("AddPublicationForm", () => {
     expect(screen.getByText("Link yourself as one of the authors.")).toBeInTheDocument()
     expect(screen.getByText("Could not add this publication. Try again.")).toBeInTheDocument()
     expect(onSuccess).not.toHaveBeenCalled()
+  })
+
+  it("shows a form error and does not close when the action throws", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    vi.mocked(createPublication).mockRejectedValue(new Error("network"))
+    const { onSuccess, user } = renderForm()
+    await openManualEntry(user)
+
+    await user.type(screen.getByLabelText(/Title/), "Teamwork in capstones")
+    await submit(user)
+
+    expect(
+      await screen.findByText("Could not add this publication. Try again."),
+    ).toBeInTheDocument()
+    expect(onSuccess).not.toHaveBeenCalled()
+  })
+
+  it("shows a server error for a field the form does not have as a form error", async () => {
+    vi.mocked(createPublication).mockResolvedValue({
+      fieldErrors: { "authors.0.member": "This member does not exist." },
+      ok: false,
+    })
+    const { user } = renderForm()
+    await openManualEntry(user)
+
+    await user.type(screen.getByLabelText(/Title/), "Teamwork in capstones")
+    await submit(user)
+
+    expect(await screen.findByText("This member does not exist.")).toBeInTheDocument()
+  })
+
+  it("clears author server errors when an author is removed", async () => {
+    vi.mocked(createPublication).mockResolvedValue({
+      fieldErrors: { "authors.2.name": "This name is too long." },
+      ok: false,
+    })
+    const { user } = renderForm()
+    await openManualEntry(user)
+    await user.type(screen.getByLabelText(/Title/), "Teamwork in capstones")
+    for (const name of ["Ben Lee", "Cara Ngata", "Dan Park"]) {
+      await user.click(screen.getByRole("button", { name: "+ Add author" }))
+      const rows = screen.getAllByRole("textbox", { name: /^Author \d+ name$/ })
+      await user.type(rows[rows.length - 1] as HTMLElement, name)
+    }
+    await submit(user)
+    expect(await screen.findByText("This name is too long.")).toBeInTheDocument()
+
+    // Dan moves into the row the error was keyed to.
+    await user.click(screen.getByRole("button", { name: "Remove author 2" }))
+
+    expect(screen.getByRole("textbox", { name: "Author 3 name" })).toHaveValue("Dan Park")
+    expect(screen.queryByText("This name is too long.")).not.toBeInTheDocument()
   })
 })

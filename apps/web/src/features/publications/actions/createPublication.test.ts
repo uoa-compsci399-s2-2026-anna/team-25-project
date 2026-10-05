@@ -73,6 +73,16 @@ describe("createPublication", () => {
     expect(payload.create).not.toHaveBeenCalled()
   })
 
+  it("returns a form error for input with no field to show on", async () => {
+    const payload = mockPayload()
+
+    expect(await createPublication("not a form")).toEqual({
+      formError: "Could not add this publication. Check the form and try again.",
+      ok: false,
+    })
+    expect(payload.create).not.toHaveBeenCalled()
+  })
+
   it("rejects a non-web URL", async () => {
     const payload = mockPayload()
 
@@ -97,6 +107,23 @@ describe("createPublication", () => {
 
     await expect(createPublication(input)).resolves.toEqual({ formError, ok: false })
     expect(payload.create).not.toHaveBeenCalled()
+  })
+
+  it("does not let a client link another member as a co-author", async () => {
+    const payload = mockPayload()
+
+    await createPublication({
+      ...input,
+      authors: [
+        { id: "1", kind: "self" },
+        { id: "2", kind: "coAuthor", member: 99, name: "Ben Lee" },
+      ],
+    })
+
+    expect(payload.create.mock.calls[0]?.[0].data.authors).toEqual([
+      { member: 7, name: "Anna Smith" },
+      { name: "Ben Lee" },
+    ])
   })
 
   it("adds the signed-in member as the linked first author and drops blank fields", async () => {
@@ -184,6 +211,17 @@ describe("createPublication", () => {
       formError: "Could not add this publication. Try again.",
       ok: false,
     })
+    expect(payload.logger.error).toHaveBeenCalled()
+    expect(updateTag).not.toHaveBeenCalled()
+  })
+
+  it("still succeeds when the cache update fails after the save", async () => {
+    const payload = mockPayload()
+    vi.mocked(updateTag).mockImplementationOnce(() => {
+      throw new Error("cache down")
+    })
+
+    expect(await createPublication(input)).toEqual({ ok: true })
     expect(payload.logger.error).toHaveBeenCalled()
   })
 })

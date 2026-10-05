@@ -40,8 +40,10 @@ const resultFromValidationError = (
     : { formError: fallbackFormError, ok: false }
 }
 
-// The form sends every field, so a blank optional one must reach `create()`
-// as `undefined`, never `""`.
+const CREATE_FAILED = "Could not add this publication. Try again."
+
+// Trim each optional field and store a blank one as unset, not "". The
+// collection's blankToNull hooks also guard the unique fields.
 const blankToUndefined = (value: string) => {
   const trimmed = value.trim()
   return trimmed ? trimmed : undefined
@@ -58,7 +60,11 @@ const parseTags = (tags: string) => {
 export const createPublication = async (input: unknown): Promise<ActionResult> => {
   const parsed = addPublicationFormSchema.safeParse(input)
   if (!parsed.success) {
-    return { fieldErrors: fieldErrorsFromIssues(parsed.error.issues), ok: false }
+    const fieldErrors = fieldErrorsFromIssues(parsed.error.issues)
+    // An issue with no path (a non-object input) has no field to show on.
+    return Object.keys(fieldErrors).length > 0
+      ? { fieldErrors, ok: false }
+      : { formError: "Could not add this publication. Check the form and try again.", ok: false }
   }
 
   const { collection, user } = await getCurrentUser()
@@ -108,13 +114,18 @@ export const createPublication = async (input: unknown): Promise<ActionResult> =
     })
   } catch (error) {
     if (error instanceof ValidationError) {
-      return resultFromValidationError(error, "Could not add this publication. Try again.")
+      return resultFromValidationError(error, CREATE_FAILED)
     }
-    payload.logger.error({ err: error }, "createPublication failed")
-    return { formError: "Could not add this publication. Try again.", ok: false }
+    payload.logger.error({ err: error, userId: user.id }, "createPublication failed")
+    return { formError: CREATE_FAILED, ok: false }
   }
 
-  updateTag(QueryKeys.PUBLICATIONS.ROOT)
+  // The publication is saved. A cache failure must not make the user add it again.
+  try {
+    updateTag(QueryKeys.PUBLICATIONS.ROOT)
+  } catch (error) {
+    payload.logger.error({ err: error }, "createPublication could not update the cache")
+  }
 
   return { ok: true }
 }

@@ -53,6 +53,7 @@ import {
 } from "@repo/ui/components/ui"
 import { type AnyFieldApi, useForm } from "@tanstack/react-form"
 import { type ComponentProps, type ReactNode, useId, useState } from "react"
+import type { ActionResult } from "@/features/auth/actions/types"
 import { createPublication } from "../actions/createPublication"
 import { BibtexImport } from "./BibtexImport"
 import { SectionTrigger } from "./SectionTrigger"
@@ -75,6 +76,27 @@ const MONTHS = [
   "December",
 ]
 const formShape = addPublicationFormSchema.shape
+
+const CREATE_FAILED = "Could not add this publication. Try again."
+
+// Server field errors that the form shows next to a field. Any other key (for
+// example a Payload error on a field the form does not have) goes in the form error.
+const isShownField = (key: string) => key in formShape || /^authors\.\d+\.name$/.test(key)
+
+const splitServerErrors = (fieldErrors: Record<string, string> = {}) => {
+  const shown: Record<string, string> = {}
+  const other: string[] = []
+  for (const [key, message] of Object.entries(fieldErrors)) {
+    if (isShownField(key)) shown[key] = message
+    else other.push(message)
+  }
+  return { shown, other }
+}
+
+// Server errors for authors are keyed by row index, so they point at the wrong
+// row after a row moves or is removed.
+const withoutAuthorErrors = (errors: Record<string, string>) =>
+  Object.fromEntries(Object.entries(errors).filter(([key]) => !key.startsWith("authors.")))
 
 const RequiredAsterisk = () => (
   <span aria-hidden="true" className="text-destructive">
@@ -121,6 +143,8 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
   const [formError, setFormError] = useState<string | undefined>(undefined)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [manualOpen, setManualOpen] = useState(false)
+  const [selfAuthorId] = useState(() => crypto.randomUUID())
+  // Keeps the dnd-kit ARIA ids the same on the server and the client.
   const dndContextId = useId()
   const sensors = useSensors(
     // A small distance lets a click on the handle focus it without starting a drag.
@@ -132,7 +156,7 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
     defaultValues: {
       type: PublicationType.ARTICLE as PublicationType,
       title: "",
-      authors: [{ id: crypto.randomUUID(), kind: "self" }] as AddPublicationFormInput["authors"],
+      authors: [{ id: selfAuthorId, kind: "self" }] as AddPublicationFormInput["authors"],
       year: new Date().getFullYear(),
       month: "",
       doi: "",
@@ -153,21 +177,28 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
       setFieldErrors({})
       setFormError(undefined)
 
+      // Only the action call is in the try. An error after a successful save must
+      // not tell the user to add the publication again.
+      let result: ActionResult
       try {
-        const result = await createPublication(value)
-        if (result.ok) {
-          toast.add({ type: "success", title: "Publication added" })
-          formApi.reset()
-          onSuccess?.()
-          return
-        }
-
-        setFieldErrors(result.fieldErrors ?? {})
-        setFormError(result.formError)
-        if (result.fieldErrors) setManualOpen(true)
-      } catch {
-        setFormError("Could not add this publication. Try again.")
+        result = await createPublication(value)
+      } catch (error) {
+        console.error("createPublication failed", error)
+        setFormError(CREATE_FAILED)
+        return
       }
+
+      if (result.ok) {
+        toast.add({ type: "success", title: "Publication added" })
+        formApi.reset()
+        onSuccess?.()
+        return
+      }
+
+      const { shown, other } = splitServerErrors(result.fieldErrors)
+      setFieldErrors(shown)
+      setFormError([result.formError, ...other].filter(Boolean).join(" ") || undefined)
+      if (Object.keys(shown).length > 0) setManualOpen(true)
     },
   })
 
@@ -289,12 +320,7 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                   const handleDragEnd = ({ active, over }: DragEndEvent) => {
                     if (!over || active.id === over.id) return
                     authorsField.moveValue(indexOf(active.id), indexOf(over.id))
-                    // Server errors are keyed by index, so they point at the wrong row after a move.
-                    setFieldErrors((errors) =>
-                      Object.fromEntries(
-                        Object.entries(errors).filter(([key]) => !key.startsWith("authors.")),
-                      ),
-                    )
+                    setFieldErrors(withoutAuthorErrors)
                   }
 
                   return (
@@ -317,14 +343,19 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                           <div className="flex flex-col gap-3">
                             {rows.map((row, index) => {
                               const position = index + 1
+                              const serverError = fieldErrors[`authors.${index}.name`]
                               return (
                                 <SortableAuthorRow id={row.id} key={row.id} position={position}>
+                                  {/* No Remove button: the schema needs the member exactly once. */}
                                   {row.kind === "self" ? (
-                                    <Input
-                                      aria-label={`Author ${position} name`}
-                                      disabled
-                                      value={defaultAuthorName}
-                                    />
+                                    <Field>
+                                      <Input
+                                        aria-label={`Author ${position} name`}
+                                        disabled
+                                        value={defaultAuthorName}
+                                      />
+                                      {serverError && <FieldError>{serverError}</FieldError>}
+                                    </Field>
                                   ) : (
                                     <form.Field
                                       name={`authors[${index}].name`}
@@ -332,7 +363,6 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                                     >
                                       {(field) => {
                                         const invalid = isInvalid(field)
-                                        const serverError = fieldErrors[`authors.${index}.name`]
                                         return (
                                           <Field data-invalid={invalid || undefined}>
                                             <div className="flex items-center gap-3">
@@ -349,7 +379,10 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                                               />
                                               <Button
                                                 aria-label={`Remove author ${position}`}
-                                                onClick={() => authorsField.removeValue(index)}
+                                                onClick={() => {
+                                                  authorsField.removeValue(index)
+                                                  setFieldErrors(withoutAuthorErrors)
+                                                }}
                                                 size="sm"
                                                 type="button"
                                                 variant="button-transparent"
@@ -372,6 +405,7 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                           </div>
                         </SortableContext>
                       </DndContext>
+                      <FieldError errors={authorsField.state.meta.errors} />
                       {fieldErrors.authors && <FieldError>{fieldErrors.authors}</FieldError>}
                       <div>
                         <Button
@@ -411,9 +445,10 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                           max={latestPublicationYear()}
                           name={field.name}
                           onBlur={field.handleBlur}
-                          onChange={(event) => field.handleChange(Number(event.target.value))}
+                          // An empty input gives NaN, so the schema says the year is required.
+                          onChange={(event) => field.handleChange(event.target.valueAsNumber)}
                           type="number"
-                          value={field.state.value}
+                          value={Number.isNaN(field.state.value) ? "" : field.state.value}
                         />
                         {invalid && <FieldError errors={field.state.meta.errors} />}
                         {fieldErrors.year && <FieldError>{fieldErrors.year}</FieldError>}
