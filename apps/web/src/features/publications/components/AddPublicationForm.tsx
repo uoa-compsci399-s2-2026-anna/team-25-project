@@ -149,6 +149,19 @@ const memberRow = (
   matched?: boolean,
 ): AuthorRow => ({ id, kind: "member", memberId: member.id, member, name, matched })
 
+// What the user can change in the author list. A member the import matched counts
+// as the printed name, so a match does not count as a user change.
+const authorsKey = (rows: AuthorRow[]) =>
+  JSON.stringify(
+    rows.map((row) =>
+      row.kind === "member" && !row.matched
+        ? `member:${row.memberId}`
+        : `${row.kind === "self" ? "self" : "name"}:${row.name}`,
+    ),
+  )
+
+type LastImport = { values: BibtexImportValues; authors?: AuthorRow[] }
+
 type AddPublicationFormProps = {
   /** The signed-in member, shown on their own author row. */
   currentUser: PersonName
@@ -163,6 +176,8 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
   const [selfAuthorId] = useState(() => crypto.randomUUID())
   // Only the latest import may apply its member matches.
   const importCount = useRef(0)
+  // The values the last import set. A re-import keeps any value the user changed after it.
+  const lastImport = useRef<LastImport>({ values: {} })
   // Keeps the dnd-kit ARIA ids the same on the server and the client.
   const dndContextId = useId()
   const sensors = useSensors(
@@ -210,6 +225,7 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
       if (result.ok) {
         toast.add({ type: "success", title: "Publication added" })
         formApi.reset()
+        lastImport.current = { values: {} }
         onSuccess?.()
         return
       }
@@ -252,20 +268,33 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
     setFormError(undefined)
     setManualOpen(true)
 
-    // Start from a blank form, so no field keeps a value from an earlier import.
-    form.reset()
-    const names = Object.keys(values) as (keyof BibtexImportValues)[]
-    for (const name of names) {
+    // Replace only the values the user did not change after the last import (or
+    // since the form opened). A field the new entry does not have goes back to
+    // its default, so it does not keep a value from an earlier import.
+    const defaults = form.options.defaultValues ?? form.state.values
+    const previous = lastImport.current
+    const imported: (keyof BibtexImportValues)[] = []
+    for (const name of Object.keys(defaults) as (keyof typeof defaults)[]) {
+      if (name === "authors") continue
+      const before = previous.values[name] ?? defaults[name]
+      if (form.getFieldValue(name) !== before) continue
+      const next = values[name] ?? defaults[name]
       // setFieldValue marks the field as touched and runs its change validators.
-      form.setFieldValue(name, values[name] as never)
+      if (next !== before) form.setFieldValue(name, next as never)
+      if (name in values) imported.push(name)
     }
-    if (authors) form.setFieldValue("authors", authors)
-    void matchImportedAuthors(authors ? coAuthorNames : [])
+
+    const keepAuthors =
+      authorsKey(form.getFieldValue("authors")) !== authorsKey(previous.authors ?? defaults.authors)
+    const nextAuthors = keepAuthors ? undefined : (authors ?? defaults.authors)
+    if (nextAuthors) form.setFieldValue("authors", nextAuthors)
+    lastImport.current = { values, authors: nextAuthors ?? previous.authors }
+    void matchImportedAuthors(nextAuthors && authors ? coAuthorNames : [])
 
     // Most validated fields use onBlur, so run those too. Then a problem such as a bad
     // DOI shows on the field, the same as when the user types it.
-    for (const name of names) void form.validateField(name, "blur")
-    for (const [index, author] of (authors ?? []).entries()) {
+    for (const name of imported) void form.validateField(name, "blur")
+    for (const [index, author] of (nextAuthors ?? []).entries()) {
       if (author.kind !== "self") void form.validateField(`authors[${index}].name`, "blur")
     }
   }

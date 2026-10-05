@@ -281,6 +281,30 @@ describe("AddPublicationForm", () => {
     expect(screen.getByLabelText("Venue")).toHaveValue("")
   })
 
+  it("keeps values the user changed when a new entry is imported", async () => {
+    const { user } = renderForm()
+
+    await pasteBibtex(
+      user,
+      "@article{a, title={First}, author={Anna Smith and Ben Lee}, year={2020}}",
+    )
+    await waitFor(() => expect(screen.getByLabelText(/Title/)).toHaveValue("First"))
+    await user.clear(screen.getByLabelText(/Title/))
+    await user.type(screen.getByLabelText(/Title/), "My title")
+    await user.clear(screen.getByLabelText("Author 2 name"))
+    await user.type(screen.getByLabelText("Author 2 name"), "Benjamin Lee{Escape}")
+
+    await user.click(screen.getByRole("button", { name: "Import from BibTeX" }))
+    await pasteBibtex(
+      user,
+      "@article{a, title={Second}, author={Anna Smith and Cara Diaz}, year={2021}}",
+    )
+
+    await waitFor(() => expect(screen.getByLabelText(/Year/)).toHaveValue(2021))
+    expect(screen.getByLabelText(/Title/)).toHaveValue("My title")
+    expect(screen.getByLabelText("Author 2 name")).toHaveValue("Benjamin Lee")
+  })
+
   it("adds the member and warns when they are not in the imported authors", async () => {
     const { user } = renderForm()
 
