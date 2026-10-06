@@ -2,21 +2,13 @@
 
 import { buttonVariants } from "@repo/ui/components/ui"
 import Link from "next/link"
-import { usePathname, useSearchParams } from "next/navigation"
-import { isAuthRoute, REDIRECT_PARAM, withRedirect } from "@/features/auth/redirect"
+import { withRedirect } from "@/features/auth/redirect"
 import { Routes } from "@/lib/routes"
+import { useAuthRedirectTarget } from "./useAuthRedirectTarget"
 
 /** Client-side so the links can send the user back to the page they are on after auth. */
 export const NavGuestLinks = () => {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const search = searchParams.toString()
-  // On an auth page, pass on the destination the user already has, not the auth page.
-  const target = isAuthRoute(pathname)
-    ? searchParams.get(REDIRECT_PARAM)
-    : search
-      ? `${pathname}?${search}`
-      : pathname
+  const target = useAuthRedirectTarget()
 
   return (
     <div className="flex items-center gap-4">
