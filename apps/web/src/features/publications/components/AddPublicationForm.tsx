@@ -27,6 +27,7 @@ import {
 import type {
   BibtexImportResult,
   BibtexImportValues,
+  ImportedAuthor,
   PersonName,
 } from "@repo/shared/utils/bibtex-import"
 import { toSelectOptions } from "@repo/shared/utils/select-options"
@@ -37,6 +38,7 @@ import {
   CollapsiblePanel,
   DialogFooter,
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -51,11 +53,14 @@ import {
   TextArea,
   toast,
 } from "@repo/ui/components/ui"
-import { type AnyFieldApi, useForm } from "@tanstack/react-form"
-import { type ComponentProps, type ReactNode, useId, useState } from "react"
+import { type AnyFieldApi, type StandardSchemaV1, useForm } from "@tanstack/react-form"
+import { type ComponentProps, type ReactNode, useId, useRef, useState } from "react"
 import type { ActionResult } from "@/features/auth/actions/types"
 import { createPublication } from "../actions/createPublication"
-import { BibtexImport } from "./BibtexImport/BibtexImport"
+import { matchBibtexAuthors } from "../actions/matchBibtexAuthors"
+import type { AuthorCandidate, AuthorMatchResult } from "../publications.types"
+import { AuthorPicker, candidateName, LinkedAuthor } from "./AuthorPicker"
+import { BibtexImport, type ImportSummary } from "./BibtexImport/BibtexImport"
 import { SectionTrigger } from "./SectionTrigger"
 import { SortableAuthorRow } from "./SortableAuthorRow"
 
@@ -78,10 +83,11 @@ const MONTHS = [
 const formShape = addPublicationFormSchema.shape
 
 const CREATE_FAILED = "Could not add this publication. Try again."
+const MATCH_FAILED = "Could not match the imported authors to members. Link them by hand."
 
 // Server field errors that the form shows next to a field. Any other key (for
 // example a Payload error on a field the form does not have) goes in the form error.
-const isShownField = (key: string) => key in formShape || /^authors\.\d+\.name$/.test(key)
+const isShownField = (key: string) => key in formShape || /^authors\.\d+\.(name|member)$/.test(key)
 
 const splitServerErrors = (fieldErrors: Record<string, string> = {}) => {
   const shown: Record<string, string> = {}
@@ -132,6 +138,41 @@ const TextInputField = ({ field, label, serverError, ...inputProps }: TextInputF
   )
 }
 
+type FormAuthor = AddPublicationFormInput["authors"][number]
+
+// A linked row also holds the member's profile to show, and whether the BibTeX import
+// chose them. The schema strips both.
+type MemberRow = Extract<FormAuthor, { kind: "member" }> & {
+  member: AuthorCandidate
+  matched: boolean
+}
+type AuthorRow = ImportedAuthor | MemberRow
+
+const memberRow = (
+  id: string,
+  member: AuthorCandidate,
+  name: string,
+  matched: boolean,
+): MemberRow => ({ id, kind: "member", memberId: member.id, member, name, matched })
+
+// What the user can change in the author list. An empty external row is not a change.
+const authorsKey = (rows: AuthorRow[]) =>
+  JSON.stringify(
+    rows.flatMap((row) => {
+      if (row.kind === "member") return [`member:${row.memberId}`]
+      if (row.kind === "external" && !row.name.trim()) return []
+      return [`${row.kind}:${row.name}`]
+    }),
+  )
+
+type FormValues = Omit<AddPublicationFormInput, "authors"> & { authors: AuthorRow[] }
+
+// TanStack wants the schema's input to be the form's type. A member row adds fields
+// that the schema strips, so it is a valid input, but zod cannot type the extra fields.
+const submitSchema = addPublicationFormSchema as unknown as StandardSchemaV1<FormValues>
+
+type LastImport = { values: BibtexImportValues; authors?: AuthorRow[] }
+
 type AddPublicationFormProps = {
   /** The signed-in member, shown on their own author row. */
   currentUser: PersonName
@@ -143,7 +184,12 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
   const [formError, setFormError] = useState<string | undefined>(undefined)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [manualOpen, setManualOpen] = useState(false)
+  const [matchError, setMatchError] = useState<string | undefined>(undefined)
   const [selfAuthorId] = useState(() => crypto.randomUUID())
+  // Only the latest import may apply its member matches.
+  const importCount = useRef(0)
+  // The values the last import set. A re-import keeps any value the user changed after it.
+  const lastImport = useRef<LastImport>({ values: {} })
   // Keeps the dnd-kit ARIA ids the same on the server and the client.
   const dndContextId = useId()
   const sensors = useSensors(
@@ -156,7 +202,7 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
     defaultValues: {
       type: PublicationType.ARTICLE as PublicationType,
       title: "",
-      authors: [{ id: selfAuthorId, kind: "self" }] as AddPublicationFormInput["authors"],
+      authors: [{ id: selfAuthorId, kind: "self", name: "" }] as AuthorRow[],
       year: new Date().getFullYear(),
       month: "",
       doi: "",
@@ -170,7 +216,7 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
       abstract: "",
       tags: "",
     },
-    validators: { onSubmit: addPublicationFormSchema },
+    validators: { onSubmit: submitSchema },
     // Errors show on the fields, so open the section that holds them.
     onSubmitInvalid: () => setManualOpen(true),
     onSubmit: async ({ value, formApi }) => {
@@ -191,6 +237,10 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
       if (result.ok) {
         toast.add({ type: "success", title: "Publication added" })
         formApi.reset()
+        lastImport.current = { values: {} }
+        // A match that is still running must not change the empty form.
+        importCount.current++
+        setMatchError(undefined)
         onSuccess?.()
         return
       }
@@ -202,26 +252,93 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
     },
   })
 
-  const handleImport = ({ values, authors }: BibtexImportResult) => {
+  // Links imported names to members. A failure keeps them as external authors.
+  const matchImportedAuthors = async (
+    authors: AuthorRow[],
+    coAuthorNames: BibtexImportResult["coAuthorNames"],
+  ) => {
+    const thisImport = ++importCount.current
+    if (coAuthorNames.length === 0) return
+
+    let result: AuthorMatchResult
+    try {
+      result = await matchBibtexAuthors(coAuthorNames.map(({ name }) => name))
+    } catch (error) {
+      console.error("Could not match imported authors to members", error)
+      result = { ok: false }
+    }
+    if (thisImport !== importCount.current) return
+    if (!result.ok) {
+      setMatchError(MATCH_FAILED)
+      return
+    }
+
+    const printed = new Map(authors.map((row) => [row.id, row.name]))
+    const linked = new Map<string, MemberRow>()
+    const rows = form.getFieldValue("authors")
+    for (const [i, { rowId }] of coAuthorNames.entries()) {
+      const member = result.matches[i]
+      const index = rows.findIndex((row) => row.id === rowId)
+      const row = rows[index]
+      // Skip a row the user linked, removed or renamed while the match ran.
+      if (!member || row?.kind !== "external" || row.name !== printed.get(rowId)) continue
+      const next = memberRow(rowId, member, row.name, true)
+      form.replaceFieldValue("authors", index, next)
+      linked.set(rowId, next)
+    }
+    // The links are part of the import, so a later unlink counts as a user change.
+    lastImport.current = {
+      ...lastImport.current,
+      authors: authors.map((row) => linked.get(row.id) ?? row),
+    }
+  }
+
+  const handleImport = ({ values, authors, coAuthorNames }: BibtexImportResult): ImportSummary => {
     // Clear server errors. They describe the values from before the import.
     setFieldErrors({})
     setFormError(undefined)
+    setMatchError(undefined)
     setManualOpen(true)
 
-    // Start from a blank form, so no field keeps a value from an earlier import.
-    form.reset()
-    const names = Object.keys(values) as (keyof BibtexImportValues)[]
-    for (const name of names) {
+    // Replace only the values the user did not change after the last import (or
+    // since the form opened). A field the new entry does not have goes back to
+    // its default, so it does not keep a value from an earlier import.
+    const defaults = form.options.defaultValues ?? form.state.values
+    const previous = lastImport.current
+    const imported: (keyof BibtexImportValues)[] = []
+    let kept = 0
+    for (const name of Object.keys(defaults) as (keyof typeof defaults)[]) {
+      if (name === "authors") continue
+      const before = previous.values[name] ?? defaults[name]
+      if (form.getFieldValue(name) !== before) {
+        if (name in values) kept++
+        continue
+      }
+      const next = values[name] ?? defaults[name]
       // setFieldValue marks the field as touched and runs its change validators.
-      form.setFieldValue(name, values[name] as never)
+      if (next !== before) form.setFieldValue(name, next as never)
+      if (name in values) imported.push(name)
     }
-    if (authors) form.setFieldValue("authors", authors)
+
+    const keepAuthors =
+      authorsKey(form.getFieldValue("authors")) !== authorsKey(previous.authors ?? defaults.authors)
+    const nextAuthors = keepAuthors ? undefined : (authors ?? defaults.authors)
+    if (nextAuthors) form.setFieldValue("authors", nextAuthors)
+    lastImport.current = { values, authors: nextAuthors ?? previous.authors }
+    // Call it with no names too, so a match from an older import cannot apply.
+    void matchImportedAuthors(nextAuthors ?? [], nextAuthors ? coAuthorNames : [])
 
     // Most validated fields use onBlur, so run those too. Then a problem such as a bad
     // DOI shows on the field, the same as when the user types it.
-    for (const name of names) void form.validateField(name, "blur")
-    for (const [index, author] of (authors ?? []).entries()) {
-      if (author.kind === "coAuthor") void form.validateField(`authors[${index}].name`, "blur")
+    for (const name of imported) void form.validateField(name, "blur")
+    for (const [index, author] of (nextAuthors ?? []).entries()) {
+      if (author.kind !== "self") void form.validateField(`authors[${index}].name`, "blur")
+    }
+
+    const importedAuthors = authors !== undefined
+    return {
+      filled: imported.length + (importedAuthors && !keepAuthors ? 1 : 0),
+      kept: kept + (importedAuthors && keepAuthors ? 1 : 0),
     }
   }
 
@@ -303,7 +420,7 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                   const describe = (id: UniqueIdentifier) => {
                     const index = indexOf(id)
                     const row = rows[index]
-                    const name = row?.kind === "self" ? defaultAuthorName : row?.name
+                    const name = row?.kind === "self" ? row.name || defaultAuthorName : row?.name
                     return `author ${index + 1}${name ? `, ${name}` : ""}`
                   }
                   const announcements: Announcements = {
@@ -345,19 +462,66 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                           <div className="flex flex-col gap-3">
                             {rows.map((row, index) => {
                               const position = index + 1
-                              const serverError = fieldErrors[`authors.${index}.name`]
+                              const serverError =
+                                fieldErrors[`authors.${index}.name`] ??
+                                fieldErrors[`authors.${index}.member`]
+                              const removeRow = () => {
+                                authorsField.removeValue(index)
+                                setFieldErrors(withoutAuthorErrors)
+                              }
+                              // The array field re-renders only when rows are added or
+                              // removed, so read the name the user typed from the form.
+                              const currentName = () =>
+                                form.getFieldValue(`authors[${index}].name`) ?? ""
+                              const linkMember = (member: AuthorCandidate) => {
+                                authorsField.replaceValue(
+                                  index,
+                                  memberRow(row.id, member, candidateName(member), false),
+                                )
+                                setFieldErrors(withoutAuthorErrors)
+                              }
+                              const removeButton = (
+                                <Button
+                                  aria-label={`Remove author ${position}`}
+                                  onClick={removeRow}
+                                  size="sm"
+                                  type="button"
+                                  variant="button-transparent"
+                                >
+                                  Remove
+                                </Button>
+                              )
+
                               return (
-                                <SortableAuthorRow id={row.id} key={row.id} position={position}>
+                                <SortableAuthorRow
+                                  centerHandle={row.kind !== "external"}
+                                  id={row.id}
+                                  key={row.id}
+                                  position={position}
+                                >
                                   {/* No Remove button: the schema needs the member exactly once. */}
                                   {row.kind === "self" ? (
-                                    <Field>
-                                      <Input
-                                        aria-label={`Author ${position} name`}
-                                        disabled
-                                        value={defaultAuthorName}
-                                      />
-                                      {serverError && <FieldError>{serverError}</FieldError>}
-                                    </Field>
+                                    <form.Field name={`authors[${index}].name`}>
+                                      {(field) => (
+                                        <Field className="gap-1.5 rounded-lg border p-2">
+                                          <Input
+                                            aria-label={`Author ${position} name`}
+                                            id={field.name}
+                                            name={field.name}
+                                            onBlur={field.handleBlur}
+                                            onChange={(event) =>
+                                              field.handleChange(event.target.value)
+                                            }
+                                            placeholder={defaultAuthorName}
+                                            value={field.state.value}
+                                          />
+                                          <FieldDescription className="text-xs">
+                                            This is you.
+                                          </FieldDescription>
+                                          {serverError && <FieldError>{serverError}</FieldError>}
+                                        </Field>
+                                      )}
+                                    </form.Field>
                                   ) : (
                                     <form.Field
                                       name={`authors[${index}].name`}
@@ -367,31 +531,61 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                                         const invalid = isInvalid(field)
                                         return (
                                           <Field data-invalid={invalid || undefined}>
-                                            <div className="flex items-center gap-3">
-                                              <Input
-                                                aria-invalid={invalid}
-                                                aria-label={`Author ${position} name`}
-                                                id={field.name}
-                                                name={field.name}
-                                                onBlur={field.handleBlur}
-                                                onChange={(event) =>
-                                                  field.handleChange(event.target.value)
-                                                }
-                                                value={field.state.value}
-                                              />
-                                              <Button
-                                                aria-label={`Remove author ${position}`}
-                                                onClick={() => {
-                                                  authorsField.removeValue(index)
-                                                  setFieldErrors(withoutAuthorErrors)
-                                                }}
-                                                size="sm"
-                                                type="button"
-                                                variant="button-transparent"
-                                              >
-                                                Remove
-                                              </Button>
-                                            </div>
+                                            {row.kind === "member" ? (
+                                              <div className="flex flex-col gap-2 rounded-lg border p-2">
+                                                <div className="flex items-center gap-3">
+                                                  <div className="min-w-0 flex-1">
+                                                    <LinkedAuthor
+                                                      matched={row.matched}
+                                                      member={row.member}
+                                                      onUnlink={() =>
+                                                        authorsField.replaceValue(index, {
+                                                          id: row.id,
+                                                          kind: "external",
+                                                          name: currentName(),
+                                                        })
+                                                      }
+                                                      position={position}
+                                                    />
+                                                  </div>
+                                                  {removeButton}
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                  <label
+                                                    className="text-muted-foreground text-xs"
+                                                    htmlFor={field.name}
+                                                  >
+                                                    Published as
+                                                  </label>
+                                                  <Input
+                                                    aria-invalid={invalid}
+                                                    aria-label={`Author ${position} published as`}
+                                                    id={field.name}
+                                                    name={field.name}
+                                                    onBlur={field.handleBlur}
+                                                    onChange={(event) =>
+                                                      field.handleChange(event.target.value)
+                                                    }
+                                                    value={field.state.value}
+                                                  />
+                                                </div>
+                                              </div>
+                                            ) : (
+                                              <div className="flex items-center gap-3">
+                                                <div className="min-w-0 flex-1">
+                                                  <AuthorPicker
+                                                    id={field.name}
+                                                    invalid={invalid}
+                                                    label={`Author ${position} name`}
+                                                    onBlur={field.handleBlur}
+                                                    onChange={field.handleChange}
+                                                    onSelectMember={linkMember}
+                                                    value={field.state.value}
+                                                  />
+                                                </div>
+                                                {removeButton}
+                                              </div>
+                                            )}
                                             {invalid && (
                                               <FieldError errors={field.state.meta.errors} />
                                             )}
@@ -409,12 +603,15 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                       </DndContext>
                       <FieldError errors={authorsField.state.meta.errors} />
                       {fieldErrors.authors && <FieldError>{fieldErrors.authors}</FieldError>}
+                      {matchError && (
+                        <FieldDescription className="text-amber-700">{matchError}</FieldDescription>
+                      )}
                       <div>
                         <Button
                           onClick={() =>
                             authorsField.pushValue({
                               id: crypto.randomUUID(),
-                              kind: "coAuthor",
+                              kind: "external",
                               name: "",
                             })
                           }

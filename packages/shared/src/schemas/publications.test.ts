@@ -6,8 +6,8 @@ const validForm = {
   type: PublicationType.ARTICLE,
   title: "Teamwork in capstone courses",
   authors: [
-    { id: "1", kind: "self" },
-    { id: "2", kind: "coAuthor", name: "Ben Lee" },
+    { id: "1", kind: "self", name: "" },
+    { id: "2", kind: "external", name: "Ben Lee" },
   ],
   year: 2025,
   month: "",
@@ -52,7 +52,7 @@ describe("addPublicationFormSchema", () => {
   })
 
   it("accepts a form with no co-authors", () => {
-    expect(errorPaths({ ...validForm, authors: [{ id: "3", kind: "self" }] })).toEqual([])
+    expect(errorPaths({ ...validForm, authors: [{ id: "3", kind: "self", name: "" }] })).toEqual([])
   })
 
   it("accepts the signed-in member in any position", () => {
@@ -60,8 +60,8 @@ describe("addPublicationFormSchema", () => {
       errorPaths({
         ...validForm,
         authors: [
-          { id: "4", kind: "coAuthor", name: "Ben Lee" },
-          { id: "5", kind: "self" },
+          { id: "4", kind: "external", name: "Ben Lee" },
+          { id: "5", kind: "self", name: "" },
         ],
       }),
     ).toEqual([])
@@ -72,12 +72,38 @@ describe("addPublicationFormSchema", () => {
     [
       "two",
       [
-        { id: "6", kind: "self" },
-        { id: "7", kind: "self" },
+        { id: "6", kind: "self", name: "" },
+        { id: "7", kind: "self", name: "" },
       ],
     ],
   ])("rejects %s signed-in member entries", (_, authors) => {
     expect(errorPaths({ ...validForm, authors })).toEqual(["authors"])
+  })
+
+  it("accepts linked members with their printed names", () => {
+    expect(
+      errorPaths({
+        ...validForm,
+        authors: [
+          { id: "10", kind: "self", name: "A. Smith" },
+          { id: "11", kind: "member", memberId: 3, name: "B. Lee" },
+          { id: "12", kind: "member", memberId: 4, name: "Cara Doe" },
+        ],
+      }),
+    ).toEqual([])
+  })
+
+  it("rejects the same member twice", () => {
+    expect(
+      errorPaths({
+        ...validForm,
+        authors: [
+          { id: "13", kind: "self", name: "" },
+          { id: "14", kind: "member", memberId: 3, name: "B. Lee" },
+          { id: "15", kind: "member", memberId: 3, name: "Ben Lee" },
+        ],
+      }),
+    ).toEqual(["authors"])
   })
 
   it("requires a title and co-author names", () => {
@@ -86,8 +112,8 @@ describe("addPublicationFormSchema", () => {
         ...validForm,
         title: " ",
         authors: [
-          { id: "8", kind: "self" },
-          { id: "9", kind: "coAuthor", name: "" },
+          { id: "8", kind: "self", name: "" },
+          { id: "9", kind: "external", name: "" },
         ],
       }),
     ).toEqual(["title", "authors.1.name"])

@@ -25,8 +25,8 @@ const input = {
   type: "article",
   title: "Teamwork in capstone courses",
   authors: [
-    { id: "1", kind: "self" },
-    { id: "2", kind: "coAuthor", name: "Ben Lee" },
+    { id: "1", kind: "self", name: "" },
+    { id: "2", kind: "external", name: "Ben Lee" },
   ],
   year: 2025,
   month: "",
@@ -109,14 +109,14 @@ describe("createPublication", () => {
     expect(payload.create).not.toHaveBeenCalled()
   })
 
-  it("does not let a client link another member as a co-author", async () => {
+  it("ignores a member id sent on an external author", async () => {
     const payload = mockPayload()
 
     await createPublication({
       ...input,
       authors: [
-        { id: "1", kind: "self" },
-        { id: "2", kind: "coAuthor", member: 99, name: "Ben Lee" },
+        { id: "1", kind: "self", name: "" },
+        { id: "2", kind: "external", member: 99, name: "Ben Lee" },
       ],
     })
 
@@ -145,15 +145,52 @@ describe("createPublication", () => {
     expect(updateTag).toHaveBeenCalledWith(QueryKeys.PUBLICATIONS.ROOT)
   })
 
+  it("links co-authors who are members and keeps printed names", async () => {
+    const payload = mockPayload()
+
+    await createPublication({
+      ...input,
+      authors: [
+        { id: "1", kind: "self", name: "A. Smith" },
+        { id: "2", kind: "member", memberId: 12, name: "B. Lee" },
+        { id: "3", kind: "external", name: "Cara Ngata" },
+      ],
+    })
+
+    expect(payload.create.mock.calls[0]?.[0].data.authors).toEqual([
+      { member: 7, name: "A. Smith" },
+      { member: 12, name: "B. Lee" },
+      { name: "Cara Ngata" },
+    ])
+  })
+
+  it("rejects the signed-in member linked as a co-author", async () => {
+    const payload = mockPayload()
+
+    expect(
+      await createPublication({
+        ...input,
+        authors: [
+          { id: "1", kind: "self", name: "" },
+          { id: "2", kind: "member", memberId: 7, name: "Anna Smith" },
+        ],
+      }),
+    ).toEqual({
+      fieldErrors: { "authors.1.member": "You are already in the author list." },
+      ok: false,
+    })
+    expect(payload.create).not.toHaveBeenCalled()
+  })
+
   it("keeps the signed-in member at the position they chose", async () => {
     const payload = mockPayload()
 
     await createPublication({
       ...input,
       authors: [
-        { id: "3", kind: "coAuthor", name: "Ben Lee" },
-        { id: "4", kind: "self" },
-        { id: "5", kind: "coAuthor", name: "Cara Ngata" },
+        { id: "3", kind: "external", name: "Ben Lee" },
+        { id: "4", kind: "self", name: "" },
+        { id: "5", kind: "external", name: "Cara Ngata" },
       ],
     })
 

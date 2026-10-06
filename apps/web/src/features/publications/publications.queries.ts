@@ -18,6 +18,9 @@ const publicationFiltersToWhere = (filters: PublicationFilters): Where => {
       { venue: { contains: search } },
       { abstract: { contains: search } },
       { "authors.name": { contains: search } },
+      // A linked author's printed name can be initials, so also search their profile.
+      { "authors.member.firstName": { contains: search } },
+      { "authors.member.lastName": { contains: search } },
     ]
   }
 

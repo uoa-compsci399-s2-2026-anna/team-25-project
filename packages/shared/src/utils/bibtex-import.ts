@@ -1,15 +1,21 @@
 import { type Creator, type Entry, parse } from "@retorquere/bibtex-parser"
 import { PublicationType } from "../enums/publications"
 import { type AddPublicationFormInput, DOI_PATTERN, webUrlSchema } from "../schemas/publications"
+import { matchMember, type PrintedName, parsePrintedName } from "./author-match"
 
 export type BibtexImportMessage = { level: "error" | "warning" | "info"; text: string }
 
 export type BibtexImportValues = Partial<Omit<AddPublicationFormInput, "authors">>
 
+/** The import never links a member, so it makes only self and external rows. */
+export type ImportedAuthor = Exclude<AddPublicationFormInput["authors"][number], { kind: "member" }>
+
 export type BibtexImportResult = {
   values: BibtexImportValues
   /** Only set when the entry has authors (or editors). Always includes the signed-in member. */
-  authors?: AddPublicationFormInput["authors"]
+  authors?: ImportedAuthor[]
+  /** The parsed name of each external author row, by row id, for matching to members. */
+  coAuthorNames: { rowId: string; name: PrintedName }[]
   messages: BibtexImportMessage[]
   /** Number of form fields filled. The author list counts as one field. */
   filledCount: number
@@ -26,6 +32,7 @@ const parseError = (): BibtexImportResult => ({
   messages: [
     { level: "error", text: "Could not read this BibTeX. Check that it starts with @type{key, …" },
   ],
+  coAuthorNames: [],
   filledCount: 0,
 })
 
@@ -71,32 +78,14 @@ const asText = (value: string | string[] | undefined): string | undefined => {
   return text?.normalize("NFC").trim() || undefined
 }
 
-const normalise = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase()
-    .trim()
-
 const formatCreator = (creator: Creator) =>
   (
     creator.name ??
     [creator.firstName, creator.prefix, creator.lastName, creator.suffix].filter(Boolean).join(" ")
   ).normalize("NFC")
 
-const isSelf = (creator: Creator, self: PersonName) => {
-  const selfFirst = normalise(self.firstName)
-  const selfLast = normalise(self.lastName)
-  if (creator.name) return normalise(creator.name) === `${selfFirst} ${selfLast}`
-  if (!creator.lastName || normalise(creator.lastName) !== selfLast) return false
-
-  const first = normalise(creator.firstName ?? "")
-    .split(/\s+/)[0]
-    ?.replace(/\.$/, "")
-  if (!first) return false
-  // "M." or "M" matches by initial; a full first name must match in full.
-  return first.length === 1 ? selfFirst.startsWith(first) : first === selfFirst.split(/\s+/)[0]
-}
+const isSelf = (creator: Creator, self: PersonName) =>
+  matchMember(parsePrintedName(creator), self) !== null
 
 const parseMonth = (value: string): string | undefined => {
   const trimmed = value.trim().toLowerCase()
@@ -123,7 +112,7 @@ const mapAuthors = (
   self: PersonName,
   used: Set<string>,
   messages: BibtexImportMessage[],
-): AddPublicationFormInput["authors"] | undefined => {
+): (Pick<BibtexImportResult, "coAuthorNames"> & { authors: ImportedAuthor[] }) | undefined => {
   let creators = fields.author
   if (creators?.length) {
     used.add("author")
@@ -144,16 +133,19 @@ const mapAuthors = (
   }
 
   const selfIndex = named.findIndex((creator) => isSelf(creator, self))
-  const authors: AddPublicationFormInput["authors"] = named.map((creator, index) =>
-    index === selfIndex
-      ? { id: crypto.randomUUID(), kind: "self" }
-      : { id: crypto.randomUUID(), kind: "coAuthor", name: formatCreator(creator) },
-  )
+  const coAuthorNames: BibtexImportResult["coAuthorNames"] = []
+  const authors: ImportedAuthor[] = named.map((creator, index) => {
+    const id = crypto.randomUUID()
+    const name = formatCreator(creator)
+    if (index === selfIndex) return { id, kind: "self", name }
+    coAuthorNames.push({ rowId: id, name: parsePrintedName(creator) })
+    return { id, kind: "external", name }
+  })
   if (selfIndex === -1) {
-    authors.unshift({ id: crypto.randomUUID(), kind: "self" })
+    authors.unshift({ id: crypto.randomUUID(), kind: "self", name: "" })
     messages.push({ level: "warning", text: SELF_NOT_FOUND_WARNING })
   }
-  return authors
+  return { authors, coAuthorNames }
 }
 
 const mapEntry = (entry: Entry, self: PersonName, messages: BibtexImportMessage[]) => {
@@ -173,7 +165,7 @@ const mapEntry = (entry: Entry, self: PersonName, messages: BibtexImportMessage[
   if (title) values.title = stripMarkup(title)
   else messages.push({ level: "warning", text: "The entry has no title. Add one." })
 
-  const authors = mapAuthors(fields, self, used, messages)
+  const mapped = mapAuthors(fields, self, used, messages)
 
   // biblatex uses `date` (YYYY, YYYY-MM or YYYY-MM-DD) in place of `year` and `month`.
   const date = take("date")?.match(/^(\d{4})(?:-(\d{1,2}))?/)
@@ -234,7 +226,7 @@ const mapEntry = (entry: Entry, self: PersonName, messages: BibtexImportMessage[
     messages.push({ level: "info", text: `Not imported: ${ignored.join(", ")}.` })
   }
 
-  return { values, authors }
+  return { values, authors: mapped?.authors, coAuthorNames: mapped?.coAuthorNames ?? [] }
 }
 
 /**
@@ -280,11 +272,11 @@ export const parseBibtexImport = (text: string, self: PersonName): BibtexImportR
     messages.push({ level: "info", text: "Only the first entry was imported." })
   }
 
-  const { values, authors } = mapEntry(entry, self, messages)
+  const { values, authors, coAuthorNames } = mapEntry(entry, self, messages)
   const filledCount = Object.keys(values).length + (authors ? 1 : 0)
   // Show the most important messages first.
   const order = { error: 0, warning: 1, info: 2 }
   messages.sort((a, b) => order[a.level] - order[b.level])
 
-  return { values, authors, messages, filledCount }
+  return { values, authors, coAuthorNames, messages, filledCount }
 }

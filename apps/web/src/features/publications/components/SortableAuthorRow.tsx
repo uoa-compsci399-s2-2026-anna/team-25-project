@@ -10,10 +10,17 @@ import type { ReactNode } from "react"
 type SortableAuthorRowProps = {
   id: string
   position: number
+  /** Centers the handle on the row, for a row taller than one input. */
+  centerHandle?: boolean
   children: ReactNode
 }
 
-export const SortableAuthorRow = ({ id, position, children }: SortableAuthorRowProps) => {
+export const SortableAuthorRow = ({
+  id,
+  position,
+  centerHandle,
+  children,
+}: SortableAuthorRowProps) => {
   const {
     attributes,
     isDragging,
@@ -27,7 +34,8 @@ export const SortableAuthorRow = ({ id, position, children }: SortableAuthorRowP
   return (
     <div
       className={cn(
-        "relative flex items-start gap-2 rounded-lg bg-background",
+        "relative flex gap-2 rounded-lg bg-background",
+        centerHandle ? "items-center" : "items-start",
         isDragging && "z-10 shadow-lg",
       )}
       ref={setNodeRef}
@@ -36,7 +44,7 @@ export const SortableAuthorRow = ({ id, position, children }: SortableAuthorRowP
       {/* Only the handle starts a drag, so typing in the row's input still works. */}
       <Button
         aria-label={`Reorder author ${position}`}
-        className="mt-1 cursor-grab touch-none active:cursor-grabbing"
+        className={cn("cursor-grab touch-none active:cursor-grabbing", !centerHandle && "mt-1")}
         ref={setActivatorNodeRef}
         size="icon-sm"
         type="button"
