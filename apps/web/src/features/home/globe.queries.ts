@@ -19,6 +19,10 @@ export const getInstitutionMarkers = async (): Promise<GlobeMarker[]> => {
     depth: 0,
     pagination: false,
     select: { location: true, name: true },
+    where: {
+      "location.latitude": { not_equals: 0 },
+      "location.longitude": { not_equals: 0 },
+    },
   })
   return docs.map(({ id, location, name }) => ({
     id: `institution-${id}`,
