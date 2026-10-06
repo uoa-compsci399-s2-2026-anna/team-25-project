@@ -14,6 +14,8 @@ import {
   getMemberDetailsCached,
   getMemberProposals,
   getMemberProposalsCached,
+  getMemberResources,
+  getMemberResourcesCached,
   getMembers,
   getResearchInterestOptions,
 } from "./members.queries"
@@ -384,5 +386,27 @@ describe("getMemberCourses", () => {
   it("is cached under the courses tag", async () => {
     await expect(getMemberCoursesCached(7)).resolves.toEqual([])
     expect(cacheTag).toHaveBeenCalledWith("courses")
+  })
+})
+
+describe("getMemberResources", () => {
+  it("reads every resource the member shared, newest first, with only what the cards draw", async () => {
+    await getMemberResources(7)
+
+    expect(find).toHaveBeenCalledWith({
+      collection: "resources",
+      depth: 1,
+      pagination: false,
+      populate: { courses: { code: true }, resourceAttachments: { filename: true } },
+      select: { attachments: true, course: true, createdAt: true, title: true },
+      sort: ["-createdAt", "-id"],
+      where: { owner: { equals: 7 } },
+    })
+  })
+
+  it("goes stale with resources and the courses whose codes the cards show", async () => {
+    await getMemberResourcesCached(7)
+
+    expect(cacheTag).toHaveBeenCalledWith("resources", "courses")
   })
 })
