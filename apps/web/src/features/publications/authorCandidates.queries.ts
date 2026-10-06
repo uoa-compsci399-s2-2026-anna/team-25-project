@@ -38,7 +38,7 @@ export const getAuthorCandidatesCached = async () => {
 }
 
 /** Every member except the signed-in one, who has their own row. Null for a non-member. */
-export const getOtherAuthorCandidates = async () => {
+export const getOtherAuthorCandidates = async (): Promise<AuthorCandidate[] | null> => {
   const { collection, user } = await getCurrentUser()
   if (collection !== Slugs.Collections.MEMBERS) return null
   return (await getAuthorCandidatesCached()).filter((member) => member.id !== user.id)

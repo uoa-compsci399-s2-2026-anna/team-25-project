@@ -12,10 +12,16 @@ export type PublicationFilters = {
 
 /** A member shown in the author picker, with details that tell same-name members apart. */
 export type AuthorCandidate = {
-  id: number
-  firstName: string
-  lastName: string
-  position: string
-  institution?: string
-  avatarUrl?: string
+  readonly id: number
+  readonly firstName: string
+  readonly lastName: string
+  readonly position: string
+  readonly institution?: string
+  readonly avatarUrl?: string
 }
+
+/** Not ok when the user is not a member, for example after the session ends. */
+export type AuthorSearchResult = { ok: true; members: AuthorCandidate[] } | { ok: false }
+
+/** One entry for each name, in order: the member, or null when no single member fits. */
+export type AuthorMatchResult = { ok: true; matches: (AuthorCandidate | null)[] } | { ok: false }

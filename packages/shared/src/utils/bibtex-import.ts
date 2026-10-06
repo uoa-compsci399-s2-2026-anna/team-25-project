@@ -7,10 +7,13 @@ export type BibtexImportMessage = { level: "error" | "warning" | "info"; text: s
 
 export type BibtexImportValues = Partial<Omit<AddPublicationFormInput, "authors">>
 
+/** The import never links a member, so it makes only self and external rows. */
+export type ImportedAuthor = Exclude<AddPublicationFormInput["authors"][number], { kind: "member" }>
+
 export type BibtexImportResult = {
   values: BibtexImportValues
   /** Only set when the entry has authors (or editors). Always includes the signed-in member. */
-  authors?: AddPublicationFormInput["authors"]
+  authors?: ImportedAuthor[]
   /** The parsed name of each external author row, by row id, for matching to members. */
   coAuthorNames: { rowId: string; name: PrintedName }[]
   messages: BibtexImportMessage[]
@@ -109,9 +112,7 @@ const mapAuthors = (
   self: PersonName,
   used: Set<string>,
   messages: BibtexImportMessage[],
-):
-  | (Pick<BibtexImportResult, "coAuthorNames"> & { authors: AddPublicationFormInput["authors"] })
-  | undefined => {
+): (Pick<BibtexImportResult, "coAuthorNames"> & { authors: ImportedAuthor[] }) | undefined => {
   let creators = fields.author
   if (creators?.length) {
     used.add("author")
@@ -133,7 +134,7 @@ const mapAuthors = (
 
   const selfIndex = named.findIndex((creator) => isSelf(creator, self))
   const coAuthorNames: BibtexImportResult["coAuthorNames"] = []
-  const authors: AddPublicationFormInput["authors"] = named.map((creator, index) => {
+  const authors: ImportedAuthor[] = named.map((creator, index) => {
     const id = crypto.randomUUID()
     const name = formatCreator(creator)
     if (index === selfIndex) return { id, kind: "self", name }

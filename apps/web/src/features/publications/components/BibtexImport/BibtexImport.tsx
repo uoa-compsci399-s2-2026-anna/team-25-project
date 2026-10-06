@@ -24,23 +24,28 @@ const hasError = (result: BibtexImportResult) =>
 
 const fieldCount = (count: number) => `${count} ${count === 1 ? "field" : "fields"}`
 
+/** What the form did with an import. A field the user changed is kept, not filled. */
+export type ImportSummary = { filled: number; kept: number }
+
 type BibtexImportProps = {
   /** The signed-in member, found in (or added to) the imported author list. */
   self: PersonName
-  onImport: (result: BibtexImportResult) => void
+  onImport: (result: BibtexImportResult) => ImportSummary
 }
 
 /**
  * A paste that replaces all the text imports at once. Typed changes only show a
  * preview, so a pause while typing does not import a half-typed entry. The user
- * imports them with the button or Ctrl+Enter.
+ * imports typed changes with the button, Ctrl+Enter or Cmd+Enter.
  */
 export const BibtexImport = ({ self, onImport }: BibtexImportProps) => {
   const [open, setOpen] = useState(true)
   const [text, setText] = useState("")
-  const [status, setStatus] = useState<{ result: BibtexImportResult; applied: boolean } | null>(
-    null,
-  )
+  // The summary is set only when the form applied the import.
+  const [status, setStatus] = useState<{
+    result: BibtexImportResult
+    summary?: ImportSummary
+  } | null>(null)
   const [importedText, setImportedText] = useState<string | null>(null)
   // The text of the newest parse, and an id so an older parse cannot overwrite it.
   const lastParsed = useRef("")
@@ -65,7 +70,7 @@ export const BibtexImport = ({ self, onImport }: BibtexImportProps) => {
       console.error("Could not load the BibTeX parser", error)
       // Let the next edit try again.
       lastParsed.current = ""
-      setStatus({ result: LOAD_ERROR, applied: false })
+      setStatus({ result: LOAD_ERROR })
       return
     }
     // A newer parse started while the parser loaded.
@@ -73,16 +78,15 @@ export const BibtexImport = ({ self, onImport }: BibtexImportProps) => {
 
     try {
       const parsed = parser.parseBibtexImport(entry, self)
-      const applied = apply && !hasError(parsed)
-      if (applied) {
-        onImport(parsed)
+      const summary = apply && !hasError(parsed) ? onImport(parsed) : undefined
+      if (summary) {
         setImportedText(entry)
         setOpen(false)
       }
-      setStatus({ result: parsed, applied })
+      setStatus({ result: parsed, summary })
     } catch (error) {
       console.error("BibTeX import failed", error)
-      setStatus({ result: IMPORT_ERROR, applied: false })
+      setStatus({ result: IMPORT_ERROR })
     }
   })
 
@@ -150,14 +154,15 @@ export const BibtexImport = ({ self, onImport }: BibtexImportProps) => {
 
       {/* Outside the panel, so the results stay visible after it collapses. */}
       <div aria-live="polite" className="flex flex-col gap-1 text-sm">
-        {succeeded && status.applied && (
+        {status?.summary && (
           <p className="flex items-center gap-2 text-brand-teal">
             <CircleCheckIcon aria-hidden="true" className="size-4 shrink-0" />
-            Filled {fieldCount(result.filledCount)} from BibTeX. Check them before you add the
-            publication.
+            Filled {fieldCount(status.summary.filled)} from BibTeX.
+            {status.summary.kept > 0 && ` Kept ${fieldCount(status.summary.kept)} you changed.`}{" "}
+            Check them before you add the publication.
           </p>
         )}
-        {succeeded && !status.applied && canImport && (
+        {succeeded && !status.summary && canImport && (
           <p className="text-muted-foreground">
             Ready to fill {fieldCount(result.filledCount)}. Select{" "}
             {importedText === null ? "Import" : "Re-import"} to fill the form.

@@ -1,7 +1,7 @@
-import { SELF_NOT_FOUND_WARNING } from "@repo/shared/utils/bibtex-import"
+import { type BibtexImportResult, SELF_NOT_FOUND_WARNING } from "@repo/shared/utils/bibtex-import"
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { BibtexImport } from "./BibtexImport"
+import { BibtexImport, type ImportSummary } from "./BibtexImport"
 import { BIBTEX_DEBOUNCE_MS } from "./BibtexImport.constants"
 
 const self = { firstName: "Anna", lastName: "Smith" }
@@ -15,8 +15,8 @@ const textbox = () =>
 
 // userEvent waits on a real setTimeout between actions, which never fires under
 // fake timers, so these tests use fireEvent.
-const renderImport = () => {
-  const onImport = vi.fn()
+const renderImport = (summary: ImportSummary = { filled: 5, kept: 0 }) => {
+  const onImport = vi.fn((_result: BibtexImportResult) => summary)
   render(<BibtexImport onImport={onImport} self={self} />)
   return { onImport }
 }
@@ -72,6 +72,16 @@ describe("BibtexImport", () => {
     // The debounced parse of the same text does not import it again.
     await advance(BIBTEX_DEBOUNCE_MS)
     expect(onImport).toHaveBeenCalledTimes(1)
+  })
+
+  it("says how many fields the form filled and kept", async () => {
+    renderImport({ filled: 3, kept: 2 })
+    paste(ENTRY)
+    await advance(0)
+
+    expect(
+      screen.getByText(/Filled 3 fields from BibTeX\. Kept 2 fields you changed\./),
+    ).toBeInTheDocument()
   })
 
   it("only previews typed text and stays open after a pause", async () => {

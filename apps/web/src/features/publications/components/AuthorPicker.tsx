@@ -17,12 +17,20 @@ import {
 import { useDebouncedValue } from "@tanstack/react-pacer"
 import { useEffect, useState } from "react"
 import { searchAuthorCandidates } from "../actions/searchAuthorCandidates"
-import type { AuthorCandidate } from "../publications.types"
+import type { AuthorCandidate, AuthorSearchResult } from "../publications.types"
 
 const SEARCH_DEBOUNCE_MS = 250
 const MIN_QUERY_LENGTH = 2
 
 export const candidateName = (member: AuthorCandidate) => `${member.firstName} ${member.lastName}`
+
+/** What the list says when it shows no members. The result is undefined while a search runs. */
+const emptyMessage = (result?: AuthorSearchResult) => {
+  if (!result) return "Searching…"
+  return result.ok
+    ? "No members match. This name is saved as an external author."
+    : "Could not search members. This name is saved as an external author."
+}
 
 /** Institution and position, which tell two members with the same name apart. */
 const details = (member: AuthorCandidate) =>
@@ -48,7 +56,7 @@ type AuthorPickerProps = {
   id: string
   label: string
   invalid: boolean
-  /** The external author's name. Typing changes it, so a name with no member is kept. */
+  /** The name in the input. Only typing changes it. A name with no member is saved as an external author. */
   value: string
   onChange: (name: string) => void
   onBlur: () => void
@@ -65,22 +73,25 @@ export const AuthorPicker = ({
   onBlur,
   onSelectMember,
 }: AuthorPickerProps) => {
-  const [found, setFound] = useState<AuthorCandidate[]>([])
-  const [query] = useDebouncedValue(value.trim(), { wait: SEARCH_DEBOUNCE_MS })
-  const results = query.length < MIN_QUERY_LENGTH ? [] : found
+  // Each reply keeps its query, so the list never shows members for older text.
+  const [found, setFound] = useState<{ query: string; result: AuthorSearchResult } | null>(null)
+  const typed = value.trim()
+  const [query] = useDebouncedValue(typed, { wait: SEARCH_DEBOUNCE_MS })
+  const searchable = typed.length >= MIN_QUERY_LENGTH
+  const result = searchable && found?.query === typed ? found.result : undefined
+  const results = result?.ok ? result.members : []
 
   useEffect(() => {
     if (query.length < MIN_QUERY_LENGTH) return undefined
     // A slow reply for older text must not replace the results for newer text.
     let current = true
     searchAuthorCandidates(query)
-      .then((members) => {
-        if (current) setFound(members)
+      .then((reply) => {
+        if (current) setFound({ query, result: reply })
       })
       .catch((error: unknown) => {
-        // The name still saves as an external author, so only log it.
         console.error("Could not search members", error)
-        if (current) setFound([])
+        if (current) setFound({ query, result: { ok: false } })
       })
     return () => {
       current = false
@@ -113,10 +124,7 @@ export const AuthorPicker = ({
         showTrigger={false}
       />
       <ComboboxContent>
-        <ComboboxEmpty>
-          {value.trim().length >= MIN_QUERY_LENGTH &&
-            "No members match. This name is saved as an external author."}
-        </ComboboxEmpty>
+        <ComboboxEmpty>{searchable && emptyMessage(result)}</ComboboxEmpty>
         <ComboboxList>
           {(member: AuthorCandidate) => (
             <ComboboxItem key={member.id} value={member}>
@@ -132,7 +140,7 @@ export const AuthorPicker = ({
 type LinkedAuthorProps = {
   member: AuthorCandidate
   position: number
-  /** Set when the BibTeX import chose this member, so the user checks it. */
+  /** Set when the BibTeX import chose this member, so the user knows to check it. */
   matched?: boolean
   onUnlink: () => void
 }

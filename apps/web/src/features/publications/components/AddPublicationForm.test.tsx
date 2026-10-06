@@ -1,10 +1,10 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react"
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { createPublication } from "../actions/createPublication"
 import { matchBibtexAuthors } from "../actions/matchBibtexAuthors"
 import { searchAuthorCandidates } from "../actions/searchAuthorCandidates"
-import type { AuthorCandidate } from "../publications.types"
+import type { AuthorCandidate, AuthorMatchResult, AuthorSearchResult } from "../publications.types"
 import { AddPublicationForm } from "./AddPublicationForm"
 
 vi.mock("../actions/createPublication", () => ({ createPublication: vi.fn() }))
@@ -17,6 +17,17 @@ const benLee: AuthorCandidate = {
   lastName: "Lee",
   position: "Lecturer",
   institution: "University of Auckland",
+}
+
+const found = (...members: AuthorCandidate[]): AuthorSearchResult => ({ ok: true, members })
+
+// A promise the test resolves later, to hold a server action open.
+const deferred = <T,>() => {
+  let resolve: (value: T) => void = () => {}
+  const promise = new Promise<T>((done) => {
+    resolve = done
+  })
+  return { promise, resolve }
 }
 
 const renderForm = () => {
@@ -81,10 +92,11 @@ const moveFirstAuthorDown = async (user: ReturnType<typeof userEvent.setup>) => 
 describe("AddPublicationForm", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(searchAuthorCandidates).mockResolvedValue([])
-    vi.mocked(matchBibtexAuthors).mockImplementation(async (names) =>
-      (names as unknown[]).map(() => null),
-    )
+    vi.mocked(searchAuthorCandidates).mockResolvedValue(found())
+    vi.mocked(matchBibtexAuthors).mockImplementation(async (names) => ({
+      ok: true,
+      matches: (names as unknown[]).map(() => null),
+    }))
   })
 
   afterEach(() => {
@@ -243,7 +255,7 @@ describe("AddPublicationForm", () => {
     expect(screen.getByLabelText("Pages")).toHaveValue("10-20")
     expect(screen.getByLabelText("Citation key")).toHaveValue("lee2023teams")
     expect(screen.getByLabelText("Author 1 name")).toHaveValue("Ben Lee")
-    // The member's row keeps the name as printed in the entry.
+    // The signed-in member's own row keeps the name as printed in the entry.
     expect(screen.getByLabelText("Author 2 name")).toHaveValue("Anna Smith")
 
     await submit(user)
@@ -303,6 +315,28 @@ describe("AddPublicationForm", () => {
     await waitFor(() => expect(screen.getByLabelText(/Year/)).toHaveValue(2021))
     expect(screen.getByLabelText(/Title/)).toHaveValue("My title")
     expect(screen.getByLabelText("Author 2 name")).toHaveValue("Benjamin Lee")
+    expect(screen.getByText(/Kept 2 fields you changed/)).toBeInTheDocument()
+  })
+
+  it("replaces the authors on a new import when the user only added an empty row", async () => {
+    const { user } = renderForm()
+
+    await pasteBibtex(
+      user,
+      "@article{a, title={First}, author={Anna Smith and Ben Lee}, year={2020}}",
+    )
+    await waitFor(() => expect(screen.getByLabelText("Author 2 name")).toHaveValue("Ben Lee"))
+    await user.click(screen.getByRole("button", { name: "+ Add author" }))
+
+    await user.click(screen.getByRole("button", { name: "Import from BibTeX" }))
+    await pasteBibtex(
+      user,
+      "@article{a, title={First}, author={Anna Smith and Cara Diaz}, year={2020}}",
+    )
+
+    await waitFor(() => expect(screen.getByLabelText("Author 2 name")).toHaveValue("Cara Diaz"))
+    expect(screen.queryByLabelText("Author 3 name")).not.toBeInTheDocument()
+    expect(screen.queryByText(/Kept/)).not.toBeInTheDocument()
   })
 
   it("adds the member and warns when they are not in the imported authors", async () => {
@@ -355,7 +389,7 @@ describe("AddPublicationForm", () => {
 
   it("shows a server error for a field the form does not have as a form error", async () => {
     vi.mocked(createPublication).mockResolvedValue({
-      fieldErrors: { "authors.0.member": "This member does not exist." },
+      fieldErrors: { "authors.0.affiliation": "This member does not exist." },
       ok: false,
     })
     const { user } = renderForm()
@@ -396,7 +430,7 @@ describe("AddPublicationForm", () => {
   describe("linking members", () => {
     it("links a co-author chosen from the member search", async () => {
       vi.mocked(createPublication).mockResolvedValue({ ok: true })
-      vi.mocked(searchAuthorCandidates).mockResolvedValue([benLee])
+      vi.mocked(searchAuthorCandidates).mockResolvedValue(found(benLee))
       const { onSuccess, user } = renderForm()
       await openManualEntry(user)
       await user.type(screen.getByLabelText(/Title/), "Teamwork in capstones")
@@ -422,7 +456,7 @@ describe("AddPublicationForm", () => {
     })
 
     it("unlinks a member and keeps the printed name as an external author", async () => {
-      vi.mocked(searchAuthorCandidates).mockResolvedValue([benLee])
+      vi.mocked(searchAuthorCandidates).mockResolvedValue(found(benLee))
       const { user } = renderForm()
       await openManualEntry(user)
       await user.click(screen.getByRole("button", { name: "+ Add author" }))
@@ -435,7 +469,7 @@ describe("AddPublicationForm", () => {
     })
 
     it("links an imported author who matches one member", async () => {
-      vi.mocked(matchBibtexAuthors).mockResolvedValue([benLee])
+      vi.mocked(matchBibtexAuthors).mockResolvedValue({ ok: true, matches: [benLee] })
       const { user } = renderForm()
 
       await pasteBibtex(
@@ -448,9 +482,12 @@ describe("AddPublicationForm", () => {
       expect(matchBibtexAuthors).toHaveBeenCalledWith([{ given: ["b"], family: "lee" }])
     })
 
-    it("keeps imported authors external when matching fails", async () => {
+    it.each([
+      ["throws", () => vi.mocked(matchBibtexAuthors).mockRejectedValue(new Error("network"))],
+      ["is refused", () => vi.mocked(matchBibtexAuthors).mockResolvedValue({ ok: false })],
+    ])("keeps imported authors external and says so when matching %s", async (_, fail) => {
       vi.spyOn(console, "error").mockImplementation(() => {})
-      vi.mocked(matchBibtexAuthors).mockRejectedValue(new Error("network"))
+      fail()
       const { user } = renderForm()
 
       await pasteBibtex(
@@ -458,8 +495,73 @@ describe("AddPublicationForm", () => {
         "@article{k, title={T}, author={Smith, Anna and Lee, B.}, year={2020}}",
       )
 
-      await waitFor(() => expect(matchBibtexAuthors).toHaveBeenCalled())
+      expect(
+        await screen.findByText(/Could not match the imported authors to members/),
+      ).toBeInTheDocument()
       expect(screen.getByRole("combobox", { name: "Author 2 name" })).toHaveValue("B. Lee")
+    })
+
+    it("does not link a row the user renamed while the match ran", async () => {
+      const match = deferred<AuthorMatchResult>()
+      vi.mocked(matchBibtexAuthors).mockReturnValue(match.promise)
+      const { user } = renderForm()
+
+      await pasteBibtex(
+        user,
+        "@article{k, title={T}, author={Smith, Anna and Lee, B.}, year={2020}}",
+      )
+      await waitFor(() => expect(matchBibtexAuthors).toHaveBeenCalled())
+      await typeAuthor(user, "Author 2 name", "x")
+      await act(async () => match.resolve({ ok: true, matches: [benLee] }))
+
+      expect(screen.queryByText("Matched from BibTeX")).not.toBeInTheDocument()
+      expect(screen.getByRole("combobox", { name: "Author 2 name" })).toHaveValue("B. Leex")
+    })
+
+    it("keeps an unlinked match unlinked when the entry is imported again", async () => {
+      vi.mocked(matchBibtexAuthors).mockResolvedValue({ ok: true, matches: [benLee] })
+      const { user } = renderForm()
+      const entry = "@article{k, title={T}, author={Smith, Anna and Lee, B.}, year={2020}}"
+
+      await pasteBibtex(user, entry)
+      await user.click(await screen.findByRole("button", { name: "Unlink author 2 from Ben Lee" }))
+      await user.click(screen.getByRole("button", { name: "Import from BibTeX" }))
+      await pasteBibtex(user, entry.replace("{T}", "{T2}"))
+
+      await waitFor(() => expect(screen.getByLabelText(/Title/)).toHaveValue("T2"))
+      expect(screen.queryByText("Matched from BibTeX")).not.toBeInTheDocument()
+      expect(screen.getByRole("combobox", { name: "Author 2 name" })).toHaveValue("B. Lee")
+    })
+
+    it("says when the member search fails", async () => {
+      vi.mocked(searchAuthorCandidates).mockResolvedValue({ ok: false })
+      const { user } = renderForm()
+      await openManualEntry(user)
+      await user.click(screen.getByRole("button", { name: "+ Add author" }))
+
+      await user.type(screen.getByLabelText("Author 2 name"), "Ben")
+
+      expect(await screen.findByText(/Could not search members/)).toBeInTheDocument()
+      expect(screen.queryByText(/No members match/)).not.toBeInTheDocument()
+    })
+
+    it("does not show members for older text while a search runs", async () => {
+      const second = deferred<AuthorSearchResult>()
+      vi.mocked(searchAuthorCandidates)
+        .mockResolvedValueOnce(found(benLee))
+        .mockReturnValueOnce(second.promise)
+      const { user } = renderForm()
+      await openManualEntry(user)
+      await user.click(screen.getByRole("button", { name: "+ Add author" }))
+
+      await user.type(screen.getByLabelText("Author 2 name"), "Be")
+      expect(await screen.findByRole("option", { name: /Ben Lee/ })).toBeInTheDocument()
+      await user.type(screen.getByLabelText("Author 2 name"), "x")
+
+      expect(screen.queryByRole("option", { name: /Ben Lee/ })).not.toBeInTheDocument()
+      expect(screen.getByText("Searching…")).toBeInTheDocument()
+      await act(async () => second.resolve(found()))
+      expect(await screen.findByText(/No members match/)).toBeInTheDocument()
     })
   })
 })
