@@ -2,6 +2,7 @@ import { AnimatedSuspense, Heading, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
 import { Logo } from "@/components/Logo"
 import { Routes } from "@/lib/routes"
+import { MobileNav } from "./MobileNav"
 import { NavAuthStatus } from "./NavAuthStatus"
 import { NavLinks } from "./NavLinks"
 
@@ -17,7 +18,8 @@ export const Navbar = () => {
         <Heading level="h4">CCCA</Heading>
       </Link>
 
-      <nav aria-label="Main" className="flex items-center gap-5">
+      {/* Replaced by MobileNav below md. */}
+      <nav aria-label="Main" className="hidden items-center gap-5 md:flex">
         <AnimatedSuspense
           fallback={
             // One bar per guest link - the signed-in set is longer, but the
@@ -34,7 +36,7 @@ export const Navbar = () => {
         </AnimatedSuspense>
       </nav>
 
-      <div className="flex flex-1 justify-end">
+      <div className="hidden flex-1 justify-end md:flex">
         <AnimatedSuspense
           fallback={
             // Matches NavGuestLinks's layout exactly (same
@@ -48,6 +50,12 @@ export const Navbar = () => {
           }
         >
           <NavAuthStatus />
+        </AnimatedSuspense>
+      </div>
+
+      <div className="flex md:hidden">
+        <AnimatedSuspense fallback={<Skeleton className="size-6 rounded-md" />}>
+          <MobileNav />
         </AnimatedSuspense>
       </div>
     </header>
