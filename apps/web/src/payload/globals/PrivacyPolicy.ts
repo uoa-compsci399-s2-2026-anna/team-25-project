@@ -1,0 +1,20 @@
+import type { GlobalConfig } from "payload"
+import { Slugs } from "@/lib/payload/slugs"
+import { isAdmin } from "../access"
+import { revalidatePrivacyPolicy } from "../hooks/PrivacyPolicy"
+
+export const PrivacyPolicy: GlobalConfig = {
+  slug: Slugs.Globals.PRIVACY_POLICY,
+  access: {
+    read: () => true,
+    update: isAdmin,
+  },
+  fields: [
+    {
+      name: "content",
+      type: "richText",
+      required: true,
+    },
+  ],
+  hooks: { afterChange: [revalidatePrivacyPolicy] },
+}
