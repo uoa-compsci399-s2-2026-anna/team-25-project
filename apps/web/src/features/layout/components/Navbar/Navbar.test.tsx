@@ -13,6 +13,9 @@ vi.mock("./NavAuthStatus", () => ({
 vi.mock("./NavLinks", () => ({
   NavLinks: () => <div data-testid="nav-links" />,
 }))
+vi.mock("./MobileNav", () => ({
+  MobileNav: () => <div data-testid="mobile-nav" />,
+}))
 
 describe("Navbar", () => {
   afterEach(() => {
@@ -39,5 +42,17 @@ describe("Navbar", () => {
   it("renders NavAuthStatus", () => {
     render(<Navbar />)
     expect(screen.getByTestId("nav-auth-status")).toBeInTheDocument()
+  })
+
+  it("renders MobileNav", () => {
+    render(<Navbar />)
+    expect(screen.getByTestId("mobile-nav")).toBeInTheDocument()
+  })
+
+  it("hides the desktop links and account below md, and MobileNav from md up", () => {
+    render(<Navbar />)
+    expect(screen.getByRole("navigation", { name: "Main" })).toHaveClass("hidden", "md:flex")
+    expect(screen.getByTestId("nav-auth-status").parentElement).toHaveClass("hidden", "md:flex")
+    expect(screen.getByTestId("mobile-nav").parentElement).toHaveClass("md:hidden")
   })
 })
