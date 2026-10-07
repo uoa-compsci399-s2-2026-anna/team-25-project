@@ -178,4 +178,20 @@ describe("AddCapstoneCourseDialog", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent("Could not save this course. Try again.")
   })
+  it("takes a custom title and opens without a trigger when driven through open", () => {
+    render(
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        onPublish={vi.fn()}
+        onSaveDraft={vi.fn()}
+        onValueChange={vi.fn()}
+        open
+        title="Edit draft course"
+        values={emptyValues}
+      />,
+    )
+
+    expect(screen.getByRole("dialog", { name: "Edit draft course" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "+ Add your course" })).not.toBeInTheDocument()
+  })
 })

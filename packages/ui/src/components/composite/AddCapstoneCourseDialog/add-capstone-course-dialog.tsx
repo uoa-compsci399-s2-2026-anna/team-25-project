@@ -69,8 +69,14 @@ export type AddCapstoneCourseDialogFieldErrors = Partial<
 export type AddCapstoneCourseDialogOption = { label: string; value: string }
 
 export type AddCapstoneCourseDialogProps = {
-  /** Rendered as the dialog's trigger via `DialogTrigger`'s `render` prop. */
-  trigger: React.ReactElement
+  /**
+   * Rendered as the dialog's trigger via `DialogTrigger`'s `render` prop. Left
+   * out when something else opens the dialog through `open`, e.g. reopening a
+   * saved draft from a table row.
+   */
+  trigger?: React.ReactElement
+  /** Defaults to "Add a capstone course". */
+  title?: string
   open?: boolean
   onOpenChange?: (open: boolean) => void
   values: AddCapstoneCourseDialogValues
@@ -95,6 +101,7 @@ export type AddCapstoneCourseDialogProps = {
  */
 export function AddCapstoneCourseDialog({
   trigger,
+  title = "Add a capstone course",
   open,
   onOpenChange,
   values,
@@ -167,14 +174,14 @@ export function AddCapstoneCourseDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogTrigger render={trigger} />
+      {trigger && <DialogTrigger render={trigger} />}
       <DialogContent
         className="max-h-[90vh] gap-0 overflow-y-auto sm:max-w-3xl"
         showCloseButton={false}
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <DialogTitle className="font-bold text-2xl">Add a capstone course</DialogTitle>
+            <DialogTitle className="font-bold text-2xl">{title}</DialogTitle>
             {/* The asterisk is described in words rather than shown inline, so this
                 still reads as a sentence with the decorative marks stripped out. */}
             <DialogDescription>
