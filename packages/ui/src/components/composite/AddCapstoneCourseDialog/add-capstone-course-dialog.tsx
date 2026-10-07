@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/ui/components/ui"
+import { cn } from "@repo/ui/lib/utils"
 import * as React from "react"
 import { RichTextEditor, type RichTextValue } from "../RichTextEditor/rich-text-editor"
 
@@ -89,9 +90,11 @@ export type AddCapstoneCourseDialogProps = {
   /** Kept out of the design system so it never couples to `CourseDeliveryFormat`. */
   deliveryFormatOptions: AddCapstoneCourseDialogOption[]
   /** Which action is in flight, so only that button shows a loading label. */
-  submitting?: "draft" | "publish"
+  submitting?: "draft" | "publish" | "delete"
   onSaveDraft: () => void
   onPublish: () => void
+  /** Shows a "Delete draft" button, which asks to confirm before calling this. */
+  onDelete?: () => void
 }
 
 /**
@@ -112,7 +115,16 @@ export function AddCapstoneCourseDialog({
   submitting,
   onSaveDraft,
   onPublish,
+  onDelete,
 }: AddCapstoneCourseDialogProps) {
+  const [confirmingDelete, setConfirmingDelete] = React.useState(false)
+
+  // Closing backs out of a pending delete confirm.
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) setConfirmingDelete(false)
+    onOpenChange?.(nextOpen)
+  }
+
   const ids = {
     additionalInfo: React.useId(),
     assessments: React.useId(),
@@ -173,7 +185,7 @@ export function AddCapstoneCourseDialog({
   )
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
+    <Dialog onOpenChange={handleOpenChange} open={open}>
       {trigger && <DialogTrigger render={trigger} />}
       {/* The popup only clips to its rounded corners; the inner wrapper does the
           scrolling. Scrolling the popup itself paints the scrollbar square over
@@ -272,24 +284,65 @@ export function AddCapstoneCourseDialog({
             </FieldError>
           )}
 
-          <DialogFooter className="mt-6">
-            <Button
-              borderColor="charcoal"
-              disabled={Boolean(submitting)}
-              onClick={onSaveDraft}
-              type="button"
-              variant="button-transparent"
-            >
-              {submitting === "draft" ? "Saving..." : "Save draft"}
-            </Button>
-            <Button
-              disabled={Boolean(submitting)}
-              onClick={onPublish}
-              type="button"
-              variant="button-mauve"
-            >
-              {submitting === "publish" ? "Publishing..." : "Publish"}
-            </Button>
+          <DialogFooter className={cn("mt-6", onDelete && "sm:items-center sm:justify-between")}>
+            {confirmingDelete ? (
+              <>
+                <p className="text-sm">Delete this draft? This can't be undone.</p>
+                <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                  <Button
+                    borderColor="charcoal"
+                    onClick={() => setConfirmingDelete(false)}
+                    type="button"
+                    variant="button-transparent"
+                  >
+                    {/* Not "Cancel" - the header already has one. */}
+                    Keep draft
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setConfirmingDelete(false)
+                      onDelete?.()
+                    }}
+                    type="button"
+                    variant="button-destructive"
+                  >
+                    Confirm delete
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                {onDelete && (
+                  <Button
+                    disabled={Boolean(submitting)}
+                    onClick={() => setConfirmingDelete(true)}
+                    type="button"
+                    variant="button-destructive-outline"
+                  >
+                    {submitting === "delete" ? "Deleting..." : "Delete draft"}
+                  </Button>
+                )}
+                <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                  <Button
+                    borderColor="charcoal"
+                    disabled={Boolean(submitting)}
+                    onClick={onSaveDraft}
+                    type="button"
+                    variant="button-transparent"
+                  >
+                    {submitting === "draft" ? "Saving..." : "Save draft"}
+                  </Button>
+                  <Button
+                    disabled={Boolean(submitting)}
+                    onClick={onPublish}
+                    type="button"
+                    variant="button-mauve"
+                  >
+                    {submitting === "publish" ? "Publishing..." : "Publish"}
+                  </Button>
+                </div>
+              </>
+            )}
           </DialogFooter>
         </div>
       </DialogContent>
