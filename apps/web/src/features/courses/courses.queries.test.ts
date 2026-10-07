@@ -6,7 +6,7 @@ import {
   getCoursesTableData,
   getLatestPublishedOffering,
   getMyCoursesSummary,
-  getMyDraftCourseRows,
+  getMyDraftCourses,
   getPublishedCourse,
   getPublishedOffering,
   getPublishedOfferings,
@@ -178,7 +178,7 @@ describe("getMyCoursesSummary", () => {
   })
 })
 
-describe("getMyDraftCourseRows", () => {
+describe("getMyDraftCourses", () => {
   const member = { id: 1 } as Member
 
   beforeEach(() => {
@@ -191,14 +191,14 @@ describe("getMyDraftCourseRows", () => {
   it("returns nothing, and queries nothing, when nobody's signed in", async () => {
     vi.mocked(getCurrentUser).mockResolvedValue({ collection: null, user: null })
 
-    expect(await getMyDraftCourseRows()).toEqual([])
+    expect(await getMyDraftCourses()).toEqual({ editable: {}, rows: [] })
     expect(find).not.toHaveBeenCalled()
   })
 
   it("returns nothing for an admin, whose id could match an unrelated member's", async () => {
     vi.mocked(getCurrentUser).mockResolvedValue({ collection: "admin", user: { id: 1 } as Admin })
 
-    expect(await getMyDraftCourseRows()).toEqual([])
+    expect(await getMyDraftCourses()).toEqual({ editable: {}, rows: [] })
     expect(find).not.toHaveBeenCalled()
   })
 
@@ -206,7 +206,7 @@ describe("getMyDraftCourseRows", () => {
     vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: member })
     find.mockResolvedValueOnce({ docs: [course({ id: 4 })] }).mockResolvedValueOnce({ docs: [] })
 
-    await getMyDraftCourseRows()
+    await getMyDraftCourses()
 
     expect(find).toHaveBeenNthCalledWith(
       1,
@@ -227,6 +227,9 @@ describe("getMyDraftCourseRows", () => {
       expect.objectContaining({
         collection: "courseVersions",
         where: { course: { in: [4] } },
+        // A draft saved over an offering only writes a revision, so the
+        // collection row alone would show the offering as first created.
+        draft: true,
         overrideAccess: false,
         user: member,
       }),
@@ -237,7 +240,7 @@ describe("getMyDraftCourseRows", () => {
     vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: member })
     find.mockResolvedValueOnce({ docs: [] })
 
-    expect(await getMyDraftCourseRows()).toEqual([])
+    expect(await getMyDraftCourses()).toEqual({ editable: {}, rows: [] })
     expect(find).toHaveBeenCalledTimes(1)
   })
 
@@ -255,7 +258,8 @@ describe("getMyDraftCourseRows", () => {
       .mockResolvedValueOnce({ docs: [course({ id: 4, code: "COSC 345" })] })
       .mockResolvedValueOnce({ docs: [newer, older] })
 
-    expect(await getMyDraftCourseRows()).toEqual([
+    const { rows } = await getMyDraftCourses()
+    expect(rows).toEqual([
       expect.objectContaining({
         id: "4",
         code: "COSC 345",
@@ -264,6 +268,56 @@ describe("getMyDraftCourseRows", () => {
         year: 2026,
       }),
     ])
+  })
+
+  it("pre-fills each draft's dialog values from its newest offering and the member's position", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      user: { ...member, position: "Senior Lecturer" } as Member,
+    })
+    const draft = version({
+      id: 9,
+      course: 4,
+      name: "Capstone",
+      period: "2026 Semester 2",
+      startDate: "2026-07-20T00:00:00.000Z",
+      endDate: "2026-11-06T00:00:00.000Z",
+      programme: null,
+      _status: "draft",
+    })
+    find
+      .mockResolvedValueOnce({ docs: [course({ id: 4, code: "COSC 345" })] })
+      .mockResolvedValueOnce({ docs: [draft] })
+
+    const { editable } = await getMyDraftCourses()
+
+    expect(editable).toEqual({
+      "4": {
+        courseId: 4,
+        versionId: 9,
+        values: {
+          additionalInfo: null,
+          assessments: null,
+          code: "COSC 345",
+          deliveryFormat: "",
+          endDate: "2026-11-06",
+          learningOutcomes: null,
+          name: "Capstone",
+          period: "2026 Semester 2",
+          programme: "",
+          projectType: "",
+          role: "Senior Lecturer",
+          startDate: "2026-07-20",
+        },
+      },
+    })
+  })
+
+  it("leaves out a draft course with no offering, which would have nothing to open", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: member })
+    find.mockResolvedValueOnce({ docs: [course({ id: 4 })] }).mockResolvedValueOnce({ docs: [] })
+
+    expect(await getMyDraftCourses()).toEqual({ editable: {}, rows: [] })
   })
 })
 

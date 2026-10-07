@@ -23,6 +23,7 @@ import {
 import { constructFilterFn, createColumnHelper, filterFn_arrHas } from "@tanstack/react-table"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { createContext, useContext } from "react"
 import { Routes } from "@/lib/routes"
 
 /**
@@ -65,6 +66,40 @@ const statusVariants = {
   published: "blue",
 } as const
 
+// Lets a draft row open for editing in place of navigating to it - a draft has
+// no course page yet. Shared through context because the column definitions
+// below are static and can't close over page state.
+const OpenDraftCourseContext = createContext<{
+  canOpen: (row: CourseTableRow) => boolean
+  open: (row: CourseTableRow) => void
+} | null>(null)
+
+const focusRing =
+  "focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+
+function CourseCell({ label, row }: { label: string; row: CourseTableRow }) {
+  const draftOpener = useContext(OpenDraftCourseContext)
+  const cell = <StackedCell primary={label} secondary={row.lecturer} />
+
+  if (draftOpener?.canOpen(row)) {
+    return (
+      <button
+        className={`block w-full cursor-pointer rounded-sm text-left ${focusRing}`}
+        onClick={() => draftOpener.open(row)}
+        type="button"
+      >
+        {cell}
+      </button>
+    )
+  }
+
+  return (
+    <Link className={`block rounded-sm ${focusRing}`} href={Routes.COURSES.COURSE(row.id)}>
+      {cell}
+    </Link>
+  )
+}
+
 const helper = createColumnHelper<DataTableFeatures, CourseTableRow>()
 
 export const courseColumns = helper.columns([
@@ -72,14 +107,7 @@ export const courseColumns = helper.columns([
     id: "course",
     filterFn: "includesString",
     header: ({ column }) => <SortableHeader column={column}>Course</SortableHeader>,
-    cell: ({ getValue, row }) => (
-      <Link
-        className="block rounded-sm focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-        href={Routes.COURSES.COURSE(row.original.id)}
-      >
-        <StackedCell primary={getValue()} secondary={row.original.lecturer} />
-      </Link>
-    ),
+    cell: ({ getValue, row }) => <CourseCell label={getValue()} row={row.original} />,
   }),
   helper.accessor("university", {
     header: ({ column }) => <SortableHeader column={column}>University</SortableHeader>,
@@ -155,6 +183,9 @@ export interface CoursesTableProps extends TableVariantProps {
   table: CoursesTableInstance
   isLoading?: boolean
   emptyMessage?: string
+  /** Lets draft rows open for editing; without it every row links to its course page. */
+  canOpenDraft?: (row: CourseTableRow) => boolean
+  onOpenDraft?: (row: CourseTableRow) => void
 }
 
 /**
@@ -168,6 +199,10 @@ export interface CoursesTableProps extends TableVariantProps {
  * `Link` (`isInteractiveDescendant`) to avoid a double navigation. Keyboard
  * users navigate through that link directly, so the row itself isn't made
  * focusable.
+ *
+ * A draft row the caller can open (`canOpenDraft`) calls `onOpenDraft` instead,
+ * from both the row and its course cell, which becomes a button rather than a
+ * link to a course page the draft doesn't have yet.
  */
 export function CoursesTable({
   table,
@@ -175,6 +210,8 @@ export function CoursesTable({
   emptyMessage = "No courses found.",
   density,
   striped,
+  canOpenDraft,
+  onOpenDraft,
 }: CoursesTableProps) {
   const router = useRouter()
 
@@ -182,19 +219,33 @@ export function CoursesTable({
     return <CoursesTableSkeleton density={density} striped={striped} />
   }
 
+  const draftOpener =
+    canOpenDraft && onOpenDraft
+      ? {
+          canOpen: (row: CourseTableRow) => row.status === "draft" && canOpenDraft(row),
+          open: onOpenDraft,
+        }
+      : null
+
   return (
-    <DataTable
-      density={density}
-      emptyMessage={emptyMessage}
-      getRowProps={(row) => ({
-        className: "cursor-pointer",
-        onClick: (event) => {
-          if (isInteractiveDescendant(event)) return
-          router.push(Routes.COURSES.COURSE(row.original.id))
-        },
-      })}
-      striped={striped}
-      table={table}
-    />
+    <OpenDraftCourseContext value={draftOpener}>
+      <DataTable
+        density={density}
+        emptyMessage={emptyMessage}
+        getRowProps={(row) => ({
+          className: "cursor-pointer",
+          onClick: (event) => {
+            if (isInteractiveDescendant(event)) return
+            if (draftOpener?.canOpen(row.original)) {
+              draftOpener.open(row.original)
+              return
+            }
+            router.push(Routes.COURSES.COURSE(row.original.id))
+          },
+        })}
+        striped={striped}
+        table={table}
+      />
+    </OpenDraftCourseContext>
   )
 }
