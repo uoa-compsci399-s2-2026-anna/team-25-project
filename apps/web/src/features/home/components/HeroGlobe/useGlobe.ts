@@ -28,15 +28,13 @@ export const useGlobe = (markers: GlobeMarker[]) => {
       mapBrightness: 6,
       baseColor: [1, 1, 1],
       markerColor: [0.2, 0.4, 1],
+      markerElevation: 0.02,
       glowColor: [1, 1, 1],
       markers: markers.map((marker) => ({
         id: marker.id,
         location: marker.location,
         size: 0.03,
       })),
-      arcColor: [0.3, 0.5, 1],
-      arcWidth: 0.5,
-      arcHeight: 0.3,
     })
 
     let frame = 0
