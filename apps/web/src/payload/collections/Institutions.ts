@@ -49,8 +49,22 @@ export const Institutions: CollectionConfig = {
         {
           type: "row",
           fields: [
-            { name: "latitude", type: "number", required: true, min: -90, max: 90 },
-            { name: "longitude", type: "number", required: true, min: -180, max: 180 },
+            {
+              name: "latitude",
+              type: "number",
+              defaultValue: 0,
+              required: true,
+              min: -90,
+              max: 90,
+            },
+            {
+              name: "longitude",
+              type: "number",
+              defaultValue: 0,
+              required: true,
+              min: -180,
+              max: 180,
+            },
           ],
         },
         {
