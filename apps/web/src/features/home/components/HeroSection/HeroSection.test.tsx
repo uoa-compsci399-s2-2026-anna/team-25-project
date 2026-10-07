@@ -8,12 +8,12 @@ describe("HeroSection", () => {
   })
 
   it("renders the eyebrow text", () => {
-    render(<HeroSection />)
+    render(<HeroSection markers={[]} />)
     expect(screen.getByText("Computing Capstone Community Australasia")).toBeInTheDocument()
   })
 
   it("renders the heading as an h1", () => {
-    render(<HeroSection />)
+    render(<HeroSection markers={[]} />)
     expect(
       screen.getByRole("heading", {
         level: 1,
@@ -23,7 +23,7 @@ describe("HeroSection", () => {
   })
 
   it("renders the description", () => {
-    render(<HeroSection />)
+    render(<HeroSection markers={[]} />)
     expect(
       screen.getByText(
         /Academics across Australian and New Zealand universities post research ideas/,
@@ -32,13 +32,13 @@ describe("HeroSection", () => {
   })
 
   it("renders the globe", () => {
-    render(<HeroSection />)
+    render(<HeroSection markers={[]} />)
     expect(screen.getByLabelText("Globe - drag to rotate")).toBeInTheDocument()
   })
 
   // Registering is asked for in Who can join now, so the hero makes no second ask.
   it("renders no call to action", () => {
-    render(<HeroSection />)
+    render(<HeroSection markers={[]} />)
     expect(screen.queryAllByRole("button")).toHaveLength(0)
   })
 })
