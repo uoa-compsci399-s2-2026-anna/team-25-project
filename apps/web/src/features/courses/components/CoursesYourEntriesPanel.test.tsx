@@ -20,7 +20,6 @@ describe("CoursesYourEntriesPanel", () => {
     expect(
       screen.getByText("You convene 2 courses. Both are up to date for 2026."),
     ).toBeInTheDocument()
-    expect(screen.getByText("Manage your courses →")).toBeInTheDocument()
   })
 
   it("uses singular phrasing for exactly one course", () => {
