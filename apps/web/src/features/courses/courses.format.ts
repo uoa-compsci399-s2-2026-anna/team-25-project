@@ -5,6 +5,9 @@ import type { CourseTableRow } from "./components/CoursesTable"
 const asPopulated = <T>(value: number | T | null | undefined): T | undefined =>
   typeof value === "number" || value === null || value === undefined ? undefined : value
 
+export const ownerIdOf = (course: Pick<Course, "owner">): number | undefined =>
+  typeof course.owner === "number" ? course.owner : course.owner?.id
+
 const formatLecturerName = (member: Member) => `${member.firstName.charAt(0)}. ${member.lastName}`
 
 // Picks the coordinator if there is one, otherwise the first teaching-team
@@ -69,6 +72,8 @@ export const toCourseTableRow = (
 export interface EditableDraftCourse {
   courseId: number
   versionId: number
+  /** Only the owner may delete a draft; its editors can still edit it. */
+  canDelete: boolean
   values: AddCapstoneCourseDialogValues
 }
 
@@ -86,14 +91,15 @@ type DialogRichText = AddCapstoneCourseDialogValues["learningOutcomes"]
 
 /**
  * Pre-fills the dialog from a draft. Drafts never store "Your role" - it only
- * becomes a teaching-team row on publish - so `role` is the member's profile
+ * becomes a teaching-team row on publish - so the viewer's `role` is their profile
  * position, the same default a new course starts from.
  */
 export const toEditableDraftCourse = (
   course: Course,
   version: CourseVersion,
-  role: string,
+  viewer: { id: number; role: string },
 ): EditableDraftCourse => ({
+  canDelete: ownerIdOf(course) === viewer.id,
   courseId: course.id,
   versionId: version.id,
   values: {
@@ -107,7 +113,7 @@ export const toEditableDraftCourse = (
     period: version.period ?? "",
     programme: version.programme ?? "",
     projectType: version.projectType ?? "",
-    role,
+    role: viewer.role,
     startDate: toDateInput(version.startDate),
   },
 })

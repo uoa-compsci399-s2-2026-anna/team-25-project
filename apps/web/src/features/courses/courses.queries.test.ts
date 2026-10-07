@@ -293,6 +293,7 @@ describe("getMyDraftCourses", () => {
 
     expect(editable).toEqual({
       "4": {
+        canDelete: true,
         courseId: 4,
         versionId: 9,
         values: {
@@ -311,6 +312,20 @@ describe("getMyDraftCourses", () => {
         },
       },
     })
+  })
+
+  it("lets only the owner delete a draft, not an editor", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      user: { id: 7 } as Member,
+    })
+    find
+      .mockResolvedValueOnce({ docs: [course({ id: 4, editors: [7] })] })
+      .mockResolvedValueOnce({ docs: [version({ id: 9, course: 4, _status: "draft" })] })
+
+    const { editable } = await getMyDraftCourses()
+
+    expect(editable["4"]?.canDelete).toBe(false)
   })
 
   it("leaves out a draft course with no offering, which would have nothing to open", async () => {

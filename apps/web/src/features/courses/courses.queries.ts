@@ -125,13 +125,13 @@ export const getMyDraftCourses = async (): Promise<MyDraftCourses> => {
   // reopen and no course page to link to, so it's left out rather than listed
   // as a dead end.
   const latestVersions = latestVersionByCourseId(versions)
-  const role = user.position ?? ""
+  const viewer = { id: user.id, role: user.position ?? "" }
   const drafts: MyDraftCourses = { editable: {}, rows: [] }
   for (const course of courses) {
     const version = latestVersions.get(course.id)
     if (!version) continue
     drafts.rows.push(toCourseTableRow(course, version))
-    drafts.editable[String(course.id)] = toEditableDraftCourse(course, version, role)
+    drafts.editable[String(course.id)] = toEditableDraftCourse(course, version, viewer)
   }
   return drafts
 }
