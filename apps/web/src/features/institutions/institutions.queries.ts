@@ -1,5 +1,5 @@
 import { QueryKeys } from "@repo/shared/constants/query-keys"
-import type { Institution } from "@repo/shared/payload-types"
+import type { Institution, Media } from "@repo/shared/payload-types"
 import { cacheLife, cacheTag } from "next/cache"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
@@ -63,6 +63,31 @@ export const getInstitution = async (institutionId: number): Promise<Institution
   return docs[0] ?? null
 }
 
+export type InstitutionLogo = Pick<Institution, "id" | "name"> & {
+  logo: Pick<Media, "id"> & { url: string; width?: number | null; height?: number | null }
+}
+
+// Only institutions that opted in with `showLogo` and actually have a logo uploaded -
+// the public ticker has nothing to show for the rest.
+export const getInstitutionsWithLogos = async (): Promise<InstitutionLogo[]> => {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: Slugs.Collections.INSTITUTIONS,
+    where: { showLogo: { equals: true }, logo: { exists: true } },
+    select: { name: true, logo: true },
+    depth: 1,
+    pagination: false,
+    sort: "name",
+  })
+
+  return docs.flatMap(({ id, name, logo }) => {
+    if (typeof logo !== "object" || logo === null || !logo.url) return []
+    return [
+      { id, name, logo: { id: logo.id, url: logo.url, width: logo.width, height: logo.height } },
+    ]
+  })
+}
+
 export const getInstitutionOptionsCached = async () => {
   "use cache"
   cacheLife("max")
@@ -89,4 +114,11 @@ export const getInstitutionCached = async (institutionId: number) => {
   cacheLife("max")
   cacheTag(QueryKeys.INSTITUTIONS)
   return getInstitution(institutionId)
+}
+
+export const getInstitutionsWithLogosCached = async () => {
+  "use cache"
+  cacheLife("max")
+  cacheTag(QueryKeys.INSTITUTIONS)
+  return getInstitutionsWithLogos()
 }

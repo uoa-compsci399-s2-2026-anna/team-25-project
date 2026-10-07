@@ -1,6 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
-import { Routes } from "@/lib/routes"
 import { HeroSection } from "./HeroSection"
 
 describe("HeroSection", () => {
@@ -32,17 +31,15 @@ describe("HeroSection", () => {
     ).toBeInTheDocument()
   })
 
-  it("links Become a member to the register route", () => {
+  // Standing in for the interactive map until that ticket lands.
+  it("reserves the space for the map", () => {
     render(<HeroSection />)
-    expect(screen.getByRole("button", { name: "Become a member" })).toHaveAttribute(
-      "href",
-      Routes.REGISTER.ROOT,
-    )
+    expect(screen.getByTestId("hero-map-placeholder")).toBeInTheDocument()
   })
 
-  // The design replaced the two-button pair with a single call to action.
-  it("renders only the one call to action", () => {
+  // Registering is asked for in Who can join now, so the hero makes no second ask.
+  it("renders no call to action", () => {
     render(<HeroSection />)
-    expect(screen.getAllByRole("button")).toHaveLength(1)
+    expect(screen.queryAllByRole("button")).toHaveLength(0)
   })
 })

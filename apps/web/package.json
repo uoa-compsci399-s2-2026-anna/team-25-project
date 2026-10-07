@@ -29,6 +29,10 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^9.1.0",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/modifiers": "^9.0.0",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@payloadcms/db-postgres": "3.87.1",
     "@payloadcms/next": "3.87.1",
     "@payloadcms/richtext-lexical": "3.87.1",
@@ -38,6 +42,7 @@
     "@repo/ui": "workspace:*",
     "@scalar/nextjs-api-reference": "^0.11.13",
     "@tanstack/react-form": "^1.33.5",
+    "@tanstack/react-pacer": "^0.24.0",
     "@tanstack/react-table": "^9.2.4",
     "dotenv": "16.4.7",
     "graphql": "^16.8.1",

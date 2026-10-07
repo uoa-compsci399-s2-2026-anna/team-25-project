@@ -1,18 +1,22 @@
 import { FilterBarSkeleton } from "@repo/ui/components/composite"
 import { getActiveInstitutionOptionsCached } from "@/features/institutions/institutions.queries"
 import { PageContainer } from "@/features/layout/components"
+import { getResearchInterestOptionsCached } from "../members.queries"
 import { MembersActiveFilters } from "./MembersActiveFilters"
 import { MembersFilterBar } from "./MembersFilterBar"
 
-// Two strips on the page, but one institutions fetch and one Suspense boundary.
+// Two strips on the page, but one Suspense boundary and one fetch of each option list.
 export const MembersFilterServer = async () => {
-  const institutions = await getActiveInstitutionOptionsCached()
+  const [institutions, researchInterests] = await Promise.all([
+    getActiveInstitutionOptionsCached(),
+    getResearchInterestOptionsCached(),
+  ])
 
   return (
     <>
       <div className="w-full bg-brand-cream/60">
         <PageContainer className="px-10 py-5 md:px-12">
-          <MembersFilterBar institutions={institutions} />
+          <MembersFilterBar institutions={institutions} researchInterests={researchInterests} />
         </PageContainer>
       </div>
       <PageContainer>
@@ -26,7 +30,7 @@ export const MembersFilterServer = async () => {
 export const MembersFilterServerSkeleton = () => (
   <div className="w-full bg-brand-cream/60">
     <PageContainer className="px-10 py-5 md:px-12">
-      <FilterBarSkeleton filterCount={2} />
+      <FilterBarSkeleton filterCount={3} />
     </PageContainer>
   </div>
 )
