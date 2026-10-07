@@ -31,10 +31,9 @@ describe("HeroSection", () => {
     ).toBeInTheDocument()
   })
 
-  // Standing in for the interactive map until that ticket lands.
-  it("reserves the space for the map", () => {
+  it("renders the globe", () => {
     render(<HeroSection />)
-    expect(screen.getByTestId("hero-map-placeholder")).toBeInTheDocument()
+    expect(screen.getByLabelText("Globe - drag to rotate")).toBeInTheDocument()
   })
 
   // Registering is asked for in Who can join now, so the hero makes no second ask.
