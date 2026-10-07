@@ -9,6 +9,9 @@ import { Button, toast } from "@repo/ui/components/ui"
 import type { ComponentProps } from "react"
 import { useState } from "react"
 import { createCourse } from "../actions/createCourse"
+import { updateDraftCourse } from "../actions/updateDraftCourse"
+import type { EditableDraftCourse } from "../courses.format"
+import { useCourseForm } from "./useCourseForm"
 
 const baseValues: AddCapstoneCourseDialogValues = {
   additionalInfo: null,
@@ -29,9 +32,6 @@ const deliveryFormatOptions = Object.values(CourseDeliveryFormat).map((value) =>
   label: CourseDeliveryFormatLabels[value],
   value,
 }))
-
-type FieldErrors = Partial<Record<keyof AddCapstoneCourseDialogValues, string>>
-type Intent = "draft" | "publish"
 
 export interface AddCourseDialogProps {
   /**
@@ -60,71 +60,91 @@ export function AddCourseTriggerButton(props: ComponentProps<typeof Button>) {
 
 export function AddCourseDialog({ defaultRole }: AddCourseDialogProps) {
   const [open, setOpen] = useState(false)
-  const [values, setValues] = useState(baseValues)
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
-  const [formError, setFormError] = useState<string | undefined>(undefined)
-  const [submitting, setSubmitting] = useState<Intent | undefined>(undefined)
+  const form = useCourseForm({
+    failureMessage: "Could not add this course. Try again.",
+    initialValues: baseValues,
+    onSaved: (values, intent) => {
+      toast.add({
+        description:
+          intent === "publish"
+            ? `${values.code} is now published.`
+            : `${values.code} was saved as a draft.`,
+        title: "Course added",
+      })
+      setOpen(false)
+    },
+    save: (values, intent) => createCourse({ ...values, intent }),
+  })
 
-  // Reopening always starts from a clean form - this dialog has no "continue
-  // editing a draft" mode, only "start a new one".
+  // Reopening always starts from a clean form - continuing a saved draft is
+  // `EditDraftCourseDialog`'s job, opened from the draft's row in the table.
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen)
     if (!nextOpen) return
 
-    setValues(baseValues)
-    setFieldErrors({})
-    setFormError(undefined)
+    form.reset(baseValues)
     // Seed "Your role" from the profile once that's known - but only into a
     // still-blank field, so a role the user has already typed while it was on
     // its way is never overwritten. A failed lookup just leaves it blank.
     void defaultRole.then(
-      (role) => setValues((current) => (current.role ? current : { ...current, role })),
+      (role) => form.setValues((current) => (current.role ? current : { ...current, role })),
       () => undefined,
     )
   }
 
-  const submit = async (intent: Intent) => {
-    setSubmitting(intent)
-    setFieldErrors({})
-    setFormError(undefined)
+  return (
+    <AddCapstoneCourseDialog
+      {...form.dialogProps}
+      deliveryFormatOptions={deliveryFormatOptions}
+      onOpenChange={handleOpenChange}
+      open={open}
+      trigger={<AddCourseTriggerButton />}
+    />
+  )
+}
 
-    try {
-      const result = await createCourse({ ...values, intent })
+export interface EditDraftCourseDialogProps {
+  draft: EditableDraftCourse
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
 
-      if (result.ok) {
-        toast.add({
-          description:
-            intent === "publish"
-              ? `${values.code} is now published.`
-              : `${values.code} was saved as a draft.`,
-          title: "Course added",
-        })
-        setOpen(false)
-        return
-      }
-
-      setFieldErrors((result.fieldErrors as FieldErrors | undefined) ?? {})
-      setFormError(result.formError)
-    } catch {
-      setFormError("Could not add this course. Try again.")
-    } finally {
-      setSubmitting(undefined)
-    }
-  }
+/**
+ * The add-course dialog reopened over a saved draft, pre-filled with what it
+ * holds. Saving updates that same course and offering rather than creating a
+ * new draft, and publishing publishes it.
+ *
+ * Its values seed once, on mount - the rich-text editors only read theirs then -
+ * so the caller remounts it (a fresh `key`) each time a draft is opened.
+ */
+export function EditDraftCourseDialog({ draft, open, onOpenChange }: EditDraftCourseDialogProps) {
+  const form = useCourseForm({
+    failureMessage: "Could not save this course. Try again.",
+    initialValues: draft.values,
+    onSaved: (values, intent) => {
+      toast.add(
+        intent === "publish"
+          ? { description: `${values.code} is now published.`, title: "Course published" }
+          : { description: `${values.code} was saved.`, title: "Draft updated" },
+      )
+      onOpenChange(false)
+    },
+    save: (values, intent) =>
+      updateDraftCourse({
+        ...values,
+        courseId: draft.courseId,
+        intent,
+        versionId: draft.versionId,
+      }),
+  })
 
   return (
     <AddCapstoneCourseDialog
+      {...form.dialogProps}
       deliveryFormatOptions={deliveryFormatOptions}
-      fieldErrors={fieldErrors}
-      formError={formError}
-      onOpenChange={handleOpenChange}
-      onPublish={() => void submit("publish")}
-      onSaveDraft={() => void submit("draft")}
-      onValueChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
+      onOpenChange={onOpenChange}
       open={open}
-      submitting={submitting}
-      trigger={<AddCourseTriggerButton />}
-      values={values}
+      title="Edit draft course"
     />
   )
 }
