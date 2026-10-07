@@ -1,8 +1,10 @@
 import { initials } from "@repo/shared/utils/initials"
+import { normaliseResearchInterests } from "@repo/shared/utils/research-interests"
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
+  Badge,
   Card,
   CardDescription,
   CardHeader,
@@ -23,7 +25,11 @@ export type MemberCardProps = {
   avatarSrc?: string
   /** The member's profile page. */
   href: AppRoute
+  researchInterests?: string[] | null
 }
+
+/** A member may list ten; past this the card stops being a card. */
+const INTERESTS_SHOWN = 3
 
 export const MemberCard = ({
   avatarSrc,
@@ -33,8 +39,13 @@ export const MemberCard = ({
   institution,
   lastName,
   position,
+  researchInterests,
 }: MemberCardProps) => {
   const affiliation = [institution, country].filter(Boolean).join(" - ")
+  // Free text, so blanks and repeats are possible; both would render as noise.
+  const interests = normaliseResearchInterests(researchInterests ?? [])
+  const shown = interests.slice(0, INTERESTS_SHOWN)
+  const hidden = interests.length - shown.length
 
   return (
     <Link
@@ -62,6 +73,24 @@ export const MemberCard = ({
               </CardDescription>
             )}
           </div>
+
+          {shown.length > 0 && (
+            <ul className="flex flex-wrap gap-1.5">
+              {shown.map((interest) => (
+                <li className="min-w-0 max-w-full" key={interest}>
+                  {/* Interests run to 50 characters, wider than a card in a four-column grid. */}
+                  <Badge className="max-w-full truncate" variant="blue">
+                    {interest}
+                  </Badge>
+                </li>
+              ))}
+              {hidden > 0 && (
+                <li>
+                  <Badge variant="outline">{`+${hidden}`}</Badge>
+                </li>
+              )}
+            </ul>
+          )}
         </CardHeader>
       </Card>
     </Link>

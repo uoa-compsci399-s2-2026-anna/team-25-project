@@ -1,0 +1,34 @@
+/*
+ * Storybook runs on plain Vite, so the `next/font` setup in apps/web `(app)/layout.tsx`
+ * never runs here. This file mirrors it: load the same fonts and define the
+ * `--font-sans` / `--font-mono` variables that globals.css relies on.
+ */
+@import "@fontsource-variable/geist-mono";
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("../../../apps/web/src/app/(app)/fonts/Satoshi-Variable.ttf") format("truetype");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("../../../apps/web/src/app/(app)/fonts/Satoshi-VariableItalic.ttf") format("truetype");
+  font-weight: 300 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+}
+
+/* Same as the `antialiased font-sans` classes on <html> in the web app */
+html {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

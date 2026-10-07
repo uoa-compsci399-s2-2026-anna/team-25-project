@@ -122,6 +122,7 @@ type RichTextEditorProps = {
   "aria-describedby"?: string
   "aria-invalid"?: boolean
   "aria-labelledby"?: string
+  "aria-required"?: boolean
   className?: string
   /**
    * Read once on mount, and later changes are ignored. The editor is uncontrolled, so to
@@ -146,6 +147,7 @@ const RichTextEditor = ({
   "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
   "aria-labelledby": ariaLabelledBy,
+  "aria-required": ariaRequired,
 }: RichTextEditorProps) => {
   const [{ initialValue, loadProblem }] = useState(() => {
     const value = defaultValue && !isEmpty(defaultValue) ? defaultValue : undefined
@@ -191,6 +193,7 @@ const RichTextEditor = ({
                   ariaInvalid={ariaInvalid}
                   ariaLabelledBy={ariaLabelledBy}
                   ariaMultiline
+                  ariaRequired={ariaRequired}
                   className={cn(
                     textAreaVariants({ variant: "box" }),
                     "rich-text min-h-40",

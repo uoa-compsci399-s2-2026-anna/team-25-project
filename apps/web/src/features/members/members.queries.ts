@@ -2,6 +2,7 @@ import { QueryKeys } from "@repo/shared/constants/query-keys"
 import type { InstitutionCountry } from "@repo/shared/enums/institutions"
 import type { Institution, Member } from "@repo/shared/payload-types"
 import type { Pagination } from "@repo/shared/types/pagination"
+import { normaliseResearchInterests } from "@repo/shared/utils/research-interests"
 import { cacheLife, cacheTag } from "next/cache"
 import { connection } from "next/server"
 import type { Where } from "payload"
@@ -15,6 +16,7 @@ export const MEMBERS_PAGE_SIZE = 12
 export type MemberFilters = {
   institutionId?: Institution["id"]
   country?: InstitutionCountry
+  researchInterests?: string[]
   search?: string
   sort?: MemberSort
 }
@@ -44,6 +46,14 @@ const memberFiltersToWhere = (filters: MemberFilters): Where => {
     }
   }
 
+  // Options are the stored values themselves, so matching is exact. On a hasMany field
+  // `in` holds a member when any one of their interests is among those picked.
+  if (filters.researchInterests?.length) {
+    where.researchInterests = {
+      in: filters.researchInterests,
+    }
+  }
+
   return where
 }
 
@@ -65,6 +75,7 @@ export const getMembers = async (filters: MemberFilters, pagination: Pagination)
       institution: true,
       lastName: true,
       position: true,
+      researchInterests: true,
     },
     // id breaks surname ties; without it paging can repeat or skip a member.
     sort: filters.sort === "surnameDesc" ? ["-lastName", "id"] : ["lastName", "id"],
@@ -81,6 +92,37 @@ export const countMembers = async (filters: MemberFilters) => {
     where: memberFiltersToWhere(filters),
   })
   return totalDocs
+}
+
+export type ResearchInterestOption = { value: string; label: string }
+
+/**
+ * The filter's options are the interests members actually entered, since the field is free
+ * text with no fixed vocabulary. Case is kept, because the filter matches on equality and
+ * Postgres compares case-sensitively - folding "Generative AI" and "generative AI" into one
+ * option here would hide every member who spelled it the other way.
+ */
+export const getResearchInterestOptions = async (): Promise<ResearchInterestOption[]> => {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: Slugs.Collections.MEMBERS,
+    depth: 0,
+    pagination: false,
+    select: { researchInterests: true },
+  })
+
+  return normaliseResearchInterests(
+    docs.flatMap(({ researchInterests }) => researchInterests ?? []),
+  )
+    .sort((a, b) => a.localeCompare(b))
+    .map((interest) => ({ label: interest, value: interest }))
+}
+
+export const getResearchInterestOptionsCached = async () => {
+  "use cache"
+  cacheLife("max")
+  cacheTag(QueryKeys.MEMBERS.ROOT)
+  return getResearchInterestOptions()
 }
 
 /** What the header reports: how many members these filters leave, out of the whole directory. */
@@ -128,6 +170,34 @@ export const getMemberProposalsCached = async (memberId: number) => {
   cacheLife("max")
   cacheTag(QueryKeys.PROPOSALS.ROOT)
   return getMemberProposals(memberId)
+}
+
+/** The resources the member shared, newest first, with only what the profile's cards draw. */
+export const getMemberResources = async (memberId: number) => {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: Slugs.Collections.RESOURCES,
+    where: { owner: { equals: memberId } },
+    // id breaks ties between resources shared in the same instant.
+    sort: ["-createdAt", "-id"],
+    // Depth 1 reaches the course's code; attachments are only counted.
+    depth: 1,
+    pagination: false,
+    populate: {
+      [Slugs.Collections.COURSES]: { code: true },
+      [Slugs.Collections.RESOURCE_ATTACHMENTS]: { filename: true },
+    },
+    select: { attachments: true, course: true, createdAt: true, title: true },
+  })
+  return docs
+}
+
+export const getMemberResourcesCached = async (memberId: number) => {
+  "use cache"
+  cacheLife("max")
+  // The cards show each course's code, so they go stale with the courses too.
+  cacheTag(QueryKeys.RESOURCES.ROOT, QueryKeys.COURSES.ROOT)
+  return getMemberResources(memberId)
 }
 
 export const getMemberCoursesConvenedCount = async (memberId: number) => {

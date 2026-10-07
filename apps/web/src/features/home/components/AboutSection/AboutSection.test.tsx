@@ -17,10 +17,16 @@ describe("AboutSection", () => {
     for (const [number, title] of [
       ["01", "Member directory"],
       ["02", "Research proposals"],
-      ["03", "Course comparison"],
+      ["03", "Workshop"],
     ]) {
       expect(screen.getByText(number)).toBeInTheDocument()
       expect(screen.getByRole("heading", { level: 3, name: title })).toBeInTheDocument()
     }
+  })
+
+  // The card it used to have its own slot for. It reads as part of 02 now.
+  it("keeps course comparison on the proposals card", () => {
+    render(<AboutSection />)
+    expect(screen.getByText(/Record course data annually/)).toBeInTheDocument()
   })
 })
