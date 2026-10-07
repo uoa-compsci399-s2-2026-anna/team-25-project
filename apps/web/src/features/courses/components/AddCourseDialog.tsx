@@ -9,6 +9,7 @@ import { Button, toast } from "@repo/ui/components/ui"
 import type { ComponentProps } from "react"
 import { useState } from "react"
 import { createCourse } from "../actions/createCourse"
+import { deleteDraftCourse } from "../actions/deleteDraftCourse"
 import { updateDraftCourse } from "../actions/updateDraftCourse"
 import type { EditableDraftCourse } from "../courses.format"
 import { useCourseForm } from "./useCourseForm"
@@ -112,7 +113,7 @@ export interface EditDraftCourseDialogProps {
 /**
  * The add-course dialog reopened over a saved draft, pre-filled with what it
  * holds. Saving updates that same course and offering rather than creating a
- * new draft, and publishing publishes it.
+ * new draft, and publishing publishes it. Its owner can also delete it from here.
  *
  * Its values seed once, on mount - the rich-text editors only read theirs then -
  * so the caller remounts it (a fresh `key`) each time a draft is opened.
@@ -121,6 +122,16 @@ export function EditDraftCourseDialog({ draft, open, onOpenChange }: EditDraftCo
   const form = useCourseForm({
     failureMessage: "Could not save this course. Try again.",
     initialValues: draft.values,
+    remove: draft.canDelete
+      ? {
+          action: () => deleteDraftCourse({ courseId: draft.courseId }),
+          failureMessage: "Could not delete this draft. Try again.",
+          onRemoved: () => {
+            toast.add({ description: `${draft.values.code} was deleted.`, title: "Draft deleted" })
+            onOpenChange(false)
+          },
+        }
+      : undefined,
     onSaved: (values, intent) => {
       toast.add(
         intent === "publish"

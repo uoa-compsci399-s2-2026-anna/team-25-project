@@ -2,6 +2,7 @@ import { toast } from "@repo/ui/components/ui"
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { createCourse } from "../actions/createCourse"
+import { deleteDraftCourse } from "../actions/deleteDraftCourse"
 import { updateDraftCourse } from "../actions/updateDraftCourse"
 import type { MyDraftCourses } from "../courses.format"
 import {
@@ -15,6 +16,7 @@ import { coursesFilterBarClassName } from "./CoursesToolbar"
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }))
 vi.mock("../actions/createCourse", () => ({ createCourse: vi.fn() }))
 vi.mock("../actions/updateDraftCourse", () => ({ updateDraftCourse: vi.fn() }))
+vi.mock("../actions/deleteDraftCourse", () => ({ deleteDraftCourse: vi.fn() }))
 
 const rows: Array<CourseTableRow> = Array.from({ length: 15 }, (_, index) => ({
   id: String(index + 1),
@@ -76,6 +78,7 @@ describe("CoursesListClient drafts", () => {
     rows: [draftRow],
     editable: {
       "4": {
+        canDelete: true,
         courseId: 4,
         versionId: 9,
         values: {
@@ -96,8 +99,8 @@ describe("CoursesListClient drafts", () => {
     },
   }
 
-  const renderWithDrafts = () =>
-    render(<CoursesListClient draftsSlot={<ShareMyDraftCourses drafts={drafts} />} rows={[]} />)
+  const renderWithDrafts = (shared: MyDraftCourses = drafts) =>
+    render(<CoursesListClient draftsSlot={<ShareMyDraftCourses drafts={shared} />} rows={[]} />)
 
   const openDraft = () =>
     fireEvent.click(screen.getByRole("button", { name: "COSC 345 Draft capstoneA. Tui" }))
@@ -187,6 +190,51 @@ describe("CoursesListClient drafts", () => {
 
     expect(await screen.findByText("This course has already been published.")).toBeInTheDocument()
     expect(screen.getByRole("dialog", { name: "Edit draft course" })).toBeInTheDocument()
+  })
+
+  it("deletes the selected draft after confirming, then closes", async () => {
+    vi.mocked(deleteDraftCourse).mockResolvedValue({ ok: true })
+    renderWithDrafts()
+
+    openDraft()
+    fireEvent.click(screen.getByRole("button", { name: "Delete draft" }))
+    expect(deleteDraftCourse).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole("button", { name: "Confirm delete" }))
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    })
+    expect(deleteDraftCourse).toHaveBeenCalledWith({ courseId: 4 })
+    expect(updateDraftCourse).not.toHaveBeenCalled()
+  })
+
+  it("keeps the dialog open with the error when deleting fails", async () => {
+    vi.mocked(deleteDraftCourse).mockResolvedValue({
+      formError: "Only the course's owner can delete this draft.",
+      ok: false,
+    })
+    renderWithDrafts()
+
+    openDraft()
+    fireEvent.click(screen.getByRole("button", { name: "Delete draft" }))
+    fireEvent.click(screen.getByRole("button", { name: "Confirm delete" }))
+
+    expect(
+      await screen.findByText("Only the course's owner can delete this draft."),
+    ).toBeInTheDocument()
+    expect(screen.getByRole("dialog", { name: "Edit draft course" })).toBeInTheDocument()
+  })
+
+  it("offers no delete to an editor who doesn't own the draft", () => {
+    renderWithDrafts({
+      ...drafts,
+      editable: { "4": { ...drafts.editable["4"], canDelete: false } },
+    })
+
+    openDraft()
+
+    expect(screen.getByRole("button", { name: "Save draft" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Delete draft" })).not.toBeInTheDocument()
   })
 
   it("drops unsaved edits when the draft is closed and reopened", async () => {

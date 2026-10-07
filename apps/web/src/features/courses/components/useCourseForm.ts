@@ -6,6 +6,7 @@ import type { ActionResult } from "@/features/auth/actions/types"
 
 type FieldErrors = Partial<Record<keyof AddCapstoneCourseDialogValues, string>>
 export type CourseFormIntent = "draft" | "publish"
+type Submitting = CourseFormIntent | "delete"
 
 export interface UseCourseFormOptions {
   initialValues: AddCapstoneCourseDialogValues
@@ -15,6 +16,12 @@ export interface UseCourseFormOptions {
   onSaved: (values: AddCapstoneCourseDialogValues, intent: CourseFormIntent) => void
   /** Shown when `save` itself throws rather than returning an error. */
   failureMessage: string
+  /** Enables the dialog's "Delete draft" button. */
+  remove?: {
+    action: () => Promise<ActionResult>
+    onRemoved: () => void
+    failureMessage: string
+  }
 }
 
 /**
@@ -27,11 +34,12 @@ export function useCourseForm({
   save,
   onSaved,
   failureMessage,
+  remove,
 }: UseCourseFormOptions) {
   const [values, setValues] = useState(initialValues)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [formError, setFormError] = useState<string | undefined>(undefined)
-  const [submitting, setSubmitting] = useState<CourseFormIntent | undefined>(undefined)
+  const [submitting, setSubmitting] = useState<Submitting | undefined>(undefined)
 
   const reset = (nextValues: AddCapstoneCourseDialogValues) => {
     setValues(nextValues)
@@ -39,32 +47,48 @@ export function useCourseForm({
     setFormError(undefined)
   }
 
-  const submit = async (intent: CourseFormIntent) => {
-    setSubmitting(intent)
+  const run = async (
+    action: Submitting,
+    request: () => Promise<ActionResult>,
+    onDone: () => void,
+    thrownMessage: string,
+  ) => {
+    setSubmitting(action)
     setFieldErrors({})
     setFormError(undefined)
 
     try {
-      const result = await save(values, intent)
+      const result = await request()
 
       if (result.ok) {
-        onSaved(values, intent)
+        onDone()
         return
       }
 
       setFieldErrors((result.fieldErrors as FieldErrors | undefined) ?? {})
       setFormError(result.formError)
     } catch {
-      setFormError(failureMessage)
+      setFormError(thrownMessage)
     } finally {
       setSubmitting(undefined)
     }
   }
 
+  const submit = (intent: CourseFormIntent) =>
+    run(
+      intent,
+      () => save(values, intent),
+      () => onSaved(values, intent),
+      failureMessage,
+    )
+
   return {
     dialogProps: {
       fieldErrors,
       formError,
+      onDelete:
+        remove &&
+        (() => void run("delete", remove.action, remove.onRemoved, remove.failureMessage)),
       onPublish: () => void submit("publish"),
       onSaveDraft: () => void submit("draft"),
       onValueChange: <Field extends keyof AddCapstoneCourseDialogValues>(
