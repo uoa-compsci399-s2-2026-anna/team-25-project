@@ -40,6 +40,45 @@ export const Institutions: CollectionConfig = {
       fields: [{ name: "domain", type: "text", required: true }],
     },
     {
+      // Plain numbers rather than a `point` field - we only plot these, never query
+      // by distance, so there's no need for PostGIS.
+      name: "location",
+      label: "GPS coordinates",
+      type: "group",
+      fields: [
+        {
+          type: "row",
+          fields: [
+            {
+              name: "latitude",
+              type: "number",
+              defaultValue: 0,
+              required: true,
+              min: -90,
+              max: 90,
+            },
+            {
+              name: "longitude",
+              type: "number",
+              defaultValue: 0,
+              required: true,
+              min: -180,
+              max: 180,
+            },
+          ],
+        },
+        {
+          name: "lookup",
+          type: "ui",
+          admin: {
+            components: {
+              Field: "/payload/components/GeocodeInstitutionButton#GeocodeInstitutionButton",
+            },
+          },
+        },
+      ],
+    },
+    {
       name: "logo",
       type: "upload",
       relationTo: Slugs.Collections.MEDIA,
