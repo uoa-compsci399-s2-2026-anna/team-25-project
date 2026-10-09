@@ -102,9 +102,68 @@ export const MultiSelect: StoryFn<typeof FilterBar> = () => {
   )
 }
 
+/**
+ * `groupControls` keeps the filters and sort together, so they wrap to the next row
+ * as one unit rather than one at a time. Narrow this story's viewport to see it.
+ */
+export const Grouped: StoryFn<typeof FilterBar> = () => {
+  const [status, setStatus] = useState("active")
+  const [search, setSearch] = useState("")
+  const [institution, setInstitution] = useState<number | null>(null)
+  const [tag, setTag] = useState<string | null>(null)
+  const [sort, setSort] = useState("newest")
+
+  return (
+    <div className="bg-brand-cream/60 p-5">
+      <FilterBar
+        filters={[
+          {
+            id: "institution",
+            onValueChange: (value) => setInstitution(value),
+            options: institutions,
+            placeholder: "University",
+            value: institution,
+          } satisfies FilterBarFilter<number>,
+          {
+            id: "tag",
+            onValueChange: (value) => setTag(value),
+            options: tags,
+            placeholder: "Interest area",
+            value: tag,
+          } satisfies FilterBarFilter<string>,
+        ]}
+        groupControls
+        onSearchChange={setSearch}
+        onSortChange={setSort}
+        onStatusChange={setStatus}
+        search={search}
+        searchPlaceholder="Search proposals..."
+        sort={sort}
+        sortOptions={[
+          { label: "Newest first", value: "newest" },
+          { label: "Oldest first", value: "oldest" },
+        ]}
+        status={status}
+        statusOptions={[
+          { count: 27, label: "Active", value: "active" },
+          { count: 14, label: "Closed", value: "closed" },
+          { label: "All", value: "all" },
+        ]}
+      />
+    </div>
+  )
+}
+
 /** Holds the bar's space while its options load. */
 export const Skeleton: StoryFn<typeof FilterBar> = () => (
   <div className="bg-brand-cream/60 p-5">
     <FilterBarSkeleton filterCount={2} statusCount={3} />
+  </div>
+)
+
+/** The skeleton for a grouped bar, matching `Grouped` above. */
+export const GroupedSkeleton: StoryFn<typeof FilterBar> = () => (
+  <div className="bg-brand-cream/60 p-5">
+    <FilterBarSkeleton filterCount={2} groupControls statusCount={3} />
   </div>
 )

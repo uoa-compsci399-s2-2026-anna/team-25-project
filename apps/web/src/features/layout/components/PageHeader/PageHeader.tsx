@@ -9,16 +9,30 @@ export interface PageHeaderProps {
   actions?: React.ReactNode
   /** Vertical alignment of `actions` against the description on wide screens. */
   align?: "center" | "end"
+  /** Centres the title, description and actions on phones. Off by default, as the other pages keep them left-aligned. */
+  centerOnMobile?: boolean
 }
 
-export function PageHeader({ title, description, actions, align = "center" }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  description,
+  actions,
+  align = "center",
+  centerOnMobile = false,
+}: PageHeaderProps) {
   return (
-    <div className="flex flex-col gap-4 px-10 pt-12 pb-8 md:px-12">
+    <div
+      className={cn(
+        "flex flex-col gap-4 px-10 pt-12 pb-8 md:px-12",
+        centerOnMobile && "max-md:items-center max-md:text-center",
+      )}
+    >
       <Heading level="h1">{title}</Heading>
       <div
         className={cn(
           "flex flex-col gap-4 md:flex-row md:justify-between md:gap-8",
           align === "end" ? "md:items-end" : "md:items-center",
+          centerOnMobile && "max-md:items-center max-md:text-center",
         )}
       >
         <div className="w-full max-w-2xl text-muted-foreground">{description}</div>
