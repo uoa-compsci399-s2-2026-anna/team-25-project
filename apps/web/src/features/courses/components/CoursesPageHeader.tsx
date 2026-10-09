@@ -22,6 +22,7 @@ export function CoursesPageHeader({ rows }: CoursesPageHeaderProps) {
           <AddCourseTrigger />
         </div>
       }
+      centerOnMobile
       {...coursesPageHeading}
     />
   )

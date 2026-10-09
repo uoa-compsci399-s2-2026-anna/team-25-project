@@ -1,32 +1,63 @@
 "use client"
 
 import { cn } from "@repo/ui/lib/utils"
+import { ArrowRightIcon } from "lucide-react"
 import type * as React from "react"
+import { useRef } from "react"
+import { useScrollOverflow } from "./hooks/use-scroll-overflow"
 import { type TableVariantProps, tableVariants } from "./table.variants"
+
+type TableProps = React.ComponentProps<"table"> &
+  TableVariantProps & {
+    /** Classes for the scrolling wrapper. */
+    containerClassName?: string
+    /** Names the scrolling region for screen readers, e.g. "Courses". */
+    scrollLabel?: string
+  }
 
 function Table({
   className,
   containerClassName,
   density = "comfortable",
+  scrollLabel = "Table",
   striped = false,
   ...props
-}: React.ComponentProps<"table"> &
-  TableVariantProps & {
-    /** Classes for the scrolling wrapper, which owns the container styling. */
-    containerClassName?: string
-  }) {
+}: TableProps) {
+  const containerRef = useRef<HTMLElement>(null)
+  // Fades whichever edge has more columns past it, so a table too wide for the
+  // screen reads as scrollable rather than cut off.
+  const overflow = useScrollOverflow(containerRef)
+
   return (
-    <div
-      className={cn(tableVariants.container({ density, striped }), containerClassName)}
-      data-density={density}
-      data-slot="table-container"
-      data-striped={striped}
-    >
-      <table
-        className={cn(tableVariants.root(), className, "rounded-5")}
-        data-slot="table"
-        {...props}
-      />
+    <div className={tableVariants.wrapper()} data-slot="table-wrapper">
+      <section
+        // A labelled, focusable region (a named <section>) lets keyboard users
+        // scroll with the arrow keys, as most rows have no link or button to tab
+        // into. Only while there is something to scroll, so a table that fits
+        // adds no tab stop.
+        aria-label={scrollLabel}
+        className={cn(tableVariants.container({ density, striped }), containerClassName)}
+        data-density={density}
+        data-overflow-end={overflow.end}
+        data-overflow-start={overflow.start}
+        data-slot="table-container"
+        data-striped={striped}
+        ref={containerRef}
+        tabIndex={overflow.start || overflow.end ? 0 : undefined}
+      >
+        <div className={tableVariants.card()} data-slot="table-card">
+          <table
+            className={cn(tableVariants.root(), className, "rounded-5")}
+            data-slot="table"
+            {...props}
+          />
+        </div>
+      </section>
+      {/* Decorative: the fade says the same thing, and screen readers move by cell. */}
+      <p aria-hidden className={tableVariants.hint()} data-slot="table-scroll-hint">
+        Scroll for more
+        <ArrowRightIcon />
+      </p>
     </div>
   )
 }
@@ -77,6 +108,7 @@ export {
   TableFooter,
   TableHead,
   TableHeader,
+  type TableProps,
   TableRow,
   type TableVariantProps,
 }
