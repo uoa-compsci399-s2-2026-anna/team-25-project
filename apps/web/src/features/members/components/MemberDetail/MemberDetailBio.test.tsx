@@ -36,12 +36,16 @@ describe("MemberBio", () => {
     expect(screen.getByText("Researches peer assessment.")).toBeInTheDocument()
   })
 
-  it.each([null, undefined, "", "   "])("renders nothing when the bio is %j", async (bio) => {
-    vi.mocked(getMemberDetailsCached).mockResolvedValue({ bio } as never)
+  it.each([null, undefined, "", "   "])(
+    "shows no heading or text when the bio is %j",
+    async (bio) => {
+      vi.mocked(getMemberDetailsCached).mockResolvedValue({ bio } as never)
 
-    await renderBio()
-    expect(screen.getByTestId("subject")).toBeEmptyDOMElement()
-  })
+      await renderBio()
+      expect(screen.queryByText("ABOUT")).not.toBeInTheDocument()
+      expect(screen.getByTestId("subject").textContent?.trim()).toBe("")
+    },
+  )
 
   it("swaps the bio for a text area seeded with it when editing", async () => {
     vi.mocked(getMemberDetailsCached).mockResolvedValue({ id: 7, bio: "My bio" } as never)
@@ -50,14 +54,27 @@ describe("MemberBio", () => {
     await renderBio()
     await user.click(screen.getByRole("button", { name: "Edit" }))
 
-    expect(screen.getByRole("textbox", { name: "Bio" })).toHaveValue("My bio")
+    expect(screen.getByText("ABOUT")).toBeInTheDocument()
+    expect(screen.getByRole("textbox", { name: "About" })).toHaveValue("My bio")
   })
 
-  it("renders nothing when the member doesn't exist", async () => {
+  it("lets a member with no bio add one when editing", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue({ id: 7, bio: null } as never)
+    const user = userEvent.setup()
+
+    await renderBio()
+    await user.click(screen.getByRole("button", { name: "Edit" }))
+
+    expect(screen.getByText("ABOUT")).toBeInTheDocument()
+    expect(screen.getByRole("textbox", { name: "About" })).toHaveValue("")
+  })
+
+  it("shows no heading or text when the member doesn't exist", async () => {
     vi.mocked(getMemberDetailsCached).mockResolvedValue(null)
 
     await renderBio()
-    expect(screen.getByTestId("subject")).toBeEmptyDOMElement()
+    expect(screen.queryByText("ABOUT")).not.toBeInTheDocument()
+    expect(screen.getByTestId("subject").textContent?.trim()).toBe("")
   })
 })
 

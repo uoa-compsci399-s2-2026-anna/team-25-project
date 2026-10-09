@@ -1,20 +1,17 @@
 "use client"
 
-import type { MemberTitle } from "@repo/shared/enums/members"
 import { memberProfileSchema } from "@repo/shared/schemas/members"
 import { useForm } from "@tanstack/react-form"
 import { createContext, type ReactNode, useContext, useState } from "react"
+import type { z } from "zod"
 import { toProfileFormData } from "../../actions/profileFormData"
 import { updateMemberProfile } from "../../actions/updateMemberProfile"
 
-/** Every profile attribute an Edit component can bind to, keyed by form field name. */
-export type ProfileValues = {
-  title: MemberTitle | null
-  firstName: string
-  lastName: string
-  position: string
-  bio: string
-  researchInterests: string[]
+/**
+ * Every profile attribute an Edit component can bind to, keyed by form field name.
+ * Derived from the schema so a field added there can't be missed here.
+ */
+export type ProfileValues = Required<z.input<typeof memberProfileSchema>> & {
   /** A newly picked photo, or null to keep the current one. */
   avatar: File | null
 }
@@ -38,9 +35,13 @@ const useProfileForm = (onSaved: () => void, onError: (message: string) => void)
     // The form won't submit while any field has an error.
     validators: { onChange: validateProfile },
     onSubmit: async ({ value }) => {
-      const result = await updateMemberProfile(toProfileFormData(value))
-      if (result.ok) onSaved()
-      else onError(result.formError ?? "Could not save. Try again.")
+      try {
+        const result = await updateMemberProfile(toProfileFormData(value))
+        if (result.ok) onSaved()
+        else onError(result.formError ?? "Could not save. Try again.")
+      } catch {
+        onError("An unexpected error occurred. Please try again.")
+      }
     },
   })
 

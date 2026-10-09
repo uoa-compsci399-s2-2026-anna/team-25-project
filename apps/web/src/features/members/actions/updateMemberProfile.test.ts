@@ -28,6 +28,8 @@ const mockPayload = (overrides: Record<string, unknown> = {}) => {
   return payload
 }
 
+const BROKEN_REQUEST = "Something went wrong sending your changes. Refresh and try again."
+
 const png = () => new File(["data"], "photo.png", { type: "image/png" })
 
 describe("updateMemberProfile", () => {
@@ -79,14 +81,28 @@ describe("updateMemberProfile", () => {
       expect(payload.update).not.toHaveBeenCalled()
     })
 
-    it("rejects profile data that isn't JSON", async () => {
+    it.each([
+      ["isn't JSON", "{not json"],
+      ["is missing", undefined],
+    ])("reports a broken request when the profile data %s", async (_, profile) => {
       const payload = mockPayload()
       const formData = new FormData()
-      formData.set("profile", "{not json")
+      if (profile !== undefined) formData.set("profile", profile)
 
       const result = await updateMemberProfile(formData)
 
-      expect(result).toMatchObject({ ok: false })
+      expect(result).toEqual({ formError: BROKEN_REQUEST, ok: false })
+      expect(payload.update).not.toHaveBeenCalled()
+    })
+
+    it("reports a broken request, not a raw schema message, when the JSON isn't an object", async () => {
+      const payload = mockPayload()
+      const formData = new FormData()
+      formData.set("profile", "5")
+
+      const result = await updateMemberProfile(formData)
+
+      expect(result).toEqual({ fieldErrors: {}, formError: BROKEN_REQUEST, ok: false })
       expect(payload.update).not.toHaveBeenCalled()
     })
 

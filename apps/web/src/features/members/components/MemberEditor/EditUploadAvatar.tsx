@@ -36,6 +36,7 @@ export const EditUploadAvatar = ({
     {(control) => (
       <AvatarUpload
         accept={accept.join(",")}
+        disabled={control.disabled}
         fallback={fallback}
         image={image}
         onFileSelect={control.setValue}

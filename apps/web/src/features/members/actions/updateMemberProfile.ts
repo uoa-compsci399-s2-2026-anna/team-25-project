@@ -9,12 +9,16 @@ import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
 import { AVATAR_KEY, PROFILE_KEY } from "./profileFormData"
 
-const parseJson = (value: FormDataEntryValue | null): unknown => {
-  if (typeof value !== "string") return {}
+const BROKEN_REQUEST = "Something went wrong sending your changes. Refresh and try again."
+
+/** The profile JSON from the form, or undefined when it's missing or not valid JSON. */
+const readProfile = (formData: FormData): unknown => {
+  const raw = formData.get(PROFILE_KEY)
+  if (typeof raw !== "string") return undefined
   try {
-    return JSON.parse(value)
+    return JSON.parse(raw)
   } catch {
-    return null
+    return undefined
   }
 }
 
@@ -24,18 +28,19 @@ export const updateMemberProfile = async (formData: FormData): Promise<ActionRes
     return { formError: "Sign in as a member to edit your profile.", ok: false }
   }
 
-  const parsed = memberProfileSchema.safeParse(parseJson(formData.get(PROFILE_KEY)))
+  const profile = readProfile(formData)
+  if (profile === undefined) return { formError: BROKEN_REQUEST, ok: false }
+
+  const parsed = memberProfileSchema.safeParse(profile)
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {}
     for (const issue of parsed.error.issues) {
       const field = issue.path.join(".")
       if (field && !fieldErrors[field]) fieldErrors[field] = issue.message
     }
-    return {
-      fieldErrors,
-      formError: parsed.error.issues[0]?.message ?? "Check your changes and try again.",
-      ok: false,
-    }
+    // An issue without a field (e.g. the JSON isn't an object) means a broken request, not a user mistake.
+    const [firstFieldError] = Object.values(fieldErrors)
+    return { fieldErrors, formError: firstFieldError ?? BROKEN_REQUEST, ok: false }
   }
 
   const avatar = formData.get(AVATAR_KEY)
