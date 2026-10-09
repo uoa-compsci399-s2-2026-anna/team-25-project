@@ -47,7 +47,7 @@ export const ProposalsFilterBar = ({ counts, institutions }: ProposalsFilterBarP
       // On phones the dropdowns shrink so all three fit on one line. Scoped here, so
       // the shared FilterBar keeps its size on the other pages. The grouped gap
       // itself is groupControls's own default, not reachable from this className.
-      className="max-md:justify-center md:flex-wrap md:justify-center xl:justify-start max-md:[&_[data-slot=select-trigger]]:px-2 max-md:[&_[data-slot=select-trigger]]:text-xs"
+      className="max-md:justify-center md:flex-wrap md:justify-start max-md:[&_[data-slot=select-trigger]]:px-2 max-md:[&_[data-slot=select-trigger]]:text-xs"
       filters={[
         {
           id: "institution",

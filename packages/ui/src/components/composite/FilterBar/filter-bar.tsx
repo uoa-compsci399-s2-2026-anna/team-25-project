@@ -233,7 +233,7 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
         // Its own gap, not the outer bar's: a caller's className only reaches this
         // wrapper's properties through a descendant selector, never its own gap.
         <div
-          className="flex flex-wrap items-center justify-center gap-2 md:mx-auto md:gap-3 xl:mr-0 xl:justify-start"
+          className="flex flex-wrap items-center justify-center gap-2 md:ml-auto md:justify-start md:gap-3"
           data-slot="filter-bar-group"
         >
           {controls}
@@ -295,7 +295,7 @@ function FilterBarSkeleton({
       <Skeleton className="order-first h-10 w-full rounded-full md:order-none md:w-80 md:min-w-32" />
       {groupControls ? (
         <div
-          className="flex flex-wrap items-center justify-center gap-2 md:mx-auto md:gap-3 xl:mr-0 xl:justify-start"
+          className="flex flex-wrap items-center justify-center gap-2 md:ml-auto md:justify-start md:gap-3"
           data-slot="filter-bar-group"
         >
           {placeholders}
