@@ -32,11 +32,13 @@ function Table({
       data-striped={striped}
       ref={containerRef}
     >
-      <table
-        className={cn(tableVariants.root(), className, "rounded-5")}
-        data-slot="table"
-        {...props}
-      />
+      <div className={tableVariants.card()} data-slot="table-card">
+        <table
+          className={cn(tableVariants.root(), className, "rounded-5")}
+          data-slot="table"
+          {...props}
+        />
+      </div>
     </div>
   )
 }

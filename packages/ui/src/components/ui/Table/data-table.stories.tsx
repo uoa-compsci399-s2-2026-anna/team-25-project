@@ -253,12 +253,13 @@ export const ClickableRows: Story = (args) => {
 /**
  * Too wide for its container, as on a phone. The table scrolls sideways and
  * fades whichever edge has more columns past it; scroll to see the left fade
- * appear and the right one go.
+ * appear and the right one go. `--table-bleed` matches the padding, so the
+ * card starts in line with it but scrolls out to the container's edge.
  */
 export const Overflowing: Story = (args) => {
   const table = useDataTable({ columns, data: courses })
   return (
-    <div className="max-w-sm">
+    <div className="max-w-sm px-6 [--table-bleed:--spacing(6)]">
       <DataTable {...args} table={table} />
     </div>
   )

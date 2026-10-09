@@ -6,12 +6,19 @@ import { cva, type VariantProps } from "class-variance-authority"
  * parts react through `group-data-*` selectors.
  */
 const tableVariants = {
+  // The scroller. On a page that sets `--table-bleed` to its side padding, it
+  // stretches out to the screen edges and pads back in by the same amount, so
+  // the card starts in line with the page but scrolls all the way off the edge.
+  // `--table-inset` pads back in by a different amount instead, e.g. to sit the
+  // card closer to the screen edge than the rest of the page.
+  //
   // The edge fades are a mask, not an overlay, so they fade the content into
   // whatever sits behind the table without matching the card or header colour.
   // `Table` sets `data-overflow-*` while columns are hidden past that edge.
   container: cva(
     [
-      "group/table relative w-full overflow-x-auto rounded-4xl bg-brand-blush/30",
+      "group/table relative overflow-x-auto",
+      "mx-[calc(var(--table-bleed,0px)*-1)] px-[var(--table-inset,var(--table-bleed,0px))]",
       "[--fade-end:0px] [--fade-start:0px] data-[overflow-end=true]:[--fade-end:3rem] data-[overflow-start=true]:[--fade-start:3rem]",
       "[mask-image:linear-gradient(to_right,transparent,#000_var(--fade-start),#000_calc(100%_-_var(--fade-end)),transparent)]",
     ],
@@ -32,6 +39,8 @@ const tableVariants = {
       },
     },
   ),
+  // Owns the card styling, so the rounded edge scrolls with the columns.
+  card: cva("w-max min-w-full overflow-hidden rounded-4xl bg-brand-blush/30"),
   root: cva("w-full caption-bottom text-sm"),
   header: cva(""),
   body: cva(""),

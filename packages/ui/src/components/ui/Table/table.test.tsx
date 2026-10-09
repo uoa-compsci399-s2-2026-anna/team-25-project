@@ -47,6 +47,7 @@ describe("Table", () => {
     const { container } = renderTable()
     for (const name of [
       "table-container",
+      "table-card",
       "table",
       "table-caption",
       "table-header",
@@ -68,13 +69,23 @@ describe("Table", () => {
     const wrapper = slot(container, "table-container")
     expect(wrapper).toHaveAttribute("data-density", "comfortable")
     expect(wrapper).toHaveAttribute("data-striped", "false")
-    expect(wrapper).toHaveClass(
-      "group/table",
-      "overflow-x-auto",
-      "rounded-4xl",
-      "bg-brand-blush/30",
-    )
+    expect(wrapper).toHaveClass("group/table", "overflow-x-auto")
     expect(wrapper).toContainElement(screen.getByRole("table"))
+  })
+
+  it("puts the card styling inside the scroller, so it scrolls with the columns", () => {
+    const { container } = renderTable()
+    const card = slot(container, "table-card")
+    expect(card).toHaveClass("rounded-4xl", "bg-brand-blush/30", "min-w-full")
+    expect(slot(container, "table-container")).toContainElement(card as HTMLElement)
+    expect(card).toContainElement(screen.getByRole("table"))
+  })
+
+  it("bleeds the scroller through the page padding named by --table-bleed", () => {
+    const container = tableVariants.container()
+    expect(container).toContain("mx-[calc(var(--table-bleed,0px)*-1)]")
+    // Pads back in by --table-inset when set, otherwise by the full bleed.
+    expect(container).toContain("px-[var(--table-inset,var(--table-bleed,0px))]")
   })
 
   it("publishes the compact density and the striped flag", () => {
