@@ -203,6 +203,32 @@ describe("Table scroll overflow", () => {
     expect(wrapper).toHaveAttribute("data-overflow-end", "false")
   })
 
+  it("names the scroller as a region, from scrollLabel or a default", () => {
+    renderTable()
+    expect(screen.getByRole("region", { name: "Table" })).toBeInTheDocument()
+    cleanup()
+    renderTable({ scrollLabel: "Courses" })
+    expect(screen.getByRole("region", { name: "Courses" })).toBeInTheDocument()
+  })
+
+  it("is a tab stop only while there is something to scroll", () => {
+    const { container } = renderTable()
+    const wrapper = slot(container, "table-container") as HTMLElement
+    expect(wrapper).not.toHaveAttribute("tabindex")
+
+    stubScroll(wrapper, { clientWidth: 300, scrollLeft: 0, scrollWidth: 600 })
+    act(() => {
+      fireEvent.scroll(wrapper)
+    })
+    expect(wrapper).toHaveAttribute("tabindex", "0")
+  })
+
+  it("draws the focus ring on the card, inside the edge fade", () => {
+    expect(tableVariants.container()).toContain("outline-none")
+    expect(tableVariants.card()).toContain("group-focus-visible/table:outline-ring/50")
+    expect(tableVariants.card()).toContain("group-focus-visible/table:-outline-offset-[3px]")
+  })
+
   it("only fades an edge while it is flagged", () => {
     const container = tableVariants.container()
     expect(container).toContain("data-[overflow-end=true]:[--fade-end:3rem]")
