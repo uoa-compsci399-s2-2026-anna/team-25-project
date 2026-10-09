@@ -230,7 +230,14 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
       </InputGroup>
 
       {groupControls ? (
-        <div className="flex flex-wrap items-center gap-3 md:mx-auto xl:ml-auto">{controls}</div>
+        // Its own gap, not the outer bar's: a caller's className only reaches this
+        // wrapper's properties through a descendant selector, never its own gap.
+        <div
+          className="flex flex-wrap items-center justify-center gap-2 md:mx-auto md:gap-3 xl:ml-auto xl:justify-start"
+          data-slot="filter-bar-group"
+        >
+          {controls}
+        </div>
       ) : (
         controls
       )}
@@ -243,15 +250,31 @@ type FilterBarSkeletonProps = React.ComponentProps<"div"> & {
   statusCount?: number
   /** How many select filters the real bar shows, not counting sort. */
   filterCount?: number
+  /** Matches a grouped `FilterBar`, so the loading state doesn't jump to a different row count once the real bar replaces it. */
+  groupControls?: boolean
 }
 
 /** Holds the same space as `FilterBar` while its options load, so nothing shifts. */
 function FilterBarSkeleton({
   className,
   filterCount = 0,
+  groupControls = false,
   statusCount = 0,
   ...props
 }: FilterBarSkeletonProps) {
+  const placeholders = (
+    <>
+      {Array.from({ length: filterCount }, (_, index) => `filter-${index}`).map((id) => (
+        <Skeleton
+          className="h-10 w-32 shrink-0 rounded-full"
+          data-slot="filter-bar-skeleton-filter"
+          key={id}
+        />
+      ))}
+      <Skeleton className="h-10 w-36 shrink-0 rounded-full md:ml-auto" />
+    </>
+  )
+
   return (
     <div
       className={cn(
@@ -270,14 +293,16 @@ function FilterBarSkeleton({
         />
       )}
       <Skeleton className="order-first h-10 w-full rounded-full md:order-none md:w-80 md:min-w-32" />
-      {Array.from({ length: filterCount }, (_, index) => `filter-${index}`).map((id) => (
-        <Skeleton
-          className="h-10 w-32 shrink-0 rounded-full"
-          data-slot="filter-bar-skeleton-filter"
-          key={id}
-        />
-      ))}
-      <Skeleton className="h-10 w-36 shrink-0 rounded-full md:ml-auto" />
+      {groupControls ? (
+        <div
+          className="flex flex-wrap items-center justify-center gap-2 md:mx-auto md:gap-3 xl:ml-auto xl:justify-start"
+          data-slot="filter-bar-group"
+        >
+          {placeholders}
+        </div>
+      ) : (
+        placeholders
+      )}
     </div>
   )
 }
