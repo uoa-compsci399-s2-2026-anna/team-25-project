@@ -27,5 +27,12 @@ export const ProposalsFilterServer = async ({
 }
 
 export const ProposalsFilterBarSkeleton = () => (
-  <FilterBarSkeleton filterCount={2} statusCount={proposalStatusFilters.length} />
+  <FilterBarSkeleton
+    // Matches ProposalsFilterBar's own layout, so the loading state doesn't jump
+    // to a different row count once the real bar replaces it.
+    className="md:flex-wrap md:justify-center xl:justify-start"
+    filterCount={2}
+    groupControls
+    statusCount={proposalStatusFilters.length}
+  />
 )
