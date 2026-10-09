@@ -46,8 +46,10 @@ describe("Table", () => {
   it("renders every part with its slot", () => {
     const { container } = renderTable()
     for (const name of [
+      "table-wrapper",
       "table-container",
       "table-card",
+      "table-scroll-hint",
       "table",
       "table-caption",
       "table-header",
@@ -86,6 +88,18 @@ describe("Table", () => {
     expect(container).toContain("mx-[calc(var(--table-bleed,0px)*-1)]")
     // Pads back in by --table-inset when set, otherwise by the full bleed.
     expect(container).toContain("px-[var(--table-inset,var(--table-bleed,0px))]")
+  })
+
+  it("hides the scroll hint from screen readers and from wide screens", () => {
+    const { container } = renderTable()
+    const hint = slot(container, "table-scroll-hint")
+    expect(hint).toHaveAttribute("aria-hidden", "true")
+    expect(hint).toHaveTextContent("Scroll for more")
+    expect(hint).toHaveClass("md:hidden", "opacity-0")
+    // Shown through the wrapper only while columns are hidden past the right edge.
+    expect(tableVariants.hint()).toContain(
+      "group-has-[[data-overflow-end=true]]/table-wrapper:opacity-100",
+    )
   })
 
   it("publishes the compact density and the striped flag", () => {

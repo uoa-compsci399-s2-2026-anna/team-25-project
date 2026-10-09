@@ -6,6 +6,8 @@ import { cva, type VariantProps } from "class-variance-authority"
  * parts react through `group-data-*` selectors.
  */
 const tableVariants = {
+  // Holds the scroller and the scroll hint beneath it.
+  wrapper: cva("group/table-wrapper flex w-full flex-col gap-2"),
   // The scroller. On a page that sets `--table-bleed` to its side padding, it
   // stretches out to the screen edges and pads back in by the same amount, so
   // the card starts in line with the page but scrolls all the way off the edge.
@@ -56,6 +58,11 @@ const tableVariants = {
     "whitespace-nowrap px-6 align-middle [&:has([role=checkbox])]:pr-0 group-data-[density=comfortable]/table:py-4 group-data-[density=compact]/table:py-1.5",
   ),
   caption: cva("mt-4 text-muted-foreground text-sm"),
+  // Phones only, and only while columns are still hidden past the right edge.
+  // It fades out rather than unmounting, so the content below doesn't jump.
+  hint: cva(
+    "flex items-center justify-end gap-1 text-muted-foreground text-xs opacity-0 transition-opacity group-has-[[data-overflow-end=true]]/table-wrapper:opacity-100 md:hidden [&_svg]:size-3",
+  ),
 }
 
 type TableVariantProps = VariantProps<typeof tableVariants.container>
