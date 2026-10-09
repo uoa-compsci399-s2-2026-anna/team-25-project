@@ -1,4 +1,5 @@
 import { Eyebrow, Heading } from "@repo/ui/components/ui"
+import { HeroGlobe } from "../HeroGlobe/HeroGlobe"
 
 export const HeroSection = () => {
   return (
@@ -18,12 +19,7 @@ export const HeroSection = () => {
 
       {/* Holds the space the interactive map will take, which is its own ticket. */}
       <div className="flex justify-center md:flex-1">
-        <div
-          className="flex aspect-4/5 w-full max-w-sm items-center justify-center rounded-2xl bg-muted text-muted-foreground text-sm"
-          data-testid="hero-map-placeholder"
-        >
-          Interactive map
-        </div>
+        <HeroGlobe />
       </div>
     </section>
   )
