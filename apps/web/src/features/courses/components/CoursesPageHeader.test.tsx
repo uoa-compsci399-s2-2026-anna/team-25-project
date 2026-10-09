@@ -36,4 +36,11 @@ describe("CoursesPageHeader", () => {
     expect(screen.getByRole("button", { name: "Export CSV" })).toBeInTheDocument()
     expect(screen.getByText("Add course trigger")).toBeInTheDocument()
   })
+
+  it("centres the header on phones, as on the proposals page", () => {
+    render(<CoursesPageHeader rows={rows} />)
+
+    const heading = screen.getByRole("heading", { level: 1, name: "Capstone courses" })
+    expect(heading.parentElement).toHaveClass("max-md:items-center", "max-md:text-center")
+  })
 })
