@@ -1,6 +1,12 @@
 import { cleanup, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { HeroSection } from "./HeroSection"
+
+// Never resolves, so the globe stays on its skeleton - the globe itself is covered in
+// InstitutionsGlobe.test.tsx.
+vi.mock("../../globe.queries", () => ({
+  getInstitutionMarkersCached: vi.fn(() => new Promise(() => {})),
+}))
 
 describe("HeroSection", () => {
   afterEach(() => {
@@ -31,9 +37,9 @@ describe("HeroSection", () => {
     ).toBeInTheDocument()
   })
 
-  it("renders the globe", () => {
-    render(<HeroSection />)
-    expect(screen.getByLabelText("Globe - drag to rotate")).toBeInTheDocument()
+  it("shows the globe's skeleton while its markers load", () => {
+    const { container } = render(<HeroSection />)
+    expect(container.querySelector(".animate-pulse")).toBeInTheDocument()
   })
 
   // Registering is asked for in Who can join now, so the hero makes no second ask.

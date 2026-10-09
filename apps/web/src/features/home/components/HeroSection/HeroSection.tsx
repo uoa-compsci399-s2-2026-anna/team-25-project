@@ -1,5 +1,6 @@
 import { Eyebrow, Heading } from "@repo/ui/components/ui"
-import { HeroGlobe } from "../HeroGlobe/HeroGlobe"
+import { Suspense } from "react"
+import { HeroGlobeSkeleton, InstitutionsGlobe } from "../HeroGlobe/InstitutionsGlobe"
 
 export const HeroSection = () => {
   return (
@@ -17,9 +18,12 @@ export const HeroSection = () => {
         </p>
       </div>
 
-      {/* Holds the space the interactive map will take, which is its own ticket. */}
+      {/* Takes the space the copy leaves and centres the globe in it, rather than
+          pinning it to the section's right edge. */}
       <div className="flex justify-center md:flex-1">
-        <HeroGlobe />
+        <Suspense fallback={<HeroGlobeSkeleton />}>
+          <InstitutionsGlobe />
+        </Suspense>
       </div>
     </section>
   )

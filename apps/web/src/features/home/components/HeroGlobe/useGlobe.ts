@@ -1,22 +1,12 @@
 import createGlobe from "cobe"
 import { useEffect, useRef } from "react"
+import type { GlobeMarker } from "../../globe.queries"
 
 const DRAG_SPEED = 0.005
 // How far up or down the globe can tilt, in radians (about 70°), so it can't flip over a pole.
 const MAX_TILT = 1.2
 
-export type GlobeMarker = {
-  id: string
-  location: [lat: number, lng: number]
-  label: string
-}
-
-export const GLOBE_MARKERS: GlobeMarker[] = [
-  { id: "sydney", location: [-33.87, 151.21], label: "Sydney" },
-  { id: "auckland", location: [-36.85, 174.76], label: "Auckland" },
-]
-
-export const useGlobe = () => {
+export const useGlobe = (markers: GlobeMarker[]) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -38,21 +28,20 @@ export const useGlobe = () => {
       mapBrightness: 6,
       baseColor: [1, 1, 1],
       markerColor: [0.2, 0.4, 1],
+      markerElevation: 0.02,
       glowColor: [1, 1, 1],
-      markers: GLOBE_MARKERS.map((marker) => ({
+      markers: markers.map((marker) => ({
         id: marker.id,
         location: marker.location,
         size: 0.03,
       })),
-      arcColor: [0.3, 0.5, 1],
-      arcWidth: 0.5,
-      arcHeight: 0.3,
     })
 
     let frame = 0
     const start = performance.now()
     function redraw() {
       globe.update({})
+      // biome-ignore lint/nursery/useReactCompiler: false positive - redraw is local to the effect and only schedules itself
       if (performance.now() - start < 1000) frame = requestAnimationFrame(redraw)
     }
     frame = requestAnimationFrame(redraw)
@@ -87,7 +76,7 @@ export const useGlobe = () => {
       canvas.removeEventListener("pointercancel", onPointerUp)
       globe.destroy()
     }
-  }, [])
+  }, [markers])
 
   return canvasRef
 }
