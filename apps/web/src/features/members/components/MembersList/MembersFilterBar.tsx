@@ -5,13 +5,13 @@ import { toSelectOptions } from "@repo/shared/utils/select-options"
 import { FilterBar, type FilterBarFilter } from "@repo/ui/components/composite"
 import { debounce, useQueryStates } from "nuqs"
 import type { InstitutionOption } from "@/features/institutions/institutions.queries"
-import type { ResearchInterestOption } from "../members.queries"
+import type { ResearchInterestOption } from "../../members.queries"
 import {
   MEMBER_INTEREST_FILTER_MAX,
   type MemberSort,
   memberSearchParams,
   memberSorts,
-} from "../members.search-params"
+} from "../../members.search-params"
 
 const sortLabels: Record<MemberSort, string> = {
   surnameAsc: "Surname A-Z",

@@ -8,6 +8,7 @@ import * as React from "react"
 function AvatarUpload({
   accept = "image/*",
   className,
+  disabled,
   fallback,
   image,
   onFileSelect,
@@ -15,10 +16,11 @@ function AvatarUpload({
 }: {
   accept?: string
   className?: string
+  disabled?: boolean
   fallback: React.ReactNode
   image?: { alt: string; src: string }
   onFileSelect?: (file: File) => void
-  size?: "default" | "sm" | "lg" | "xl"
+  size?: "default" | "sm" | "lg" | "xl" | "xxl"
 }) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [localPreview, setLocalPreview] = React.useState<string | undefined>(undefined)
@@ -36,7 +38,8 @@ function AvatarUpload({
     <div className={cn("relative inline-block", className)}>
       <button
         aria-label="Upload photo"
-        className="cursor-pointer rounded-full"
+        className="cursor-pointer rounded-full disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={disabled}
         onClick={() => inputRef.current?.click()}
         type="button"
       >
@@ -52,6 +55,7 @@ function AvatarUpload({
         accept={accept}
         aria-hidden="true"
         className="sr-only"
+        disabled={disabled}
         onChange={handleChange}
         ref={inputRef}
         tabIndex={-1}

@@ -1,9 +1,9 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { countMembers, getMembers } from "../members.queries"
+import { countMembers, getMembers } from "../../members.queries"
 import { MembersList, MembersListSkeleton } from "./MembersList"
 
-vi.mock("../members.queries", () => ({
+vi.mock("../../members.queries", () => ({
   countMembers: vi.fn(),
   getMembers: vi.fn(),
   MEMBERS_PAGE_SIZE: 12,

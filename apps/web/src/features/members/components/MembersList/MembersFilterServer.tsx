@@ -1,7 +1,7 @@
 import { FilterBarSkeleton } from "@repo/ui/components/composite"
 import { getInstitutionOptionsCached } from "@/features/institutions/institutions.queries"
 import { PageContainer } from "@/features/layout/components"
-import { getResearchInterestOptionsCached } from "../members.queries"
+import { getResearchInterestOptionsCached } from "../../members.queries"
 import { MembersActiveFilters } from "./MembersActiveFilters"
 import { MembersFilterBar } from "./MembersFilterBar"
 

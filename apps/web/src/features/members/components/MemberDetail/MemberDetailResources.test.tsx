@@ -1,10 +1,10 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
-import { getMemberResourcesCached } from "../members.queries"
+import { getMemberResourcesCached } from "../../members.queries"
 import { MemberResources, MemberResourcesSkeleton } from "./MemberDetailResources"
 
-vi.mock("../members.queries", () => ({ getMemberResourcesCached: vi.fn() }))
+vi.mock("../../members.queries", () => ({ getMemberResourcesCached: vi.fn() }))
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
 
 type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>

@@ -4,8 +4,8 @@ import { withRedirect } from "@/features/auth/redirect"
 import { formatDate } from "@/features/courses/courses.format"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Routes } from "@/lib/routes"
-import { type MembersRouteParams, parseMemberId } from "../members.params"
-import { getMemberResourcesCached } from "../members.queries"
+import { type MembersRouteParams, parseMemberId } from "../../members.params"
+import { getMemberResourcesCached } from "../../members.queries"
 
 // Aliased as the React compiler rule reads a capitalized call inside a component as
 // a component rendered the wrong way.
