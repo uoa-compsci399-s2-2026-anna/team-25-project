@@ -232,8 +232,17 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
       {groupControls ? (
         // Its own gap, not the outer bar's: a caller's className only reaches this
         // wrapper's properties through a descendant selector, never its own gap.
+        // Centred (mx-auto) while it still wraps to its own row; past 1080px -
+        // where proposals' own tabs and search actually stop needing that row -
+        // ml-auto alone pushes it flush against the bar's right edge instead.
+        // Both breakpoints are arbitrary and mutually exclusive on purpose: mixing
+        // one of them with a named breakpoint like md: let Tailwind emit the two
+        // rules in an order where md:mx-auto's margin-right kept winning even past
+        // 1080px, since custom breakpoints aren't reliably sorted against named
+        // ones. 1080px is tuned to this one real consumer; a second page with
+        // different tab/search content may need a different value.
         <div
-          className="flex flex-wrap items-center justify-center gap-2 md:ml-auto md:justify-start md:gap-3"
+          className="flex flex-wrap items-center justify-center gap-2 max-[1079px]:mx-auto md:gap-3 min-[1080px]:ml-auto min-[1080px]:justify-start"
           data-slot="filter-bar-group"
         >
           {controls}
@@ -295,7 +304,7 @@ function FilterBarSkeleton({
       <Skeleton className="order-first h-10 w-full rounded-full md:order-none md:w-80 md:min-w-32" />
       {groupControls ? (
         <div
-          className="flex flex-wrap items-center justify-center gap-2 md:ml-auto md:justify-start md:gap-3"
+          className="flex flex-wrap items-center justify-center gap-2 max-[1079px]:mx-auto md:gap-3 min-[1080px]:ml-auto min-[1080px]:justify-start"
           data-slot="filter-bar-group"
         >
           {placeholders}
