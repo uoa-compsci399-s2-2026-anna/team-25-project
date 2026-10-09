@@ -4,10 +4,10 @@ import { describe, expect, it, vi } from "vitest"
 import { getProposalInstitutionsCached, loadProposalStatusCounts } from "../proposals.queries"
 import { ProposalsFilterBarSkeleton, ProposalsFilterServer } from "./ProposalsFilterServer"
 
-vi.mock("@/features/proposals/proposals.queries", () => ({
+vi.mock("../proposals.queries", () => ({
   getProposalInstitutionsCached: vi.fn(),
+  loadProposalStatusCounts: vi.fn(),
 }))
-vi.mock("../proposals.queries", () => ({ loadProposalStatusCounts: vi.fn() }))
 vi.mock("./ProposalsFilterBar", () => ({
   ProposalsFilterBar: ({ counts, institutions }: { counts: object; institutions: object[] }) => (
     <div>
