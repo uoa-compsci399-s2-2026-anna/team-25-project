@@ -6,22 +6,32 @@ import { cva, type VariantProps } from "class-variance-authority"
  * parts react through `group-data-*` selectors.
  */
 const tableVariants = {
-  container: cva("group/table relative w-full overflow-x-auto rounded-4xl bg-brand-blush/30", {
-    variants: {
-      density: {
-        comfortable: "",
-        compact: "",
+  // The edge fades are a mask, not an overlay, so they fade the content into
+  // whatever sits behind the table without matching the card or header colour.
+  // `Table` sets `data-overflow-*` while columns are hidden past that edge.
+  container: cva(
+    [
+      "group/table relative w-full overflow-x-auto rounded-4xl bg-brand-blush/30",
+      "[--fade-end:0px] [--fade-start:0px] data-[overflow-end=true]:[--fade-end:3rem] data-[overflow-start=true]:[--fade-start:3rem]",
+      "[mask-image:linear-gradient(to_right,transparent,#000_var(--fade-start),#000_calc(100%_-_var(--fade-end)),transparent)]",
+    ],
+    {
+      variants: {
+        density: {
+          comfortable: "",
+          compact: "",
+        },
+        striped: {
+          false: "",
+          true: "",
+        },
       },
-      striped: {
-        false: "",
-        true: "",
+      defaultVariants: {
+        density: "comfortable",
+        striped: false,
       },
     },
-    defaultVariants: {
-      density: "comfortable",
-      striped: false,
-    },
-  }),
+  ),
   root: cva("w-full caption-bottom text-sm"),
   header: cva(""),
   body: cva(""),

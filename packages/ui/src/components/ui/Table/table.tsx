@@ -2,6 +2,8 @@
 
 import { cn } from "@repo/ui/lib/utils"
 import type * as React from "react"
+import { useRef } from "react"
+import { useScrollOverflow } from "./hooks/use-scroll-overflow"
 import { type TableVariantProps, tableVariants } from "./table.variants"
 
 function Table({
@@ -12,15 +14,23 @@ function Table({
   ...props
 }: React.ComponentProps<"table"> &
   TableVariantProps & {
-    /** Classes for the scrolling wrapper, which owns the container styling. */
+    /** Classes for the scrolling wrapper. */
     containerClassName?: string
   }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  // Fades whichever edge has more columns past it, so a table too wide for the
+  // screen reads as scrollable rather than cut off.
+  const overflow = useScrollOverflow(containerRef)
+
   return (
     <div
       className={cn(tableVariants.container({ density, striped }), containerClassName)}
       data-density={density}
+      data-overflow-end={overflow.end}
+      data-overflow-start={overflow.start}
       data-slot="table-container"
       data-striped={striped}
+      ref={containerRef}
     >
       <table
         className={cn(tableVariants.root(), className, "rounded-5")}

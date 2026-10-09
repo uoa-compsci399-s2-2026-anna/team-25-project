@@ -249,3 +249,17 @@ export const ClickableRows: Story = (args) => {
     </div>
   )
 }
+
+/**
+ * Too wide for its container, as on a phone. The table scrolls sideways and
+ * fades whichever edge has more columns past it; scroll to see the left fade
+ * appear and the right one go.
+ */
+export const Overflowing: Story = (args) => {
+  const table = useDataTable({ columns, data: courses })
+  return (
+    <div className="max-w-sm">
+      <DataTable {...args} table={table} />
+    </div>
+  )
+}

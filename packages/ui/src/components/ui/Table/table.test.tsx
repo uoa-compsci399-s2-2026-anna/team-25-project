@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import {
   Table,
@@ -130,6 +130,60 @@ describe("Table", () => {
     expect(table).toHaveAttribute("data-testid", "courses")
     expect(screen.getByRole("row")).toHaveAttribute("data-state", "selected")
     expect(screen.getByRole("cell")).toHaveAttribute("colspan", "2")
+  })
+})
+
+describe("Table scroll overflow", () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  // jsdom does no layout, so the scroll metrics are stubbed onto the container.
+  const stubScroll = (element: Element, metrics: Record<string, number>) => {
+    for (const [key, value] of Object.entries(metrics)) {
+      Object.defineProperty(element, key, { configurable: true, value })
+    }
+  }
+
+  it("flags no hidden content when the table fits", () => {
+    const { container } = renderTable()
+    const wrapper = slot(container, "table-container")
+    expect(wrapper).toHaveAttribute("data-overflow-start", "false")
+    expect(wrapper).toHaveAttribute("data-overflow-end", "false")
+  })
+
+  it("flags the edge that has columns past it as the table scrolls", () => {
+    const { container } = renderTable()
+    const wrapper = slot(container, "table-container") as HTMLElement
+
+    stubScroll(wrapper, { clientWidth: 300, scrollLeft: 0, scrollWidth: 600 })
+    act(() => {
+      fireEvent.scroll(wrapper)
+    })
+    expect(wrapper).toHaveAttribute("data-overflow-start", "false")
+    expect(wrapper).toHaveAttribute("data-overflow-end", "true")
+
+    stubScroll(wrapper, { scrollLeft: 150 })
+    act(() => {
+      fireEvent.scroll(wrapper)
+    })
+    expect(wrapper).toHaveAttribute("data-overflow-start", "true")
+    expect(wrapper).toHaveAttribute("data-overflow-end", "true")
+
+    stubScroll(wrapper, { scrollLeft: 300 })
+    act(() => {
+      fireEvent.scroll(wrapper)
+    })
+    expect(wrapper).toHaveAttribute("data-overflow-start", "true")
+    expect(wrapper).toHaveAttribute("data-overflow-end", "false")
+  })
+
+  it("only fades an edge while it is flagged", () => {
+    const container = tableVariants.container()
+    expect(container).toContain("data-[overflow-end=true]:[--fade-end:3rem]")
+    expect(container).toContain("data-[overflow-start=true]:[--fade-start:3rem]")
+    expect(container).toContain("[--fade-end:0px]")
+    expect(container).toContain("[--fade-start:0px]")
   })
 })
 
