@@ -7,7 +7,7 @@ import {
   type CourseTableRow,
   useCoursesTable,
 } from "./CoursesTable"
-import { CoursesToolbar } from "./CoursesToolbar"
+import { CoursesToolbar, coursesFilterBarClassName } from "./CoursesToolbar"
 
 export interface CoursesListClientProps {
   rows: CourseTableRow[]
@@ -40,7 +40,12 @@ export function CoursesListClient({ rows }: CoursesListClientProps) {
 export function CoursesListClientSkeleton() {
   return (
     <div className={listClassName}>
-      <FilterBarSkeleton filterCount={3} statusCount={3} />
+      <FilterBarSkeleton
+        className={coursesFilterBarClassName}
+        filterCount={3}
+        groupControls
+        statusCount={3}
+      />
       <CoursesTableSkeleton />
     </div>
   )

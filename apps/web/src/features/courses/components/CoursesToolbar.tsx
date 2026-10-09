@@ -24,6 +24,23 @@ const sortConfig: Record<SortKey, { columnId: string; desc: boolean }> = {
 
 const uniqueSorted = (values: Array<string>) => Array.from(new Set(values)).sort()
 
+/**
+ * Lays the bar out as on the proposals page: on phones the dropdowns shrink so
+ * they fit on fewer rows, with `groupControls` they wrap as one centred group,
+ * and from 1080px the group moves to the right of the search. Shared with the
+ * loading skeleton so it doesn't jump once the bar loads.
+ *
+ * Courses has one more dropdown than proposals, so from 1080px the search (the
+ * second child, in the skeleton too) shrinks to fit the row instead of pushing
+ * the group onto a row of its own: measured at 1080px wide, the group wrapped
+ * and sat right while the tabs and search sat left until about 1220px.
+ */
+export const coursesFilterBarClassName = [
+  "min-[1080px]:justify-start! max-md:justify-center md:flex-wrap md:justify-center md:gap-2",
+  "max-md:[&_[data-slot=select-trigger]]:px-2 max-md:[&_[data-slot=select-trigger]]:text-xs",
+  "min-[1080px]:[&>:nth-child(2)]:w-auto min-[1080px]:[&>:nth-child(2)]:max-w-80 min-[1080px]:[&>:nth-child(2)]:flex-1 min-[1080px]:[&>:nth-child(2)]:basis-0",
+].join(" ")
+
 export interface CoursesToolbarProps {
   table: CoursesTableInstance
   /** The full, unfiltered row set, so the filter option lists don't shrink
@@ -101,6 +118,7 @@ export function CoursesToolbar({ table, rows }: CoursesToolbarProps) {
 
   return (
     <FilterBar
+      className={coursesFilterBarClassName}
       filters={[
         {
           id: "university",
@@ -124,6 +142,7 @@ export function CoursesToolbar({ table, rows }: CoursesToolbarProps) {
           value: year,
         } satisfies FilterBarFilter<number>,
       ]}
+      groupControls
       onSearchChange={handleSearchChange}
       onSortChange={handleSortChange}
       onStatusChange={handleStatusChange}

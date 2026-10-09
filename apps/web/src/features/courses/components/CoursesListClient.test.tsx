@@ -2,6 +2,7 @@ import { cleanup, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { CoursesListClient, CoursesListClientSkeleton } from "./CoursesListClient"
 import type { CourseTableRow } from "./CoursesTable"
+import { coursesFilterBarClassName } from "./CoursesToolbar"
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }))
 
@@ -34,6 +35,14 @@ describe("CoursesListClient", () => {
     expect(screen.getByRole("searchbox", { name: "Search courses..." })).toBeInTheDocument()
   })
 
+  it("groups the filter dropdowns so they wrap together on narrow screens", () => {
+    const { container } = render(<CoursesListClient rows={rows} />)
+
+    const bar = container.querySelector('[data-slot="filter-bar"]')
+    expect(bar?.querySelector('[data-slot="filter-bar-group"]')).toBeInTheDocument()
+    expect(bar?.className).toContain(coursesFilterBarClassName)
+  })
+
   it("shows the empty message when no courses are passed in", () => {
     render(<CoursesListClient rows={[]} />)
 
@@ -51,6 +60,14 @@ describe("CoursesListClientSkeleton", () => {
 
     expect(container.querySelector('[data-slot="filter-bar-skeleton-status"]')).toBeInTheDocument()
     expect(container.querySelectorAll('[data-slot="filter-bar-skeleton-filter"]')).toHaveLength(3)
+  })
+
+  it("lays the filter placeholders out like the real bar, so nothing jumps on load", () => {
+    const { container } = render(<CoursesListClientSkeleton />)
+
+    const bar = container.querySelector('[data-slot="filter-bar-skeleton"]')
+    expect(bar?.querySelector('[data-slot="filter-bar-group"]')).toBeInTheDocument()
+    expect(bar?.className).toContain(coursesFilterBarClassName)
   })
 
   it("renders the table's real column headers above placeholder rows", () => {
