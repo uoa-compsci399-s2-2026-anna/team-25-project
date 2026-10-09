@@ -7,16 +7,13 @@ import {
   InstitutionsTickerSkeleton,
   WhoCanJoinSection,
 } from "@/features/home/components"
-import { getInstitutionMarkersCached } from "@/features/home/globe.queries"
 import { PageContainer } from "@/features/layout/components"
 
-export default async function Page() {
-  const markers = await getInstitutionMarkersCached()
-
+export default function Page() {
   return (
     <>
       <PageContainer>
-        <HeroSection markers={markers} />
+        <HeroSection />
       </PageContainer>
       <Suspense fallback={<InstitutionsTickerSkeleton />}>
         <InstitutionsTicker />
