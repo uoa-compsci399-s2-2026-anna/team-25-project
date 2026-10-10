@@ -25,6 +25,7 @@ export const MembersHeader = async ({ searchParams }: { searchParams: Promise<Se
         )
       }
       align="end"
+      centerOnMobile
       description={
         <>
           {total} academics who teach or research computing capstones across {institutions.length}{" "}

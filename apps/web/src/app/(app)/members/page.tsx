@@ -17,6 +17,7 @@ export default function Page({ searchParams }: { searchParams: Promise<SearchPar
             <PageHeaderSkeleton
               actions={<Skeleton className="h-3 w-32 shrink-0" />}
               align="end"
+              centerOnMobile
               title="Members"
             />
           }
