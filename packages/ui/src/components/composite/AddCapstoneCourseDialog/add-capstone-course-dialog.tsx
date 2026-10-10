@@ -69,8 +69,14 @@ export type AddCapstoneCourseDialogFieldErrors = Partial<
 export type AddCapstoneCourseDialogOption = { label: string; value: string }
 
 export type AddCapstoneCourseDialogProps = {
-  /** Rendered as the dialog's trigger via `DialogTrigger`'s `render` prop. */
-  trigger: React.ReactElement
+  /**
+   * Rendered as the dialog's trigger via `DialogTrigger`'s `render` prop. Left
+   * out when something else opens the dialog through `open`, e.g. reopening a
+   * saved draft from a table row.
+   */
+  trigger?: React.ReactElement
+  /** Defaults to "Add a capstone course". */
+  title?: string
   open?: boolean
   onOpenChange?: (open: boolean) => void
   values: AddCapstoneCourseDialogValues
@@ -95,6 +101,7 @@ export type AddCapstoneCourseDialogProps = {
  */
 export function AddCapstoneCourseDialog({
   trigger,
+  title = "Add a capstone course",
   open,
   onOpenChange,
   values,
@@ -167,117 +174,124 @@ export function AddCapstoneCourseDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogTrigger render={trigger} />
+      {trigger && <DialogTrigger render={trigger} />}
+      {/* The popup only clips to its rounded corners; the inner wrapper does the
+          scrolling. Scrolling the popup itself paints the scrollbar square over
+          its right-hand corners. */}
       <DialogContent
-        className="max-h-[90vh] gap-0 overflow-y-auto sm:max-w-3xl"
+        className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl"
         showCloseButton={false}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <DialogTitle className="font-bold text-2xl">Add a capstone course</DialogTitle>
-            {/* The asterisk is described in words rather than shown inline, so this
-                still reads as a sentence with the decorative marks stripped out. */}
-            <DialogDescription>
-              Course code and name are all a draft needs - fields marked with an asterisk are
-              required to publish.
-            </DialogDescription>
+        <div className="min-h-0 overflow-y-auto p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <DialogTitle className="font-bold text-2xl">{title}</DialogTitle>
+              {/* The asterisk is described in words rather than shown inline, so this
+                  still reads as a sentence with the decorative marks stripped out. */}
+              <DialogDescription>
+                Course code and name are all a draft needs - fields marked with an asterisk are
+                required to publish.
+              </DialogDescription>
+            </div>
+            <DialogClose render={<Button size="sm" variant="button-transparent" />}>
+              Cancel
+            </DialogClose>
           </div>
-          <DialogClose render={<Button size="sm" variant="button-transparent" />}>
-            Cancel
-          </DialogClose>
-        </div>
 
-        {/* Grouped by real-world category (identity, schedule, description,
-            content, publishing) rather than one flat list - no labels on the
-            groups themselves, just wider gaps between them than within them,
-            so proximity alone reads as the grouping. Long or free-form fields
-            span the full width; short ones share a row. */}
-        <div className="flex flex-col gap-8 pt-6">
-          <FieldGroup className="grid gap-4 md:grid-cols-2">
-            {textField("name", "Course name", undefined, "md:col-span-2")}
-            {textField("code", "Course code", { placeholder: "e.g. CS399" })}
-            {textField("programme", "Course program")}
-          </FieldGroup>
+          {/* Grouped by real-world category (identity, schedule, description,
+              content, publishing) rather than one flat list - no labels on the
+              groups themselves, just wider gaps between them than within them,
+              so proximity alone reads as the grouping. Long or free-form fields
+              span the full width; short ones share a row. */}
+          <div className="flex flex-col gap-8 pt-6">
+            <FieldGroup className="grid gap-4 md:grid-cols-2">
+              {textField("name", "Course name", undefined, "md:col-span-2")}
+              {textField("code", "Course code", { placeholder: "e.g. CS399" })}
+              {textField("programme", "Course program")}
+            </FieldGroup>
 
-          <FieldGroup className="grid gap-4 md:grid-cols-3">
-            {textField("period", "Teaching period", {
-              // "<year> <term>" - the table's splitPeriod parses the first
-              // token as the year, so this order isn't just cosmetic.
-              placeholder: "e.g. 2026 Semester 2",
-            })}
-            {textField("startDate", "Start date", { type: "date" })}
-            {textField("endDate", "End date", { type: "date" })}
-          </FieldGroup>
+            <FieldGroup className="grid gap-4 md:grid-cols-3">
+              {textField("period", "Teaching period", {
+                // "<year> <term>" - the table's splitPeriod parses the first
+                // token as the year, so this order isn't just cosmetic.
+                placeholder: "e.g. 2026 Semester 2",
+              })}
+              {textField("startDate", "Start date", { type: "date" })}
+              {textField("endDate", "End date", { type: "date" })}
+            </FieldGroup>
 
-          <FieldGroup className="grid gap-4 md:grid-cols-2">
-            <Field>
-              <FieldLabel htmlFor={ids.deliveryFormat}>
-                Delivery format
-                <RequiredAsterisk />
-              </FieldLabel>
-              <Select
-                items={deliveryFormatOptions}
-                onValueChange={(next) => onValueChange("deliveryFormat", next ?? "")}
-                value={values.deliveryFormat || null}
-              >
-                <SelectTrigger
-                  aria-invalid={Boolean(fieldErrors?.deliveryFormat) || undefined}
-                  aria-required={requiredFields.deliveryFormat || undefined}
-                  className="w-full px-3 data-[size=default]:h-10"
-                  id={ids.deliveryFormat}
+            <FieldGroup className="grid gap-4 md:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor={ids.deliveryFormat}>
+                  Delivery format
+                  <RequiredAsterisk />
+                </FieldLabel>
+                <Select
+                  items={deliveryFormatOptions}
+                  onValueChange={(next) => onValueChange("deliveryFormat", next ?? "")}
+                  value={values.deliveryFormat || null}
                 >
-                  <SelectValue placeholder="Select a delivery format" />
-                </SelectTrigger>
-                <SelectContent align="start" alignItemWithTrigger={false}>
-                  {deliveryFormatOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {fieldErrors?.deliveryFormat && <FieldError>{fieldErrors.deliveryFormat}</FieldError>}
-            </Field>
+                  <SelectTrigger
+                    aria-invalid={Boolean(fieldErrors?.deliveryFormat) || undefined}
+                    aria-required={requiredFields.deliveryFormat || undefined}
+                    className="w-full px-3 data-[size=default]:h-10"
+                    id={ids.deliveryFormat}
+                  >
+                    <SelectValue placeholder="Select a delivery format" />
+                  </SelectTrigger>
+                  <SelectContent align="start" alignItemWithTrigger={false}>
+                    {deliveryFormatOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fieldErrors?.deliveryFormat && (
+                  <FieldError>{fieldErrors.deliveryFormat}</FieldError>
+                )}
+              </Field>
 
-            {textField("projectType", "Project type")}
-          </FieldGroup>
+              {textField("projectType", "Project type")}
+            </FieldGroup>
 
-          <FieldGroup className="gap-4">
-            {richTextField("learningOutcomes", "Learning outcomes")}
-            {richTextField("assessments", "Assessments")}
-            {richTextField("additionalInfo", "Additional information")}
-          </FieldGroup>
+            <FieldGroup className="gap-4">
+              {richTextField("learningOutcomes", "Learning outcomes")}
+              {richTextField("assessments", "Assessments")}
+              {richTextField("additionalInfo", "Additional information")}
+            </FieldGroup>
 
-          <FieldGroup className="grid gap-4 md:grid-cols-2">
-            {textField("role", "Your role", { placeholder: "e.g. Course Coordinator" })}
-          </FieldGroup>
+            <FieldGroup className="grid gap-4 md:grid-cols-2">
+              {textField("role", "Your role", { placeholder: "e.g. Course Coordinator" })}
+            </FieldGroup>
+          </div>
+
+          {formError && (
+            <FieldError className="mt-4" role="alert">
+              {formError}
+            </FieldError>
+          )}
+
+          <DialogFooter className="mt-6">
+            <Button
+              borderColor="charcoal"
+              disabled={Boolean(submitting)}
+              onClick={onSaveDraft}
+              type="button"
+              variant="button-transparent"
+            >
+              {submitting === "draft" ? "Saving..." : "Save draft"}
+            </Button>
+            <Button
+              disabled={Boolean(submitting)}
+              onClick={onPublish}
+              type="button"
+              variant="button-mauve"
+            >
+              {submitting === "publish" ? "Publishing..." : "Publish"}
+            </Button>
+          </DialogFooter>
         </div>
-
-        {formError && (
-          <FieldError className="mt-4" role="alert">
-            {formError}
-          </FieldError>
-        )}
-
-        <DialogFooter className="mt-6">
-          <Button
-            borderColor="charcoal"
-            disabled={Boolean(submitting)}
-            onClick={onSaveDraft}
-            type="button"
-            variant="button-transparent"
-          >
-            {submitting === "draft" ? "Saving..." : "Save draft"}
-          </Button>
-          <Button
-            disabled={Boolean(submitting)}
-            onClick={onPublish}
-            type="button"
-            variant="button-mauve"
-          >
-            {submitting === "publish" ? "Publishing..." : "Publish"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

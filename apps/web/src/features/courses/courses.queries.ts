@@ -9,9 +9,11 @@ import type { CourseTableRow } from "./components/CoursesTable"
 import {
   type CoursesSummaryStats,
   type MyCoursesSummary,
+  type MyDraftCourses,
   summarizeCourses,
   summarizeMyCourses,
   toCourseTableRow,
+  toEditableDraftCourse,
 } from "./courses.format"
 
 // The newest offering wins for each course; sorting by `-id` as a tiebreaker
@@ -20,6 +22,16 @@ const NEWEST_FIRST = ["-startDate", "-id"]
 
 const courseIdOf = (version: CourseVersion): number =>
   typeof version.course === "number" ? version.course : version.course.id
+
+// Docs arrive sorted newest first, so the first one seen for a course is its newest.
+const latestVersionByCourseId = (versions: CourseVersion[]) => {
+  const latest = new Map<number, CourseVersion>()
+  for (const version of versions) {
+    const courseId = courseIdOf(version)
+    if (!latest.has(courseId)) latest.set(courseId, version)
+  }
+  return latest
+}
 
 export interface CoursesTableData {
   rows: CourseTableRow[]
@@ -53,19 +65,75 @@ export const getCoursesTableData = async (): Promise<CoursesTableData> => {
     }),
   ])
 
-  const latestVersionByCourseId = new Map<number, CourseVersion>()
-  for (const version of versions) {
-    const courseId = courseIdOf(version)
-    if (!latestVersionByCourseId.has(courseId)) {
-      latestVersionByCourseId.set(courseId, version)
-    }
-  }
-
-  const rows = courses.map((course) =>
-    toCourseTableRow(course, latestVersionByCourseId.get(course.id)),
-  )
+  const latestVersions = latestVersionByCourseId(versions)
+  const rows = courses.map((course) => toCourseTableRow(course, latestVersions.get(course.id)))
 
   return { rows, summary: summarizeCourses(rows) }
+}
+
+const NO_DRAFTS: MyDraftCourses = { editable: {}, rows: [] }
+
+/**
+ * The signed-in member's own courses that have never been published, as table rows
+ * plus what the add-course dialog needs to reopen each one. The public table can't
+ * show these - `courseRead` hides a course until it has a published offering - so
+ * without them a saved draft would vanish from the page.
+ *
+ * Unlike `getCoursesTableData` this reads the viewer and passes them as `user`, so
+ * Payload's access rules limit it to courses the member owns or edits. That makes it
+ * viewer-specific: keep it uncached, and out of `getCoursesTableDataCached`, so one
+ * member's drafts can never be served to another. Admins and signed-out viewers get
+ * none; the same `members` gate as `getMyCoursesSummary` applies, for the same reason.
+ *
+ * Offerings are read with `draft: true`: saving a draft over an existing offering
+ * only writes a new revision, leaving the collection row as it was first created.
+ */
+export const getMyDraftCourses = async (): Promise<MyDraftCourses> => {
+  const { collection, user } = await getCurrentUser()
+  if (collection !== Slugs.Collections.MEMBERS) return NO_DRAFTS
+
+  const payload = await getPayloadClient()
+  const { docs: courses } = await payload.find({
+    collection: Slugs.Collections.COURSES,
+    where: {
+      and: [
+        { hasPublishedVersion: { not_equals: true } },
+        { or: [{ owner: { equals: user.id } }, { editors: { contains: user.id } }] },
+      ],
+    },
+    depth: 1,
+    overrideAccess: false,
+    pagination: false,
+    sort: "code",
+    user,
+  })
+  if (courses.length === 0) return NO_DRAFTS
+
+  const { docs: versions } = await payload.find({
+    collection: Slugs.Collections.COURSE_VERSIONS,
+    where: { course: { in: courses.map((course) => course.id) } },
+    depth: 1,
+    draft: true,
+    overrideAccess: false,
+    pagination: false,
+    sort: NEWEST_FIRST,
+    user,
+  })
+
+  // createCourse writes a course and its first offering together, so a course
+  // with no offering shouldn't exist - but if one did, it would have nothing to
+  // reopen and no course page to link to, so it's left out rather than listed
+  // as a dead end.
+  const latestVersions = latestVersionByCourseId(versions)
+  const role = user.position ?? ""
+  const drafts: MyDraftCourses = { editable: {}, rows: [] }
+  for (const course of courses) {
+    const version = latestVersions.get(course.id)
+    if (!version) continue
+    drafts.rows.push(toCourseTableRow(course, version))
+    drafts.editable[String(course.id)] = toEditableDraftCourse(course, version, role)
+  }
+  return drafts
 }
 
 export const getCoursesTableDataCached = async () => {

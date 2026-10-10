@@ -41,9 +41,13 @@ const courses: Array<CourseTableRow> = [
 function Harness({
   data = courses,
   isLoading,
+  canOpenDraft,
+  onOpenDraft,
 }: {
   data?: Array<CourseTableRow>
   isLoading?: boolean
+  canOpenDraft?: (row: CourseTableRow) => boolean
+  onOpenDraft?: (row: CourseTableRow) => void
 }) {
   const table = useCoursesTable({ data })
 
@@ -67,7 +71,12 @@ function Harness({
       <button onClick={() => table.getColumn("year")?.setFilterValue(["2026"])} type="button">
         Filter year 2026
       </button>
-      <CoursesTable isLoading={isLoading} table={table} />
+      <CoursesTable
+        canOpenDraft={canOpenDraft}
+        isLoading={isLoading}
+        onOpenDraft={onOpenDraft}
+        table={table}
+      />
     </div>
   )
 }
@@ -176,5 +185,53 @@ describe("CoursesTable", () => {
     fireEvent.click(screen.getByRole("button", { name: "Filter year 2026" }))
     expect(bodyRows()).toHaveLength(1)
     expect(screen.getByText("COMP 693 Capstone Project")).toBeInTheDocument()
+  })
+  describe("opening drafts", () => {
+    const draftRow = courses[1]
+
+    it("turns an openable draft's course cell into a button that opens it", () => {
+      const onOpenDraft = vi.fn()
+      render(<Harness canOpenDraft={() => true} onOpenDraft={onOpenDraft} />)
+
+      expect(
+        screen.queryByRole("link", { name: "SOFTENG 700 Research ProjectM. Rahman" }),
+      ).not.toBeInTheDocument()
+      fireEvent.click(screen.getByRole("button", { name: "SOFTENG 700 Research ProjectM. Rahman" }))
+
+      expect(onOpenDraft).toHaveBeenCalledTimes(1)
+      expect(onOpenDraft).toHaveBeenCalledWith(draftRow)
+      expect(push).not.toHaveBeenCalled()
+    })
+
+    it("opens the draft, rather than navigating, when another cell in its row is clicked", () => {
+      const onOpenDraft = vi.fn()
+      render(<Harness canOpenDraft={() => true} onOpenDraft={onOpenDraft} />)
+
+      fireEvent.click(screen.getByText("Semester 1"))
+
+      expect(onOpenDraft).toHaveBeenCalledWith(draftRow)
+      expect(push).not.toHaveBeenCalled()
+    })
+
+    it("keeps published rows as links even when drafts can be opened", () => {
+      const onOpenDraft = vi.fn()
+      render(<Harness canOpenDraft={() => true} onOpenDraft={onOpenDraft} />)
+
+      expect(screen.getByRole("link", { name: "COMP 693 Capstone ProjectA. Tui" })).toHaveAttribute(
+        "href",
+        "/courses/1",
+      )
+      fireEvent.click(screen.getByText("Semester 2"))
+      expect(push).toHaveBeenCalledWith("/courses/1")
+      expect(onOpenDraft).not.toHaveBeenCalled()
+    })
+
+    it("falls back to the link for a draft it has nothing to open for", () => {
+      render(<Harness canOpenDraft={() => false} onOpenDraft={vi.fn()} />)
+
+      expect(
+        screen.getByRole("link", { name: "SOFTENG 700 Research ProjectM. Rahman" }),
+      ).toHaveAttribute("href", "/courses/2")
+    })
   })
 })
