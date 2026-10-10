@@ -11,6 +11,7 @@ import {
   CardTitle,
   Skeleton,
 } from "@repo/ui/components/ui"
+import { cn } from "@repo/ui/lib/utils"
 import Link from "next/link"
 import type { AppRoute } from "@/lib/routes"
 
@@ -31,6 +32,15 @@ export type MemberCardProps = {
 /** A member may list ten; past this the card stops being a card. */
 const INTERESTS_SHOWN = 3
 
+// Below sm the card becomes a divided list row, as in the mobile design.
+const cardClassName = "h-full max-sm:rounded-none max-sm:bg-transparent max-sm:py-5 max-sm:ring-0"
+const headerClassName =
+  "gap-4 max-sm:grid-cols-[auto_1fr] max-sm:gap-x-4 max-sm:gap-y-1.5 max-sm:px-0"
+// Bleeds into the list's padding so the divider runs nearer the screen edge.
+const rowBleedClassName = "max-sm:-mx-6 max-sm:px-6"
+// Only with interests, or the empty second row adds a gap.
+const avatarSpanClassName = "max-sm:row-span-2"
+
 export const MemberCard = ({
   avatarSrc,
   country,
@@ -49,12 +59,16 @@ export const MemberCard = ({
 
   return (
     <Link
-      className="group rounded-lg focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+      className={cn(
+        "group rounded-lg focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 max-sm:rounded-none",
+        "transition-colors max-sm:hover:bg-foreground/5",
+        rowBleedClassName,
+      )}
       href={href}
     >
-      <Card className="h-full transition-colors group-hover:ring-foreground/25">
-        <CardHeader className="gap-4">
-          <Avatar size="lg">
+      <Card className={cn(cardClassName, "transition-colors group-hover:ring-foreground/25")}>
+        <CardHeader className={headerClassName}>
+          <Avatar className={cn(shown.length > 0 && avatarSpanClassName)} size="lg">
             {avatarSrc && <AvatarImage alt="" src={avatarSrc} />}
             <AvatarFallback>{initials(firstName, lastName)}</AvatarFallback>
           </Avatar>
@@ -62,16 +76,32 @@ export const MemberCard = ({
           {/* Grouped so these sit closer to each other than to the avatar above. */}
           <div className="flex flex-col gap-0.5">
             <CardTitle>{`${firstName} ${lastName}`}</CardTitle>
-            {position && (
-              <CardDescription className="text-muted-foreground text-xs">
-                {position}
-              </CardDescription>
-            )}
-            {affiliation && (
-              <CardDescription className="text-muted-foreground text-xs">
-                {affiliation}
-              </CardDescription>
-            )}
+            {/* Inline on phones, so a long affiliation wraps without leaving "|" hanging. */}
+            <div className="flex flex-col max-sm:block max-sm:text-xs">
+              {position && (
+                <CardDescription className="text-muted-foreground text-xs max-sm:inline">
+                  {position}
+                </CardDescription>
+              )}
+              {position && affiliation && (
+                <>
+                  <span
+                    aria-hidden
+                    className="mx-2 hidden text-muted-foreground text-xs max-sm:inline"
+                    data-slot="member-card-separator"
+                  >
+                    |
+                  </span>
+                  {/* Stops screen readers running the two texts together. */}
+                  <span className="sr-only">, </span>
+                </>
+              )}
+              {affiliation && (
+                <CardDescription className="text-muted-foreground text-xs max-sm:inline">
+                  {affiliation}
+                </CardDescription>
+              )}
+            </div>
           </div>
 
           {shown.length > 0 && (
@@ -98,8 +128,8 @@ export const MemberCard = ({
 }
 
 export const MemberCardSkeleton = () => (
-  <Card className="h-full">
-    <CardHeader className="gap-4">
+  <Card className={cn(cardClassName, rowBleedClassName)}>
+    <CardHeader className={headerClassName}>
       <Skeleton className="size-10 rounded-full" />
       <div className="flex flex-col gap-1.5">
         <Skeleton className="h-5 w-40" />
