@@ -92,7 +92,10 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
         <AvatarUpload
           accept={ALLOWED_AVATAR_MIME_TYPES.join(",")}
           fallback={initials}
-          onFileSelect={setAvatar}
+          onFileSelect={(file) => {
+            setAvatar(file)
+            setFormError(undefined)
+          }}
           size="xl"
         />
         <p className="font-medium text-sm">Photo</p>
