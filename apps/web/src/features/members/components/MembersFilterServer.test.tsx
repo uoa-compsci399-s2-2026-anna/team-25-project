@@ -12,4 +12,11 @@ describe("MembersFilterServerSkeleton", () => {
     expect(container.querySelectorAll('[data-slot="filter-bar-skeleton-filter"]')).toHaveLength(3)
     expect(container.querySelector('[data-slot="filter-bar-skeleton-status"]')).toBeNull()
   })
+
+  it("lays the filter placeholders out like the real bar, so nothing jumps on load", () => {
+    const { container } = render(<MembersFilterServerSkeleton />)
+
+    const bar = container.querySelector('[data-slot="filter-bar-skeleton"]')
+    expect(bar?.querySelector('[data-slot="filter-bar-group"]')).toBeInTheDocument()
+  })
 })
