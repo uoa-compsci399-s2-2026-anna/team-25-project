@@ -12,6 +12,9 @@ import {
 } from "../members.search-params"
 import { MemberCard, MemberCardSkeleton } from "./MemberCard"
 
+// Rows split by dividers on phones.
+const gridClassName = "grid w-full gap-6 max-sm:gap-0 max-sm:divide-y sm:grid-cols-2 lg:grid-cols-4"
+
 // Stable keys for the placeholder cards, which have no data of their own.
 const skeletonCardIds = Array.from({ length: MEMBERS_PAGE_SIZE }, (_, i) => `member-skeleton-${i}`)
 
@@ -53,7 +56,7 @@ export const MembersList = async ({ searchParams }: { searchParams: Promise<Sear
 
   return (
     <div className="flex w-full flex-col gap-8 p-10 md:p-12">
-      <div className="grid w-full gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className={gridClassName}>
         {members.map((member) => {
           const institution =
             typeof member.institution === "number" ? undefined : member.institution
@@ -88,7 +91,7 @@ export const MembersList = async ({ searchParams }: { searchParams: Promise<Sear
 // A full page of cards, so the footer stays out of view until the real list lands.
 export const MembersListSkeleton = () => (
   <div className="flex w-full flex-col gap-8 p-10 md:p-12">
-    <div className="grid w-full gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div className={gridClassName}>
       {skeletonCardIds.map((id) => (
         <MemberCardSkeleton key={id} />
       ))}

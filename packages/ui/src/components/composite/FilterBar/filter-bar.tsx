@@ -76,12 +76,18 @@ type FilterBarProps<
   onSearchChange: (search: string) => void
   searchPlaceholder?: string
   filters?: FilterBarFilter[]
-  /** Keeps the dropdowns and sort together, so they wrap to the next row as one group. */
+  /** Wraps the dropdowns and sort as one group, centred until 1080px, then right of the search. */
   groupControls?: boolean
   sortOptions: FilterBarOption<TSort>[]
   sort: TSort
   onSortChange: (sort: TSort) => void
 }
+
+// The bar's side of `groupControls`, shared with the skeleton. Shrinks dropdowns on
+// phones; md:gap-2 lets proposals fit one row at 1080px. The ! is needed because
+// Tailwind doesn't order custom breakpoints against named ones.
+const groupedBarClassName =
+  "min-[1080px]:justify-start! md:flex-wrap md:justify-center md:gap-2 max-md:[&_[data-slot=select-trigger]]:px-2 max-md:[&_[data-slot=select-trigger]]:text-xs"
 
 // Tabs and Select report values as unknown; each value came from our own options,
 // so the casts below only restore the type the caller passed in.
@@ -191,6 +197,7 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
     <div
       className={cn(
         "flex flex-wrap items-center justify-center gap-3 md:flex-nowrap md:justify-start",
+        groupControls && groupedBarClassName,
         className,
       )}
       data-slot="filter-bar"
@@ -239,8 +246,7 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
         // one of them with a named breakpoint like md: let Tailwind emit the two
         // rules in an order where md:mx-auto's margin-right kept winning even past
         // 1080px, since custom breakpoints aren't reliably sorted against named
-        // ones. 1080px is tuned to this one real consumer; a second page with
-        // different tab/search content may need a different value.
+        // ones. 1080px fits proposals; a bar with wider content may need another value.
         <div
           className="flex flex-wrap items-center justify-center gap-2 max-[1079px]:mx-auto md:gap-3 min-[1080px]:ml-auto min-[1080px]:justify-start"
           data-slot="filter-bar-group"
@@ -288,6 +294,7 @@ function FilterBarSkeleton({
     <div
       className={cn(
         "flex flex-wrap items-center justify-center gap-3 md:flex-nowrap md:justify-start",
+        groupControls && groupedBarClassName,
         className,
       )}
       data-slot="filter-bar-skeleton"

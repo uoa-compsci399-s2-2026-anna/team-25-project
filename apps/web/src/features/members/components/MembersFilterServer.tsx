@@ -30,7 +30,7 @@ export const MembersFilterServer = async () => {
 export const MembersFilterServerSkeleton = () => (
   <div className="w-full bg-brand-cream/60">
     <PageContainer className="px-10 py-5 md:px-12">
-      <FilterBarSkeleton filterCount={3} />
+      <FilterBarSkeleton filterCount={3} groupControls />
     </PageContainer>
   </div>
 )
