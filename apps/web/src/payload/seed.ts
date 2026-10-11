@@ -26,10 +26,30 @@ const SEED_CONTEXT = { disableRevalidate: true }
 const SEED_FILES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "seed-files")
 
 const institutions = [
-  { name: "University of Auckland", country: "NZ", domain: "auckland.ac.nz" },
-  { name: "University of Otago", country: "NZ", domain: "otago.ac.nz" },
-  { name: "University of Melbourne", country: "AU", domain: "unimelb.edu.au" },
-  { name: "UNSW Sydney", country: "AU", domain: "unsw.edu.au" },
+  {
+    name: "University of Auckland",
+    country: "NZ",
+    domain: "auckland.ac.nz",
+    location: { latitude: -36.8523, longitude: 174.769 },
+  },
+  {
+    name: "University of Otago",
+    country: "NZ",
+    domain: "otago.ac.nz",
+    location: { latitude: -45.8655, longitude: 170.5145 },
+  },
+  {
+    name: "University of Melbourne",
+    country: "AU",
+    domain: "unimelb.edu.au",
+    location: { latitude: -37.7963, longitude: 144.9612 },
+  },
+  {
+    name: "UNSW Sydney",
+    country: "AU",
+    domain: "unsw.edu.au",
+    location: { latitude: -33.9173, longitude: 151.2313 },
+  },
 ] as const
 
 const members = [
@@ -549,6 +569,7 @@ export const seed = async () => {
           name: fixture.name,
           country: fixture.country,
           domains: [{ domain: fixture.domain }],
+          location: fixture.location,
         },
         context: SEED_CONTEXT,
       }))

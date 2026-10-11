@@ -69,12 +69,17 @@ describe("ResourcesFilterBar", () => {
     const user = userEvent.setup()
     const onUrlUpdate = renderFilterBar("?page=3")
 
-    await user.type(screen.getByRole("searchbox", { name: "Search resources..." }), "rubric")
+    // Pasted rather than typed, so the debounce restarts once, not once per key. The wait
+    // allows for a slow CI runner under coverage; it returns as soon as the URL updates.
+    await user.click(screen.getByRole("searchbox", { name: "Search resources..." }))
+    await user.paste("rubric")
 
-    await vi.waitFor(() =>
-      expect(onUrlUpdate).toHaveBeenLastCalledWith(
-        expect.objectContaining({ queryString: "?q=rubric" }),
-      ),
+    await vi.waitFor(
+      () =>
+        expect(onUrlUpdate).toHaveBeenLastCalledWith(
+          expect.objectContaining({ queryString: "?q=rubric" }),
+        ),
+      { timeout: 3000 },
     )
   })
 })

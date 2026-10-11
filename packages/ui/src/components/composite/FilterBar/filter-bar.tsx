@@ -76,6 +76,8 @@ type FilterBarProps<
   onSearchChange: (search: string) => void
   searchPlaceholder?: string
   filters?: FilterBarFilter[]
+  /** Keeps the dropdowns and sort together, so they wrap to the next row as one group. */
+  groupControls?: boolean
   sortOptions: FilterBarOption<TSort>[]
   sort: TSort
   onSortChange: (sort: TSort) => void
@@ -86,6 +88,7 @@ type FilterBarProps<
 function FilterBar<TStatus extends string = string, TSort extends string = string>({
   className,
   filters = [],
+  groupControls = false,
   onSearchChange,
   onSortChange,
   onStatusChange,
@@ -97,48 +100,8 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
   statusOptions = [],
   ...props
 }: FilterBarProps<TStatus, TSort>) {
-  return (
-    <div
-      className={cn(
-        "flex flex-wrap items-center justify-center gap-3 md:flex-nowrap md:justify-start",
-        className,
-      )}
-      data-slot="filter-bar"
-      {...props}
-    >
-      {statusOptions.length > 0 && (
-        <Tabs
-          className="shrink-0"
-          onValueChange={(value) => onStatusChange?.(value as TStatus)}
-          value={status}
-        >
-          <TabsList className="h-10" variant="pill">
-            {statusOptions.map((option) => (
-              <TabsTrigger className="px-4" key={option.value} value={option.value}>
-                {option.label}
-                {option.count !== undefined && ` - ${option.count}`}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      )}
-
-      <InputGroup
-        className="order-first h-10 w-full md:order-none md:w-80 md:min-w-32"
-        variant="pill"
-      >
-        <InputGroupAddon className="pl-4">
-          <SearchIcon />
-        </InputGroupAddon>
-        <InputGroupInput
-          aria-label={searchPlaceholder}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder={searchPlaceholder}
-          type="search"
-          value={search}
-        />
-      </InputGroup>
-
+  const controls = (
+    <>
       {filters.map((filter) =>
         filter.multiple ? (
           <Select<FilterBarValue, true>
@@ -156,7 +119,7 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
               variant="pill"
             >
               {/* Not SelectValue: the chips beside the bar already show what is picked, so the
-                  trigger stays on its placeholder rather than restating it. */}
+              trigger stays on its placeholder rather than restating it. */}
               <span className="flex flex-1 text-left text-muted-foreground">
                 {filter.placeholder}
               </span>
@@ -221,6 +184,72 @@ function FilterBar<TStatus extends string = string, TSort extends string = strin
           ))}
         </SelectContent>
       </Select>
+    </>
+  )
+
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap items-center justify-center gap-3 md:flex-nowrap md:justify-start",
+        className,
+      )}
+      data-slot="filter-bar"
+      {...props}
+    >
+      {statusOptions.length > 0 && (
+        <Tabs
+          className="shrink-0"
+          onValueChange={(value) => onStatusChange?.(value as TStatus)}
+          value={status}
+        >
+          <TabsList className="h-10" variant="pill">
+            {statusOptions.map((option) => (
+              <TabsTrigger className="px-4" key={option.value} value={option.value}>
+                {option.label}
+                {option.count !== undefined && ` - ${option.count}`}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      )}
+
+      <InputGroup
+        className="order-first h-10 w-full md:order-none md:w-80 md:min-w-32"
+        variant="pill"
+      >
+        <InputGroupAddon className="pl-4">
+          <SearchIcon />
+        </InputGroupAddon>
+        <InputGroupInput
+          aria-label={searchPlaceholder}
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder={searchPlaceholder}
+          type="search"
+          value={search}
+        />
+      </InputGroup>
+
+      {groupControls ? (
+        // Its own gap, not the outer bar's: a caller's className only reaches this
+        // wrapper's properties through a descendant selector, never its own gap.
+        // Centred (mx-auto) while it still wraps to its own row; past 1080px -
+        // where proposals' own tabs and search actually stop needing that row -
+        // ml-auto alone pushes it flush against the bar's right edge instead.
+        // Both breakpoints are arbitrary and mutually exclusive on purpose: mixing
+        // one of them with a named breakpoint like md: let Tailwind emit the two
+        // rules in an order where md:mx-auto's margin-right kept winning even past
+        // 1080px, since custom breakpoints aren't reliably sorted against named
+        // ones. 1080px is tuned to this one real consumer; a second page with
+        // different tab/search content may need a different value.
+        <div
+          className="flex flex-wrap items-center justify-center gap-2 max-[1079px]:mx-auto md:gap-3 min-[1080px]:ml-auto min-[1080px]:justify-start"
+          data-slot="filter-bar-group"
+        >
+          {controls}
+        </div>
+      ) : (
+        controls
+      )}
     </div>
   )
 }
@@ -230,15 +259,31 @@ type FilterBarSkeletonProps = React.ComponentProps<"div"> & {
   statusCount?: number
   /** How many select filters the real bar shows, not counting sort. */
   filterCount?: number
+  /** Matches a grouped `FilterBar`, so the loading state doesn't jump to a different row count once the real bar replaces it. */
+  groupControls?: boolean
 }
 
 /** Holds the same space as `FilterBar` while its options load, so nothing shifts. */
 function FilterBarSkeleton({
   className,
   filterCount = 0,
+  groupControls = false,
   statusCount = 0,
   ...props
 }: FilterBarSkeletonProps) {
+  const placeholders = (
+    <>
+      {Array.from({ length: filterCount }, (_, index) => `filter-${index}`).map((id) => (
+        <Skeleton
+          className="h-10 w-32 shrink-0 rounded-full"
+          data-slot="filter-bar-skeleton-filter"
+          key={id}
+        />
+      ))}
+      <Skeleton className="h-10 w-36 shrink-0 rounded-full md:ml-auto" />
+    </>
+  )
+
   return (
     <div
       className={cn(
@@ -257,14 +302,16 @@ function FilterBarSkeleton({
         />
       )}
       <Skeleton className="order-first h-10 w-full rounded-full md:order-none md:w-80 md:min-w-32" />
-      {Array.from({ length: filterCount }, (_, index) => `filter-${index}`).map((id) => (
-        <Skeleton
-          className="h-10 w-32 shrink-0 rounded-full"
-          data-slot="filter-bar-skeleton-filter"
-          key={id}
-        />
-      ))}
-      <Skeleton className="h-10 w-36 shrink-0 rounded-full md:ml-auto" />
+      {groupControls ? (
+        <div
+          className="flex flex-wrap items-center justify-center gap-2 max-[1079px]:mx-auto md:gap-3 min-[1080px]:ml-auto min-[1080px]:justify-start"
+          data-slot="filter-bar-group"
+        >
+          {placeholders}
+        </div>
+      ) : (
+        placeholders
+      )}
     </div>
   )
 }

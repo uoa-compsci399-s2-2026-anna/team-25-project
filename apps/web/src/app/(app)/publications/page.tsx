@@ -1,10 +1,11 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
 import type { SearchParams } from "nuqs/server"
-import { PageContainer, PageHeader } from "@/features/layout/components"
+import { PageContainer } from "@/features/layout/components"
 import {
   PublicationsFilterServer,
   PublicationsFilterServerSkeleton,
 } from "@/features/publications/components/PublicationsFilterServer"
+import { PublicationsHeader } from "@/features/publications/components/PublicationsHeader"
 import {
   PublicationsList,
   PublicationsListSkeleton,
@@ -14,10 +15,7 @@ export default function Page({ searchParams }: { searchParams: Promise<SearchPar
   return (
     <>
       <PageContainer>
-        <PageHeader
-          description="Papers, theses and reports on computing capstones, written by members and their co-authors."
-          title="Publications"
-        />
+        <PublicationsHeader />
       </PageContainer>
       <AnimatedSuspense fallback={<PublicationsFilterServerSkeleton />}>
         <PublicationsFilterServer />

@@ -1,10 +1,10 @@
-import { convertLexicalToPlaintext } from "@payloadcms/richtext-lexical/plaintext"
 import { PaginationNav, ResourceCard, ResourceCardSkeleton } from "@repo/ui/components/composite"
 import type { Route } from "next"
 import Link from "next/link"
 import type { SearchParams } from "nuqs/server"
 import { StringHrefLink } from "@/components/StringHrefLink"
 import { Routes } from "@/lib/routes"
+import { toResourceCardProps } from "../resource-card-props"
 import { loadResourcesPage } from "../resources.queries"
 import {
   loadResourceSearchParams,
@@ -61,31 +61,13 @@ export const ResourcesList = async ({ searchParams }: { searchParams: Promise<Se
   return (
     <div className="flex w-full flex-col gap-8 p-10 md:p-12">
       <div className="flex w-full flex-col gap-8">
-        {resources.map((resource) => {
-          const owner = typeof resource.owner === "object" ? resource.owner : undefined
-          const avatar =
-            owner?.avatar && typeof owner.avatar === "object" ? owner.avatar : undefined
-          const course = typeof resource.course === "object" ? resource.course : undefined
-
-          return (
-            <ResourceCard
-              course={course?.code}
-              href={Routes.RESOURCES.RESOURCE(String(resource.id))}
-              key={resource.id}
-              linkComponent={StringHrefLink}
-              owner={{
-                avatarSrc: avatar?.url ?? undefined,
-                href: owner ? Routes.MEMBERS.MEMBER(owner.id) : undefined,
-                name: owner ? `${owner.firstName} ${owner.lastName}` : "Unknown member",
-              }}
-              sharedAt={resource.createdAt}
-              summary={
-                convertLexicalToPlaintext({ data: resource.description }).trim() || undefined
-              }
-              title={resource.title}
-            />
-          )
-        })}
+        {resources.map((resource) => (
+          <ResourceCard
+            key={resource.id}
+            linkComponent={StringHrefLink}
+            {...toResourceCardProps(resource)}
+          />
+        ))}
       </div>
       <PaginationNav
         getHref={getPageHref}

@@ -16,6 +16,7 @@ import { Proposals } from "./payload/collections/Proposals"
 import { Publications } from "./payload/collections/Publications"
 import { ResourceAttachments } from "./payload/collections/ResourceAttachments"
 import { Resources } from "./payload/collections/Resources"
+import { PrivacyPolicy } from "./payload/globals/PrivacyPolicy"
 import { richTextFeatures } from "./payload/richText"
 
 declare module "payload" {
@@ -50,6 +51,7 @@ export default buildConfig({
     Resources,
     ResourceAttachments,
   ],
+  globals: [PrivacyPolicy],
   editor: lexicalEditor({ features: richTextFeatures }),
   graphQL: {
     disable: true,

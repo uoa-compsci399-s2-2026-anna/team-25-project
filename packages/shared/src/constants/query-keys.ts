@@ -20,4 +20,5 @@ export const QueryKeys = {
     ROOT: "resources",
     ID: (id: number) => `resources:${id}`,
   } as const,
+  PRIVACY_POLICY: "privacy-policy",
 } as const

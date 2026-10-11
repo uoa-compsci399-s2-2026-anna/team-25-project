@@ -51,6 +51,8 @@ describe("getPublications", () => {
           { venue: { contains: "capstone" } },
           { abstract: { contains: "capstone" } },
           { "authors.name": { contains: "capstone" } },
+          { "authors.member.firstName": { contains: "capstone" } },
+          { "authors.member.lastName": { contains: "capstone" } },
         ],
         tags: { in: ["Teamwork", "Assessment"] },
         type: { equals: PublicationType.ARTICLE },
