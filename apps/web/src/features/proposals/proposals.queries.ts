@@ -55,6 +55,33 @@ export const getProposals = async (filters: ProposalFilters, pagination: Paginat
   })
 }
 
+export const getProposalInstitutions = async () => {
+  const payload = await getPayloadClient()
+  const { values } = await payload.findDistinct({
+    collection: Slugs.Collections.PROPOSALS,
+    field: "institutions",
+    depth: 0,
+  })
+  const ids = values.flatMap(({ institutions }) => institutions ?? [])
+  const { docs } = await payload.find({
+    collection: Slugs.Collections.INSTITUTIONS,
+    where: {
+      id: {
+        in: ids,
+      },
+    },
+  })
+
+  return docs.map(({ id, name }) => ({ label: name, value: id }))
+}
+
+export const getProposalInstitutionsCached = async () => {
+  "use cache"
+  cacheLife("max")
+  cacheTag(QueryKeys.PROPOSALS.ROOT, QueryKeys.INSTITUTIONS, QueryKeys.MEMBERS.ROOT)
+  return getProposalInstitutions()
+}
+
 const getProposalsCached = async (filters: ProposalFilters, pagination: Pagination) => {
   "use cache"
   cacheLife("max")

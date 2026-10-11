@@ -1,5 +1,5 @@
 import type { SearchParams } from "nuqs/server"
-import { getInstitutionOptionsCached } from "@/features/institutions/institutions.queries"
+import { getActiveInstitutionOptionsCached } from "@/features/institutions/institutions.queries"
 import { PageHeader } from "@/features/layout/components"
 import { getMemberCounts, MEMBERS_PAGE_SIZE } from "../members.queries"
 import { loadMemberSearchParams, toMemberFilters } from "../members.search-params"
@@ -8,7 +8,7 @@ export const MembersHeader = async ({ searchParams }: { searchParams: Promise<Se
   const params = await loadMemberSearchParams(searchParams)
   const [{ shown, total }, institutions] = await Promise.all([
     getMemberCounts(toMemberFilters(params)),
-    getInstitutionOptionsCached(),
+    getActiveInstitutionOptionsCached(),
   ])
 
   const start = (params.page - 1) * MEMBERS_PAGE_SIZE + 1

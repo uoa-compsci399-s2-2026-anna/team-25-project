@@ -1,7 +1,6 @@
 import { FilterBarSkeleton } from "@repo/ui/components/composite"
 import type { SearchParams } from "nuqs/server"
-import { getInstitutionOptionsCached } from "@/features/institutions/institutions.queries"
-import { loadProposalStatusCounts } from "../proposals.queries"
+import { getProposalInstitutionsCached, loadProposalStatusCounts } from "../proposals.queries"
 import {
   loadProposalSearchParams,
   proposalStatusFilters,
@@ -20,7 +19,7 @@ export const ProposalsFilterServer = async ({
 
   const [counts, institutions] = await Promise.all([
     loadProposalStatusCounts({ institutionId, tag, search }),
-    getInstitutionOptionsCached(),
+    getProposalInstitutionsCached(),
   ])
 
   return <ProposalsFilterBar counts={counts} institutions={institutions} />
