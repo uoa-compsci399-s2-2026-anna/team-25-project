@@ -24,7 +24,9 @@ function AvatarUpload({
 }) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [localPreview, setLocalPreview] = React.useState<string | undefined>(undefined)
-  const preview = localPreview ?? image?.src
+  // Set once Remove is pressed, so the saved photo stays hidden too - not just a new pick.
+  const [removed, setRemoved] = React.useState(false)
+  const preview = localPreview ?? (removed ? undefined : image?.src)
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -52,12 +54,13 @@ function AvatarUpload({
             </AvatarBadge>
           </Avatar>
         </button>
-        {localPreview && (
+        {preview && (
           <Button
-            className="bg-red-500 text-white"
+            className="bg-primary text-primary-foreground hover:bg-primary/80"
             disabled={disabled}
             onClick={() => {
               setLocalPreview(undefined)
+              setRemoved(true)
               onFileSelect?.(undefined)
             }}
             size="sm"

@@ -3,7 +3,7 @@ import { updateTag } from "next/cache"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
-import { toProfileFormData } from "./profileFormData"
+import { REMOVE_AVATAR, toProfileFormData } from "./profileFormData"
 import { updateMemberProfile } from "./updateMemberProfile"
 
 vi.mock("next/cache", () => ({ updateTag: vi.fn() }))
@@ -201,6 +201,32 @@ describe("updateMemberProfile", () => {
       expect(payload.delete).toHaveBeenCalledWith(
         expect.objectContaining({ collection: "media", id: 12, overrideAccess: false }),
       )
+    })
+
+    it("clears the saved photo and deletes it when the member removes it", async () => {
+      signInWithAvatar(12)
+      const payload = mockPayload()
+
+      const result = await updateMemberProfile(toProfileFormData({ avatar: REMOVE_AVATAR }))
+
+      expect(result).toEqual({ ok: true })
+      expect(payload.create).not.toHaveBeenCalled()
+      expect(payload.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { avatar: null } }),
+      )
+      expect(payload.delete).toHaveBeenCalledWith(
+        expect.objectContaining({ collection: "media", id: 12 }),
+      )
+    })
+
+    it("keeps the saved photo when the save fails after a removal", async () => {
+      signInWithAvatar(12)
+      const payload = mockPayload({ update: vi.fn().mockRejectedValue(new Error("db down")) })
+
+      const result = await updateMemberProfile(toProfileFormData({ avatar: REMOVE_AVATAR }))
+
+      expect(result).toMatchObject({ ok: false })
+      expect(payload.delete).not.toHaveBeenCalled()
     })
 
     it("keeps the current photo when no new one is uploaded", async () => {
