@@ -29,11 +29,11 @@ const mockPayload = (overrides: Record<string, unknown> = {}) => {
 }
 
 /** Signs in the member with an existing photo, as an id or a populated Media doc. */
-const signInWithAvatar = (avatar: number | { id: number }) =>
+const signInWithAvatar = (avatar: number | { id: number }) => {
+  const signedIn = { ...member, user: { ...member.user, avatar } }
   // biome-ignore lint/suspicious/noExplicitAny: only the fields the action reads
-  vi
-    .mocked(getCurrentUser)
-    .mockResolvedValue({ ...member, user: { ...member.user, avatar } } as any)
+  vi.mocked(getCurrentUser).mockResolvedValue(signedIn as any)
+}
 
 const BROKEN_REQUEST = "Something went wrong sending your changes. Refresh and try again."
 
