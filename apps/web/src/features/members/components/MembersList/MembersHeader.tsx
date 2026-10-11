@@ -1,8 +1,8 @@
 import type { SearchParams } from "nuqs/server"
 import { getInstitutionOptionsCached } from "@/features/institutions/institutions.queries"
 import { PageHeader } from "@/features/layout/components"
-import { getMemberCounts, MEMBERS_PAGE_SIZE } from "../members.queries"
-import { loadMemberSearchParams, toMemberFilters } from "../members.search-params"
+import { getMemberCounts, MEMBERS_PAGE_SIZE } from "../../members.queries"
+import { loadMemberSearchParams, toMemberFilters } from "../../members.search-params"
 
 export const MembersHeader = async ({ searchParams }: { searchParams: Promise<SearchParams> }) => {
   const params = await loadMemberSearchParams(searchParams)

@@ -1,5 +1,5 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
-import type { MembersRouteParams } from "../members.params"
+import type { MembersRouteParams } from "../../members.params"
 import { MemberBio } from "./MemberDetailBio"
 import { MemberProposals, MemberProposalsSkeleton } from "./MemberDetailProposals"
 import { MemberPublications } from "./MemberDetailPublications"

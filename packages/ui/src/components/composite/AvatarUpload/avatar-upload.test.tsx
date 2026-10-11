@@ -41,4 +41,14 @@ describe("AvatarUpload", () => {
     fireEvent.change(input, { target: { files: [] } })
     expect(onFileSelect).not.toHaveBeenCalled()
   })
+
+  it("disables the picker when disabled", () => {
+    render(<AvatarUpload disabled fallback="JD" />)
+    expect(screen.getByRole("button", { name: "Upload photo" })).toBeDisabled()
+  })
+
+  it("forwards the xxl size to the avatar", () => {
+    const { container } = render(<AvatarUpload fallback="JD" size="xxl" />)
+    expect(container.querySelector('[data-size="xxl"]')).toBeInTheDocument()
+  })
 })

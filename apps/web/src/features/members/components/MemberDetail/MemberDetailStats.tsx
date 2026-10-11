@@ -1,10 +1,12 @@
+import { RESEARCH_INTEREST_MAX_LENGTH, RESEARCH_INTERESTS_MAX } from "@repo/shared/schemas/register"
 import { Badge, Card, CardContent, CardHeader, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { formatDate } from "@/features/courses/courses.format"
 import { Routes } from "@/lib/routes"
-import { type MembersRouteParams, parseMemberId } from "../members.params"
-import { getMemberCoursesCached, getMemberDetailsCached } from "../members.queries"
+import { type MembersRouteParams, parseMemberId } from "../../members.params"
+import { getMemberCoursesCached, getMemberDetailsCached } from "../../members.queries"
+import { EditTagList } from "../MemberEditor/EditTagList"
 
 const StatCard = ({ label, children }: { label: string; children: ReactNode }) => (
   <Card>
@@ -21,9 +23,8 @@ export const MemberStats = async ({ params }: { params: MembersRouteParams }) =>
     getMemberDetailsCached(memberId),
     getMemberCoursesCached(memberId),
   ])
-  // The header 404s a missing member, so there's nothing to show here.
-  if (!member) return null
 
+  if (!member) return null
   const memberSince = formatDate(member.registrationCompletedAt ?? member.createdAt)
 
   return (
@@ -55,17 +56,27 @@ export const MemberStats = async ({ params }: { params: MembersRouteParams }) =>
         )}
       </StatCard>
       <StatCard label="Research interests">
-        {member.researchInterests?.length ? (
-          <ul className="flex flex-wrap gap-1">
-            {member.researchInterests.map((interest) => (
-              <li key={interest}>
-                <Badge>{interest}</Badge>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <span className="text-muted-foreground">Not added yet</span>
-        )}
+        <EditTagList
+          itemLabel="research interest"
+          label="Research interests"
+          max={RESEARCH_INTERESTS_MAX}
+          maxLength={RESEARCH_INTEREST_MAX_LENGTH}
+          name="researchInterests"
+          value={member.researchInterests}
+          view={
+            member.researchInterests?.length ? (
+              <ul className="flex flex-wrap gap-1">
+                {member.researchInterests.map((interest) => (
+                  <li key={interest}>
+                    <Badge>{interest}</Badge>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <span className="text-muted-foreground">No interests yet.</span>
+            )
+          }
+        />
       </StatCard>
       {memberSince && (
         <StatCard label="Member since">

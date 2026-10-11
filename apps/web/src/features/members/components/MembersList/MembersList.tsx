@@ -4,12 +4,12 @@ import Link from "next/link"
 import type { SearchParams } from "nuqs/server"
 import { StringHrefLink } from "@/components/StringHrefLink"
 import { Routes } from "@/lib/routes"
-import { countMembers, getMembers, MEMBERS_PAGE_SIZE } from "../members.queries"
+import { countMembers, getMembers, MEMBERS_PAGE_SIZE } from "../../members.queries"
 import {
   loadMemberSearchParams,
   serializeMemberSearchParams,
   toMemberFilters,
-} from "../members.search-params"
+} from "../../members.search-params"
 import { MemberCard, MemberCardSkeleton } from "./MemberCard"
 
 // Stable keys for the placeholder cards, which have no data of their own.

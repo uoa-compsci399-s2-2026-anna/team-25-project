@@ -2,7 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { type OnUrlUpdateFunction, withNuqsTestingAdapter } from "nuqs/adapters/testing"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { MEMBER_INTEREST_FILTER_MAX } from "../members.search-params"
+import { MEMBER_INTEREST_FILTER_MAX } from "../../members.search-params"
 import { MembersActiveFilters } from "./MembersActiveFilters"
 
 const institutions = [
