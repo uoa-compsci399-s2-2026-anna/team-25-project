@@ -23,7 +23,6 @@ export const Routes = {
     PROPOSAL: (proposalId: number, proposalSlug?: string | null) =>
       route(`/proposals/${proposalSlug ? `${proposalId}-${proposalSlug}` : String(proposalId)}`),
   },
-  ABOUT: route("/about"),
   NEWS: route("/news"),
   RESOURCES: {
     ROOT: route("/resources"),
@@ -31,6 +30,7 @@ export const Routes = {
   },
   PUBLICATIONS: route("/publications"),
   PRIVACY: route("/privacy"),
+  GUIDELINES: route("/guidelines"),
   REGISTER: {
     ROOT: route("/register"),
     PROFILE: route("/register/profile"),
