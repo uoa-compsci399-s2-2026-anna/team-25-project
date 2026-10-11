@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { MemberTitle } from "../enums/members"
 import { isHttpUrl } from "../utils/is-http-url"
+import { normaliseResearchInterests } from "../utils/research-interests"
 
 /**
  * Shared by the client form and the server action, so a field can never be
@@ -20,6 +21,11 @@ export const LINK_LABEL_MAX_LENGTH = 50
 // Matches Media's own mimeTypes restriction. Excludes image/svg+xml
 // deliberately - an SVG can carry an embedded <script>.
 export const ALLOWED_AVATAR_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+
+// Kept below next.config.ts's serverActions.bodySizeLimit so the photo and the rest of
+// the form fit in one request - an oversized body is rejected before the action runs,
+// so the client checks this too to give a clear message.
+export const MAX_AVATAR_BYTES = 4 * 1024 * 1024
 
 export const registerDetailsSchema = z.object({
   title: z.enum(MemberTitle).nullable(),
@@ -45,14 +51,7 @@ export const registerDetailsSchema = z.object({
 export type RegisterDetails = z.infer<typeof registerDetailsSchema>
 
 // Deduplicated because each interest is also its React key when listed.
-const splitResearchInterests = (value: string) => [
-  ...new Set(
-    value
-      .split(",")
-      .map((interest) => interest.trim())
-      .filter(Boolean),
-  ),
-]
+const splitResearchInterests = (value: string) => normaliseResearchInterests(value.split(","))
 
 /**
  * Every profile field is skippable - the Figma frames this step as optional

@@ -4,9 +4,12 @@ import { PageContainer, PageHeaderSkeleton } from "@/features/layout/components"
 import {
   MembersFilterServer,
   MembersFilterServerSkeleton,
-} from "@/features/members/components/MembersFilterServer"
-import { MembersHeader } from "@/features/members/components/MembersHeader"
-import { MembersList, MembersListSkeleton } from "@/features/members/components/MembersList"
+} from "@/features/members/components/MembersList/MembersFilterServer"
+import { MembersHeader } from "@/features/members/components/MembersList/MembersHeader"
+import {
+  MembersList,
+  MembersListSkeleton,
+} from "@/features/members/components/MembersList/MembersList"
 
 export default function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (

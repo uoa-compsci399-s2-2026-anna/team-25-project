@@ -5,6 +5,7 @@ export const mockInstitution = (overrides: Partial<Institution> = {}): Instituti
   name: "University of Auckland",
   country: "NZ",
   domains: [{ domain: "auckland.ac.nz" }],
+  location: { latitude: -36.8523, longitude: 174.769 },
   logo: null,
   showLogo: true,
   updatedAt: "",

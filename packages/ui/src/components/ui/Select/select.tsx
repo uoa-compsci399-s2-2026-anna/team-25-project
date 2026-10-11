@@ -134,7 +134,9 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Prop
       data-slot="select-item"
       {...props}
     >
-      <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">
+      {/* min-w-0 lets it shrink and truncate inside the item's right padding; shrink-0 would
+          send a long label out under the tick instead. */}
+      <SelectPrimitive.ItemText className="block min-w-0 flex-1 truncate">
         {children}
       </SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator

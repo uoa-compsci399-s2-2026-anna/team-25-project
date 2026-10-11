@@ -2,6 +2,7 @@ import { InstitutionCountry } from "@repo/shared/enums/institutions"
 import { describe, expect, it } from "vitest"
 import {
   loadMemberSearchParams,
+  MEMBER_INTEREST_FILTER_MAX,
   serializeMemberSearchParams,
   toMemberFilters,
 } from "./members.search-params"
@@ -11,6 +12,7 @@ describe("loadMemberSearchParams", () => {
     expect(loadMemberSearchParams("")).toEqual({
       country: null,
       institution: null,
+      interest: [],
       page: 1,
       q: "",
       sort: "surnameAsc",
@@ -19,10 +21,13 @@ describe("loadMemberSearchParams", () => {
 
   it("parses every param", () => {
     expect(
-      loadMemberSearchParams("?q=tui&institution=12&country=NZ&sort=surnameDesc&page=3"),
+      loadMemberSearchParams(
+        "?q=tui&institution=12&country=NZ&interest=Teamwork&sort=surnameDesc&page=3",
+      ),
     ).toEqual({
       country: InstitutionCountry.NZ,
       institution: 12,
+      interest: ["Teamwork"],
       page: 3,
       q: "tui",
       sort: "surnameDesc",
@@ -33,6 +38,7 @@ describe("loadMemberSearchParams", () => {
     expect(loadMemberSearchParams("?institution=abc&country=FR&sort=random&page=0")).toEqual({
       country: null,
       institution: null,
+      interest: [],
       page: 1,
       q: "",
       sort: "surnameAsc",
@@ -78,6 +84,7 @@ describe("toMemberFilters", () => {
       toMemberFilters({
         country: null,
         institution: null,
+        interest: [],
         page: 2,
         q: "  tui  ",
         sort: "surnameAsc",
@@ -85,6 +92,7 @@ describe("toMemberFilters", () => {
     ).toEqual({
       country: undefined,
       institutionId: undefined,
+      researchInterests: [],
       search: "tui",
       sort: "surnameAsc",
     })
@@ -92,8 +100,58 @@ describe("toMemberFilters", () => {
 
   it("treats a whitespace-only search as no search", () => {
     expect(
-      toMemberFilters({ country: null, institution: null, page: 1, q: "   ", sort: "surnameAsc" }),
+      toMemberFilters({
+        country: null,
+        institution: null,
+        interest: [],
+        page: 1,
+        q: "   ",
+        sort: "surnameAsc",
+      }),
     ).toMatchObject({ search: undefined })
+  })
+
+  it("treats a whitespace-only interest as no interest", () => {
+    expect(
+      toMemberFilters({
+        country: null,
+        institution: null,
+        interest: ["   "],
+        page: 1,
+        q: "",
+        sort: "surnameAsc",
+      }),
+    ).toMatchObject({ researchInterests: [] })
+  })
+
+  // Stored interests are saved trimmed, so the trimmed value is the one that matches.
+  it("trims each interest and drops repeats", () => {
+    expect(
+      toMemberFilters({
+        country: null,
+        institution: null,
+        interest: ["  Teamwork  ", "Teamwork", "Ethics"],
+        page: 1,
+        q: "",
+        sort: "surnameAsc",
+      }),
+    ).toMatchObject({ researchInterests: ["Teamwork", "Ethics"] })
+  })
+
+  it("caps how many interests reach the query, whatever the URL asks for", () => {
+    const seven = ["a", "b", "c", "d", "e", "f", "g"]
+
+    const { researchInterests } = toMemberFilters({
+      country: null,
+      institution: null,
+      interest: seven,
+      page: 1,
+      q: "",
+      sort: "surnameAsc",
+    })
+
+    expect(researchInterests).toHaveLength(MEMBER_INTEREST_FILTER_MAX)
+    expect(researchInterests).toEqual(seven.slice(0, MEMBER_INTEREST_FILTER_MAX))
   })
 
   it("carries every set filter through", () => {
@@ -101,6 +159,7 @@ describe("toMemberFilters", () => {
       toMemberFilters({
         country: InstitutionCountry.AU,
         institution: 7,
+        interest: ["Teamwork"],
         page: 4,
         q: "anna",
         sort: "surnameDesc",
@@ -108,6 +167,7 @@ describe("toMemberFilters", () => {
     ).toEqual({
       country: InstitutionCountry.AU,
       institutionId: 7,
+      researchInterests: ["Teamwork"],
       search: "anna",
       sort: "surnameDesc",
     })

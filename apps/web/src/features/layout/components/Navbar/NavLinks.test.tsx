@@ -23,7 +23,7 @@ const renderNavLinks = async () => render(await NavLinks())
 const publicLinks = [
   ["Home", Routes.HOME],
   ["Members", Routes.MEMBERS.ROOT],
-  ["Publications", Routes.ABOUT],
+  ["Publications", Routes.PUBLICATIONS],
 ] as const
 
 const memberLinks = [

@@ -35,6 +35,9 @@ const publishInput = {
   startDate: "2026-07-13",
 }
 
+const issueFor = (result: ReturnType<typeof addCourseFormSchema.safeParse>, field: string) =>
+  result.success ? undefined : result.error.issues.find((issue) => issue.path[0] === field)?.message
+
 describe("createCourseSchema", () => {
   it("accepts a valid course code", () => {
     expect(createCourseSchema.safeParse({ code: "CS399" }).success).toBe(true)
@@ -134,6 +137,32 @@ describe("addCourseFormSchema (publish)", () => {
       ).toBe(false)
     },
   )
+
+  // A date input takes a year of any length, so both of these parse as real
+  // dates and used to sail through to the server.
+  it.each([
+    ["a year before any offering", "1444-01-01", "1444-06-01"],
+    ["a year past any offering", "12345-01-01", "12345-06-01"],
+  ])("rejects %s", (_label, startDate, endDate) => {
+    const result = addCourseFormSchema.safeParse({ ...publishInput, endDate, startDate })
+
+    expect(result.success).toBe(false)
+    expect(issueFor(result, "startDate")).toBe("Year must be between 2000 and 2100")
+    expect(issueFor(result, "endDate")).toBe("Year must be between 2000 and 2100")
+  })
+
+  // NaN compares false against everything, so an unparseable date used to be
+  // reported as being out of order rather than unparseable.
+  it("says an unparseable date is invalid rather than out of order", () => {
+    const result = addCourseFormSchema.safeParse({
+      ...publishInput,
+      endDate: "also-not-a-date",
+      startDate: "not-a-date",
+    })
+
+    expect(issueFor(result, "startDate")).toBe("Enter a valid date")
+    expect(issueFor(result, "endDate")).toBe("Enter a valid date")
+  })
 
   it("rejects an end date before the start date", () => {
     const result = addCourseFormSchema.safeParse({

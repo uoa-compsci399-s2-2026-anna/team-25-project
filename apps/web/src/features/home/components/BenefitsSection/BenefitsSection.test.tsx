@@ -1,6 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
-import { Routes } from "@/lib/routes"
 import { BenefitsSection } from "./BenefitsSection"
 
 describe("BenefitsSection", () => {
@@ -21,12 +20,9 @@ describe("BenefitsSection", () => {
     expect(screen.getByText(/Share ideas, join other projects/)).toBeInTheDocument()
   })
 
-  it("links Log in and Register to the real routes", () => {
+  // The pair that used to sit under the list moved to Who can join.
+  it("asks for nothing, it only lists", () => {
     render(<BenefitsSection />)
-    expect(screen.getByRole("button", { name: "Log in" })).toHaveAttribute("href", Routes.LOGIN)
-    expect(screen.getByRole("button", { name: "Register with your uni email" })).toHaveAttribute(
-      "href",
-      Routes.REGISTER.ROOT,
-    )
+    expect(screen.queryAllByRole("button")).toHaveLength(0)
   })
 })

@@ -1,48 +1,70 @@
 import { cleanup, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { getInstitutionMarkersCached } from "@/features/home/globe.queries"
+import { getInstitutionsWithLogosCached } from "@/features/institutions/institutions.queries"
 import Page from "./page"
 
+vi.mock("@/features/institutions/institutions.queries", () => ({
+  getInstitutionsWithLogosCached: vi.fn(),
+}))
+
+vi.mock("@/features/home/globe.queries", () => ({
+  getInstitutionMarkersCached: vi.fn().mockResolvedValue([]),
+}))
+
 describe("Home page", () => {
+  // Some tests below override this to a never-resolving promise to inspect the
+  // Suspense fallback - reset it before every test so that doesn't leak across cases.
+  beforeEach(() => {
+    vi.mocked(getInstitutionsWithLogosCached).mockReset().mockResolvedValue([])
+  })
+
   afterEach(() => {
     cleanup()
   })
 
-  it("renders HeroSection", () => {
-    render(<Page />)
+  it("renders HeroSection", async () => {
+    render(await Page())
     expect(screen.getByText("Computing Capstone Community Australasia")).toBeInTheDocument()
   })
 
-  it("renders TickerPlaceholder", () => {
-    render(<Page />)
-    expect(screen.getByTestId("ticker-placeholder")).toBeInTheDocument()
+  it("renders the institutions ticker's skeleton while logos load", async () => {
+    vi.mocked(getInstitutionsWithLogosCached).mockReturnValue(new Promise(() => {}))
+    const { container } = render(await Page())
+    // The ticker's pills are the w-20 skeletons - the globe has its own skeleton too.
+    expect(container.querySelectorAll(".animate-pulse.w-20")).toHaveLength(8)
   })
 
-  it("renders AboutSection", () => {
-    render(<Page />)
+  it("renders the globe's skeleton while its markers load", async () => {
+    vi.mocked(getInstitutionMarkersCached).mockReturnValueOnce(new Promise(() => {}))
+    const { container } = render(await Page())
+    expect(container.querySelector(".animate-pulse.aspect-square")).toBeInTheDocument()
+  })
+
+  it("renders AboutSection", async () => {
+    render(await Page())
     expect(screen.getByRole("heading", { level: 2, name: "About us" })).toBeInTheDocument()
   })
 
-  it("renders BenefitsSection", () => {
-    render(<Page />)
+  it("renders BenefitsSection", async () => {
+    render(await Page())
     expect(
       screen.getByRole("heading", { level: 2, name: "Benefits of being a member" }),
     ).toBeInTheDocument()
   })
 
-  it("renders JoinCommunityBand", () => {
-    render(<Page />)
-    expect(
-      screen.getByRole("heading", { level: 2, name: "Want to be a part of the community?" }),
-    ).toBeInTheDocument()
+  it("renders WhoCanJoinSection", async () => {
+    render(await Page())
+    expect(screen.getByRole("heading", { level: 2, name: "Who can join" })).toBeInTheDocument()
   })
 
   // The order the design lays them out in.
-  it("renders the sections in order", () => {
-    render(<Page />)
+  it("renders the sections in order", async () => {
+    render(await Page())
     expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual([
       "About us",
       "Benefits of being a member",
-      "Want to be a part of the community?",
+      "Who can join",
     ])
   })
 })

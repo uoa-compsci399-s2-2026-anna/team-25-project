@@ -1,7 +1,12 @@
 import { cleanup, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
-import { Routes } from "@/lib/routes"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { HeroSection } from "./HeroSection"
+
+// Never resolves, so the globe stays on its skeleton - the globe itself is covered in
+// InstitutionsGlobe.test.tsx.
+vi.mock("../../globe.queries", () => ({
+  getInstitutionMarkersCached: vi.fn(() => new Promise(() => {})),
+}))
 
 describe("HeroSection", () => {
   afterEach(() => {
@@ -32,17 +37,14 @@ describe("HeroSection", () => {
     ).toBeInTheDocument()
   })
 
-  it("links Become a member to the register route", () => {
-    render(<HeroSection />)
-    expect(screen.getByRole("button", { name: "Become a member" })).toHaveAttribute(
-      "href",
-      Routes.REGISTER.ROOT,
-    )
+  it("shows the globe's skeleton while its markers load", () => {
+    const { container } = render(<HeroSection />)
+    expect(container.querySelector(".animate-pulse")).toBeInTheDocument()
   })
 
-  // The design replaced the two-button pair with a single call to action.
-  it("renders only the one call to action", () => {
+  // Registering is asked for in Who can join now, so the hero makes no second ask.
+  it("renders no call to action", () => {
     render(<HeroSection />)
-    expect(screen.getAllByRole("button")).toHaveLength(1)
+    expect(screen.queryAllByRole("button")).toHaveLength(0)
   })
 })

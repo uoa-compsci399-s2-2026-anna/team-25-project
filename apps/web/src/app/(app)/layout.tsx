@@ -25,7 +25,11 @@ export default function RootLayout({
 }>) {
   return (
     <html className={cn("antialiased", fontMono.variable, "font-sans", satoshi.variable)} lang="en">
-      <body className="flex min-h-dvh flex-col items-center">
+      {/* overflow-x-clip (not overflow-x-hidden) so full-bleed sections that break out
+          via 100vw (e.g. InstitutionsTicker) can't push the page into horizontal
+          scroll on platforms with a classic, non-overlay scrollbar - x-only so it
+          doesn't disable Navbar's vertical position:sticky. */}
+      <body className="flex min-h-dvh flex-col items-center overflow-x-clip">
         <Providers>
           <Navbar />
           <div className="w-full flex-1">{children}</div>

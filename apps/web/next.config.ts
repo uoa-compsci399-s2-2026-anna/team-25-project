@@ -9,9 +9,11 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   experimental: {
     serverActions: {
-      // Default is 1 MB; a normal phone photo is 2-5 MB. Matches
-      // RegisterProfileForm's own MAX_AVATAR_BYTES check.
-      bodySizeLimit: "4mb",
+      // Default is 1 MB. Applies to every action and is read before any of them runs, so it
+      // stays small: room for createResource's attachments, capped at
+      // RESOURCE_ATTACHMENTS_MAX_MB (9 MB), plus the form's other fields. RegisterProfileForm
+      // caps an avatar at 4 MB itself.
+      bodySizeLimit: "10mb",
     },
   },
   images: {

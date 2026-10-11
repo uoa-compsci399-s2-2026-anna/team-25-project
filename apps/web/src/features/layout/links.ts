@@ -8,7 +8,7 @@ export const siteLinks = {
   members: { name: "Members", href: Routes.MEMBERS.ROOT, membersOnly: false },
   courses: { name: "Courses", href: Routes.COURSES.ROOT, membersOnly: true },
   proposals: { name: "Proposals", href: Routes.PROPOSALS.ROOT, membersOnly: true },
-  publications: { name: "Publications", href: Routes.ABOUT, membersOnly: false },
+  publications: { name: "Publications", href: Routes.PUBLICATIONS, membersOnly: false },
   resources: { name: "Resources", href: Routes.RESOURCES.ROOT, membersOnly: true },
   privacy: { name: "Privacy", href: Routes.PRIVACY, membersOnly: false },
 } as const

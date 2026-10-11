@@ -15,4 +15,21 @@ describe("Institutions collection", () => {
     expect(logo).toMatchObject({ type: "upload", relationTo: Slugs.Collections.MEDIA })
     expect(logo).not.toHaveProperty("required", true)
   })
+
+  it("stores GPS as plain numbers with an OpenStreetMap lookup button", () => {
+    const location = findField("location")
+    expect(location).toMatchObject({ type: "group" })
+    expect(JSON.stringify(location)).toContain("GeocodeInstitutionButton")
+    expect(location).toMatchObject({
+      fields: expect.arrayContaining([
+        expect.objectContaining({
+          type: "row",
+          fields: [
+            expect.objectContaining({ name: "latitude", type: "number", required: true }),
+            expect.objectContaining({ name: "longitude", type: "number", required: true }),
+          ],
+        }),
+      ]),
+    })
+  })
 })
