@@ -4,7 +4,7 @@ import { HeroGlobeSkeleton, InstitutionsGlobe } from "../HeroGlobe/InstitutionsG
 
 export const HeroSection = () => {
   return (
-    <section className="flex flex-col items-center gap-12 px-8 pt-20 pb-5 md:px-16 md:pt-25 md:pb-25 lg:flex-row">
+    <section className="flex flex-col items-center gap-12 px-8 pt-15 pb-4 md:px-16 md:pt-25 md:pb-25 lg:flex-row">
       <div className="flex max-w-3xl flex-col gap-8 lg:min-w-0 lg:flex-1">
         <Eyebrow>Computing Capstone Community Australasia</Eyebrow>
 

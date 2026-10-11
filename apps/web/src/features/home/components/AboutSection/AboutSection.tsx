@@ -25,7 +25,7 @@ export const AboutSection = () => {
   // More above than below: this meets the ticker band, which leaves the heading
   // no room of its own.
   return (
-    <section className="flex flex-col gap-8 px-8 pt-10 pb-10 sm:pt-16 sm:pb-12 md:px-16 md:pt-20">
+    <section className="flex flex-col gap-8 px-8 pt-4 pb-4 sm:pt-16 sm:pb-12 md:px-16 md:pt-20">
       <Heading level="h2">About us</Heading>
       <div className="grid gap-6 md:grid-cols-3">
         {about.map((item) => (
