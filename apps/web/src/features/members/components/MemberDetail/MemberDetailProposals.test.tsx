@@ -1,17 +1,43 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getMemberProposalsCached } from "../../members.queries"
 import { MemberProposals, MemberProposalsSkeleton } from "./MemberDetailProposals"
 
 vi.mock("../../members.queries", () => ({ getMemberProposalsCached: vi.fn() }))
+vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
+
+type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>
+
+const signedIn = { collection: "members", user: { id: 1 } } as unknown as CurrentUser
+const guest = { collection: null, user: null } as unknown as CurrentUser
 
 const renderProposals = async () =>
   render(await MemberProposals({ params: Promise.resolve({ memberId: "7" }) }))
 
 describe("MemberProposals", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(getCurrentUser).mockResolvedValue(signedIn)
+  })
+
   afterEach(() => {
     cleanup()
+  })
+
+  it("asks a guest to sign in instead of listing or loading the member's proposals", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue(guest)
+
+    await renderProposals()
+
+    expect(screen.getByRole("heading", { name: "Proposals" })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+      "href",
+      "/login?redirect=%2Fmembers%2F7",
+    )
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument()
+    expect(getMemberProposalsCached).not.toHaveBeenCalled()
   })
 
   it("shows an empty state for each tab when the member has no proposals", async () => {
