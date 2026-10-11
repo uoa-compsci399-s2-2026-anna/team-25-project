@@ -25,6 +25,10 @@ export type EditControl<V> = {
 export const EditSwitch = ({ children, view }: { children: ReactNode; view?: ReactNode }) =>
   useEdit().isEditing ? children : view
 
+/** Shows `children` until the page enters edit mode, then nothing. */
+export const ViewOnly = ({ children }: { children: ReactNode }) =>
+  useEdit().isEditing ? null : children
+
 /** Returns an error message, or undefined when the value is fine. */
 type Validator<V> = (value: V) => string | undefined
 

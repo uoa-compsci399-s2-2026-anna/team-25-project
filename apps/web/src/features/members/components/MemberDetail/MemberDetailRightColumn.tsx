@@ -4,7 +4,7 @@ import { MemberContacts, MemberContactsSkeleton } from "./MemberDetailContacts"
 import { MemberStats, MemberStatsSkeleton } from "./MemberDetailStats"
 
 export const MemberDetailRightColumn = ({ params }: { params: MembersRouteParams }) => (
-  <aside className="flex flex-col gap-4">
+  <aside className="flex flex-col gap-4 max-md:contents">
     <AnimatedSuspense fallback={<MemberContactsSkeleton />}>
       <MemberContacts params={params} />
     </AnimatedSuspense>
