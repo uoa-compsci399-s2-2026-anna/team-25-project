@@ -56,6 +56,7 @@ function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
         "group-data-[size=default]/avatar:size-2.5 group-data-[size=default]/avatar:[&>svg]:size-2",
         "group-data-[size=lg]/avatar:size-3 group-data-[size=lg]/avatar:[&>svg]:size-2",
         "group-data-[size=xl]/avatar:size-6 group-data-[size=xl]/avatar:[&>svg]:size-3.5",
+        "group-data-[size=xxl]/avatar:size-8 group-data-[size=xxl]/avatar:[&>svg]:size-4",
         className,
       )}
       data-slot="avatar-badge"

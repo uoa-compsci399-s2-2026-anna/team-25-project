@@ -1,9 +1,28 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
-import { PageHeaderSkeleton } from "./PageHeader"
+import { PageHeader, PageHeaderSkeleton } from "./PageHeader"
 
 afterEach(() => {
   cleanup()
+})
+
+describe("PageHeader", () => {
+  it("leaves the heading's container left-aligned by default", () => {
+    render(<PageHeader description="Description" title="Members" />)
+    const heading = screen.getByRole("heading", { level: 1, name: "Members" })
+    expect(heading.parentElement).not.toHaveClass("max-md:text-center")
+  })
+
+  it("centres the heading and description on phones when asked to", () => {
+    render(<PageHeader centerOnMobile description="Description" title="Members" />)
+
+    const heading = screen.getByRole("heading", { level: 1, name: "Members" })
+    expect(heading.parentElement).toHaveClass("max-md:items-center", "max-md:text-center")
+    expect(screen.getByText("Description").parentElement).toHaveClass(
+      "max-md:items-center",
+      "max-md:text-center",
+    )
+  })
 })
 
 describe("PageHeaderSkeleton", () => {

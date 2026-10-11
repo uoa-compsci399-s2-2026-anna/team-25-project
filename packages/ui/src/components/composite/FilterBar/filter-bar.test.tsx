@@ -195,6 +195,18 @@ describe("FilterBar", () => {
     expect(screen.queryByRole("tablist")).not.toBeInTheDocument()
     expect(screen.queryAllByRole("tab")).toHaveLength(0)
   })
+
+  // The filters and sort still work either way; only their grouping changes.
+  it("wraps the filters and sort in their own group only when asked to", () => {
+    const { container, rerender } = render(<FilterBar {...props()} />)
+    expect(container.querySelector('[data-slot="filter-bar-group"]')).not.toBeInTheDocument()
+
+    rerender(<FilterBar {...props()} groupControls />)
+    const group = container.querySelector('[data-slot="filter-bar-group"]')
+    expect(group).toBeInTheDocument()
+    expect(group).toContainElement(screen.getByRole("combobox", { name: "University" }))
+    expect(group).toContainElement(screen.getByRole("combobox", { name: "Sort" }))
+  })
 })
 
 describe("FilterBarSkeleton", () => {
@@ -227,5 +239,17 @@ describe("FilterBarSkeleton", () => {
   it("leaves out the status placeholder when the bar has no tabs", () => {
     const { container } = render(<FilterBarSkeleton filterCount={2} />)
     expect(container.querySelector('[data-slot="filter-bar-skeleton-status"]')).toBeNull()
+  })
+
+  // Matches FilterBar's own groupControls, so the loading state doesn't jump
+  // to a different row count once the real bar replaces it.
+  it("wraps the filter and sort placeholders in their own group only when asked to", () => {
+    const { container, rerender } = render(<FilterBarSkeleton filterCount={2} />)
+    expect(container.querySelector('[data-slot="filter-bar-group"]')).not.toBeInTheDocument()
+
+    rerender(<FilterBarSkeleton filterCount={2} groupControls />)
+    const group = container.querySelector('[data-slot="filter-bar-group"]')
+    expect(group).toBeInTheDocument()
+    expect(group?.querySelectorAll('[data-slot="filter-bar-skeleton-filter"]')).toHaveLength(2)
   })
 })

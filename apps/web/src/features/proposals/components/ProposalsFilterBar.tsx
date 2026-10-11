@@ -44,6 +44,17 @@ export const ProposalsFilterBar = ({ counts, institutions }: ProposalsFilterBarP
 
   return (
     <FilterBar
+      // On phones the dropdowns shrink so all three fit on one line. Scoped here, so
+      // the shared FilterBar keeps its size on the other pages. The grouped gap
+      // itself is groupControls's own default, not reachable from this className.
+      // md:gap-2 trims the gap between tabs, search and the group: measured at
+      // 1080px wide, everything was 7px short of fitting on one line at gap-3.
+      // Below 1080px everything stays centred, same as on phones; md:justify-center
+      // overrides FilterBar's own md:justify-start to get that, which only
+      // the !important on min-[1080px]:justify-start can then beat reliably -
+      // Tailwind doesn't sort a named breakpoint against a custom one, so a plain
+      // min-[1080px]:justify-start left the bar right-aligned from 768px already.
+      className="min-[1080px]:justify-start! max-md:justify-center md:flex-wrap md:justify-center md:gap-2 max-md:[&_[data-slot=select-trigger]]:px-2 max-md:[&_[data-slot=select-trigger]]:text-xs"
       filters={[
         {
           id: "institution",
@@ -60,6 +71,7 @@ export const ProposalsFilterBar = ({ counts, institutions }: ProposalsFilterBarP
           value: params.tag,
         } satisfies FilterBarFilter<ProposalTag>,
       ]}
+      groupControls
       // The input updates at once; only the URL, and so the server fetch, waits for a pause.
       // Clearing the search skips the wait, so the full list comes back at once.
       onSearchChange={(q) => update({ q }, { limitUrlUpdates: q ? debounce(300) : undefined })}
