@@ -38,7 +38,7 @@ export const EditTagList = ({
               <Badge className="h-7 pl-1">
                 <Button
                   aria-label={`Remove ${item || itemLabel}`}
-                  className="bg-destructive text-white"
+                  className="hover:bg-primary-foreground/20"
                   disabled={disabled}
                   onClick={() => remove(index)}
                   size="icon-xs"
@@ -48,10 +48,11 @@ export const EditTagList = ({
                 </Button>
                 <Input
                   aria-label={`${itemLabel} ${index + 1}`}
-                  className="h-auto w-24 border-0 px-1 font-medium hover:bg-transparent focus-visible:ring-0"
+                  className="h-auto w-24 border-0 px-1 font-medium text-white placeholder:text-white hover:bg-transparent focus-visible:ring-0"
                   disabled={disabled}
                   maxLength={maxLength}
                   onChange={(e) => update(index, e.target.value)}
+                  placeholder="Type here…"
                   value={item}
                   variant="pill"
                 />
@@ -63,10 +64,9 @@ export const EditTagList = ({
               aria-label={`Add ${itemLabel}`}
               disabled={disabled || isFull}
               onClick={() => setValue([...items, ""])}
-              size="icon-xs"
               variant="button-cream"
             >
-              +
+              Add +
             </Button>
           </li>
         </ul>

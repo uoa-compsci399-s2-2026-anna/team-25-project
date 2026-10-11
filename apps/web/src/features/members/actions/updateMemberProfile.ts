@@ -95,6 +95,19 @@ export const updateMemberProfile = async (formData: FormData): Promise<ActionRes
     return { formError: "Could not save your changes. Try again.", ok: false }
   }
 
+  // Only once the member points at the new photo is the old one safe to remove.
+  const previousAvatarId = typeof user.avatar === "object" ? user.avatar?.id : user.avatar
+  if (avatarId !== undefined && previousAvatarId && previousAvatarId !== avatarId) {
+    await payload
+      .delete({
+        collection: Slugs.Collections.MEDIA,
+        id: previousAvatarId,
+        user,
+        overrideAccess: false,
+      })
+      .catch((err) => payload.logger.error({ err }, "previous avatar cleanup failed"))
+  }
+
   updateTag(QueryKeys.MEMBERS.ID(user.id))
 
   return { ok: true }

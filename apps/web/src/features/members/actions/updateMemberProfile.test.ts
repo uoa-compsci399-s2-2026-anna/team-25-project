@@ -28,6 +28,13 @@ const mockPayload = (overrides: Record<string, unknown> = {}) => {
   return payload
 }
 
+/** Signs in the member with an existing photo, as an id or a populated Media doc. */
+const signInWithAvatar = (avatar: number | { id: number }) =>
+  // biome-ignore lint/suspicious/noExplicitAny: only the fields the action reads
+  vi
+    .mocked(getCurrentUser)
+    .mockResolvedValue({ ...member, user: { ...member.user, avatar } } as any)
+
 const BROKEN_REQUEST = "Something went wrong sending your changes. Refresh and try again."
 
 const png = () => new File(["data"], "photo.png", { type: "image/png" })
@@ -182,6 +189,41 @@ describe("updateMemberProfile", () => {
         expect.objectContaining({ data: { bio: "Hi", avatar: 55 } }),
       )
     })
+
+    it("deletes the previous photo once the member points at the new one", async () => {
+      signInWithAvatar(12)
+      const payload = mockPayload()
+
+      const result = await updateMemberProfile(toProfileFormData({ avatar: png() }))
+
+      expect(result).toEqual({ ok: true })
+      expect(payload.delete).toHaveBeenCalledTimes(1)
+      expect(payload.delete).toHaveBeenCalledWith(
+        expect.objectContaining({ collection: "media", id: 12, overrideAccess: false }),
+      )
+    })
+
+    it("keeps the current photo when no new one is uploaded", async () => {
+      signInWithAvatar(12)
+      const payload = mockPayload()
+
+      const result = await updateMemberProfile(toProfileFormData({ bio: "Hi" }))
+
+      expect(result).toEqual({ ok: true })
+      expect(payload.delete).not.toHaveBeenCalled()
+    })
+
+    it("still saves when removing the previous photo fails", async () => {
+      signInWithAvatar({ id: 12 })
+      const payload = mockPayload({ delete: vi.fn().mockRejectedValue(new Error("S3 down")) })
+
+      const result = await updateMemberProfile(toProfileFormData({ avatar: png() }))
+
+      expect(result).toEqual({ ok: true })
+      expect(payload.delete).toHaveBeenCalledWith(expect.objectContaining({ id: 12 }))
+      expect(payload.logger.error).toHaveBeenCalled()
+      expect(updateTag).toHaveBeenCalledWith(QueryKeys.MEMBERS.ID(7))
+    })
   })
 
   describe("failures", () => {
@@ -196,12 +238,15 @@ describe("updateMemberProfile", () => {
     })
 
     it("reports a form error, logs, and removes the orphaned photo when the update fails", async () => {
+      signInWithAvatar(12)
       const payload = mockPayload({ update: vi.fn().mockRejectedValue(new Error("db down")) })
 
       const result = await updateMemberProfile(toProfileFormData({ bio: "Hi", avatar: png() }))
 
       expect(result).toEqual({ formError: "Could not save your changes. Try again.", ok: false })
       expect(payload.logger.error).toHaveBeenCalled()
+      // Only the new upload goes - the member still points at the previous photo.
+      expect(payload.delete).toHaveBeenCalledTimes(1)
       expect(payload.delete).toHaveBeenCalledWith(
         expect.objectContaining({ collection: "media", id: 55 }),
       )
