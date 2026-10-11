@@ -13,6 +13,7 @@ export const Slugs = {
   },
   Globals: {
     PRIVACY_POLICY: "privacy-policy",
+    COMMUNITY_GUIDELINES: "community-guidelines",
   },
 } as const
 
