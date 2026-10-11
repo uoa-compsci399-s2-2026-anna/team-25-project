@@ -11,6 +11,7 @@ export const siteLinks = {
   publications: { name: "Publications", href: Routes.PUBLICATIONS, membersOnly: false },
   resources: { name: "Resources", href: Routes.RESOURCES.ROOT, membersOnly: true },
   privacy: { name: "Privacy", href: Routes.PRIVACY, membersOnly: false },
+  guidelines: { name: "Guidelines", href: Routes.GUIDELINES, membersOnly: false },
 } as const
 
 // Shown by both the desktop and mobile navbars.
