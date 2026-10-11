@@ -10,7 +10,7 @@ const counts = {
   [ProposalStatus.CLOSED]: 14,
 }
 
-const renderFilterBar = (searchParams = "") => {
+const renderFilterBar = (searchParams = "", { hasMemory = false } = {}) => {
   const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
   render(
     <ProposalsFilterBar
@@ -20,7 +20,7 @@ const renderFilterBar = (searchParams = "") => {
         { label: "University of Canterbury", value: 3 },
       ]}
     />,
-    { wrapper: withNuqsTestingAdapter({ onUrlUpdate, searchParams }) },
+    { wrapper: withNuqsTestingAdapter({ hasMemory, onUrlUpdate, searchParams }) },
   )
   return onUrlUpdate
 }
@@ -84,7 +84,9 @@ describe("ProposalsFilterBar", () => {
 
   it("applies search text after the debounce", async () => {
     const user = userEvent.setup()
-    const onUrlUpdate = renderFilterBar()
+    // nuqs debounces each key on its own timer, so on a slow runner q and the page reset can
+    // reach the URL in separate updates - memory makes the later one build on the earlier.
+    const onUrlUpdate = renderFilterBar("", { hasMemory: true })
     const search = screen.getByRole("searchbox", { name: "Search proposals..." })
 
     await user.type(search, "peer")

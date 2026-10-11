@@ -1,14 +1,13 @@
 import { ProposalStatus } from "@repo/shared/enums/proposals"
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
-import { getInstitutionOptionsCached } from "@/features/institutions/institutions.queries"
-import { loadProposalStatusCounts } from "../proposals.queries"
+import { getProposalInstitutionsCached, loadProposalStatusCounts } from "../proposals.queries"
 import { ProposalsFilterBarSkeleton, ProposalsFilterServer } from "./ProposalsFilterServer"
 
-vi.mock("@/features/institutions/institutions.queries", () => ({
-  getInstitutionOptionsCached: vi.fn(),
+vi.mock("../proposals.queries", () => ({
+  getProposalInstitutionsCached: vi.fn(),
+  loadProposalStatusCounts: vi.fn(),
 }))
-vi.mock("../proposals.queries", () => ({ loadProposalStatusCounts: vi.fn() }))
 vi.mock("./ProposalsFilterBar", () => ({
   ProposalsFilterBar: ({ counts, institutions }: { counts: object; institutions: object[] }) => (
     <div>
@@ -22,7 +21,7 @@ describe("ProposalsFilterServer", () => {
     const counts = { [ProposalStatus.ACTIVE]: 2, [ProposalStatus.CLOSED]: 1 }
     const institutions = [{ label: "University of Auckland", value: 12 }]
     vi.mocked(loadProposalStatusCounts).mockResolvedValue(counts)
-    vi.mocked(getInstitutionOptionsCached).mockResolvedValue(institutions)
+    vi.mocked(getProposalInstitutionsCached).mockResolvedValue(institutions)
 
     render(
       await ProposalsFilterServer({
@@ -35,7 +34,7 @@ describe("ProposalsFilterServer", () => {
       search: "peer",
       tag: undefined,
     })
-    expect(getInstitutionOptionsCached).toHaveBeenCalledOnce()
+    expect(getProposalInstitutionsCached).toHaveBeenCalledOnce()
     expect(screen.getByText(/University of Auckland/)).toBeInTheDocument()
   })
 })
