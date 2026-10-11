@@ -16,6 +16,7 @@ import {
 } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import type * as React from "react"
+import { Fragment } from "react"
 
 /** Matches `ProposalStatus` by value, without coupling the design system to it. */
 type ProposalCardStatus = "active" | "closed"
@@ -45,7 +46,8 @@ type ProposalCardProps = Omit<React.ComponentProps<"div">, "title"> & {
   href?: string
   linkComponent?: React.ElementType<ProposalCardLinkProps>
   summary: string
-  author: ProposalCardAuthor
+  /** Every author, in order. A long list fades out at the end of the byline rather than wrapping. */
+  authors: ProposalCardAuthor[]
   /** A `Date`, or any string `Date` can parse (an ISO timestamp from Payload). */
   postedAt: Date | string
   status?: ProposalCardStatus
@@ -78,8 +80,15 @@ const initials = (name: string) =>
     .join("")
     .toUpperCase() || "?"
 
+/**
+ * Clips to one line and fades the last 3rem to nothing, so a byline too long for the card
+ * trails off instead of wrapping. Text that fits ends before the fade and is left as is.
+ */
+const bylineFade =
+  "overflow-hidden whitespace-nowrap [mask-image:linear-gradient(to_right,black_calc(100%-3rem),transparent)]"
+
 function ProposalCard({
-  author,
+  authors,
   className,
   href,
   linkComponent: LinkComponent = "a",
@@ -97,18 +106,10 @@ function ProposalCard({
   const posted = new Date(postedAt)
   const postedLabel = Number.isNaN(posted.getTime()) ? null : postedFormatter.format(posted)
 
-  const byline = (
-    <>
-      {/* The name sits right beside it, so the photo and initials are decorative. */}
-      <Avatar aria-hidden className="group-data-[status=closed]/card:opacity-60">
-        {author.avatarSrc && <AvatarImage alt="" src={author.avatarSrc} />}
-        <AvatarFallback>{initials(author.name)}</AvatarFallback>
-      </Avatar>
-      <p className="truncate text-muted-foreground text-sm group-hover/author:underline group-data-[status=closed]/card:text-neutral-400">
-        {author.institution ? `${author.name} - ${author.institution}` : author.name}
-      </p>
-    </>
-  )
+  // Listed once each, as on the proposal's own page, when authors share an institution.
+  const institutions = [
+    ...new Set(authors.flatMap(({ institution }) => (institution ? [institution] : []))),
+  ].join(", ")
 
   return (
     <Card
@@ -167,16 +168,46 @@ function ProposalCard({
 
       <CardFooter className="flex-col items-stretch gap-3 border-t-0 bg-transparent pt-0">
         <Separator />
-        {author.href ? (
-          <LinkComponent
-            className="group/author flex min-w-0 items-center gap-2"
-            href={author.href}
-          >
-            {byline}
-          </LinkComponent>
-        ) : (
-          <div className="flex min-w-0 items-center gap-2">{byline}</div>
-        )}
+        <div className="flex min-w-0 items-center gap-3">
+          {/* The names sit right beside them, so the photos and initials are decorative. */}
+          <div aria-hidden className="flex shrink-0 -space-x-3">
+            {authors.map((author) => (
+              <Avatar
+                className="ring-2 ring-brand-cream group-data-[status=closed]/card:opacity-60"
+                key={author.href ?? author.name}
+              >
+                {author.avatarSrc && <AvatarImage alt="" src={author.avatarSrc} />}
+                <AvatarFallback>{initials(author.name)}</AvatarFallback>
+              </Avatar>
+            ))}
+          </div>
+          <div className="min-w-0 flex-1 text-sm leading-snug">
+            <p className={cn(bylineFade, "font-medium")}>
+              {authors.map((author, index) => (
+                <Fragment key={author.href ?? author.name}>
+                  {index > 0 && ", "}
+                  {author.href ? (
+                    <LinkComponent className="hover:underline" href={author.href}>
+                      {author.name}
+                    </LinkComponent>
+                  ) : (
+                    author.name
+                  )}
+                </Fragment>
+              ))}
+            </p>
+            {institutions && (
+              <p
+                className={cn(
+                  bylineFade,
+                  "text-muted-foreground group-data-[status=closed]/card:text-neutral-400",
+                )}
+              >
+                {institutions}
+              </p>
+            )}
+          </div>
+        </div>
       </CardFooter>
     </Card>
   )

@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import { ProposalCard, type ProposalCardProps, ProposalCardSkeleton } from "./proposal-card"
 
 const props: ProposalCardProps = {
-  author: { institution: "University of Example", name: "Dr Anna Tui" },
+  authors: [{ institution: "University of Example", name: "Dr Anna Tui" }],
   postedAt: "2026-08-03T00:00:00.000Z",
   summary: "Seeking two co-investigators with access to multi-year peer-assessment data.",
   title: "Longitudinal study of team assessment fairness in capstone cohorts",
@@ -15,17 +15,43 @@ describe("ProposalCard", () => {
     cleanup()
   })
 
-  it("renders the title, summary and author", () => {
+  it("renders the title, summary, author and institution", () => {
     render(<ProposalCard {...props} />)
 
     expect(screen.getByText(props.title)).toBeInTheDocument()
     expect(screen.getByText(props.summary)).toBeInTheDocument()
-    expect(screen.getByText("Dr Anna Tui - University of Example")).toBeInTheDocument()
+    expect(screen.getByText("Dr Anna Tui")).toBeInTheDocument()
+    expect(screen.getByText("University of Example")).toBeInTheDocument()
   })
 
   it("renders the author alone when there is no institution", () => {
-    render(<ProposalCard {...props} author={{ name: "Dr Anna Tui" }} />)
+    render(<ProposalCard {...props} authors={[{ name: "Dr Anna Tui" }]} />)
     expect(screen.getByText("Dr Anna Tui")).toBeInTheDocument()
+    expect(screen.queryByText("University of Example")).not.toBeInTheDocument()
+  })
+
+  it("joins every author's name with a comma, with an avatar each", () => {
+    render(
+      <ProposalCard
+        {...props}
+        authors={[...props.authors, { institution: "Victoria University", name: "Ben Lee" }]}
+      />,
+    )
+
+    expect(screen.getByText("Dr Anna Tui, Ben Lee")).toBeInTheDocument()
+    expect(screen.getByText("AT")).toBeInTheDocument()
+    expect(screen.getByText("BL")).toBeInTheDocument()
+    expect(screen.getByText("University of Example, Victoria University")).toBeInTheDocument()
+  })
+
+  it("only lists an institution once when authors share it", () => {
+    render(
+      <ProposalCard
+        {...props}
+        authors={[...props.authors, { institution: "University of Example", name: "Ben Lee" }]}
+      />,
+    )
+    expect(screen.getByText("University of Example")).toBeInTheDocument()
   })
 
   it.each([["2026-08-03T00:00:00.000Z"], [new Date("2026-08-03T00:00:00.000Z")]])(
@@ -94,14 +120,14 @@ describe("ProposalCard", () => {
   })
 
   it("falls back to a placeholder rather than an empty avatar for a blank name", () => {
-    render(<ProposalCard {...props} author={{ name: "   " }} />)
+    render(<ProposalCard {...props} authors={[{ name: "   " }]} />)
     expect(screen.getByText("?")).toBeInTheDocument()
   })
 
   // Base UI only swaps the fallback out once the image loads, which jsdom never
   // reports, so the loaded avatar cannot be asserted. Same as avatar.test.tsx.
   it("keeps the initials showing until the author's avatar loads", () => {
-    render(<ProposalCard {...props} author={{ ...props.author, avatarSrc: "/anna.png" }} />)
+    render(<ProposalCard {...props} authors={[{ ...props.authors[0], avatarSrc: "/anna.png" }]} />)
     expect(screen.getByText("AT")).toBeVisible()
   })
 
@@ -137,11 +163,19 @@ describe("ProposalCard", () => {
     expect(screen.getByTestId("custom-link")).toHaveAttribute("href", "/proposals/fairness")
   })
 
-  it("links the byline to the author's href", () => {
-    render(<ProposalCard {...props} author={{ ...props.author, href: "/members/1" }} />)
-    expect(
-      screen.getByRole("link", { name: "Dr Anna Tui - University of Example" }),
-    ).toHaveAttribute("href", "/members/1")
+  it("links each author's name to their own href", () => {
+    render(
+      <ProposalCard
+        {...props}
+        authors={[
+          { ...props.authors[0], href: "/members/1" },
+          { href: "/members/2", name: "Ben Lee" },
+        ]}
+      />,
+    )
+
+    expect(screen.getByRole("link", { name: "Dr Anna Tui" })).toHaveAttribute("href", "/members/1")
+    expect(screen.getByRole("link", { name: "Ben Lee" })).toHaveAttribute("href", "/members/2")
   })
 
   it("renders the byline through the custom link component", () => {
@@ -153,7 +187,7 @@ describe("ProposalCard", () => {
     render(
       <ProposalCard
         {...props}
-        author={{ ...props.author, href: "/members/1" }}
+        authors={[{ ...props.authors[0], href: "/members/1" }]}
         linkComponent={CustomLink}
       />,
     )
