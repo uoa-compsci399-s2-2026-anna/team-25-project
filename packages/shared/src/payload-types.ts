@@ -106,9 +106,11 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     'privacy-policy': PrivacyPolicy;
+    'community-guidelines': CommunityGuideline;
   };
   globalsSelect: {
     'privacy-policy': PrivacyPolicySelect<false> | PrivacyPolicySelect<true>;
+    'community-guidelines': CommunityGuidelinesSelect<false> | CommunityGuidelinesSelect<true>;
   };
   locale: null;
   widgets: {
@@ -988,9 +990,43 @@ export interface PrivacyPolicy {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "community-guidelines".
+ */
+export interface CommunityGuideline {
+  id: number;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "privacy-policy_select".
  */
 export interface PrivacyPolicySelect<T extends boolean = true> {
+  content?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "community-guidelines_select".
+ */
+export interface CommunityGuidelinesSelect<T extends boolean = true> {
   content?: T;
   updatedAt?: T;
   createdAt?: T;
