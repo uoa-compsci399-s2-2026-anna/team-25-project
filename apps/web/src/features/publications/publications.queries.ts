@@ -46,7 +46,7 @@ const publicationFiltersToWhere = (filters: PublicationFilters): Where => {
 }
 
 // id breaks ties; without it paging can repeat or skip a publication.
-const publicationSortFields: Record<PublicationSort, Sort> = {
+export const publicationSortFields: Record<PublicationSort, Sort> = {
   newest: ["-year", "-month", "-id"],
   oldest: ["year", "month", "id"],
   titleAsc: ["title", "id"],
