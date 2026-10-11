@@ -11,11 +11,13 @@ import {
   TabsList,
   TabsTrigger,
 } from "@repo/ui/components/ui"
+import { cn } from "@repo/ui/lib/utils"
 import Link from "next/link"
 import { formatDate } from "@/features/courses/courses.format"
 import { Routes } from "@/lib/routes"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberProposalsCached } from "../../members.queries"
+import { mobileSection } from "./mobileSection"
 
 type MemberProposal = Awaited<ReturnType<typeof getMemberProposalsCached>>[number]
 
@@ -26,10 +28,14 @@ export const MemberProposals = async ({ params }: { params: MembersRouteParams }
   const closed = proposals.filter((proposal) => proposal.status === ProposalStatus.CLOSED)
 
   return (
-    <Tabs className="gap-4" defaultValue={ProposalStatus.ACTIVE} render={<section />}>
-      <div className="flex flex-row justify-between">
+    <Tabs
+      className={cn("gap-4 max-md:order-4", mobileSection)}
+      defaultValue={ProposalStatus.ACTIVE}
+      render={<section />}
+    >
+      <div className="flex flex-row items-center justify-between gap-3">
         <Heading level="h2">Proposals</Heading>
-        <TabsList className="w-80" variant="pill">
+        <TabsList className="w-80 max-md:w-auto max-md:text-xs" variant="pill">
           <TabsTrigger value={ProposalStatus.ACTIVE}>
             {`${ProposalStatusLabels.active} - ${active.length}`}
           </TabsTrigger>
@@ -93,7 +99,7 @@ const ProposalList = ({
 }
 
 export const MemberProposalsSkeleton = () => (
-  <div className="flex flex-col gap-4">
+  <div className={cn("flex flex-col gap-4 max-md:order-4", mobileSection)}>
     <Skeleton className="h-7 w-40" />
     <Skeleton className="h-16 w-full" />
     <Skeleton className="h-16 w-full" />

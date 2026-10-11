@@ -1,4 +1,5 @@
 import { Badge, Card, CardContent, CardHeader, Heading, Skeleton } from "@repo/ui/components/ui"
+import { cn } from "@repo/ui/lib/utils"
 import Link from "next/link"
 import { withRedirect } from "@/features/auth/redirect"
 import { formatDate } from "@/features/courses/courses.format"
@@ -6,6 +7,7 @@ import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Routes } from "@/lib/routes"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberResourcesCached } from "../../members.queries"
+import { mobileSection } from "./mobileSection"
 
 // Aliased as the React compiler rule reads a capitalized call inside a component as
 // a component rendered the wrong way.
@@ -21,7 +23,7 @@ export const MemberResources = async ({ params }: { params: MembersRouteParams }
   const { user } = await getCurrentUser()
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className={cn("flex flex-col gap-4 max-md:order-5", mobileSection)}>
       <Heading level="h2">Resources</Heading>
       {user ? (
         <ResourceList resources={await getMemberResourcesCached(memberId)} />
@@ -76,7 +78,7 @@ const ResourceList = ({ resources }: { resources: MemberResource[] }) => {
 }
 
 export const MemberResourcesSkeleton = () => (
-  <div className="flex flex-col gap-4">
+  <div className={cn("flex flex-col gap-4 max-md:order-5", mobileSection)}>
     <Skeleton className="h-7 w-40" />
     <Skeleton className="h-16 w-full" />
     <Skeleton className="h-16 w-full" />

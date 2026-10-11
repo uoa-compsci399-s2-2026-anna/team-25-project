@@ -6,7 +6,7 @@ import { MemberPublications, MemberPublicationsSkeleton } from "./MemberDetailPu
 import { MemberResources, MemberResourcesSkeleton } from "./MemberDetailResources"
 
 export const MemberDetailLeftColumn = ({ params }: { params: MembersRouteParams }) => (
-  <div className="flex min-w-0 flex-col gap-8">
+  <div className="flex min-w-0 flex-col gap-8 max-md:contents">
     <AnimatedSuspense>
       <MemberBio params={params} />
     </AnimatedSuspense>
