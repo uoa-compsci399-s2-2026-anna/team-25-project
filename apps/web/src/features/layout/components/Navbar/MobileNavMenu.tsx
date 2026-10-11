@@ -111,7 +111,11 @@ export function MobileNavMenu({ account, links }: MobileNavMenuProps) {
         inert={!open}
       >
         {account && (
-          <div className="flex items-center gap-3 border-border border-b px-4 py-5">
+          <Link
+            className="flex items-center gap-3 border-border border-b px-4 py-5 transition-colors hover:bg-brand-blush"
+            href={account.href}
+            onClick={close}
+          >
             <Avatar size="lg">
               {account.avatarUrl && <AvatarImage alt="" src={account.avatarUrl} />}
               <AvatarFallback>{account.initials}</AvatarFallback>
@@ -122,7 +126,7 @@ export function MobileNavMenu({ account, links }: MobileNavMenuProps) {
                 <p className="truncate text-muted-foreground text-sm">{account.subtitle}</p>
               )}
             </div>
-          </div>
+          </Link>
         )}
 
         <nav aria-label="Mobile" className="flex flex-col px-4 py-5">
