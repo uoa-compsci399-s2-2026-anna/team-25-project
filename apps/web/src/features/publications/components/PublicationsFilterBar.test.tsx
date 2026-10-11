@@ -4,10 +4,10 @@ import { type OnUrlUpdateFunction, withNuqsTestingAdapter } from "nuqs/adapters/
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { PublicationsFilterBar } from "./PublicationsFilterBar"
 
-const renderFilterBar = (searchParams = "") => {
+const renderFilterBar = (searchParams = "", { hasMemory = false } = {}) => {
   const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
   render(<PublicationsFilterBar tags={["Assessment", "Teamwork"]} years={[2025, 2024]} />, {
-    wrapper: withNuqsTestingAdapter({ onUrlUpdate, searchParams }),
+    wrapper: withNuqsTestingAdapter({ hasMemory, onUrlUpdate, searchParams }),
   })
   return onUrlUpdate
 }
@@ -95,7 +95,9 @@ describe("PublicationsFilterBar", () => {
 
   it("applies search text after the debounce", async () => {
     const user = userEvent.setup()
-    const onUrlUpdate = renderFilterBar()
+    // nuqs debounces each key on its own timer, so on a slow runner q and the page reset can
+    // reach the URL in separate updates - memory makes the later one build on the earlier.
+    const onUrlUpdate = renderFilterBar("", { hasMemory: true })
 
     await user.type(screen.getByRole("searchbox", { name: "Search publications..." }), "peer")
     await waitFor(
