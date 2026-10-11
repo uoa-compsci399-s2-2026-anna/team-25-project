@@ -4,6 +4,7 @@ import { avatarFileError } from "@repo/shared/schemas/members"
 import { ALLOWED_AVATAR_MIME_TYPES, MAX_AVATAR_BYTES } from "@repo/shared/schemas/register"
 import { AvatarUpload } from "@repo/ui/components/composite"
 import type { ReactNode } from "react"
+import { type AvatarValue, REMOVE_AVATAR } from "../../actions/profileFormData"
 import { EditField, type FieldsOfType } from "./EditField"
 
 export const EditUploadAvatar = ({
@@ -22,14 +23,16 @@ export const EditUploadAvatar = ({
   image?: { alt: string; src: string }
   label?: string
   maxBytes?: number
-  name: FieldsOfType<File | null>
+  name: FieldsOfType<AvatarValue>
   size?: "default" | "sm" | "lg" | "xl" | "xxl"
   view?: ReactNode
 }) => (
   <EditField
     label={label}
     name={name}
-    validate={(file) => (file ? avatarFileError(file, { accept, maxBytes }) : undefined)}
+    validate={(file) =>
+      file instanceof File ? avatarFileError(file, { accept, maxBytes }) : undefined
+    }
     value={null}
     view={view}
   >
@@ -39,7 +42,8 @@ export const EditUploadAvatar = ({
         disabled={control.disabled}
         fallback={fallback}
         image={image}
-        onFileSelect={control.setValue}
+        // Removing only needs sending when there is a saved photo to clear.
+        onFileSelect={(file) => control.setValue(file ?? (image ? REMOVE_AVATAR : null))}
         size={size}
       />
     )}

@@ -4,7 +4,7 @@ import { memberProfileSchema } from "@repo/shared/schemas/members"
 import { useForm } from "@tanstack/react-form"
 import { createContext, type ReactNode, useContext, useState } from "react"
 import type { z } from "zod"
-import { toProfileFormData } from "../../actions/profileFormData"
+import { type AvatarValue, toProfileFormData } from "../../actions/profileFormData"
 import { updateMemberProfile } from "../../actions/updateMemberProfile"
 
 /**
@@ -12,8 +12,7 @@ import { updateMemberProfile } from "../../actions/updateMemberProfile"
  * Derived from the schema so a field added there can't be missed here.
  */
 export type ProfileValues = Required<z.input<typeof memberProfileSchema>> & {
-  /** A newly picked photo, or null to keep the current one. */
-  avatar: File | null
+  avatar: AvatarValue
 }
 
 const validateProfile = ({ value }: { value: ProfileValues }) => {

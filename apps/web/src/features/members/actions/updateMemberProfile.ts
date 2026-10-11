@@ -7,7 +7,7 @@ import type { ActionResult } from "@/features/auth/actions/types"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
-import { AVATAR_KEY, PROFILE_KEY } from "./profileFormData"
+import { AVATAR_KEY, PROFILE_KEY, REMOVE_AVATAR } from "./profileFormData"
 
 const BROKEN_REQUEST = "Something went wrong sending your changes. Refresh and try again."
 
@@ -45,6 +45,7 @@ export const updateMemberProfile = async (formData: FormData): Promise<ActionRes
 
   const avatar = formData.get(AVATAR_KEY)
   const newAvatar = avatar instanceof File && avatar.size > 0 ? avatar : null
+  const removeAvatar = avatar === REMOVE_AVATAR
   if (newAvatar) {
     const avatarError = avatarFileError(newAvatar)
     if (avatarError)
@@ -76,11 +77,15 @@ export const updateMemberProfile = async (formData: FormData): Promise<ActionRes
     }
   }
 
+  // A new photo wins over a removal; with neither, the avatar is left out so it's kept.
+  const avatarChange =
+    avatarId !== undefined ? { avatar: avatarId } : removeAvatar ? { avatar: null } : {}
+
   try {
     await payload.update({
       collection: Slugs.Collections.MEMBERS,
       id: user.id,
-      data: avatarId === undefined ? parsed.data : { ...parsed.data, avatar: avatarId },
+      data: { ...parsed.data, ...avatarChange },
       user,
       overrideAccess: false,
     })
@@ -95,9 +100,9 @@ export const updateMemberProfile = async (formData: FormData): Promise<ActionRes
     return { formError: "Could not save your changes. Try again.", ok: false }
   }
 
-  // Only once the member points at the new photo is the old one safe to remove.
+  // Only once the member no longer points at the old photo is it safe to delete.
   const previousAvatarId = typeof user.avatar === "object" ? user.avatar?.id : user.avatar
-  if (avatarId !== undefined && previousAvatarId && previousAvatarId !== avatarId) {
+  if ("avatar" in avatarChange && previousAvatarId && previousAvatarId !== avatarId) {
     await payload
       .delete({
         collection: Slugs.Collections.MEDIA,
