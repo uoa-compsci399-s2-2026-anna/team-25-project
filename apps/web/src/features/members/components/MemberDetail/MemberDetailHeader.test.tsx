@@ -139,6 +139,42 @@ describe("MemberHeader", () => {
     expect(screen.getByRole("textbox", { name: "Position" })).toHaveValue("Senior Lecturer")
   })
 
+  it("tags the research interests under the name for phones, hidden from screen readers", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue(
+      member({ researchInterests: ["Peer review", "Team assessment"] }) as never,
+    )
+
+    await renderHeader()
+    const tags = screen.getByText("Peer review").closest("ul")
+    expect(tags).toHaveTextContent("Team assessment")
+    // The Research interests section reads them out, so these would be a repeat.
+    expect(tags).toHaveAttribute("aria-hidden", "true")
+    expect(screen.queryByRole("list")).not.toBeInTheDocument()
+  })
+
+  it("leaves out the interest tags when there are none", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue(member({ researchInterests: [] }) as never)
+
+    const { container } = await renderHeader()
+    expect(container.querySelector("ul")).toBeNull()
+  })
+
+  it("hides the interest tags while editing, as they're edited in their own section", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue(
+      member({ researchInterests: ["Peer review"] }) as never,
+    )
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      user: { id: 7 },
+    } as never)
+    const user = userEvent.setup()
+
+    await renderHeader()
+    await user.click(screen.getByRole("button", { name: "Edit" }))
+
+    expect(screen.queryByText("Peer review")).not.toBeInTheDocument()
+  })
+
   it("falls back to initials without a populated avatar", async () => {
     vi.mocked(getMemberDetailsCached).mockResolvedValue(member({ avatar: 5 }) as never)
 
