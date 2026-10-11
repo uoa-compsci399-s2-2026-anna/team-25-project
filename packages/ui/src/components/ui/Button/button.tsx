@@ -16,6 +16,7 @@ const buttonVariants = cva(
       },
       borderColor: {
         charcoal: "border-brand-charcoal",
+        mauve: "border-brand-mauve bg-clip-border",
         white: "border-white",
       },
       active: {
