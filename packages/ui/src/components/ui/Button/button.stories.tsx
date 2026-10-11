@@ -7,6 +7,8 @@ const variants = [
   "button-transparent",
   "button-white",
   "button-cream",
+  "button-destructive",
+  "button-destructive-outline",
   "button-unstyled",
 ] as const
 const sizes = ["sm", "md", "lg", "xl", "xxl", "icon", "icon-xs", "icon-sm", "icon-lg"] as const

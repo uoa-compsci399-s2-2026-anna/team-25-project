@@ -2,52 +2,17 @@
 
 import { QueryKeys } from "@repo/shared/constants/query-keys"
 import { addCourseFormSchema } from "@repo/shared/schemas/courses"
-import { richTextHasText } from "@repo/shared/schemas/shared"
 import { updateTag } from "next/cache"
-import { APIError, type RequiredDataFromCollectionSlug, ValidationError } from "payload"
+import type { RequiredDataFromCollectionSlug } from "payload"
 import type { ActionResult } from "@/features/auth/actions/types"
-import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
-
-type ZodIssue = { message: string; path: PropertyKey[] }
-
-const fieldErrorsFromIssues = (issues: readonly ZodIssue[]): Record<string, string> => {
-  const fieldErrors: Record<string, string> = {}
-  for (const issue of issues) {
-    const field = issue.path.join(".")
-    // Only the first message per field is shown, matching one message per input.
-    if (field && !fieldErrors[field]) {
-      fieldErrors[field] = issue.message
-    }
-  }
-  return fieldErrors
-}
-
-const resultFromValidationError = (
-  error: ValidationError,
-  fallbackFormError: string,
-): ActionResult => {
-  const fieldErrors: Record<string, string> = {}
-  for (const { path, message } of error.data?.errors ?? []) {
-    if (path && !fieldErrors[path]) {
-      fieldErrors[path] = message
-    }
-  }
-  return Object.keys(fieldErrors).length > 0
-    ? { fieldErrors, ok: false }
-    : { formError: fallbackFormError, ok: false }
-}
-
-// The dialog always sends every field, blank ones included - Payload's date
-// columns reject an empty string outright, so a blank optional field must
-// reach `create()` as `undefined`, never `""`.
-const blankToUndefined = (value: string | undefined) => (value ? value : undefined)
-
-// An editor the user typed in and then cleared still holds an empty paragraph, so a draft
-// stores only rich text with visible text in it.
-const richTextOrUndefined = <Value extends { root: unknown }>(value: Value | null | undefined) =>
-  value && richTextHasText(value.root) ? value : undefined
+import {
+  fieldErrorsFromIssues,
+  requireMember,
+  resultFromWriteError,
+  toVersionData,
+} from "./courseForm"
 
 /**
  * Creates the course and its first offering together. The two writes share
@@ -67,39 +32,15 @@ export const createCourse = async (input: unknown): Promise<ActionResult> => {
     return { fieldErrors: fieldErrorsFromIssues(parsed.error.issues), ok: false }
   }
 
-  const { collection, user } = await getCurrentUser()
-  // The courses page itself requires sign-in (#90), so this should only ever
-  // be reached signed in - `!user` stays as a fallback for a direct call to
-  // this action outside that page, not a case the UI here needs to design
-  // around. An admin can reach the page too but has no institution of their
-  // own to own a course in, so admins get their own message rather than one
-  // implying they aren't signed in at all.
-  if (!user) {
-    return { formError: "Sign in to add a course.", ok: false }
-  }
-  if (collection !== Slugs.Collections.MEMBERS) {
-    return {
-      formError: "Only members can add a course - admins manage the directory, not entries in it.",
-      ok: false,
-    }
-  }
+  const member = await requireMember({
+    notMember: "Only members can add a course - admins manage the directory, not entries in it.",
+    signedOut: "Sign in to add a course.",
+  })
+  if (member.error) return member.error
+  const { user } = member
 
   const payload = await getPayloadClient()
-  const {
-    additionalInfo,
-    assessments,
-    code,
-    deliveryFormat,
-    endDate,
-    intent,
-    learningOutcomes,
-    name,
-    period,
-    programme,
-    projectType,
-    role,
-    startDate,
-  } = parsed.data
+  const { code, intent, role } = parsed.data
   const publishing = intent === "publish"
 
   const transactionID = await payload.db.beginTransaction()
@@ -118,19 +59,7 @@ export const createCourse = async (input: unknown): Promise<ActionResult> => {
       user,
     })
 
-    const versionData = {
-      additionalInfo: richTextOrUndefined(additionalInfo),
-      assessments: richTextOrUndefined(assessments),
-      course: course.id,
-      deliveryFormat: deliveryFormat ? deliveryFormat : undefined,
-      endDate: blankToUndefined(endDate),
-      learningOutcomes: richTextOrUndefined(learningOutcomes),
-      name,
-      period: blankToUndefined(period),
-      programme: blankToUndefined(programme),
-      projectType: blankToUndefined(projectType),
-      startDate: blankToUndefined(startDate),
-    }
+    const versionData = { ...toVersionData(parsed.data, undefined), course: course.id }
 
     // A draft's fields are all optional by the collection's own type, but
     // publishing needs the full shape - kept as separate calls so `draft`
@@ -170,15 +99,8 @@ export const createCourse = async (input: unknown): Promise<ActionResult> => {
   } catch (error) {
     if (transactionID) await payload.db.rollbackTransaction(transactionID)
 
-    if (error instanceof ValidationError) {
-      return resultFromValidationError(error, "Could not add this course. Try again.")
-    }
-    // The collection hooks (e.g. requiring publication content, a valid
-    // period) throw a plain APIError rather than a ValidationError, so there
-    // is no field path to attach - its message is already fit to show as-is.
-    if (error instanceof APIError) {
-      return { formError: error.message, ok: false }
-    }
+    const result = resultFromWriteError(error, "Could not add this course. Try again.")
+    if (result) return result
     payload.logger.error({ err: error }, "createCourse failed")
     return { formError: "Could not add this course. Try again.", ok: false }
   }

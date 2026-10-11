@@ -178,4 +178,74 @@ describe("AddCapstoneCourseDialog", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent("Could not save this course. Try again.")
   })
+  it("takes a custom title and opens without a trigger when driven through open", () => {
+    render(
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        onPublish={vi.fn()}
+        onSaveDraft={vi.fn()}
+        onValueChange={vi.fn()}
+        open
+        title="Edit draft course"
+        values={emptyValues}
+      />,
+    )
+
+    expect(screen.getByRole("dialog", { name: "Edit draft course" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "+ Add your course" })).not.toBeInTheDocument()
+  })
+  describe("deleting a draft", () => {
+    const renderDraft = (overrides: Partial<AddCapstoneCourseDialogProps> = {}) =>
+      render(
+        <AddCapstoneCourseDialog
+          deliveryFormatOptions={deliveryFormatOptions}
+          onDelete={vi.fn()}
+          onPublish={vi.fn()}
+          onSaveDraft={vi.fn()}
+          onValueChange={vi.fn()}
+          open
+          values={emptyValues}
+          {...overrides}
+        />,
+      )
+
+    it("offers no delete button without onDelete, as when adding a course", () => {
+      renderDialog()
+      expect(screen.queryByRole("button", { name: "Delete draft" })).not.toBeInTheDocument()
+    })
+
+    it("asks for confirmation before deleting", () => {
+      const onDelete = vi.fn()
+      renderDraft({ onDelete })
+
+      fireEvent.click(screen.getByRole("button", { name: "Delete draft" }))
+
+      expect(onDelete).not.toHaveBeenCalled()
+      expect(screen.getByText("Delete this draft? This can't be undone.")).toBeInTheDocument()
+      expect(screen.queryByRole("button", { name: "Publish" })).not.toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole("button", { name: "Confirm delete" }))
+      expect(onDelete).toHaveBeenCalledTimes(1)
+    })
+
+    it("goes back to the normal footer when the confirmation is cancelled", () => {
+      const onDelete = vi.fn()
+      renderDraft({ onDelete })
+
+      fireEvent.click(screen.getByRole("button", { name: "Delete draft" }))
+      fireEvent.click(screen.getByRole("button", { name: "Keep draft" }))
+
+      expect(onDelete).not.toHaveBeenCalled()
+      expect(screen.getByRole("button", { name: "Delete draft" })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument()
+    })
+
+    it("disables every action while deleting, labelling the delete", () => {
+      renderDraft({ submitting: "delete" })
+
+      expect(screen.getByRole("button", { name: "Deleting..." })).toBeDisabled()
+      expect(screen.getByRole("button", { name: "Save draft" })).toBeDisabled()
+      expect(screen.getByRole("button", { name: "Publish" })).toBeDisabled()
+    })
+  })
 })

@@ -298,9 +298,38 @@ describe("assertCourseDeletable", () => {
   const remove = (req: PayloadRequest, id: unknown = 5) =>
     assertCourseDeletable({ id, req } as unknown as Parameters<typeof assertCourseDeletable>[0])
 
-  it("refuses a member, even one who can edit the course", async () => {
+  it("refuses an anonymous request", async () => {
+    const { req } = request(null)
+    await expect(remove(req)).rejects.toThrow("Sign in to delete a course.")
+  })
+
+  it("refuses an editor who doesn't own the course", async () => {
+    vi.mocked(lockDocument).mockResolvedValue(saved())
+    const { req } = request(editor)
+
+    await expect(remove(req)).rejects.toThrow("Only the course's owner or an admin can delete it.")
+  })
+
+  it("refuses the owner once the course has been published", async () => {
+    vi.mocked(lockDocument).mockResolvedValue(saved({ hasPublishedVersion: true }))
+    const { req, count } = request(owner)
+
+    await expect(remove(req)).rejects.toThrow("Their history is permanent.")
+    expect(count).not.toHaveBeenCalled()
+  })
+
+  it("lets the owner delete a never-published course with no offerings left", async () => {
+    vi.mocked(lockDocument).mockResolvedValue(saved())
     const { req } = request(owner)
-    await expect(remove(req)).rejects.toThrow("Only admins can delete courses.")
+
+    await expect(remove(req)).resolves.toBeUndefined()
+  })
+
+  it("asks the owner to clear the course's drafts first, like an admin", async () => {
+    vi.mocked(lockDocument).mockResolvedValue(saved())
+    const { req } = request(owner, { counts: [0, 1] })
+
+    await expect(remove(req)).rejects.toThrow("Delete the course's draft offerings first.")
   })
 
   it("refuses a course with published offerings", async () => {

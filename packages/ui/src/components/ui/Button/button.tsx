@@ -12,6 +12,10 @@ const buttonVariants = cva(
         "button-transparent": "bg-transparent text-brand-charcoal hover:bg-brand-charcoal/10",
         "button-white": "bg-white text-brand-charcoal hover:bg-brand-charcoal/10",
         "button-cream": "bg-brand-cream text-brand-charcoal hover:bg-brand-charcoal/10",
+        // Irreversible actions: outline asks, solid confirms.
+        "button-destructive": "bg-destructive text-white hover:bg-destructive/80",
+        "button-destructive-outline":
+          "border-destructive bg-transparent text-destructive hover:bg-destructive/10",
         "button-unstyled": "",
       },
       borderColor: {

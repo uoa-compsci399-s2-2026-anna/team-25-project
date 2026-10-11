@@ -63,6 +63,43 @@ export const Default: Story = {
   },
 }
 
+// Reopening a saved draft, with a "Delete draft" button.
+export const EditingDraft: Story = {
+  render: () => {
+    const [values, setValues] = React.useState({
+      ...emptyValues,
+      code: "CS399",
+      name: "Capstone Project",
+    })
+    const [submitting, setSubmitting] = React.useState<"draft" | "publish" | "delete" | undefined>(
+      undefined,
+    )
+
+    const simulateSubmit = (intent: "draft" | "publish" | "delete") => {
+      setSubmitting(intent)
+      setTimeout(() => setSubmitting(undefined), 1000)
+    }
+
+    return (
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        onDelete={() => simulateSubmit("delete")}
+        onPublish={() => simulateSubmit("publish")}
+        onSaveDraft={() => simulateSubmit("draft")}
+        onValueChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
+        submitting={submitting}
+        title="Edit draft course"
+        trigger={
+          <Button size="xl" type="button" variant="button-mauve">
+            Open draft
+          </Button>
+        }
+        values={values}
+      />
+    )
+  },
+}
+
 export const WithErrors: Story = {
   render: () => {
     const [values, setValues] = React.useState(emptyValues)

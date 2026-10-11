@@ -1,8 +1,12 @@
 import type { Course, CourseVersion, Member } from "@repo/shared/payload-types"
+import type { AddCapstoneCourseDialogValues } from "@repo/ui/components/composite"
 import type { CourseTableRow } from "./components/CoursesTable"
 
 const asPopulated = <T>(value: number | T | null | undefined): T | undefined =>
   typeof value === "number" || value === null || value === undefined ? undefined : value
+
+export const ownerIdOf = (course: Pick<Course, "owner">): number | undefined =>
+  typeof course.owner === "number" ? course.owner : course.owner?.id
 
 const formatLecturerName = (member: Member) => `${member.firstName.charAt(0)}. ${member.lastName}`
 
@@ -63,6 +67,56 @@ export const toCourseTableRow = (
     status: deriveStatus(version),
   }
 }
+
+/** A never-published course the viewer can reopen in the add-course dialog. */
+export interface EditableDraftCourse {
+  courseId: number
+  versionId: number
+  /** Only the owner may delete a draft; its editors can still edit it. */
+  canDelete: boolean
+  values: AddCapstoneCourseDialogValues
+}
+
+/** The viewer's own never-published courses, for the courses table. */
+export interface MyDraftCourses {
+  rows: CourseTableRow[]
+  /** Keyed by the row's `id`, for reopening a draft in the add-course dialog. */
+  editable: Record<string, EditableDraftCourse>
+}
+
+// Payload hands dates back as full ISO timestamps; a date input only takes the day.
+const toDateInput = (value: string | null | undefined) => (value ? value.slice(0, 10) : "")
+
+type DialogRichText = AddCapstoneCourseDialogValues["learningOutcomes"]
+
+/**
+ * Pre-fills the dialog from a draft. Drafts never store "Your role" - it only
+ * becomes a teaching-team row on publish - so the viewer's `role` is their profile
+ * position, the same default a new course starts from.
+ */
+export const toEditableDraftCourse = (
+  course: Course,
+  version: CourseVersion,
+  viewer: { id: number; role: string },
+): EditableDraftCourse => ({
+  canDelete: ownerIdOf(course) === viewer.id,
+  courseId: course.id,
+  versionId: version.id,
+  values: {
+    additionalInfo: (version.additionalInfo ?? null) as DialogRichText,
+    assessments: (version.assessments ?? null) as DialogRichText,
+    code: course.code,
+    deliveryFormat: version.deliveryFormat ?? "",
+    endDate: toDateInput(version.endDate),
+    learningOutcomes: (version.learningOutcomes ?? null) as DialogRichText,
+    name: version.name ?? "",
+    period: version.period ?? "",
+    programme: version.programme ?? "",
+    projectType: version.projectType ?? "",
+    role: viewer.role,
+    startDate: toDateInput(version.startDate),
+  },
+})
 
 export interface CoursesSummaryStats {
   totalCourses: number

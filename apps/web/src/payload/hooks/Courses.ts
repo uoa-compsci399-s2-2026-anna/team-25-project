@@ -99,9 +99,17 @@ export const revalidateDeletedCourse: CollectionAfterDeleteHook<Course> = ({ doc
 }
 
 export const assertCourseDeletable: CollectionBeforeDeleteHook = async ({ id, req }) => {
-  if (!admin(req)) fail("Only admins can delete courses.", 403)
+  if (!admin(req) && !member(req)) fail("Sign in to delete a course.", 403)
 
-  await lockCourse(req, relationID(id))
+  const course = await lockCourse(req, relationID(id))
+
+  // Mirrors courseDelete, re-checked under the lock.
+  if (!admin(req)) {
+    if (relationID(course.owner) !== req.user?.id)
+      fail("Only the course's owner or an admin can delete it.", 403)
+    if (course.hasPublishedVersion)
+      fail("This course has published offerings. Their history is permanent.", 409)
+  }
 
   const countVersions = (where: Where) =>
     req.payload.count({
