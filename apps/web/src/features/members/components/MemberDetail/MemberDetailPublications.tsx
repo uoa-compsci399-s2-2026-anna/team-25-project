@@ -1,5 +1,7 @@
-import { PublicationTypeLabels } from "@repo/shared/enums/publications"
-import { Badge, Card, CardContent, CardHeader, Heading, Skeleton } from "@repo/ui/components/ui"
+import { PublicationCard, PublicationCardSkeleton } from "@repo/ui/components/composite"
+import { Heading } from "@repo/ui/components/ui"
+import { StringHrefLink } from "@/components/StringHrefLink"
+import { Routes } from "@/lib/routes"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberPublicationsCached } from "../../members.queries"
 
@@ -15,22 +17,12 @@ export const MemberPublications = async ({ params }: { params: MembersRouteParam
       <Heading level="h2">Publications</Heading>
       {publications.length > 0 ? (
         publications.map((publication) => (
-          <Card key={publication.id}>
-            <CardHeader className="flex items-center justify-between gap-3">
-              <Badge className="uppercase tracking-wide" variant="blue">
-                {PublicationTypeLabels[publication.type]}
-              </Badge>
-              <span className="text-muted-foreground text-xs">Published {publication.year}</span>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              <p className="font-semibold">{publication.title}</p>
-              {publication.authors.length > 0 && (
-                <p className="text-muted-foreground text-sm">
-                  {publication.authors.map((author) => author.name).join(", ")}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          <PublicationCard
+            key={publication.id}
+            linkComponent={StringHrefLink}
+            memberHref={Routes.MEMBERS.MEMBER}
+            publication={publication}
+          />
         ))
       ) : (
         <p className="text-muted-foreground text-sm">No publications yet.</p>
@@ -43,16 +35,7 @@ export const MemberPublicationsSkeleton = () => (
   <section className="flex flex-col gap-4">
     <Heading level="h2">Publications</Heading>
     {skeletonCardIds.map((id) => (
-      <Card key={id}>
-        <CardHeader className="flex items-center justify-between gap-3">
-          <Skeleton className="h-5 w-24" />
-          <Skeleton className="h-4 w-20" />
-        </CardHeader>
-        <CardContent className="flex flex-col gap-2">
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-        </CardContent>
-      </Card>
+      <PublicationCardSkeleton key={id} />
     ))}
   </section>
 )

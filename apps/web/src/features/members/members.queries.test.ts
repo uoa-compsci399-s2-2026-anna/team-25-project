@@ -315,9 +315,10 @@ describe("getMemberPublications", () => {
     expect(find).toHaveBeenCalledWith({
       collection: "publications",
       where: { "authors.member": { equals: 7 } },
-      sort: "-createdAt",
-      depth: 0,
+      sort: ["-year", "-month", "-id"],
+      depth: 2,
       pagination: false,
+      populate: { members: { avatar: true } },
     })
   })
 
@@ -327,10 +328,9 @@ describe("getMemberPublications", () => {
     await expect(getMemberPublications(7)).resolves.toEqual(docs)
   })
 
-  // Saving a publication revalidates the profile of each linked author, by member id.
-  it("is cached under the publications and member tags", async () => {
+  it("is cached under the publications and members tags", async () => {
     await expect(getMemberPublicationsCached(7)).resolves.toEqual([])
-    expect(cacheTag).toHaveBeenCalledWith("publications", "member:7")
+    expect(cacheTag).toHaveBeenCalledWith("publications", "members", "member:7")
   })
 })
 

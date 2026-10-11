@@ -6,6 +6,7 @@ import { normaliseResearchInterests } from "@repo/shared/utils/research-interest
 import { cacheLife, cacheTag } from "next/cache"
 import { connection } from "next/server"
 import type { Where } from "payload"
+import { publicationSortFields } from "@/features/publications/publications.queries"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
 import type { MemberSort } from "./members.search-params"
@@ -55,18 +56,6 @@ const memberFiltersToWhere = (filters: MemberFilters): Where => {
   }
 
   return where
-}
-
-export const getMemberPublications = async (memberId: number) => {
-  const payload = await getPayloadClient()
-  const { docs } = await payload.find({
-    collection: Slugs.Collections.PUBLICATIONS,
-    where: { "authors.member": { equals: memberId } },
-    sort: "-createdAt",
-    depth: 0,
-    pagination: false,
-  })
-  return docs
 }
 
 /**
@@ -130,12 +119,6 @@ export const getResearchInterestOptions = async (): Promise<ResearchInterestOpti
     .map((interest) => ({ label: interest, value: interest }))
 }
 
-export const getMemberPublicationsCached = async (memberId: number) => {
-  "use cache"
-  cacheLife("max")
-  cacheTag(QueryKeys.PUBLICATIONS.ROOT, QueryKeys.MEMBERS.ID(memberId))
-  return getMemberPublications(memberId)
-}
 export const getResearchInterestOptionsCached = async () => {
   "use cache"
   cacheLife("max")
@@ -216,6 +199,30 @@ export const getMemberResourcesCached = async (memberId: number) => {
   // The cards show each course's code, so they go stale with the courses too.
   cacheTag(QueryKeys.RESOURCES.ROOT, QueryKeys.COURSES.ROOT)
   return getMemberResources(memberId)
+}
+
+/** The publications the member is a linked author of, newest first as on the publications page. */
+export const getMemberPublications = async (memberId: number) => {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: Slugs.Collections.PUBLICATIONS,
+    where: { "authors.member": { equals: memberId } },
+    sort: publicationSortFields.newest,
+    // Depth 2 reaches the avatar of each author who is a member.
+    depth: 2,
+    pagination: false,
+    // The Local API overrides access, so ask only for what the card draws of a member.
+    populate: { [Slugs.Collections.MEMBERS]: { avatar: true } },
+  })
+  return docs
+}
+
+export const getMemberPublicationsCached = async (memberId: number) => {
+  "use cache"
+  cacheLife("max")
+  // The cards show each co-author's avatar, so they go stale with the members too.
+  cacheTag(QueryKeys.PUBLICATIONS.ROOT, QueryKeys.MEMBERS.ROOT, QueryKeys.MEMBERS.ID(memberId))
+  return getMemberPublications(memberId)
 }
 
 export const getMemberCoursesConvenedCount = async (memberId: number) => {
