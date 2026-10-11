@@ -271,16 +271,21 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
         <form.Field name="agreedToTerms">
           {(field) => (
             <Field
+              className="items-start"
               data-invalid={field.state.meta.errors.length > 0 || undefined}
               orientation="horizontal"
             >
+              {/* Sits on the first line of the label, which can wrap on narrow screens. */}
               <Checkbox
                 checked={field.state.value}
+                className="mt-0.5"
                 id={field.name}
                 name={field.name}
                 onCheckedChange={(checked) => field.handleChange(checked)}
               />
-              <FieldLabel className="font-normal" htmlFor={field.name}>
+              {/* block, not the label's default flex, so the sentence and its links flow inline
+                  as one run of text rather than as separate columns. */}
+              <FieldLabel className="block font-normal" htmlFor={field.name}>
                 I agree to the{" "}
                 <Link className="text-primary underline underline-offset-4" href={Routes.ABOUT}>
                   community guidelines
