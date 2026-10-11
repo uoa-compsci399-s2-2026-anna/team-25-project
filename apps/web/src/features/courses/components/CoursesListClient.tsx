@@ -7,7 +7,7 @@ import {
   type CourseTableRow,
   useCoursesTable,
 } from "./CoursesTable"
-import { CoursesToolbar } from "./CoursesToolbar"
+import { CoursesToolbar, coursesFilterBarClassName } from "./CoursesToolbar"
 
 export interface CoursesListClientProps {
   rows: CourseTableRow[]
@@ -17,6 +17,12 @@ export interface CoursesListClientProps {
 // All rows load up front and get filtered/sorted in the browser -
 // `pageSize: Infinity` opts out of pagination, since the design doesn't have
 // any and the directory is small enough not to need it.
+// On phones the table bleeds into the side padding so it can scroll to the
+// screen edge; `--table-bleed` matches the `px-10` it bleeds through, and
+// `--table-inset` sits it at half that from the edge, to fit more columns.
+const listClassName =
+  "flex w-full flex-col gap-4 px-10 py-6 max-md:[--table-bleed:--spacing(10)] max-md:[--table-inset:--spacing(5)] md:px-12"
+
 export function CoursesListClient({ rows }: CoursesListClientProps) {
   const table = useCoursesTable({
     data: rows,
@@ -24,7 +30,7 @@ export function CoursesListClient({ rows }: CoursesListClientProps) {
   })
 
   return (
-    <div className="flex w-full flex-col gap-4 px-10 py-6 md:px-12">
+    <div className={listClassName}>
       <CoursesToolbar rows={rows} table={table} />
       <CoursesTable emptyMessage="No courses match these filters." table={table} />
     </div>
@@ -33,8 +39,13 @@ export function CoursesListClient({ rows }: CoursesListClientProps) {
 
 export function CoursesListClientSkeleton() {
   return (
-    <div className="flex w-full flex-col gap-4 px-10 py-6 md:px-12">
-      <FilterBarSkeleton filterCount={3} statusCount={3} />
+    <div className={listClassName}>
+      <FilterBarSkeleton
+        className={coursesFilterBarClassName}
+        filterCount={3}
+        groupControls
+        statusCount={3}
+      />
       <CoursesTableSkeleton />
     </div>
   )

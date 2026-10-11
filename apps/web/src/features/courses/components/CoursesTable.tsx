@@ -121,6 +121,9 @@ export function useCoursesTable(options: UseCoursesTableOptions) {
 
 export type CoursesTableInstance = DataTableInstance<CourseTableRow>
 
+// Names the table's scrolling region for screen readers.
+const scrollLabel = "Capstone courses"
+
 const SKELETON_ROW_COUNT = 8
 // Stable per-row identity for the placeholder rows below, since they have no
 // underlying data of their own to key off.
@@ -128,7 +131,7 @@ const skeletonRowIds = Array.from({ length: SKELETON_ROW_COUNT }, (_, i) => `cou
 
 export function CoursesTableSkeleton({ density, striped }: TableVariantProps) {
   return (
-    <Table density={density} striped={striped}>
+    <Table density={density} scrollLabel={scrollLabel} striped={striped}>
       <TableHeader>
         <TableRow>
           {courseColumnLabels.map((label) => (
@@ -193,6 +196,7 @@ export function CoursesTable({
           router.push(Routes.COURSES.COURSE(row.original.id))
         },
       })}
+      scrollLabel={scrollLabel}
       striped={striped}
       table={table}
     />

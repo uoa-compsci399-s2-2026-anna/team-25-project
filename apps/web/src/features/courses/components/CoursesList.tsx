@@ -44,6 +44,7 @@ export function CoursesListSkeleton() {
             <AddCourseTriggerButton />
           </div>
         }
+        centerOnMobile
         {...coursesPageHeading}
       />
       <CoursesListClientSkeleton />

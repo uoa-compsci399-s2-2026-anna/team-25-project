@@ -6,8 +6,8 @@ import {
   TableCell,
   TableHead,
   TableHeader,
+  type TableProps,
   TableRow,
-  type TableVariantProps,
 } from "@repo/ui/components/ui/Table/table"
 import { cn } from "@repo/ui/lib/utils"
 import type { Row, RowData } from "@tanstack/react-table"
@@ -32,9 +32,7 @@ function isInteractiveDescendant(event: { target: EventTarget | null }): boolean
     : false
 }
 
-interface DataTableProps<TData extends RowData>
-  extends React.ComponentProps<"table">,
-    TableVariantProps {
+interface DataTableProps<TData extends RowData> extends TableProps {
   table: DataTableInstance<TData>
   emptyMessage?: string
   /** Extra DOM props for each body row, e.g. `onClick` and `className` to
