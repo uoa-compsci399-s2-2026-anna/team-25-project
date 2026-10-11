@@ -1,6 +1,7 @@
 import { AnimatedSuspense, Separator } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import { BackLink, PageContainer } from "@/features/layout/components"
+import { MemberEditBar } from "@/features/members/components/MemberDetail/MemberDetailEditBar"
 import {
   MemberHeader,
   MemberHeaderSkeleton,
@@ -27,6 +28,9 @@ export default function Page({ params }: { params: MembersRouteParams }) {
           <Separator className="max-md:hidden lg:col-span-2" />
           <MemberDetailLeftColumn params={params} />
           <MemberDetailRightColumn params={params} />
+          <AnimatedSuspense>
+            <MemberEditBar params={params} />
+          </AnimatedSuspense>
         </EditProvider>
       </article>
     </PageContainer>
