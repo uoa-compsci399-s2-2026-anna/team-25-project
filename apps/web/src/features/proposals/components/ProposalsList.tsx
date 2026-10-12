@@ -1,10 +1,12 @@
 import { ProposalTagLabels } from "@repo/shared/enums/proposals"
 import { PaginationNav, ProposalCard, ProposalCardSkeleton } from "@repo/ui/components/composite"
 import { Button } from "@repo/ui/components/ui"
+import { Lightbulb, SearchX } from "lucide-react"
 import type { Route } from "next"
 import Link from "next/link"
 import type { SearchParams } from "nuqs/server"
 import { withEditHash } from "@/components/Editor/editOnLoad"
+import { EmptyState } from "@/components/EmptyState"
 import { StringHrefLink } from "@/components/StringHrefLink"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
@@ -32,19 +34,25 @@ export const ProposalsList = async ({ searchParams }: { searchParams: Promise<Se
     serializeProposalSearchParams(Routes.PROPOSALS.ROOT, { ...params, page }) as Route
 
   if (proposals.length === 0) {
+    if (totalDocs > 0) {
+      return (
+        <EmptyState
+          action={{ href: getPageHref(totalPages), label: "Go to the last page" }}
+          className="p-10 md:p-12"
+          description="This page is past the end of the results."
+          icon={<SearchX />}
+          title="No more results"
+        />
+      )
+    }
+
     return (
-      <div className="flex flex-col items-center gap-2 p-10 text-center text-muted-foreground md:p-12">
-        {totalDocs > 0 ? (
-          <>
-            <p>This page is past the end of the results.</p>
-            <Link className="underline underline-offset-2" href={getPageHref(totalPages)}>
-              Go to the last page
-            </Link>
-          </>
-        ) : (
-          <p>No proposals match these filters.</p>
-        )}
-      </div>
+      <EmptyState
+        className="p-10 md:p-12"
+        description="No proposals match these filters."
+        icon={<Lightbulb />}
+        title="No proposals found"
+      />
     )
   }
 

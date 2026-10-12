@@ -29,7 +29,7 @@ describe("MemberPublications", () => {
 
     await renderPublications()
     expect(screen.getByRole("heading", { level: 2, name: "Publications" })).toBeInTheDocument()
-    expect(screen.getByText("No publications yet.")).toBeInTheDocument()
+    expect(screen.getByText("No publications yet")).toBeInTheDocument()
   })
 
   it("shows a publication card for each publication", async () => {
@@ -54,7 +54,7 @@ describe("MemberPublications", () => {
     expect(screen.getByText("Published 2025")).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "A. Smith" })).toHaveAttribute("href", "/members/7")
     expect(screen.getByText(/B\. Jones/)).toBeInTheDocument()
-    expect(screen.queryByText("No publications yet.")).not.toBeInTheDocument()
+    expect(screen.queryByText("No publications yet")).not.toBeInTheDocument()
   })
 })
 
