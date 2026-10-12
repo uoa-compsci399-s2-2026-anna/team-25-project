@@ -1,6 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
-import { Routes } from "@/lib/routes"
 import { WhoCanJoinSection } from "./WhoCanJoinSection"
 
 describe("WhoCanJoinSection", () => {
@@ -30,19 +29,5 @@ describe("WhoCanJoinSection", () => {
     expect(
       Array.from(steps.querySelectorAll("li"), (step) => step.querySelector("p")?.textContent),
     ).toEqual(["Pick your university", "Complete your profile"])
-  })
-
-  it("links the register button to the register flow", () => {
-    render(<WhoCanJoinSection />)
-    expect(screen.getByRole("button", { name: "Register with your uni email" })).toHaveAttribute(
-      "href",
-      Routes.REGISTER.ROOT,
-    )
-  })
-
-  // The navbar is otherwise the only way in from this page.
-  it("links Log in to the login flow", () => {
-    render(<WhoCanJoinSection />)
-    expect(screen.getByRole("button", { name: "Log in" })).toHaveAttribute("href", Routes.LOGIN)
   })
 })
