@@ -1,22 +1,15 @@
-import { Button, Heading } from "@repo/ui/components/ui"
-import Link from "next/link"
+import { FolderOpen } from "lucide-react"
+import { EmptyState } from "@/components/EmptyState"
 import { Routes } from "@/lib/routes"
 
 export default function NotFound() {
   return (
-    <div className="flex flex-col items-center gap-4 p-10 text-center md:p-24">
-      <Heading level="h2">This resource is not available</Heading>
-      <p className="max-w-prose text-muted-foreground">
-        The resource was removed, or the link is no longer valid.
-      </p>
-      <Button
-        nativeButton={false}
-        render={<Link href={Routes.RESOURCES.ROOT} />}
-        size="lg"
-        variant="button-charcoal"
-      >
-        Browse resources
-      </Button>
-    </div>
+    <EmptyState
+      action={{ href: Routes.RESOURCES.ROOT, label: "Browse resources" }}
+      className="p-10 md:p-24"
+      description="The resource was removed, or the link is no longer valid."
+      icon={<FolderOpen />}
+      title="This resource is not available"
+    />
   )
 }

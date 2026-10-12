@@ -1,7 +1,8 @@
 import { PaginationNav } from "@repo/ui/components/composite"
+import { SearchX, Users } from "lucide-react"
 import type { Route } from "next"
-import Link from "next/link"
 import type { SearchParams } from "nuqs/server"
+import { EmptyState } from "@/components/EmptyState"
 import { StringHrefLink } from "@/components/StringHrefLink"
 import { Routes } from "@/lib/routes"
 import { countMembers, getMembers, MEMBERS_PAGE_SIZE } from "../../members.queries"
@@ -35,22 +36,28 @@ export const MembersList = async ({ searchParams }: { searchParams: Promise<Sear
     // the empty state and the page to recover to come from a count instead.
     const matches = await countMembers(filters)
 
+    if (matches > 0) {
+      return (
+        <EmptyState
+          action={{
+            href: getPageHref(Math.ceil(matches / MEMBERS_PAGE_SIZE)),
+            label: "Go to the last page",
+          }}
+          className="p-10 md:p-12"
+          description="This page is past the end of the results."
+          icon={<SearchX />}
+          title="No more results"
+        />
+      )
+    }
+
     return (
-      <div className="flex flex-col items-center gap-2 p-10 text-center text-muted-foreground md:p-12">
-        {matches > 0 ? (
-          <>
-            <p>This page is past the end of the results.</p>
-            <Link
-              className="underline underline-offset-2"
-              href={getPageHref(Math.ceil(matches / MEMBERS_PAGE_SIZE))}
-            >
-              Go to the last page
-            </Link>
-          </>
-        ) : (
-          <p>No members match these filters.</p>
-        )}
-      </div>
+      <EmptyState
+        className="p-10 md:p-12"
+        description="No members match these filters."
+        icon={<Users />}
+        title="No members found"
+      />
     )
   }
 

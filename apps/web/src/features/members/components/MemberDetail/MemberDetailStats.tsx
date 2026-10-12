@@ -1,8 +1,10 @@
 import { RESEARCH_INTEREST_MAX_LENGTH, RESEARCH_INTERESTS_MAX } from "@repo/shared/schemas/register"
 import { Badge, Card, CardContent, CardHeader, Skeleton } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
+import { GraduationCap, Tag } from "lucide-react"
 import Link from "next/link"
 import type { ReactNode } from "react"
+import { EmptyState } from "@/components/EmptyState"
 import { formatDate } from "@/features/courses/courses.format"
 import { Routes } from "@/lib/routes"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
@@ -52,7 +54,7 @@ export const MemberStats = async ({ params }: { params: MembersRouteParams }) =>
     <div className="flex flex-col gap-4 max-md:contents">
       <StatCard className="max-md:order-6" label="Courses convened">
         {courses.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No courses yet.</p>
+          <EmptyState className="border p-4" icon={<GraduationCap />} title="No courses yet" />
         ) : (
           <ul className="flex flex-col divide-y divide-border">
             {courses.map((course) => (
@@ -98,7 +100,7 @@ export const MemberStats = async ({ params }: { params: MembersRouteParams }) =>
                 ))}
               </ul>
             ) : (
-              <span className="text-muted-foreground">No interests yet.</span>
+              <EmptyState className="border p-4" icon={<Tag />} title="No interests yet" />
             )
           }
         />

@@ -58,7 +58,7 @@ describe("MemberStats", () => {
     vi.mocked(getMemberCoursesCached).mockResolvedValue([])
 
     await renderStats()
-    expect(screen.getByText("No courses yet.")).toBeInTheDocument()
+    expect(screen.getByText("No courses yet")).toBeInTheDocument()
   })
 
   it("lists the member's research interests", async () => {
@@ -71,7 +71,7 @@ describe("MemberStats", () => {
     await renderStats()
     expect(screen.getByText("Code review")).toBeInTheDocument()
     expect(screen.getByText("Generative AI")).toBeInTheDocument()
-    expect(screen.queryByText("No interests yet.")).not.toBeInTheDocument()
+    expect(screen.queryByText("No interests yet")).not.toBeInTheDocument()
   })
 
   it("shows the research interests filler when there are none", async () => {
@@ -79,7 +79,7 @@ describe("MemberStats", () => {
     vi.mocked(getMemberCoursesCached).mockResolvedValue([])
 
     await renderStats()
-    expect(screen.getByText("No interests yet.")).toBeInTheDocument()
+    expect(screen.getByText("No interests yet")).toBeInTheDocument()
   })
 
   it("swaps the research interests for editable tags when editing", async () => {

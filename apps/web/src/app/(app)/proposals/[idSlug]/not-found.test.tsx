@@ -10,7 +10,7 @@ describe("proposal not-found page", () => {
 
   it("links back to the proposals list", () => {
     render(<NotFound />)
-    expect(screen.getByRole("button", { name: "Browse proposals" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Browse proposals" })).toHaveAttribute(
       "href",
       Routes.PROPOSALS.ROOT,
     )

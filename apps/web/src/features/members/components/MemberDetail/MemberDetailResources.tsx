@@ -1,6 +1,8 @@
 import { Badge, Card, CardContent, CardHeader, Heading, Skeleton } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
+import { FolderOpen } from "lucide-react"
 import Link from "next/link"
+import { EmptyState } from "@/components/EmptyState"
 import { withRedirect } from "@/features/auth/redirect"
 import { formatDate } from "@/features/courses/courses.format"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
@@ -44,7 +46,9 @@ export const MemberResources = async ({ params }: { params: MembersRouteParams }
 
 const ResourceList = ({ resources }: { resources: MemberResource[] }) => {
   if (resources.length === 0) {
-    return <p className="text-muted-foreground text-sm">No resources shared yet.</p>
+    return (
+      <EmptyState className="border p-6" icon={<FolderOpen />} title="No resources shared yet" />
+    )
   }
 
   return (
