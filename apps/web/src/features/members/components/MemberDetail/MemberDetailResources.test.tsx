@@ -70,7 +70,7 @@ describe("MemberResources", () => {
 
     await renderResources()
 
-    expect(screen.getByText("No resources shared yet.")).toBeInTheDocument()
+    expect(screen.getByText("No resources shared yet")).toBeInTheDocument()
   })
 
   it("asks a guest to sign in instead of listing or loading the member's resources", async () => {

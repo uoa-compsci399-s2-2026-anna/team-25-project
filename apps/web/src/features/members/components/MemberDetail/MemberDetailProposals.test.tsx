@@ -19,10 +19,10 @@ describe("MemberProposals", () => {
     const user = userEvent.setup()
 
     await renderProposals()
-    expect(screen.getByText("No active proposals.")).toBeInTheDocument()
+    expect(screen.getByText("No active proposals")).toBeInTheDocument()
 
     await user.click(screen.getByRole("tab", { name: "Closed - 0" }))
-    expect(screen.getByText("No closed proposals.")).toBeInTheDocument()
+    expect(screen.getByText("No closed proposals")).toBeInTheDocument()
   })
 
   it("links each proposal to its page", async () => {

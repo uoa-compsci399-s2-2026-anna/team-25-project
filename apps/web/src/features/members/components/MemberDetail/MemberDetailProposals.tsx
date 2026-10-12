@@ -12,7 +12,9 @@ import {
   TabsTrigger,
 } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
+import { Lightbulb } from "lucide-react"
 import Link from "next/link"
+import { EmptyState } from "@/components/EmptyState"
 import { formatDate } from "@/features/courses/courses.format"
 import { Routes } from "@/lib/routes"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
@@ -45,10 +47,10 @@ export const MemberProposals = async ({ params }: { params: MembersRouteParams }
         </TabsList>
       </div>
       <TabsContent value={ProposalStatus.ACTIVE}>
-        <ProposalList emptyText="No active proposals." proposals={active} />
+        <ProposalList emptyTitle="No active proposals" proposals={active} />
       </TabsContent>
       <TabsContent value={ProposalStatus.CLOSED}>
-        <ProposalList emptyText="No closed proposals." proposals={closed} />
+        <ProposalList emptyTitle="No closed proposals" proposals={closed} />
       </TabsContent>
     </Tabs>
   )
@@ -56,12 +58,14 @@ export const MemberProposals = async ({ params }: { params: MembersRouteParams }
 
 const ProposalList = ({
   proposals,
-  emptyText,
+  emptyTitle,
 }: {
   proposals: MemberProposal[]
-  emptyText: string
+  emptyTitle: string
 }) => {
-  if (proposals.length === 0) return <p className="text-muted-foreground text-sm">{emptyText}</p>
+  if (proposals.length === 0) {
+    return <EmptyState className="border p-6" icon={<Lightbulb />} title={emptyTitle} />
+  }
 
   return (
     <div className="flex flex-col gap-3">
