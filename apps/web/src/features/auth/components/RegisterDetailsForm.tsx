@@ -287,7 +287,10 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
                   as one run of text rather than as separate columns. */}
               <FieldLabel className="block font-normal" htmlFor={field.name}>
                 I agree to the{" "}
-                <Link className="text-primary underline underline-offset-4" href={Routes.ABOUT}>
+                <Link
+                  className="text-primary underline underline-offset-4"
+                  href={Routes.GUIDELINES}
+                >
                   community guidelines
                 </Link>{" "}
                 and{" "}
