@@ -13,16 +13,38 @@ import {
 } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import Link from "next/link"
+import { withRedirect } from "@/features/auth/redirect"
 import { formatDate } from "@/features/courses/courses.format"
+import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Routes } from "@/lib/routes"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberProposalsCached } from "../../members.queries"
 import { mobileSection } from "./mobileSection"
 
 type MemberProposal = Awaited<ReturnType<typeof getMemberProposalsCached>>[number]
+const memberHref = Routes.MEMBERS.MEMBER
 
 export const MemberProposals = async ({ params }: { params: MembersRouteParams }) => {
   const memberId = await parseMemberId(params)
+  const { user } = await getCurrentUser()
+
+  if (!user) {
+    return (
+      <section className="flex flex-col gap-4">
+        <Heading level="h2">Proposals</Heading>
+        <p className="text-muted-foreground text-sm">
+          <Link
+            className="underline underline-offset-2"
+            href={withRedirect(Routes.LOGIN, memberHref(memberId))}
+          >
+            Sign in
+          </Link>{" "}
+          to see the proposals this member has posted.
+        </p>
+      </section>
+    )
+  }
+
   const proposals = await getMemberProposalsCached(memberId)
   const active = proposals.filter((proposal) => proposal.status === ProposalStatus.ACTIVE)
   const closed = proposals.filter((proposal) => proposal.status === ProposalStatus.CLOSED)
