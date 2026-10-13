@@ -31,6 +31,7 @@ export const Routes = {
   },
   PUBLICATIONS: route("/publications"),
   PRIVACY: route("/privacy"),
+  GUIDELINES: route("/guidelines"),
   REGISTER: {
     ROOT: route("/register"),
     PROFILE: route("/register/profile"),
