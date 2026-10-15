@@ -2,7 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { EditButton } from "@/components/Editor/EditButton"
-import { EditProvider } from "@/components/Editor/EditContext"
+import { MemberEditProvider } from "@/features/members/components/MemberEditor/MemberEditProvider"
 import { getMemberDetailsCached } from "../../members.queries"
 import { MemberBio, MemberBioSkeleton } from "./MemberDetailBio"
 
@@ -13,12 +13,12 @@ vi.mock("../../actions/updateMemberProfile", () => ({ updateMemberProfile: vi.fn
 // The component itself goes in its own element so tests can check just its output.
 const renderBio = async () =>
   render(
-    <EditProvider>
+    <MemberEditProvider>
       <div data-testid="subject">
         {await MemberBio({ params: Promise.resolve({ memberId: "7" }) })}
       </div>
       <EditButton />
-    </EditProvider>,
+    </MemberEditProvider>,
   )
 
 describe("MemberBio", () => {

@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from "@repo/ui/components/ui"
 import type { ReactNode } from "react"
-import { EditField, type FieldsOfType } from "./EditField"
+import { EditField } from "./EditField"
 
 export type EditSelectOption = { label: string; value: string }
 
@@ -27,7 +27,7 @@ export const EditSelect = ({
 }: {
   className?: string
   label: string
-  name: FieldsOfType<string | null>
+  name: string
   /** Shown for, and as the item that clears to, null - e.g. "None". Omit to require a value. */
   nullLabel?: string
   options: EditSelectOption[]

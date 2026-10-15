@@ -1,6 +1,5 @@
 import { AnimatedSuspense, Separator } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
-import { EditProvider } from "@/components/Editor/EditContext"
 import { BackLink, PageContainer } from "@/features/layout/components"
 import { MemberEditBar } from "@/features/members/components/MemberDetail/MemberDetailEditBar"
 import {
@@ -10,6 +9,7 @@ import {
 import { MemberDetailLeftColumn } from "@/features/members/components/MemberDetail/MemberDetailLeftColumn"
 import { MemberDetailRightColumn } from "@/features/members/components/MemberDetail/MemberDetailRightColumn"
 import { mobileSection } from "@/features/members/components/MemberDetail/mobileSection"
+import { MemberEditProvider } from "@/features/members/components/MemberEditor/MemberEditProvider"
 import type { MembersRouteParams } from "@/features/members/members.params"
 import { Routes } from "@/lib/routes"
 
@@ -19,7 +19,7 @@ export default function Page({ params }: { params: MembersRouteParams }) {
       <BackLink href={Routes.MEMBERS.ROOT}>Members</BackLink>
       {/* On phones the sections run edge to edge in one column, each owning its padding. */}
       <article className="grid w-full gap-x-10 gap-y-8 p-10 max-md:flex max-md:flex-col max-md:gap-0 max-md:p-0 md:p-12 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-12">
-        <EditProvider>
+        <MemberEditProvider>
           <div className={cn("max-md:order-1 lg:col-span-2", mobileSection)}>
             <AnimatedSuspense fallback={<MemberHeaderSkeleton />}>
               <MemberHeader params={params} />
@@ -31,7 +31,7 @@ export default function Page({ params }: { params: MembersRouteParams }) {
           <AnimatedSuspense>
             <MemberEditBar params={params} />
           </AnimatedSuspense>
-        </EditProvider>
+        </MemberEditProvider>
       </article>
     </PageContainer>
   )

@@ -3,7 +3,6 @@ import userEvent from "@testing-library/user-event"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { EditButton } from "@/components/Editor/EditButton"
-import { EditProvider } from "@/components/Editor/EditContext"
 import { EditSwitch } from "@/components/Editor/EditField"
 import { EditInput } from "@/components/Editor/EditInput"
 import { EditSelect } from "@/components/Editor/EditSelect"
@@ -11,15 +10,16 @@ import { EditTagList } from "@/components/Editor/EditTagList"
 import { AVATAR_KEY, PROFILE_KEY, REMOVE_AVATAR } from "../../actions/profileFormData"
 import { updateMemberProfile } from "../../actions/updateMemberProfile"
 import { EditUploadAvatar } from "./EditUploadAvatar"
+import { MemberEditProvider } from "./MemberEditProvider"
 
 vi.mock("../../actions/updateMemberProfile", () => ({ updateMemberProfile: vi.fn() }))
 
 const renderEditable = (ui: ReactNode) =>
   render(
-    <EditProvider>
+    <MemberEditProvider>
       {ui}
       <EditButton />
-    </EditProvider>,
+    </MemberEditProvider>,
   )
 
 /** The FormData the form last sent to updateMemberProfile. */
