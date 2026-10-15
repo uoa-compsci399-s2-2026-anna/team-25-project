@@ -4,8 +4,8 @@ import { memberProfileSchema } from "@repo/shared/schemas/members"
 import { useForm } from "@tanstack/react-form"
 import { createContext, type ReactNode, useContext, useState } from "react"
 import type { z } from "zod"
-import { type AvatarValue, toProfileFormData } from "../../actions/profileFormData"
-import { updateMemberProfile } from "../../actions/updateMemberProfile"
+import { type AvatarValue, toProfileFormData } from "@/features/members/actions/profileFormData"
+import { updateMemberProfile } from "@/features/members/actions/updateMemberProfile"
 
 /**
  * Every profile attribute an Edit component can bind to, keyed by form field name.

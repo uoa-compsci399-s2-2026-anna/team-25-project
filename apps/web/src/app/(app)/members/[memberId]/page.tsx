@@ -1,5 +1,6 @@
 import { AnimatedSuspense, Separator } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
+import { EditProvider } from "@/components/Editor/EditContext"
 import { BackLink, PageContainer } from "@/features/layout/components"
 import { MemberEditBar } from "@/features/members/components/MemberDetail/MemberDetailEditBar"
 import {
@@ -9,7 +10,6 @@ import {
 import { MemberDetailLeftColumn } from "@/features/members/components/MemberDetail/MemberDetailLeftColumn"
 import { MemberDetailRightColumn } from "@/features/members/components/MemberDetail/MemberDetailRightColumn"
 import { mobileSection } from "@/features/members/components/MemberDetail/mobileSection"
-import { EditProvider } from "@/features/members/components/MemberEditor/EditContext"
 import type { MembersRouteParams } from "@/features/members/members.params"
 import { Routes } from "@/lib/routes"
 

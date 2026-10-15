@@ -1,10 +1,10 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { EditProvider } from "@/components/Editor/EditContext"
 import { getInstitutionCached } from "@/features/institutions/institutions.queries"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getMemberDetailsCached } from "../../members.queries"
-import { EditProvider } from "../MemberEditor/EditContext"
 import { MemberHeader, MemberHeaderSkeleton } from "./MemberDetailHeader"
 
 vi.mock("../../members.queries", () => ({ getMemberDetailsCached: vi.fn() }))

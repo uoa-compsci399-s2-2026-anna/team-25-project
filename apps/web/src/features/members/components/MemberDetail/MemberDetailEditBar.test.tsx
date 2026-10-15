@@ -1,8 +1,8 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { EditProvider } from "@/components/Editor/EditContext"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
-import { EditProvider } from "../MemberEditor/EditContext"
 import { MemberEditBar } from "./MemberDetailEditBar"
 
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))

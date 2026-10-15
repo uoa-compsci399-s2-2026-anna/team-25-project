@@ -4,8 +4,8 @@ import { avatarFileError } from "@repo/shared/schemas/members"
 import { ALLOWED_AVATAR_MIME_TYPES, MAX_AVATAR_BYTES } from "@repo/shared/schemas/register"
 import { AvatarUpload } from "@repo/ui/components/composite"
 import type { ReactNode } from "react"
+import { EditField, type FieldsOfType } from "@/components/Editor/EditField"
 import { type AvatarValue, REMOVE_AVATAR } from "../../actions/profileFormData"
-import { EditField, type FieldsOfType } from "./EditField"
 
 export const EditUploadAvatar = ({
   accept = ALLOWED_AVATAR_MIME_TYPES,

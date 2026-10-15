@@ -1,9 +1,9 @@
 import { Skeleton } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
+import { EditDiv } from "@/components/Editor/EditDiv"
+import { EditInput } from "@/components/Editor/EditInput"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberDetailsCached } from "../../members.queries"
-import { EditDiv } from "../MemberEditor/EditDiv"
-import { EditInput } from "../MemberEditor/EditInput"
 import { mobileSection } from "./mobileSection"
 
 export const MemberBio = async ({ params }: { params: MembersRouteParams }) => {
