@@ -12,14 +12,14 @@ import {
   Skeleton,
 } from "@repo/ui/components/ui"
 import { notFound } from "next/navigation"
+import { EditButton } from "@/components/Editor/EditButton"
+import { EditSwitch, ViewOnly } from "@/components/Editor/EditField"
+import { EditInput } from "@/components/Editor/EditInput"
+import { EditSelect } from "@/components/Editor/EditSelect"
 import { getInstitutionCached } from "@/features/institutions/institutions.queries"
 import { isOwnProfile } from "../../members.ownership"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberDetailsCached } from "../../members.queries"
-import { EditButton } from "../MemberEditor/EditButton"
-import { EditSwitch, ViewOnly } from "../MemberEditor/EditField"
-import { EditInput } from "../MemberEditor/EditInput"
-import { EditSelect } from "../MemberEditor/EditSelect"
 import { EditUploadAvatar } from "../MemberEditor/EditUploadAvatar"
 
 // Built from the enum, so the dropdown can only offer approved titles.

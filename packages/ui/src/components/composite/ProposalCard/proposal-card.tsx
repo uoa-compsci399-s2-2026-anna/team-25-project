@@ -41,6 +41,8 @@ type ProposalCardLinkProps = {
 }
 
 type ProposalCardProps = Omit<React.ComponentProps<"div">, "title"> & {
+  /** At the end of the footer, beside the author - e.g. an Edit link. */
+  action?: React.ReactNode
   title: string
   href?: string
   linkComponent?: React.ElementType<ProposalCardLinkProps>
@@ -79,6 +81,7 @@ const initials = (name: string) =>
     .toUpperCase() || "?"
 
 function ProposalCard({
+  action,
   author,
   className,
   href,
@@ -167,16 +170,19 @@ function ProposalCard({
 
       <CardFooter className="flex-col items-stretch gap-3 border-t-0 bg-transparent pt-0">
         <Separator />
-        {author.href ? (
-          <LinkComponent
-            className="group/author flex min-w-0 items-center gap-2"
-            href={author.href}
-          >
-            {byline}
-          </LinkComponent>
-        ) : (
-          <div className="flex min-w-0 items-center gap-2">{byline}</div>
-        )}
+        <div className="flex items-center justify-between gap-3">
+          {author.href ? (
+            <LinkComponent
+              className="group/author flex min-w-0 items-center gap-2"
+              href={author.href}
+            >
+              {byline}
+            </LinkComponent>
+          ) : (
+            <div className="flex min-w-0 items-center gap-2">{byline}</div>
+          )}
+          {action}
+        </div>
       </CardFooter>
     </Card>
   )

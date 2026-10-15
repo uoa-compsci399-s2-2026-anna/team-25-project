@@ -3,12 +3,7 @@
 import { FieldError } from "@repo/ui/components/ui"
 import { useStore } from "@tanstack/react-form"
 import type { ReactNode } from "react"
-import { type ProfileValues, useEdit } from "./EditContext"
-
-/** The profile fields whose value is of type V, e.g. FieldsOfType<string> = "firstName" | ... */
-export type FieldsOfType<V> = {
-  [K in keyof ProfileValues]: ProfileValues[K] extends V ? K : never
-}[keyof ProfileValues]
+import { useEdit } from "./EditContext"
 
 /** What a control needs to draw itself - kept free of TanStack's FieldApi generics. */
 export type EditControl<V> = {
@@ -34,8 +29,8 @@ type Validator<V> = (value: V) => string | undefined
 
 const toFieldValidator =
   <V,>(validate: Validator<V>) =>
-  ({ value }: { value: V }) => {
-    const message = validate(value)
+  ({ value }: { value: unknown }) => {
+    const message = validate(value as V)
     return message ? { message } : undefined
   }
 
@@ -43,7 +38,7 @@ const toFieldValidator =
  * The base every Edit component is built on: swaps the view for a form field,
  * seeds the field from the saved value, and shows its validation errors.
  */
-export const EditField = <K extends keyof ProfileValues>({
+export const EditField = <V,>({
   children,
   label,
   name,
@@ -51,14 +46,14 @@ export const EditField = <K extends keyof ProfileValues>({
   value,
   view,
 }: {
-  children: (control: EditControl<ProfileValues[K]>) => ReactNode
+  children: (control: EditControl<V>) => ReactNode
   /** Accessible name for the control, e.g. "First name". */
   label: string
-  name: K
+  name: string
 
-  validate?: Validator<ProfileValues[K]>
+  validate?: Validator<V>
   /** The saved value - the field starts from it every time editing begins. */
-  value: ProfileValues[K]
+  value: V
   view?: ReactNode
 }) => {
   const { form } = useEdit()
@@ -66,9 +61,9 @@ export const EditField = <K extends keyof ProfileValues>({
 
   return (
     <EditSwitch view={view}>
-      {/* TanStack types a generic K's value as DeepValue<ProfileValues, K>, which TS can't
-          reduce to ProfileValues[K] - they're the same type for a top-level key. These
-          three casts are the only bridge between the two, so callers stay fully typed. */}
+      {/* The shared form is typed loosely (see EditContext), so TanStack only knows a field's
+          value as unknown. These casts (and the one in toFieldValidator) bridge it to V, the
+          type of the value passed in, so callers stay fully typed. */}
       <form.Field
         defaultValue={value as never}
         name={name}
@@ -79,7 +74,7 @@ export const EditField = <K extends keyof ProfileValues>({
             {children({
               id: `edit-${name}`,
               label,
-              value: field.state.value as ProfileValues[K],
+              value: field.state.value as V,
               setValue: (next) => field.handleChange(next as never),
               onBlur: field.handleBlur,
               disabled: isSubmitting,

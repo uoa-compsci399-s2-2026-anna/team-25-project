@@ -1,6 +1,6 @@
+import { EditButton } from "@/components/Editor/EditButton"
 import { isOwnProfile } from "../../members.ownership"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
-import { EditButton } from "../MemberEditor/EditButton"
 
 /**
  * The phone layout's edit button, kept in reach at the foot of the screen. Wide screens use

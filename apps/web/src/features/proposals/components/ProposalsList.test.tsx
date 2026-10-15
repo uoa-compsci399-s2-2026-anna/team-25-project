@@ -6,6 +6,10 @@ import { loadProposalsPage } from "../proposals.queries"
 import { ProposalsList, ProposalsListSkeleton } from "./ProposalsList"
 
 vi.mock("../proposals.queries", () => ({ loadProposalsPage: vi.fn() }))
+// Signed out, so no Edit links.
+vi.mock("@/lib/payload/getCurrentUser", () => ({
+  getCurrentUser: vi.fn().mockResolvedValue({ collection: null, user: null }),
+}))
 
 const proposal = (overrides: Partial<Proposal> = {}): Proposal =>
   ({

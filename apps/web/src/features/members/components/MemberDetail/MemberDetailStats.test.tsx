@@ -1,9 +1,9 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { EditButton } from "@/components/Editor/EditButton"
+import { MemberEditProvider } from "@/features/members/components/MemberEditor/MemberEditProvider"
 import { getMemberCoursesCached, getMemberDetailsCached } from "../../members.queries"
-import { EditButton } from "../MemberEditor/EditButton"
-import { EditProvider } from "../MemberEditor/EditContext"
 import { MemberStats, MemberStatsSkeleton } from "./MemberDetailStats"
 
 vi.mock("../../members.queries", () => ({
@@ -18,12 +18,12 @@ const member = { id: 7, createdAt: "2026-03-01T00:00:00.000Z" }
 // The component itself goes in its own element so tests can check just its output.
 const renderStats = async () =>
   render(
-    <EditProvider>
+    <MemberEditProvider>
       <div data-testid="subject">
         {await MemberStats({ params: Promise.resolve({ memberId: "7" }) })}
       </div>
       <EditButton />
-    </EditProvider>,
+    </MemberEditProvider>,
   )
 
 describe("MemberStats", () => {

@@ -3,11 +3,11 @@ import { Badge, Card, CardContent, CardHeader, Skeleton } from "@repo/ui/compone
 import { cn } from "@repo/ui/lib/utils"
 import Link from "next/link"
 import type { ReactNode } from "react"
+import { EditTagList } from "@/components/Editor/EditTagList"
 import { formatDate } from "@/features/courses/courses.format"
 import { Routes } from "@/lib/routes"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberCoursesCached, getMemberDetailsCached } from "../../members.queries"
-import { EditTagList } from "../MemberEditor/EditTagList"
 import { mobileSection } from "./mobileSection"
 
 // A sidebar card on wide screens; on phones a plain section like the rest of the profile.
