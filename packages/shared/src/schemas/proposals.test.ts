@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { ProposalEthicsStatus, ProposalTimeframeStartPeriod } from "../enums/proposals"
-import { createProposalSchema, postProposalFormSchema, updateProposalSchema } from "./proposals"
+import { createProposalSchema, postProposalFormSchema } from "./proposals"
 
 const validBody = {
   root: {
@@ -122,26 +122,5 @@ describe("postProposalFormSchema", () => {
     const result = postProposalFormSchema.safeParse({ ...formInput, body, outputTarget: "" })
     expect(result.success).toBe(false)
     expect(!result.success && result.error.issues[0]?.message).toBe("Body is required")
-  })
-})
-
-describe("updateProposalSchema", () => {
-  it("accepts a single changed field", () => {
-    expect(updateProposalSchema.safeParse({ title: "New title" }).success).toBe(true)
-  })
-
-  it("still applies a field's rules when it is sent", () => {
-    const result = updateProposalSchema.safeParse({ title: "" })
-    expect(!result.success && result.error.issues[0]?.message).toBe("Title is required")
-  })
-
-  it("strips fields an edit may not change", () => {
-    const result = updateProposalSchema.safeParse({
-      author: [99],
-      institutions: [3],
-      status: "closed",
-      title: "New title",
-    })
-    expect(result.success && result.data).toEqual({ title: "New title" })
   })
 })

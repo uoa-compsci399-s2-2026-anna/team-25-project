@@ -1,50 +1,17 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { isOwnProfile } from "../../members.ownership"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { getMemberProposalsCached } from "../../members.queries"
 import { MemberProposals, MemberProposalsSkeleton } from "./MemberDetailProposals"
 
 vi.mock("../../members.queries", () => ({ getMemberProposalsCached: vi.fn() }))
-vi.mock("../../members.ownership", () => ({ isOwnProfile: vi.fn() }))
-
-const proposal = {
-  id: 3,
-  title: "Peer assessment in capstones",
-  proposalSlug: "peer-assessment-in-capstones",
-  summary: "A study of peer marking.",
-  status: "active",
-  createdAt: "2026-08-05T00:00:00.000Z",
-}
 
 const renderProposals = async () =>
   render(await MemberProposals({ params: Promise.resolve({ memberId: "7" }) }))
 
 describe("MemberProposals", () => {
-  beforeEach(() => {
-    vi.mocked(isOwnProfile).mockResolvedValue(false)
-  })
-
   afterEach(() => {
     cleanup()
-  })
-
-  it("gives each proposal an Edit link that opens its editor on the member's own profile", async () => {
-    vi.mocked(getMemberProposalsCached).mockResolvedValue([proposal] as never)
-    vi.mocked(isOwnProfile).mockResolvedValue(true)
-
-    await renderProposals()
-    expect(
-      screen.getByRole("button", { name: "Edit Peer assessment in capstones" }),
-    ).toHaveAttribute("href", "/proposals/3-peer-assessment-in-capstones#edit")
-  })
-
-  it("has no Edit links on someone else's profile", async () => {
-    vi.mocked(getMemberProposalsCached).mockResolvedValue([proposal] as never)
-
-    await renderProposals()
-    expect(screen.queryByRole("button", { name: /^Edit/ })).not.toBeInTheDocument()
-    expect(screen.queryByRole("link", { name: /^Edit/ })).not.toBeInTheDocument()
   })
 
   it("shows an empty state for each tab when the member has no proposals", async () => {

@@ -1,6 +1,6 @@
-import { Card, Tabs, TabsList, TabsTrigger } from "@repo/ui/components/ui"
-import { EditButton } from "@/components/Editor/EditButton"
-import { StartEditingOnLoad } from "@/components/Editor/StartEditingOnLoad"
+import { Button, Card, Tabs, TabsList, TabsTrigger } from "@repo/ui/components/ui"
+import Link from "next/link"
+import { Routes } from "@/lib/routes"
 
 const dateFormatter = new Intl.DateTimeFormat("en-NZ", {
   day: "numeric",
@@ -34,16 +34,16 @@ export const StatusAuthorCard = ({
         interest.
       </p>
 
-      {/* items-stretch makes the button fill the card's width. */}
-      <EditButton
+      {/* TODO: point to a real edit-proposal page once it exists */}
+      <Button
         borderColor="charcoal"
-        className="max-w-none items-stretch"
-        label="Edit proposal"
+        className="w-full"
+        nativeButton={false}
+        render={<Link href={Routes.HOME} />}
         variant="button-transparent"
-      />
-      {/* Here because this card only renders for people who can edit, e.g. arriving from
-          the Edit link on their profile's proposal list. */}
-      <StartEditingOnLoad />
+      >
+        Edit proposal
+      </Button>
 
       <span className="text-center text-muted-foreground text-xs">
         Last edited {dateFormatter.format(new Date(updatedAt))}

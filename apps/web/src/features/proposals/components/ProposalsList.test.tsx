@@ -1,13 +1,11 @@
 import { ProposalStatus, ProposalTag } from "@repo/shared/enums/proposals"
 import type { Proposal } from "@repo/shared/payload-types"
 import { cleanup, render, screen, within } from "@testing-library/react"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { getCurrentUser } from "@/lib/payload/getCurrentUser"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { loadProposalsPage } from "../proposals.queries"
 import { ProposalsList, ProposalsListSkeleton } from "./ProposalsList"
 
 vi.mock("../proposals.queries", () => ({ loadProposalsPage: vi.fn() }))
-vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
 
 const proposal = (overrides: Partial<Proposal> = {}): Proposal =>
   ({
@@ -29,52 +27,8 @@ const proposal = (overrides: Partial<Proposal> = {}): Proposal =>
 type ProposalsPage = Awaited<ReturnType<typeof loadProposalsPage>>
 
 describe("ProposalsList", () => {
-  beforeEach(() => {
-    vi.mocked(getCurrentUser).mockResolvedValue({ collection: null, user: null })
-  })
-
   afterEach(() => {
     cleanup()
-  })
-
-  describe("Edit links", () => {
-    const signInAs = (collection: "admin" | "members", id: number) =>
-      vi.mocked(getCurrentUser).mockResolvedValue({ collection, user: { id } } as never)
-
-    const renderOne = async () => {
-      vi.mocked(loadProposalsPage).mockResolvedValue({
-        docs: [proposal({ author: [{ id: 10, firstName: "Anna", lastName: "Tui" } as never] })],
-        totalDocs: 1,
-        totalPages: 1,
-      } as ProposalsPage)
-      render(await ProposalsList({ searchParams: Promise.resolve({}) }))
-    }
-
-    it("gives a proposal's author an Edit link that opens its editor", async () => {
-      signInAs("members", 10)
-      await renderOne()
-      expect(screen.getByRole("button", { name: "Edit Peer assessment" })).toHaveAttribute(
-        "href",
-        "/proposals/1-peer-assessment#edit",
-      )
-    })
-
-    it("gives an admin an Edit link on any proposal", async () => {
-      signInAs("admin", 1)
-      await renderOne()
-      expect(screen.getByRole("button", { name: "Edit Peer assessment" })).toBeInTheDocument()
-    })
-
-    it("shows no Edit link to a member who isn't an author, or to a signed-out visitor", async () => {
-      signInAs("members", 99)
-      await renderOne()
-      expect(screen.queryByRole("button", { name: /^Edit/ })).not.toBeInTheDocument()
-      cleanup()
-
-      vi.mocked(getCurrentUser).mockResolvedValue({ collection: null, user: null })
-      await renderOne()
-      expect(screen.queryByRole("button", { name: /^Edit/ })).not.toBeInTheDocument()
-    })
   })
 
   it.each([

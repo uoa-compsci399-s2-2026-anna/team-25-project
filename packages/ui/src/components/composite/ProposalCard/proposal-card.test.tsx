@@ -160,11 +160,6 @@ describe("ProposalCard", () => {
     expect(screen.getByTestId("custom-link")).toHaveAttribute("href", "/members/1")
   })
 
-  it("renders an action in the footer beside the author", () => {
-    render(<ProposalCard {...props} action={<a href="/edit">Edit</a>} />)
-    expect(screen.getByRole("link", { name: "Edit" })).toHaveAttribute("href", "/edit")
-  })
-
   it("passes the size through to the card", () => {
     render(<ProposalCard {...props} data-testid="card" size="sm" />)
     expect(screen.getByTestId("card")).toHaveAttribute("data-size", "sm")

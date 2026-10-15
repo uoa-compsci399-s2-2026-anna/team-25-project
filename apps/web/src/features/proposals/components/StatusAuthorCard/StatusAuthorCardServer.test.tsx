@@ -1,6 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { EditProvider } from "@/components/Editor/EditContext"
 import { getProposalByIdCached } from "@/features/proposals/proposals.queries"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { StatusAuthorCardServer } from "./StatusAuthorCardServer"
@@ -15,13 +14,7 @@ const proposal = (overrides: { author?: Array<{ id: number } | number> } = {}) =
   updatedAt: "2026-08-03T00:00:00.000Z",
 })
 
-// The card's Edit button needs an editor around it, as on the proposal page.
-const renderCard = async () =>
-  render(
-    <EditProvider onSave={async () => ({ ok: true })} validate={() => undefined}>
-      {await StatusAuthorCardServer({ id: 1 })}
-    </EditProvider>,
-  )
+const renderCard = async () => render(await StatusAuthorCardServer({ id: 1 }))
 
 describe("StatusAuthorCardServer", () => {
   afterEach(() => {
