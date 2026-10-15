@@ -1,10 +1,14 @@
 import { ProposalTagLabels } from "@repo/shared/enums/proposals"
 import { PaginationNav, ProposalCard, ProposalCardSkeleton } from "@repo/ui/components/composite"
+import { Button } from "@repo/ui/components/ui"
 import type { Route } from "next"
 import Link from "next/link"
 import type { SearchParams } from "nuqs/server"
+import { withEditHash } from "@/components/Editor/editOnLoad"
 import { StringHrefLink } from "@/components/StringHrefLink"
+import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Routes } from "@/lib/routes"
+import { canEditProposal } from "../proposals.access"
 import { loadProposalsPage } from "../proposals.queries"
 import {
   loadProposalSearchParams,
@@ -18,14 +22,10 @@ const skeletonCardIds = Array.from({ length: PAGE_SIZE }, (_, i) => `proposal-sk
 
 export const ProposalsList = async ({ searchParams }: { searchParams: Promise<SearchParams> }) => {
   const params = await loadProposalSearchParams(searchParams)
-  const {
-    docs: proposals,
-    totalDocs,
-    totalPages,
-  } = await loadProposalsPage(toProposalFilters(params), {
-    limit: PAGE_SIZE,
-    page: params.page,
-  })
+  const [{ docs: proposals, totalDocs, totalPages }, currentUser] = await Promise.all([
+    loadProposalsPage(toProposalFilters(params), { limit: PAGE_SIZE, page: params.page }),
+    getCurrentUser(),
+  ])
 
   // Keeps the current filters, so moving between pages only changes the page.
   const getPageHref = (page: number) =>
@@ -57,16 +57,32 @@ export const ProposalsList = async ({ searchParams }: { searchParams: Promise<Se
             author && typeof author.institution !== "number" ? author.institution : undefined
           const avatar =
             author?.avatar && typeof author.avatar !== "number" ? author.avatar : undefined
+          const href = Routes.PROPOSALS.PROPOSAL(proposal.id, proposal.proposalSlug)
 
           return (
             <ProposalCard
+              action={
+                canEditProposal(currentUser, proposal) && (
+                  <Button
+                    aria-label={`Edit ${proposal.title}`}
+                    borderColor="charcoal"
+                    className="shrink-0"
+                    nativeButton={false}
+                    render={<Link href={withEditHash(href)} />}
+                    size="sm"
+                    variant="button-transparent"
+                  >
+                    Edit
+                  </Button>
+                )
+              }
               author={{
                 avatarSrc: avatar?.url ?? undefined,
                 href: author ? Routes.MEMBERS.MEMBER(author.id) : undefined,
                 institution: institution?.name,
                 name: author ? `${author.firstName} ${author.lastName}` : "Unknown author",
               }}
-              href={Routes.PROPOSALS.PROPOSAL(proposal.id, proposal.proposalSlug)}
+              href={href}
               key={proposal.id}
               linkComponent={StringHrefLink}
               postedAt={proposal.createdAt}

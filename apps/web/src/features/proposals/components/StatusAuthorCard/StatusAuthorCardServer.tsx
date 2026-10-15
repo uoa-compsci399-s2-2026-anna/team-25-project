@@ -1,6 +1,6 @@
+import { canEditProposal } from "@/features/proposals/proposals.access"
 import { getProposalByIdCached } from "@/features/proposals/proposals.queries"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
-import { Slugs } from "@/lib/payload/slugs"
 import { StatusAuthorCard } from "./StatusAuthorCard"
 
 // getCurrentUser() reads headers(), which is dynamic - kept in its own
@@ -13,14 +13,7 @@ export const StatusAuthorCardServer = async ({ id }: { id: number }) => {
     return null
   }
 
-  const { collection, user } = await getCurrentUser()
-  const authorIds = proposal.author.map((author) =>
-    typeof author === "object" ? author.id : author,
-  )
-  const canEditProposal =
-    collection === Slugs.Collections.ADMIN || (user !== null && authorIds.includes(user.id))
-
-  if (!canEditProposal) {
+  if (!canEditProposal(await getCurrentUser(), proposal)) {
     return null
   }
 

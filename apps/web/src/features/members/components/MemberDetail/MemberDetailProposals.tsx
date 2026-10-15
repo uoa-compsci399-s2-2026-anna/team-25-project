@@ -1,6 +1,7 @@
 import { ProposalStatus, ProposalStatusLabels } from "@repo/shared/enums/proposals"
 import {
   Badge,
+  Button,
   Card,
   CardContent,
   CardHeader,
@@ -13,8 +14,10 @@ import {
 } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import Link from "next/link"
+import { withEditHash } from "@/components/Editor/editOnLoad"
 import { formatDate } from "@/features/courses/courses.format"
 import { Routes } from "@/lib/routes"
+import { isOwnProfile } from "../../members.ownership"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberProposalsCached } from "../../members.queries"
 import { mobileSection } from "./mobileSection"
@@ -23,7 +26,10 @@ type MemberProposal = Awaited<ReturnType<typeof getMemberProposalsCached>>[numbe
 
 export const MemberProposals = async ({ params }: { params: MembersRouteParams }) => {
   const memberId = await parseMemberId(params)
-  const proposals = await getMemberProposalsCached(memberId)
+  const [proposals, canEdit] = await Promise.all([
+    getMemberProposalsCached(memberId),
+    isOwnProfile(memberId),
+  ])
   const active = proposals.filter((proposal) => proposal.status === ProposalStatus.ACTIVE)
   const closed = proposals.filter((proposal) => proposal.status === ProposalStatus.CLOSED)
 
@@ -45,19 +51,22 @@ export const MemberProposals = async ({ params }: { params: MembersRouteParams }
         </TabsList>
       </div>
       <TabsContent value={ProposalStatus.ACTIVE}>
-        <ProposalList emptyText="No active proposals." proposals={active} />
+        <ProposalList canEdit={canEdit} emptyText="No active proposals." proposals={active} />
       </TabsContent>
       <TabsContent value={ProposalStatus.CLOSED}>
-        <ProposalList emptyText="No closed proposals." proposals={closed} />
+        <ProposalList canEdit={canEdit} emptyText="No closed proposals." proposals={closed} />
       </TabsContent>
     </Tabs>
   )
 }
 
 const ProposalList = ({
+  canEdit,
   proposals,
   emptyText,
 }: {
+  /** On the member's own profile, each proposal also gets an Edit link that opens its editor. */
+  canEdit: boolean
   proposals: MemberProposal[]
   emptyText: string
 }) => {
@@ -68,30 +77,45 @@ const ProposalList = ({
       {proposals.map((proposal) => {
         // Proposals have no postedAt field; createdAt is the posted date, as in ProposalsList.
         const postedAt = formatDate(proposal.createdAt)
+        const href = Routes.PROPOSALS.PROPOSAL(proposal.id, proposal.proposalSlug)
 
         return (
-          <Link
-            className="group"
-            href={Routes.PROPOSALS.PROPOSAL(proposal.id, proposal.proposalSlug)}
-            key={proposal.id}
-          >
-            <Card className="transition-colors group-hover:ring-foreground/25">
-              <CardHeader className="flex items-center justify-between gap-3">
-                <Badge
-                  className="uppercase tracking-wide"
-                  variant={proposal.status === "closed" ? "closed" : "active"}
+          // The Edit link sits beside the card's link, not inside it - links can't nest.
+          <div className="relative" key={proposal.id}>
+            <Link className="group" href={href}>
+              <Card className="transition-colors group-hover:ring-foreground/25">
+                <CardHeader className="flex items-center justify-between gap-3">
+                  <Badge
+                    className="uppercase tracking-wide"
+                    variant={proposal.status === "closed" ? "closed" : "active"}
+                  >
+                    {ProposalStatusLabels[proposal.status]}
+                  </Badge>
+                  {postedAt && (
+                    <span className="text-muted-foreground text-xs">Posted {postedAt}</span>
+                  )}
+                </CardHeader>
+                <CardContent
+                  className={cn("font-medium group-hover:underline", canEdit && "pr-24")}
                 >
-                  {ProposalStatusLabels[proposal.status]}
-                </Badge>
-                {postedAt && (
-                  <span className="text-muted-foreground text-xs">Posted {postedAt}</span>
-                )}
-              </CardHeader>
-              <CardContent className="font-medium group-hover:underline">
-                {proposal.title}
-              </CardContent>
-            </Card>
-          </Link>
+                  {proposal.title}
+                </CardContent>
+              </Card>
+            </Link>
+            {canEdit && (
+              <Button
+                aria-label={`Edit ${proposal.title}`}
+                borderColor="charcoal"
+                className="absolute right-4 bottom-4"
+                nativeButton={false}
+                render={<Link href={withEditHash(href)} />}
+                size="sm"
+                variant="button-transparent"
+              >
+                Edit
+              </Button>
+            )}
+          </div>
         )
       })}
     </div>

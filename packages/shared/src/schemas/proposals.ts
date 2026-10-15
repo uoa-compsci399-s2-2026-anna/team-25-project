@@ -11,7 +11,7 @@ import { richTextHasText, richTextSchema } from "./shared"
 
 const timeframeSchema = z
   .object({
-    startYear: z.number().int().min(2000).max(2100),
+    startYear: z.number({ error: "Start year is required" }).int().min(2000).max(2100),
     startPeriod: z.enum(ProposalTimeframeStartPeriod),
     endYear: z.number().int().min(2000).max(2100).optional(),
     endPeriod: z.enum(ProposalTimeframeEndPeriod).optional(),
@@ -50,3 +50,12 @@ export const postProposalFormSchema = createProposalSchema
   })
 
 export type PostProposalFormInput = z.infer<typeof postProposalFormSchema>
+
+/**
+ * What an author can change when editing in place: the post form's fields, each optional so
+ * a field left out is kept as is. author, status and institutions aren't listed, so zod
+ * strips them - an edit can never add or remove authors.
+ */
+export const updateProposalSchema = postProposalFormSchema.partial()
+
+export type UpdateProposalInput = z.infer<typeof updateProposalSchema>
