@@ -31,4 +31,8 @@ export const MemberBio = async ({ params }: { params: MembersRouteParams }) => {
   )
 }
 
-export const MemberBioSkeleton = () => <Skeleton className="h-20 w-full" />
+export const MemberBioSkeleton = () => (
+  <div className={cn("max-md:order-3", mobileSection)}>
+    <Skeleton className="h-20 w-full" />
+  </div>
+)
