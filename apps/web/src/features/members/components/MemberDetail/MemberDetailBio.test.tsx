@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { getMemberDetailsCached } from "../../members.queries"
 import { EditButton } from "../MemberEditor/EditButton"
 import { EditProvider } from "../MemberEditor/EditContext"
-import { MemberBio, MemberBioSkeleton } from "./MemberDetailBio"
+import { MemberBio } from "./MemberDetailBio"
 
 vi.mock("../../members.queries", () => ({ getMemberDetailsCached: vi.fn() }))
 vi.mock("../../actions/updateMemberProfile", () => ({ updateMemberProfile: vi.fn() }))
@@ -75,13 +75,5 @@ describe("MemberBio", () => {
     await renderBio()
     expect(screen.queryByText("ABOUT")).not.toBeInTheDocument()
     expect(screen.getByTestId("subject").textContent?.trim()).toBe("")
-  })
-})
-
-describe("MemberBio skeleton", () => {
-  it("renders a placeholder", () => {
-    const { container } = render(<MemberBioSkeleton />)
-    expect(container.firstElementChild).toBeInTheDocument()
-    cleanup()
   })
 })

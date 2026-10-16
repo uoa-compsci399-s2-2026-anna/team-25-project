@@ -1,4 +1,3 @@
-import { Skeleton } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberDetailsCached } from "../../members.queries"
@@ -30,5 +29,3 @@ export const MemberBio = async ({ params }: { params: MembersRouteParams }) => {
     </div>
   )
 }
-
-export const MemberBioSkeleton = () => <Skeleton className="h-20 w-full" />
