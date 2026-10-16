@@ -40,13 +40,9 @@ export const createProposalSchema = z.object({
   status: z.enum(ProposalStatus).default(ProposalStatus.ACTIVE),
 }) satisfies z.ZodType<Omit<Proposal, "id" | "createdAt" | "updatedAt">>
 
-export type CreateProposalInput = z.infer<typeof createProposalSchema>
-
 export const postProposalFormSchema = createProposalSchema
   .omit({ author: true, status: true })
   .extend({
     body: richTextSchema.refine((body) => richTextHasText(body.root), "Body is required"),
     outputTarget: z.string(),
   })
-
-export type PostProposalFormInput = z.infer<typeof postProposalFormSchema>

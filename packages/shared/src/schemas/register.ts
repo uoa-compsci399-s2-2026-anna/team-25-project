@@ -98,5 +98,3 @@ export const registerProfileSchema = z.object({
     )
     .max(LINKS_MAX, `Add up to ${LINKS_MAX} links`),
 })
-
-export type RegisterProfile = z.infer<typeof registerProfileSchema>

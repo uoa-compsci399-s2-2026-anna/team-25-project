@@ -43,8 +43,6 @@ export const memberProfileSchema = z
   })
   .partial()
 
-export type MemberProfile = z.infer<typeof memberProfileSchema>
-
 const formatMegabytes = (bytes: number) => `${Math.round(bytes / (1024 * 1024))} MB`
 
 /**
