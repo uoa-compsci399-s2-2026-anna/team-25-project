@@ -21,7 +21,7 @@ product UI and Payload CMS (admin panel and REST API). Part of the
 
 | Group | Serves | Layout |
 | --- | --- | --- |
-| `src/app/(app)/` | Product UI (`/`) and the app's own route handlers (`/api/health`, `/api/openapi`, `/api/docs`) | Satoshi + Geist Mono fonts, `@repo/ui` global styles |
+| `src/app/(app)/` | Product UI (`/`) and the app's own route handlers (`/api/health`) | Satoshi + Geist Mono fonts, `@repo/ui` global styles |
 | `src/app/(payload)/` | Payload admin at `/payload/admin`, Payload REST API at `/payload/api` | Payload's `RootLayout` |
 
 Payload's own collections, globals, and migrations live outside the route group,
@@ -144,10 +144,3 @@ for `src/**/*.test.ts` (Payload, API route handlers) and a `jsdom` project for
 | `pnpm generate:importmap` | Regenerate the Payload admin import map |
 | `pnpm db:seed` | Seed the admin user and development fixtures (`SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` to override) |
 | `pnpm payload` | Run arbitrary Payload CLI commands |
-
-## API reference
-
-An OpenAPI/Scalar reference is wired up via `@asteasolutions/zod-to-openapi` and
-`@scalar/nextjs-api-reference` (see `src/lib/openapi.ts` and `src/lib/swagger.ts`).
-Document all route handlers with `zod` schemas so they show up in the Scalar UI at
-`/api/docs`.
