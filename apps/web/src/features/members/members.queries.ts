@@ -225,22 +225,6 @@ export const getMemberPublicationsCached = async (memberId: number) => {
   return getMemberPublications(memberId)
 }
 
-export const getMemberCoursesConvenedCount = async (memberId: number) => {
-  const payload = await getPayloadClient()
-  const { totalDocs } = await payload.count({
-    collection: Slugs.Collections.COURSES,
-    where: { owner: { equals: memberId } },
-  })
-  return totalDocs
-}
-
-export const getMemberCoursesConvenedCountCached = async (memberId: number) => {
-  "use cache"
-  cacheLife("max")
-  cacheTag(QueryKeys.COURSES.ROOT)
-  return getMemberCoursesConvenedCount(memberId)
-}
-
 export type MemberCourse = {
   courseId: number
   code: string | null
