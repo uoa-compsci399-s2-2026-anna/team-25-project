@@ -36,7 +36,7 @@ root.
 
 - Docker (for the local Postgres container — see below), or your own Postgres
   instance the app can connect to
-- Node.js 20+ and pnpm (see the [root README](../../README.md#prerequisites))
+- Node.js 24+ and pnpm (see the [root README](../../README.md#prerequisites))
 
 ## Environment variables
 

@@ -103,7 +103,7 @@ Run from the repo root; Turborepo fans each one out to the workspaces that defin
 | `pnpm types:generate` | Regenerate Payload's generated types |
 | `pnpm db:seed` | Seed a fresh database with the admin user and development fixtures |
 
-Per-app scripts (migrations, Playwright, Storybook builds, etc.) are documented in each workspace's own README, linked in [Structure](#structure) above.
+Per-app scripts (migrations, Storybook builds, etc.) are documented in each workspace's own README, linked in [Structure](#structure) above.
 
 ## Linting & formatting
 
@@ -143,7 +143,8 @@ Never edit `payload-types.ts` by hand — it's regenerated automatically.
 | Workspace | How |
 | --- | --- |
 | `apps/web` | `pnpm --filter web test` — Vitest (`node` project for `*.test.ts`, `jsdom` project for `*.test.tsx`) |
-| `packages/ui` | `pnpm --filter @repo/ui test` — Vitest, including Storybook interaction/a11y tests |
+| `packages/ui` | `pnpm --filter @repo/ui test` — Vitest (`jsdom`) |
+| `packages/shared` | `pnpm --filter @repo/shared test` — Vitest |
 
 Or run everything at once from the root with `pnpm test`.
 
@@ -174,7 +175,7 @@ Or run everything at once from the root with `pnpm test`.
 - **[Lefthook](https://lefthook.dev/)** — Git hooks
 - **[Commitlint](https://commitlint.js.org/)** — Conventional Commits enforcement
 - **[Storybook](https://storybook.js.org/)** — component development for `packages/ui`
-- **[Vitest](https://vitest.dev/)** + **[Playwright](https://playwright.dev/)** — testing
+- **[Vitest](https://vitest.dev/)** — testing
 
 ## Learn more
 
