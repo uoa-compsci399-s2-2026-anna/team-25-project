@@ -1,13 +1,13 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
 import type { MembersRouteParams } from "../../members.params"
-import { MemberBio } from "./MemberDetailBio"
+import { MemberBio, MemberBioSkeleton } from "./MemberDetailBio"
 import { MemberProposals, MemberProposalsSkeleton } from "./MemberDetailProposals"
 import { MemberPublications, MemberPublicationsSkeleton } from "./MemberDetailPublications"
 import { MemberResources, MemberResourcesSkeleton } from "./MemberDetailResources"
 
 export const MemberDetailLeftColumn = ({ params }: { params: MembersRouteParams }) => (
   <div className="flex min-w-0 flex-col gap-8 max-md:contents">
-    <AnimatedSuspense>
+    <AnimatedSuspense fallback={<MemberBioSkeleton />}>
       <MemberBio params={params} />
     </AnimatedSuspense>
     <AnimatedSuspense fallback={<MemberProposalsSkeleton />}>
