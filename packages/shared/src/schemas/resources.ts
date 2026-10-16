@@ -20,8 +20,6 @@ export const addResourceFormSchema = z.object({
   course: z.number().int().positive().nullable(),
 })
 
-export type AddResourceFormInput = z.infer<typeof addResourceFormSchema>
-
 type AttachmentLike = { name: string; size: number; type: string }
 
 /**

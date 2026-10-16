@@ -11,8 +11,6 @@ export const createCourseSchema = z.object({
   code: z.string().trim().min(1, "Course code is required"),
 })
 
-export type CreateCourseInput = z.infer<typeof createCourseSchema>
-
 /**
  * Draft: only the two things needed to find and recognise it later. Even the
  * teaching period is settled later, before publication (see the
