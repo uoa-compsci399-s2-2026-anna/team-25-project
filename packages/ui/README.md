@@ -56,4 +56,4 @@ Or from the repo root: `pnpm dev:storybook` / `pnpm build:storybook`.
 | --- | --- |
 | `pnpm types:check` | Type-check with `tsc --noEmit` |
 | `pnpm lint:check` / `pnpm lint:fix` | Biome lint check / autofix |
-| `pnpm test` | Run Vitest tests (including Storybook interaction tests via `@storybook/addon-vitest`) |
+| `pnpm test` | Run Vitest tests |
