@@ -17,7 +17,6 @@ Each component lives in its own subdir, named `<ComponentName>/<slug>.tsx`, grou
 | --- | --- | --- |
 | `src/components/ui/<ComponentName>` | `@repo/ui/components/ui` | Base shadcn/ui primitives |
 | `src/components/composite/<ComponentName>` | `@repo/ui/components/composite` | Composed components built from primitives |
-| `src/components/generic/<ComponentName>` | `@repo/ui/components/generic` | Other shared, non-shadcn components |
 | `src/hooks` | `@repo/ui/hooks/*` | Shared React hooks |
 | `src/lib/utils.ts` | `@repo/ui/lib/utils` | Shared helpers (e.g. `cn` for class merging) |
 | `src/styles/globals.css` | `@repo/ui/globals.css` | Tailwind entry point and design tokens |
@@ -32,7 +31,7 @@ pnpm exec shadcn add button
 
 This drops `button.tsx` flat in `src/components/ui/`. Move it into its own subdir (`src/components/ui/Button/button.tsx`) and add the export line to `src/components/ui/index.ts`.
 
-**Composite/generic components:** write the file directly at `src/components/{composite,generic}/<ComponentName>/<slug>.tsx`, then add its export line to that category's `index.ts`.
+**Composite components:** write the file directly at `src/components/composite/<ComponentName>/<slug>.tsx`, then add its export line to `src/components/composite/index.ts`.
 
 ## Using components
 

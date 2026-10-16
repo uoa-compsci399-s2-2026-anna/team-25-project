@@ -64,8 +64,6 @@
     "./postcss.config": "./postcss.config.mjs",
     "./components/composite": "./src/components/composite/index.ts",
     "./components/composite/*": "./src/components/composite/*",
-    "./components/generic": "./src/components/generic/index.ts",
-    "./components/generic/*": "./src/components/generic/*",
     "./components/ui": "./src/components/ui/index.ts",
     "./components/ui/*": "./src/components/ui/*",
     "./lib/*": "./src/lib/*.ts",
