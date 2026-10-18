@@ -9,7 +9,7 @@ import { EditUploadAvatar } from "./EditUploadAvatar"
  * Every profile attribute an Edit component can bind to, keyed by form field name.
  * Derived from the schema so a field added there can't be missed here.
  */
-export type ProfileValues = Required<z.input<typeof memberProfileSchema>> & {
+export type ProfileValues = z.input<typeof memberProfileSchema> & {
   avatar: AvatarValue
 }
 
