@@ -11,14 +11,18 @@ type Timeframe = {
  * these runs the built-in first to keep required, min and max working.
  */
 
-/** Keeps the timeframe pointing forwards. */
+/**
+ * Keeps the timeframe pointing forwards. An edit can send the start without the end, so the
+ * value is then undefined; siblingData holds the saved end merged with the edit.
+ */
 export const validateProposalEndYear: NumberFieldSingleValidation = (value, options) => {
   const builtIn = number(value, options)
   if (builtIn !== true) return builtIn
 
-  const { startYear } = options.siblingData as Timeframe
-  if (typeof value !== "number" || typeof startYear !== "number") return true
-  return value >= startYear || "End year cannot be before the start year."
+  const { startYear, endYear } = options.siblingData as Timeframe
+  const end = value ?? endYear
+  if (typeof end !== "number" || typeof startYear !== "number") return true
+  return end >= startYear || "End year cannot be before the start year."
 }
 
 /** A period on its own says nothing without the year it falls in. */

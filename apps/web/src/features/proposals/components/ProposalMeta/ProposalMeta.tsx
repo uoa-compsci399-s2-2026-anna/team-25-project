@@ -31,7 +31,8 @@ export const ProposalMeta = ({
   const items = [
     {
       label: "Timeframe",
-      // Edited together so the timeframe is always sent whole; its end is kept as saved.
+      // Both start fields show together, as the schema needs both. The end isn't sent, so
+      // Payload keeps the saved end and checks the new start against it.
       value: (
         <div className="flex gap-2">
           <ProposalEdit.Select
