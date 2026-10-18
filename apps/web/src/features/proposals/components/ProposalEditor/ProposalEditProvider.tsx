@@ -2,7 +2,7 @@
 
 import { updateProposalSchema } from "@repo/shared/schemas/proposals"
 import type { ReactNode } from "react"
-import { updateProposal } from "../../actions/postProposal"
+import { updateProposal } from "../../actions/updateProposal"
 import { ProposalEdit } from "./proposalEditFields"
 
 /** The editor wired to one proposal. Who may save is checked by updateProposal, on the server. */
