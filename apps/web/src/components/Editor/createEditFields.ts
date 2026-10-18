@@ -1,13 +1,12 @@
-import type { RichTextValue } from "@repo/ui/components/composite"
 import type { DeepKeys, DeepValue } from "@tanstack/react-form"
 import type { ComponentProps, ReactNode } from "react"
 import { EditCheckboxList } from "./EditCheckboxList"
-import { EditInput } from "./EditInput"
-import { EditNumberInput } from "./EditNumberInput"
-import { EditRichText } from "./EditRichText"
+import { EditInput, type EditInputValue } from "./EditInput"
+import { EditNumberInput, type EditNumberInputValue } from "./EditNumberInput"
+import { EditRichText, type EditRichTextValue } from "./EditRichText"
 import { EditSelect } from "./EditSelect"
 import { EditTabs } from "./EditTabs"
-import { EditTagList } from "./EditTagList"
+import { EditTagList, type EditTagListValue } from "./EditTagList"
 
 /** The keys of T holding a File - its own keys (name, size...) are not form fields. */
 type FileKeys<T> = {
@@ -35,8 +34,13 @@ type SavedValue<T, K extends DeepKeys<T>> = DeepValue<T, K> | null | undefined
 
 type Option<V> = { label: string; value: V }
 
-/** A free-entry control (props P) that writes a V, so `name` only takes a field that holds any V. */
-export type TypedEdit<P extends { name: string }, T, V> = <K extends FieldsAccepting<T, V>>(
+/**
+ * A free-entry control (props P) that writes a V, so `name` only takes a field that holds
+ * any V. An empty control writes null/undefined, left for the schema to reject if required.
+ */
+export type TypedEdit<P extends { name: string }, T, V> = <
+  K extends FieldsAccepting<T, NonNullable<V>>,
+>(
   props: Omit<P, "name" | "value"> & { name: K } & ("value" extends keyof P
       ? { value: SavedValue<T, K> }
       : unknown),
@@ -73,13 +77,12 @@ type TypedSelect<T> = <K extends FieldsWithin<T, string>>(
 
 type EditFields<T> = {
   CheckboxList: TypedPick<ComponentProps<typeof EditCheckboxList>, T, string[], true>
-  Input: TypedEdit<ComponentProps<typeof EditInput>, T, string>
-  // An empty box is undefined, left for the schema to reject on a required field.
-  NumberInput: TypedEdit<ComponentProps<typeof EditNumberInput>, T, number>
-  RichText: TypedEdit<ComponentProps<typeof EditRichText>, T, RichTextValue>
+  Input: TypedEdit<ComponentProps<typeof EditInput>, T, EditInputValue>
+  NumberInput: TypedEdit<ComponentProps<typeof EditNumberInput>, T, EditNumberInputValue>
+  RichText: TypedEdit<ComponentProps<typeof EditRichText>, T, EditRichTextValue>
   Select: TypedSelect<T>
   Tabs: TypedPick<ComponentProps<typeof EditTabs>, T, string>
-  TagList: TypedEdit<ComponentProps<typeof EditTagList>, T, string[]>
+  TagList: TypedEdit<ComponentProps<typeof EditTagList>, T, EditTagListValue>
 }
 
 /**

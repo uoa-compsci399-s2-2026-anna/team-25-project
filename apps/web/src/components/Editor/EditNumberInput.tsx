@@ -4,6 +4,9 @@ import { Input } from "@repo/ui/components/ui"
 import type { ReactNode } from "react"
 import { EditField } from "./EditField"
 
+/** What EditNumberInput writes to its field. */
+export type EditNumberInputValue = number | undefined
+
 /** A number attribute, like a year. An empty box is undefined, not 0, so it reads as missing. */
 export const EditNumberInput = ({
   className,
@@ -18,7 +21,7 @@ export const EditNumberInput = ({
   value: number | null | undefined
   view?: ReactNode
 }) => (
-  <EditField<number | undefined> label={label} name={name} value={value ?? undefined} view={view}>
+  <EditField<EditNumberInputValue> label={label} name={name} value={value ?? undefined} view={view}>
     {(control) => (
       <Input
         aria-invalid={control.invalid || undefined}

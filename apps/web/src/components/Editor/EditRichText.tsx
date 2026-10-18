@@ -4,6 +4,9 @@ import { RichTextEditor, type RichTextValue } from "@repo/ui/components/composit
 import type { ReactNode } from "react"
 import { EditField } from "./EditField"
 
+/** What EditRichText writes to its field. */
+export type EditRichTextValue = RichTextValue | null
+
 /** A rich-text attribute. The editor reads its value on mount, which is when editing starts. */
 export const EditRichText = ({
   className,
@@ -18,7 +21,7 @@ export const EditRichText = ({
   value: RichTextValue | null | undefined
   view?: ReactNode
 }) => (
-  <EditField<RichTextValue | null> label={label} name={name} value={value ?? null} view={view}>
+  <EditField<EditRichTextValue> label={label} name={name} value={value ?? null} view={view}>
     {(control) => (
       <>
         {/* The editor takes no aria-label, so it's named by this hidden label. */}

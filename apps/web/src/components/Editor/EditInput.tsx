@@ -4,6 +4,9 @@ import { Input, TextArea } from "@repo/ui/components/ui"
 import type { ComponentProps, ReactNode } from "react"
 import { EditField } from "./EditField"
 
+/** What EditInput writes to its field. */
+export type EditInputValue = string
+
 /** A text attribute - single line by default, `multiline` for longer text like a bio. */
 export const EditInput = ({
   className,
@@ -25,7 +28,7 @@ export const EditInput = ({
   value: string | null | undefined
   view?: ReactNode
 }) => (
-  <EditField label={label} name={name} value={value ?? ""} view={view}>
+  <EditField<EditInputValue> label={label} name={name} value={value ?? ""} view={view}>
     {(control) => {
       const props = {
         "aria-invalid": control.invalid || undefined,
