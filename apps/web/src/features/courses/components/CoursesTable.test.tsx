@@ -68,9 +68,6 @@ function Harness({
       <button onClick={() => table.getColumn("course")?.setFilterValue("softeng")} type="button">
         Search softeng
       </button>
-      <button onClick={() => table.getColumn("year")?.setFilterValue(["2026"])} type="button">
-        Filter year 2026
-      </button>
       <CoursesTable
         canOpenDraft={canOpenDraft}
         isLoading={isLoading}
@@ -180,12 +177,28 @@ describe("CoursesTable", () => {
     expect(push).not.toHaveBeenCalled()
   })
 
-  it("narrows rows when the year filter is applied with string values", () => {
-    render(<Harness />)
-    fireEvent.click(screen.getByRole("button", { name: "Filter year 2026" }))
-    expect(bodyRows()).toHaveLength(1)
-    expect(screen.getByText("COMP 693 Capstone Project")).toBeInTheDocument()
+  // Set once a period filter has picked one of the course's offerings.
+  it("links and navigates to the row's chosen offering when it has one", () => {
+    render(<Harness data={[{ ...courses[0], offeringId: 12 }]} />)
+
+    expect(screen.getByRole("link", { name: "COMP 693 Capstone ProjectA. Tui" })).toHaveAttribute(
+      "href",
+      "/courses/1?offering=12",
+    )
+    fireEvent.click(screen.getByText("Semester 2"))
+    expect(push).toHaveBeenCalledWith("/courses/1?offering=12")
   })
+
+  // The current offering's canonical URL is the plain course URL.
+  it("links to the plain course URL when the chosen offering is the current one", () => {
+    render(<Harness data={[{ ...courses[0], offeringId: 12, currentOfferingId: 12 }]} />)
+
+    expect(screen.getByRole("link", { name: "COMP 693 Capstone ProjectA. Tui" })).toHaveAttribute(
+      "href",
+      "/courses/1",
+    )
+  })
+
   describe("opening drafts", () => {
     const draftRow = courses[1]
 

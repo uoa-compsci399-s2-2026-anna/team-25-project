@@ -1,6 +1,7 @@
+import { CourseTermLabels, derivePeriod } from "@repo/shared/enums/courses"
 import type { Course, CourseVersion, Member } from "@repo/shared/payload-types"
 import type { AddCapstoneCourseDialogValues } from "@repo/ui/components/composite"
-import type { CourseTableRow } from "./components/CoursesTable"
+import type { CourseTableOffering, CourseTableRow } from "./components/CoursesTable"
 
 const asPopulated = <T>(value: number | T | null | undefined): T | undefined =>
   typeof value === "number" || value === null || value === undefined ? undefined : value
@@ -29,43 +30,86 @@ export const deriveLecturer = (version: CourseVersion | undefined, course: Cours
 export const deriveUniversity = (course: Course): string =>
   asPopulated(course.institution)?.name ?? "Unknown university"
 
+/**
+ * An offering's period label. Stored on every write, so the fallbacks only
+ * cover a row saved before it was derived, or a draft without its period yet.
+ */
+export const offeringPeriod = (offering: Pick<CourseVersion, "period" | "term" | "year">) =>
+  offering.period || derivePeriod(offering) || "Unscheduled"
+
 export const deriveTitle = (version: CourseVersion | undefined): string =>
   version?.name?.trim() || "No offering yet"
 
 export const deriveStatus = (version: CourseVersion | undefined): CourseTableRow["status"] =>
   version?._status === "published" ? "published" : "draft"
 
-// `period` is formatted as "<year> <term>", like "2026 Semester 2" or
-// "2027 Full Year". If there's no offering yet there's no period to read, so
-// `year` falls back to `0` - `CourseTableRow.year` has to be a plain number
-// since that's how `CoursesTable` (#104) defined it.
-export const splitPeriod = (
-  period: string | undefined | null,
-): { year: number; semester: string } => {
-  if (!period) return { year: 0, semester: "—" }
-  const [yearToken, ...rest] = period.trim().split(/\s+/)
-  const year = Number(yearToken)
-  return {
-    year: Number.isFinite(year) ? year : 0,
-    semester: rest.join(" ") || "—",
-  }
-}
+// A draft may not have its term or year yet, so each falls back to a
+// placeholder - `CourseTableRow.year` has to be a plain number since that's
+// how `CoursesTable` (#104) defined it.
+export const termAndYear = (
+  version: Pick<CourseVersion, "term" | "year"> | undefined,
+): { year: number; semester: string } => ({
+  year: version?.year ?? 0,
+  semester: version?.term ? CourseTermLabels[version.term] : "—",
+})
 
+const toCourseTableOffering = (version: CourseVersion, course: Course): CourseTableOffering => ({
+  offeringId: version.id,
+  title: deriveTitle(version),
+  lecturer: deriveLecturer(version, course),
+  ...termAndYear(version),
+})
+
+/**
+ * `version` is the offering the row shows; `offerings` is every published one,
+ * newest first, for the semester/year filters to match against.
+ */
 export const toCourseTableRow = (
   course: Course,
   version: CourseVersion | undefined,
-): CourseTableRow => {
-  const { year, semester } = splitPeriod(version?.period)
-  return {
-    id: String(course.id),
-    code: course.code,
-    title: deriveTitle(version),
-    lecturer: deriveLecturer(version, course),
-    university: deriveUniversity(course),
-    semester,
-    year,
-    status: deriveStatus(version),
-  }
+  offerings?: CourseVersion[],
+): CourseTableRow => ({
+  id: String(course.id),
+  code: course.code,
+  title: deriveTitle(version),
+  lecturer: deriveLecturer(version, course),
+  university: deriveUniversity(course),
+  ...termAndYear(version),
+  status: deriveStatus(version),
+  ...(offerings && {
+    currentOfferingId: version?.id,
+    offerings: offerings.map((offering) => toCourseTableOffering(offering, course)),
+  }),
+})
+
+export interface CoursePeriodFilter {
+  semester: string | null
+  year: number | null
+}
+
+/**
+ * The row as the newest of its offerings that matches every set filter, or
+ * `null` when none does. Both filters have to match the same offering, so a
+ * course taught in Semester 1 2025 and Semester 2 2026 is no match for
+ * Semester 1 2026. A matched row links to that offering rather than the
+ * course's current one. A draft row has no `offerings`, so it matches as itself.
+ */
+export const matchOffering = (
+  row: CourseTableRow,
+  { semester, year }: CoursePeriodFilter,
+): CourseTableRow | null => {
+  if (semester === null && year === null) return row
+
+  const candidates = row.offerings ?? [row]
+  const match = candidates.find(
+    (offering) =>
+      (semester === null || offering.semester === semester) &&
+      (year === null || offering.year === year),
+  )
+  if (!match) return null
+
+  const { offeringId, title, lecturer } = match
+  return { ...row, title, lecturer, semester: match.semester, year: match.year, offeringId }
 }
 
 /** A never-published course the viewer can reopen in the add-course dialog. */
@@ -110,11 +154,12 @@ export const toEditableDraftCourse = (
     endDate: toDateInput(version.endDate),
     learningOutcomes: (version.learningOutcomes ?? null) as DialogRichText,
     name: version.name ?? "",
-    period: version.period ?? "",
     programme: version.programme ?? "",
     projectType: version.projectType ?? "",
     role: viewer.role,
     startDate: toDateInput(version.startDate),
+    term: version.term ?? "",
+    year: version.year ? String(version.year) : "",
   },
 })
 

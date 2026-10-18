@@ -1,6 +1,7 @@
 import { cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import type { CoursePeriodFilter } from "../courses.format"
 import { CoursesTable, type CourseTableRow, useCoursesTable } from "./CoursesTable"
 import { CoursesToolbar } from "./CoursesToolbar"
 
@@ -39,11 +40,28 @@ const courses: Array<CourseTableRow> = [
   },
 ]
 
-function Harness({ data = courses }: { data?: Array<CourseTableRow> }) {
+const NO_PERIOD_FILTER: CoursePeriodFilter = { semester: null, year: null }
+
+// The toolbar only reports period filter changes; applying them across a
+// course's offerings is CoursesListClient's job, and is tested there.
+function Harness({
+  data = courses,
+  periodFilter = NO_PERIOD_FILTER,
+  onPeriodFilterChange = vi.fn(),
+}: {
+  data?: Array<CourseTableRow>
+  periodFilter?: CoursePeriodFilter
+  onPeriodFilterChange?: (filter: CoursePeriodFilter) => void
+}) {
   const table = useCoursesTable({ data })
   return (
     <div>
-      <CoursesToolbar rows={data} table={table} />
+      <CoursesToolbar
+        onPeriodFilterChange={onPeriodFilterChange}
+        periodFilter={periodFilter}
+        rows={data}
+        table={table}
+      />
       <CoursesTable table={table} />
     </div>
   )
@@ -77,15 +95,66 @@ describe("CoursesToolbar", () => {
     expect(screen.getByText("ENGR 302 Team Project")).toBeInTheDocument()
   })
 
-  it("narrows rows by year", async () => {
+  it("reports a chosen year to its caller, keeping the semester already set", async () => {
     const user = userEvent.setup()
-    render(<Harness />)
+    const onPeriodFilterChange = vi.fn()
+    render(
+      <Harness
+        onPeriodFilterChange={onPeriodFilterChange}
+        periodFilter={{ semester: "Semester 2", year: null }}
+      />,
+    )
 
     await user.click(screen.getByRole("combobox", { name: "Year" }))
     await user.click(await screen.findByRole("option", { name: "2025" }))
 
-    expect(bodyRows()).toHaveLength(1)
-    expect(screen.getByText("ENGR 302 Team Project")).toBeInTheDocument()
+    expect(onPeriodFilterChange).toHaveBeenCalledWith({ semester: "Semester 2", year: 2025 })
+    // Narrowing is left to the caller, so the table itself is untouched.
+    expect(bodyRows()).toHaveLength(3)
+  })
+
+  it("reports a chosen semester to its caller, keeping the year already set", async () => {
+    const user = userEvent.setup()
+    const onPeriodFilterChange = vi.fn()
+    render(
+      <Harness
+        onPeriodFilterChange={onPeriodFilterChange}
+        periodFilter={{ semester: null, year: 2026 }}
+      />,
+    )
+
+    await user.click(screen.getByRole("combobox", { name: "Semester" }))
+    await user.click(await screen.findByRole("option", { name: "Semester 1" }))
+
+    expect(onPeriodFilterChange).toHaveBeenCalledWith({ semester: "Semester 1", year: 2026 })
+  })
+
+  it("shows the period filter it is given", () => {
+    render(<Harness periodFilter={{ semester: "Trimester 1", year: 2025 }} />)
+
+    expect(screen.getByRole("combobox", { name: "Semester" })).toHaveTextContent("Trimester 1")
+    expect(screen.getByRole("combobox", { name: "Year" })).toHaveTextContent("2025")
+  })
+
+  it("offers the semesters and years of every offering, not just the one each row shows", async () => {
+    const user = userEvent.setup()
+    const withOfferings = [
+      {
+        ...courses[0],
+        offerings: [
+          { offeringId: 2, title: "", lecturer: "", semester: "Semester 2", year: 2026 },
+          { offeringId: 1, title: "", lecturer: "", semester: "Full Year", year: 2024 },
+        ],
+      },
+    ]
+    render(<Harness data={withOfferings} />)
+
+    await user.click(screen.getByRole("combobox", { name: "Year" }))
+    expect(await screen.findByRole("option", { name: "2024" })).toBeInTheDocument()
+    await user.keyboard("{Escape}")
+
+    await user.click(screen.getByRole("combobox", { name: "Semester" }))
+    expect(await screen.findByRole("option", { name: "Full Year" })).toBeInTheDocument()
   })
 
   it("narrows rows by status tab, with counts for each tab", async () => {
@@ -131,6 +200,26 @@ describe("CoursesToolbar", () => {
     await user.keyboard("{Escape}")
 
     await user.click(screen.getByRole("combobox", { name: "Semester" }))
+    expect(screen.queryByRole("option", { name: "—" })).not.toBeInTheDocument()
+  })
+
+  // A draft can be saved with a year before its term is settled, or the reverse.
+  it("drops each half's placeholder for a draft with only a year or only a term", async () => {
+    const user = userEvent.setup()
+    const halfSet = [
+      ...courses,
+      { ...courses[0], id: "4", semester: "—", year: 2031 },
+      { ...courses[0], id: "5", semester: "Summer School", year: 0 },
+    ]
+    render(<Harness data={halfSet} />)
+
+    await user.click(screen.getByRole("combobox", { name: "Year" }))
+    expect(await screen.findByRole("option", { name: "2031" })).toBeInTheDocument()
+    expect(screen.queryByRole("option", { name: "0" })).not.toBeInTheDocument()
+    await user.keyboard("{Escape}")
+
+    await user.click(screen.getByRole("combobox", { name: "Semester" }))
+    expect(await screen.findByRole("option", { name: "Summer School" })).toBeInTheDocument()
     expect(screen.queryByRole("option", { name: "—" })).not.toBeInTheDocument()
   })
 })

@@ -2,6 +2,7 @@
 
 import { FilterBar, type FilterBarFilter } from "@repo/ui/components/composite"
 import { useState } from "react"
+import type { CoursePeriodFilter } from "../courses.format"
 import type { CoursesTableInstance, CourseTableRow } from "./CoursesTable"
 
 type CourseStatusFilter = "all" | CourseTableRow["status"]
@@ -46,14 +47,20 @@ export interface CoursesToolbarProps {
   /** The full, unfiltered row set, so the filter option lists don't shrink
    * as other filters narrow what's on screen. */
   rows: CourseTableRow[]
+  /** Semester and year, applied by the caller across every offering of a course. */
+  periodFilter: CoursePeriodFilter
+  onPeriodFilterChange: (filter: CoursePeriodFilter) => void
 }
 
-export function CoursesToolbar({ table, rows }: CoursesToolbarProps) {
+export function CoursesToolbar({
+  table,
+  rows,
+  periodFilter,
+  onPeriodFilterChange,
+}: CoursesToolbarProps) {
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState<CourseStatusFilter>("all")
   const [university, setUniversity] = useState<string | null>(null)
-  const [semester, setSemester] = useState<string | null>(null)
-  const [year, setYear] = useState<number | null>(null)
 
   // This is derived from the table rather than tracked in its own state,
   // because a column header can change the sort independently of this
@@ -66,18 +73,22 @@ export function CoursesToolbar({ table, rows }: CoursesToolbarProps) {
       return direction === (desc ? "desc" : "asc")
     }) ?? "course-asc"
 
-  // A course with no offering yet gets the `year: 0` / `semester: "—"`
-  // placeholders from `splitPeriod`, which aren't real values to filter by.
-  const coursesWithOfferings = rows.filter((row) => row.year !== 0)
+  // Offered from every offering, not just the one each row shows. A draft
+  // missing its term or year gets the `semester: "—"` / `year: 0` placeholders
+  // from `termAndYear`, which aren't real values to filter by - and it may
+  // have one half without the other, so each list drops its own placeholder.
+  const offerings = rows.flatMap((row) => row.offerings ?? [row])
 
   const universityOptions = uniqueSorted(rows.map((row) => row.university)).map((value) => ({
     label: value,
     value,
   }))
-  const semesterOptions = uniqueSorted(coursesWithOfferings.map((row) => row.semester)).map(
-    (value) => ({ label: value, value }),
+  const semesterOptions = uniqueSorted(
+    offerings.map((offering) => offering.semester).filter((semester) => semester !== "—"),
+  ).map((value) => ({ label: value, value }))
+  const yearOptions = Array.from(
+    new Set(offerings.map((offering) => offering.year).filter((year) => year !== 0)),
   )
-  const yearOptions = Array.from(new Set(coursesWithOfferings.map((row) => row.year)))
     .sort((a, b) => b - a)
     .map((value) => ({ label: String(value), value }))
   const statusCounts = {
@@ -96,15 +107,10 @@ export function CoursesToolbar({ table, rows }: CoursesToolbarProps) {
     table.getColumn("university")?.setFilterValue(value === null ? undefined : [value])
   }
 
-  const handleSemesterChange = (value: string | null) => {
-    setSemester(value)
-    table.getColumn("semester")?.setFilterValue(value === null ? undefined : [value])
-  }
+  const handleSemesterChange = (semester: string | null) =>
+    onPeriodFilterChange({ ...periodFilter, semester })
 
-  const handleYearChange = (value: number | null) => {
-    setYear(value)
-    table.getColumn("year")?.setFilterValue(value === null ? undefined : [value])
-  }
+  const handleYearChange = (year: number | null) => onPeriodFilterChange({ ...periodFilter, year })
 
   const handleStatusChange = (value: CourseStatusFilter) => {
     setStatus(value)
@@ -132,14 +138,14 @@ export function CoursesToolbar({ table, rows }: CoursesToolbarProps) {
           onValueChange: handleSemesterChange,
           options: semesterOptions,
           placeholder: "Semester",
-          value: semester,
+          value: periodFilter.semester,
         } satisfies FilterBarFilter<string>,
         {
           id: "year",
           onValueChange: handleYearChange,
           options: yearOptions,
           placeholder: "Year",
-          value: year,
+          value: periodFilter.year,
         } satisfies FilterBarFilter<number>,
       ]}
       groupControls

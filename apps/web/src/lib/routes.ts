@@ -12,6 +12,19 @@ export const Routes = {
   COURSES: {
     ROOT: route("/courses"),
     COURSE: (courseId: string) => route(`/courses/${courseId}`),
+    /**
+     * One offering of a course. The current offering's canonical URL is the plain
+     * course URL, so `?offering=` is only added for any other one - and left off
+     * without an `offeringId`, for the course's default.
+     */
+    OFFERING: (
+      courseId: number | string,
+      offeringId?: number | null,
+      currentOfferingId?: number | null,
+    ) =>
+      offeringId && offeringId !== currentOfferingId
+        ? route(`/courses/${courseId}?offering=${offeringId}`)
+        : route(`/courses/${courseId}`),
   },
   MEMBERS: {
     ROOT: route("/members"),

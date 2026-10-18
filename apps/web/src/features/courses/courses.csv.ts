@@ -1,6 +1,9 @@
 import type { CourseTableRow } from "./components/CoursesTable"
 
-const CSV_COLUMNS: { key: keyof CourseTableRow; header: string }[] = [
+// The row as shown, so the offering-matching fields stay out of the export.
+type CsvKey = Exclude<keyof CourseTableRow, "offeringId" | "currentOfferingId" | "offerings">
+
+const CSV_COLUMNS: { key: CsvKey; header: string }[] = [
   { key: "code", header: "Code" },
   { key: "title", header: "Title" },
   { key: "lecturer", header: "Lecturer" },

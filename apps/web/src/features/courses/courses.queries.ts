@@ -1,6 +1,7 @@
 import { QueryKeys } from "@repo/shared/constants/query-keys"
 import type { Course, CourseVersion } from "@repo/shared/payload-types"
 import { cacheLife, cacheTag } from "next/cache"
+import { connection } from "next/server"
 import type { Where } from "payload"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
@@ -15,6 +16,13 @@ import {
   toCourseTableRow,
   toEditableDraftCourse,
 } from "./courses.format"
+import { currentOffering, selectOffering } from "./courses.offerings"
+import {
+  type CourseRouteParams,
+  type CourseRouteSearchParams,
+  parseCourseId,
+} from "./courses.params"
+import { loadCourseSearchParams } from "./courses.search-params"
 
 // The newest offering wins for each course; sorting by `-id` as a tiebreaker
 // keeps the pick stable if two offerings ever share a `startDate`.
@@ -23,14 +31,16 @@ const NEWEST_FIRST = ["-startDate", "-id"]
 const courseIdOf = (version: CourseVersion): number =>
   typeof version.course === "number" ? version.course : version.course.id
 
-// Docs arrive sorted newest first, so the first one seen for a course is its newest.
-const latestVersionByCourseId = (versions: CourseVersion[]) => {
-  const latest = new Map<number, CourseVersion>()
+// Keeps the newest-first order, so each list starts with the course's newest offering.
+const versionsByCourseId = (versions: CourseVersion[]) => {
+  const grouped = new Map<number, CourseVersion[]>()
   for (const version of versions) {
     const courseId = courseIdOf(version)
-    if (!latest.has(courseId)) latest.set(courseId, version)
+    const group = grouped.get(courseId)
+    if (group) group.push(version)
+    else grouped.set(courseId, [version])
   }
-  return latest
+  return grouped
 }
 
 export interface CoursesTableData {
@@ -45,7 +55,7 @@ export interface CoursesTableData {
  * back to their published-only rule for everyone, admins included, which is
  * what keeps the result viewer-independent.
  */
-export const getCoursesTableData = async (): Promise<CoursesTableData> => {
+export const getCoursesTableData = async (now = new Date()): Promise<CoursesTableData> => {
   const payload = await getPayloadClient()
 
   const [{ docs: courses }, { docs: versions }] = await Promise.all([
@@ -65,8 +75,13 @@ export const getCoursesTableData = async (): Promise<CoursesTableData> => {
     }),
   ])
 
-  const latestVersions = latestVersionByCourseId(versions)
-  const rows = courses.map((course) => toCourseTableRow(course, latestVersions.get(course.id)))
+  // Each row shows the course's current offering, as its page does by default,
+  // and every offering rides along so the semester/year filters can match any of them.
+  const offerings = versionsByCourseId(versions)
+  const rows = courses.map((course) => {
+    const courseOfferings = offerings.get(course.id) ?? []
+    return toCourseTableRow(course, currentOffering(courseOfferings, now), courseOfferings)
+  })
 
   return { rows, summary: summarizeCourses(rows) }
 }
@@ -124,11 +139,15 @@ export const getMyDraftCourses = async (): Promise<MyDraftCourses> => {
   // with no offering shouldn't exist - but if one did, it would have nothing to
   // reopen and no course page to link to, so it's left out rather than listed
   // as a dead end.
-  const latestVersions = latestVersionByCourseId(versions)
+  //
+  // The newest offering, not the current one: these courses were never published,
+  // so a draft may have no dates to judge "current" by, and the newest is the one
+  // the dialog reopens.
+  const versionsByCourse = versionsByCourseId(versions)
   const viewer = { id: user.id, role: user.position ?? "" }
   const drafts: MyDraftCourses = { editable: {}, rows: [] }
   for (const course of courses) {
-    const version = latestVersions.get(course.id)
+    const version = versionsByCourse.get(course.id)?.[0]
     if (!version) continue
     drafts.rows.push(toCourseTableRow(course, version))
     drafts.editable[String(course.id)] = toEditableDraftCourse(course, version, viewer)
@@ -136,9 +155,12 @@ export const getMyDraftCourses = async (): Promise<MyDraftCourses> => {
   return drafts
 }
 
+// "hours", not "max": which offering is current moves with the date, so a cached
+// table rolls over to a new semester within hours of it starting, with no write
+// to revalidate it.
 export const getCoursesTableDataCached = async () => {
   "use cache"
-  cacheLife("max")
+  cacheLife("hours")
   cacheTag(QueryKeys.COURSES.ROOT)
   return getCoursesTableData()
 }
@@ -224,62 +246,25 @@ export const getPublishedOfferingsCached = async (courseId: number) => {
   return getPublishedOfferings(courseId)
 }
 
-export const getLatestPublishedOffering = async (
-  courseId: number,
-): Promise<CourseVersion | null> => {
-  const payload = await getPayloadClient()
-  const { docs } = await payload.find({
-    collection: Slugs.Collections.COURSE_VERSIONS,
-    where: publishedOfferingsWhere(courseId),
-    sort: NEWEST_FIRST,
-    depth: 0,
-    limit: 1,
-    pagination: false,
-  })
-  return docs[0] ?? null
-}
-
-export const getLatestPublishedOfferingCached = async (courseId: number) => {
-  "use cache"
-  cacheTag(QueryKeys.COURSES.ID(courseId))
-  cacheLife("max")
-
-  return getLatestPublishedOffering(courseId)
-}
-
 /**
- * One offering by ID, scoped to its course.
+ * The course in the URL, its published offerings, and the one `?offering=` picks,
+ * with the `now` that pick was judged against - so everything the page derives
+ * from the date (badges, labels, the notice) agrees with it.
  *
- * The course ID comes from the URL, so a request for an offering that belongs to
- * another course must miss rather than render under the wrong course.
+ * The offerings are cached; picking the current one isn't, since it depends on
+ * today's date - `connection()` defers it to request time. Callers sit inside a
+ * Suspense boundary, as anything reading `searchParams` already has to.
  */
-export const getPublishedOffering = async (
-  courseId: number,
-  offeringId: number,
-): Promise<CourseVersion | null> => {
-  const payload = await getPayloadClient()
-  const { docs } = await payload.find({
-    collection: Slugs.Collections.COURSE_VERSIONS,
-    where: { and: [{ id: { equals: offeringId } }, publishedOfferingsWhere(courseId)] },
-    depth: 0,
-    limit: 1,
-    pagination: false,
-  })
-  return docs[0] ?? null
-}
-
-export const getPublishedOfferingCached = async (courseId: number, offeringId: number) => {
-  "use cache"
-  cacheTag(QueryKeys.COURSES.ID(courseId))
-  cacheLife("max")
-
-  return getPublishedOffering(courseId, offeringId)
-}
-
-/**
- * Gets a specific offering for a course, or the latest if none is specified.
- */
-export const getSelectedOffering = async (courseId: number, offeringId?: number) => {
-  const selected = offeringId ? await getPublishedOfferingCached(courseId, offeringId) : null
-  return selected ?? (await getLatestPublishedOfferingCached(courseId))
+export const resolveCourseOffering = async (
+  params: CourseRouteParams,
+  searchParams: CourseRouteSearchParams,
+) => {
+  const [courseId, { offering }] = await Promise.all([
+    parseCourseId(params),
+    loadCourseSearchParams(searchParams),
+  ])
+  const offerings = await getPublishedOfferingsCached(courseId)
+  await connection()
+  const now = new Date()
+  return { courseId, now, ...selectOffering(offerings, offering, now) }
 }

@@ -2,7 +2,12 @@
 
 import { FilterBarSkeleton } from "@repo/ui/components/composite"
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react"
-import type { EditableDraftCourse, MyDraftCourses } from "../courses.format"
+import {
+  type CoursePeriodFilter,
+  type EditableDraftCourse,
+  type MyDraftCourses,
+  matchOffering,
+} from "../courses.format"
 import { EditDraftCourseDialog } from "./AddCourseDialog"
 import {
   CoursesTable,
@@ -13,6 +18,7 @@ import {
 import { CoursesToolbar, coursesFilterBarClassName } from "./CoursesToolbar"
 
 const NO_DRAFTS: MyDraftCourses = { editable: {}, rows: [] }
+const NO_PERIOD_FILTER: CoursePeriodFilter = { semester: null, year: null }
 
 // No default: a `ShareMyDraftCourses` outside a `CoursesListClient` has nowhere
 // to send the drafts, and should fail loudly rather than drop them unseen.
@@ -57,10 +63,23 @@ const listClassName =
 
 export function CoursesListClient({ rows, draftsSlot }: CoursesListClientProps) {
   const [drafts, setDrafts] = useState(NO_DRAFTS)
+  const [periodFilter, setPeriodFilter] = useState(NO_PERIOD_FILTER)
   const allRows = useMemo(() => [...rows, ...drafts.rows], [rows, drafts])
 
+  // The period filters live here rather than on the table's columns: a column
+  // filter only sees the one offering a row shows, and semester and year have
+  // to match the same offering, which two separate column filters can't express.
+  const matchedRows = useMemo(
+    () =>
+      allRows.flatMap((row) => {
+        const matched = matchOffering(row, periodFilter)
+        return matched ? [matched] : []
+      }),
+    [allRows, periodFilter],
+  )
+
   const table = useCoursesTable({
-    data: allRows,
+    data: matchedRows,
     initialState: { pagination: { pageIndex: 0, pageSize: Number.POSITIVE_INFINITY } },
   })
 
@@ -74,7 +93,12 @@ export function CoursesListClient({ rows, draftsSlot }: CoursesListClientProps) 
   return (
     <div className={listClassName}>
       <ReceiveMyDraftCoursesContext value={setDrafts}>{draftsSlot}</ReceiveMyDraftCoursesContext>
-      <CoursesToolbar rows={allRows} table={table} />
+      <CoursesToolbar
+        onPeriodFilterChange={setPeriodFilter}
+        periodFilter={periodFilter}
+        rows={allRows}
+        table={table}
+      />
       <CoursesTable
         canOpenDraft={(row) => Object.hasOwn(drafts.editable, row.id)}
         emptyMessage="No courses match these filters."

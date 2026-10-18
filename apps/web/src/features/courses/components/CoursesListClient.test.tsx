@@ -1,5 +1,6 @@
 import { toast } from "@repo/ui/components/ui"
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { createCourse } from "../actions/createCourse"
 import { deleteDraftCourse } from "../actions/deleteDraftCourse"
@@ -62,6 +63,120 @@ describe("CoursesListClient", () => {
   })
 })
 
+describe("CoursesListClient period filters", () => {
+  // Shows its newest offering, but was also taught in Semester 1 2025.
+  const multiOffering: CourseTableRow = {
+    id: "1",
+    code: "COMP 693",
+    title: "Capstone 2026",
+    lecturer: "A. Tui",
+    university: "University of Auckland",
+    semester: "Semester 2",
+    year: 2026,
+    status: "published",
+    offerings: [
+      {
+        offeringId: 12,
+        title: "Capstone 2026",
+        lecturer: "A. Tui",
+        semester: "Semester 2",
+        year: 2026,
+      },
+      {
+        offeringId: 10,
+        title: "Capstone 2025",
+        lecturer: "M. Chen",
+        semester: "Semester 1",
+        year: 2025,
+      },
+    ],
+  }
+  const singleOffering: CourseTableRow = {
+    id: "2",
+    code: "SOFTENG 700",
+    title: "Research Project",
+    lecturer: "K. Whitfield",
+    university: "University of Auckland",
+    semester: "Semester 1",
+    year: 2026,
+    status: "published",
+    offerings: [
+      {
+        offeringId: 20,
+        title: "Research Project",
+        lecturer: "K. Whitfield",
+        semester: "Semester 1",
+        year: 2026,
+      },
+    ],
+  }
+
+  const bodyRows = () => within(screen.getAllByRole("rowgroup")[1]).queryAllByRole("row")
+
+  const choose = async (
+    user: ReturnType<typeof userEvent.setup>,
+    filter: string,
+    option: string,
+  ) => {
+    await user.click(screen.getByRole("combobox", { name: filter }))
+    await user.click(await screen.findByRole("option", { name: option }))
+  }
+
+  afterEach(() => {
+    cleanup()
+  })
+
+  it("offers semesters and years from every offering, not only the ones shown", async () => {
+    const user = userEvent.setup()
+    render(<CoursesListClient rows={[multiOffering]} />)
+
+    await user.click(screen.getByRole("combobox", { name: "Year" }))
+    expect(await screen.findByRole("option", { name: "2025" })).toBeInTheDocument()
+    await user.keyboard("{Escape}")
+
+    await user.click(screen.getByRole("combobox", { name: "Semester" }))
+    expect(await screen.findByRole("option", { name: "Semester 1" })).toBeInTheDocument()
+  })
+
+  it("shows the offering that matches both filters, linked by its id", async () => {
+    const user = userEvent.setup()
+    render(<CoursesListClient rows={[multiOffering, singleOffering]} />)
+
+    await choose(user, "Semester", "Semester 1")
+    await choose(user, "Year", "2025")
+
+    expect(bodyRows()).toHaveLength(1)
+    const [row] = bodyRows()
+    const cells = within(row).getAllByRole("cell")
+    expect(cells[2]).toHaveTextContent("Semester 1")
+    expect(cells[3]).toHaveTextContent("2025")
+    expect(
+      within(row).getByRole("link", { name: "COMP 693 Capstone 2025M. Chen" }),
+    ).toHaveAttribute("href", "/courses/1?offering=10")
+  })
+
+  // COMP 693 has a Semester 1 offering and a 2026 one, but not a Semester 1 2026 one.
+  it("does not match a semester and a year taken from different offerings", async () => {
+    const user = userEvent.setup()
+    render(<CoursesListClient rows={[multiOffering, singleOffering]} />)
+
+    await choose(user, "Semester", "Semester 1")
+    await choose(user, "Year", "2026")
+
+    expect(bodyRows()).toHaveLength(1)
+    expect(screen.getByText("SOFTENG 700 Research Project")).toBeInTheDocument()
+  })
+
+  it("links each row to its course's current offering until a filter is set", () => {
+    render(<CoursesListClient rows={[multiOffering]} />)
+
+    expect(screen.getByRole("link", { name: "COMP 693 Capstone 2026A. Tui" })).toHaveAttribute(
+      "href",
+      "/courses/1",
+    )
+  })
+})
+
 describe("CoursesListClient drafts", () => {
   const draftRow: CourseTableRow = {
     id: "4",
@@ -89,11 +204,12 @@ describe("CoursesListClient drafts", () => {
           endDate: "",
           learningOutcomes: null,
           name: "Draft capstone",
-          period: "2026 Semester 2",
           programme: "",
           projectType: "",
           role: "Senior Lecturer",
           startDate: "",
+          term: "semester2",
+          year: "2026",
         },
       },
     },
@@ -143,7 +259,10 @@ describe("CoursesListClient drafts", () => {
     expect(screen.getByRole("dialog", { name: "Edit draft course" })).toBeInTheDocument()
     expect(screen.getByLabelText(/^Course code/)).toHaveValue("COSC 345")
     expect(screen.getByLabelText(/^Course name/)).toHaveValue("Draft capstone")
-    expect(screen.getByLabelText(/^Teaching period/)).toHaveValue("2026 Semester 2")
+    // The toolbar behind the dialog has its own Year filter, so look inside the dialog.
+    const dialog = screen.getByRole("dialog", { name: "Edit draft course" })
+    expect(within(dialog).getByRole("combobox", { name: /^Term/ })).toHaveTextContent("Semester 2")
+    expect(within(dialog).getByLabelText(/^Year/)).toHaveValue("2026")
     expect(screen.getByLabelText(/^Your role/)).toHaveValue("Senior Lecturer")
   })
 

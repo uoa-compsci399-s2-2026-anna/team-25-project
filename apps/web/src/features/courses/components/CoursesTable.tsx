@@ -20,20 +20,27 @@ import {
   type UseDataTableOptions,
   useDataTable,
 } from "@repo/ui/components/ui"
-import { constructFilterFn, createColumnHelper, filterFn_arrHas } from "@tanstack/react-table"
+import { createColumnHelper } from "@tanstack/react-table"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createContext, useContext } from "react"
 import { Routes } from "@/lib/routes"
 
+/** One published offering of a row's course, as the period filters see it. */
+export interface CourseTableOffering {
+  offeringId?: number
+  title: string
+  lecturer: string
+  /** The term's label, e.g. "Semester 2". */
+  semester: string
+  year: number
+}
+
 /**
  * `duration`, `students`, `teamSize`, and `industry` were dropped: none have
  * a backing field in `Course`/`CourseVersion` (see PR description).
  *
- * `semester`/`year` are derived by splitting `CourseVersion.period` (e.g.
- * "2026 Semester 2") - no other part of the app does this split, so whoever
- * wires the real Course/CourseVersion join (#106) will need to derive them
- * from `period` the same way.
+ * `semester`/`year` come from the offering's `term` and `year`.
  */
 export interface CourseTableRow {
   id: string
@@ -46,15 +53,19 @@ export interface CourseTableRow {
   semester: string
   year: number
   status: "draft" | "published"
+  /**
+   * Set once a period filter picks one of the course's offerings, so the row
+   * opens that offering. Unset, it opens the course's current offering.
+   */
+  offeringId?: number
+  /** The offering the row shows unfiltered, whose URL is the plain course URL. */
+  currentOfferingId?: number
+  /** Every published offering, newest first. Drafts have none. */
+  offerings?: CourseTableOffering[]
 }
 
-// `arrHas` compares with `===`, so a numeric column needs both sides coerced
-// to the same type to match string filter values (e.g. from a URL/filter UI).
-const arrHasNumeric = constructFilterFn({
-  ...filterFn_arrHas,
-  resolveDataValue: (value: unknown) => String(value),
-  resolveFilterValue: (value: unknown) => (Array.isArray(value) ? value.map(String) : value),
-})
+const rowHref = (row: CourseTableRow) =>
+  Routes.COURSES.OFFERING(row.id, row.offeringId, row.currentOfferingId)
 
 const statusLabels = {
   draft: "Draft",
@@ -94,7 +105,7 @@ function CourseCell({ label, row }: { label: string; row: CourseTableRow }) {
   }
 
   return (
-    <Link className={`block rounded-sm ${focusRing}`} href={Routes.COURSES.COURSE(row.id)}>
+    <Link className={`block rounded-sm ${focusRing}`} href={rowHref(row)}>
       {cell}
     </Link>
   )
@@ -114,14 +125,14 @@ export const courseColumns = helper.columns([
     filterFn: "arrHas",
     cell: ({ getValue }) => <TextCell tone="muted">{getValue()}</TextCell>,
   }),
+  // No filterFn on semester or year: CoursesListClient filters them across every
+  // offering with matchOffering, which a column filter here would disagree with.
   helper.accessor("semester", {
     header: ({ column }) => <SortableHeader column={column}>Semester</SortableHeader>,
-    filterFn: "arrHas",
     cell: ({ getValue }) => <TextCell tone="muted">{getValue()}</TextCell>,
   }),
   helper.accessor("year", {
     header: ({ column }) => <SortableHeader column={column}>Year</SortableHeader>,
-    filterFn: arrHasNumeric,
     cell: ({ getValue }) => <TextCell tone="muted">{getValue()}</TextCell>,
   }),
   helper.accessor("status", {
@@ -243,7 +254,7 @@ export function CoursesTable({
               draftOpener.open(row.original)
               return
             }
-            router.push(Routes.COURSES.COURSE(row.original.id))
+            router.push(rowHref(row.original))
           },
         })}
         scrollLabel={scrollLabel}

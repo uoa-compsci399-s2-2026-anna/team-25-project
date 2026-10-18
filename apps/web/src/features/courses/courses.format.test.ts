@@ -6,9 +6,10 @@ import {
   deriveStatus,
   deriveTitle,
   deriveUniversity,
-  splitPeriod,
+  matchOffering,
   summarizeCourses,
   summarizeMyCourses,
+  termAndYear,
   toCourseTableRow,
 } from "./courses.format"
 
@@ -33,7 +34,9 @@ const version = (overrides: Partial<CourseVersion> = {}): CourseVersion =>
   ({
     id: 100,
     course: 10,
-    period: "2026 Semester 2",
+    term: "semester2",
+    year: 2026,
+    period: "Semester 2 2026",
     startDate: "2026-07-20",
     endDate: "2026-11-06",
     name: "Capstone: Computer Science",
@@ -42,22 +45,26 @@ const version = (overrides: Partial<CourseVersion> = {}): CourseVersion =>
     ...overrides,
   }) as CourseVersion
 
-describe("splitPeriod", () => {
-  it("splits the year from the rest of the period", () => {
-    expect(splitPeriod("2026 Semester 2")).toEqual({ year: 2026, semester: "Semester 2" })
+describe("termAndYear", () => {
+  it("labels the term and passes the year through", () => {
+    expect(termAndYear(version())).toEqual({ year: 2026, semester: "Semester 2" })
+    expect(termAndYear(version({ term: "fullYear", year: 2027 }))).toEqual({
+      year: 2027,
+      semester: "Full Year",
+    })
   })
 
-  it("keeps multi-word terms together", () => {
-    expect(splitPeriod("2027 Full Year")).toEqual({ year: 2027, semester: "Full Year" })
+  it("falls back when there's no offering yet", () => {
+    expect(termAndYear(undefined)).toEqual({ year: 0, semester: "—" })
   })
 
-  it("falls back for a missing period", () => {
-    expect(splitPeriod(undefined)).toEqual({ year: 0, semester: "—" })
-    expect(splitPeriod(null)).toEqual({ year: 0, semester: "—" })
-  })
-
-  it("falls back when the leading token isn't a year", () => {
-    expect(splitPeriod("TBD")).toEqual({ year: 0, semester: "—" })
+  // A draft may have one half of its period and not the other.
+  it("falls back for each half a draft hasn't set", () => {
+    expect(termAndYear(version({ term: null, year: 2026 }))).toEqual({ year: 2026, semester: "—" })
+    expect(termAndYear(version({ term: "semester1", year: null }))).toEqual({
+      year: 0,
+      semester: "Semester 1",
+    })
   })
 })
 
@@ -139,6 +146,52 @@ describe("toCourseTableRow", () => {
     })
   })
 
+  it("lists every offering for the period filters, keeping the order it was given", () => {
+    const newer = version()
+    const older = version({
+      id: 99,
+      term: "semester1",
+      year: 2025,
+      name: "Capstone (2025)",
+      teachingTeam: [{ member: member({ firstName: "Maya", lastName: "Chen" }), role: "Lecturer" }],
+    })
+
+    expect(toCourseTableRow(course(), newer, [newer, older])).toEqual({
+      id: "10",
+      code: "COMPSCI 399",
+      title: "Capstone: Computer Science",
+      lecturer: "A. Patel",
+      university: "University of Auckland",
+      semester: "Semester 2",
+      year: 2026,
+      status: "published",
+      // The offering the row shows, so its link can stay the plain course URL.
+      currentOfferingId: 100,
+      offerings: [
+        {
+          offeringId: 100,
+          title: "Capstone: Computer Science",
+          lecturer: "A. Patel",
+          semester: "Semester 2",
+          year: 2026,
+        },
+        {
+          offeringId: 99,
+          title: "Capstone (2025)",
+          lecturer: "M. Chen",
+          semester: "Semester 1",
+          year: 2025,
+        },
+      ],
+    })
+  })
+
+  // Not even an empty list: a draft row's lack of `offerings` is how
+  // matchOffering knows to match it as itself.
+  it("leaves offerings off a row built without them", () => {
+    expect(toCourseTableRow(course(), version())).not.toHaveProperty("offerings")
+  })
+
   it("composes a placeholder row for a course with no offering yet", () => {
     expect(toCourseTableRow(course(), undefined)).toEqual({
       id: "10",
@@ -163,6 +216,76 @@ const row = (overrides: Partial<CourseTableRow> = {}): CourseTableRow => ({
   year: 2026,
   status: "published",
   ...overrides,
+})
+
+describe("matchOffering", () => {
+  const s2_2026 = {
+    offeringId: 12,
+    title: "Capstone 2026",
+    lecturer: "A. Tui",
+    semester: "Semester 2",
+    year: 2026,
+  }
+  const s1_2026 = {
+    offeringId: 11,
+    title: "Capstone early 2026",
+    lecturer: "B. Lee",
+    semester: "Semester 1",
+    year: 2026,
+  }
+  const s1_2025 = {
+    offeringId: 10,
+    title: "Capstone 2025",
+    lecturer: "M. Chen",
+    semester: "Semester 1",
+    year: 2025,
+  }
+  // Newest first, as getCoursesTableData hands them over.
+  const published = row({ offerings: [s2_2026, s1_2026, s1_2025] })
+
+  it("returns the row unchanged when no filter is set", () => {
+    expect(matchOffering(published, { semester: null, year: null })).toBe(published)
+  })
+
+  it("narrows to the newest offering in the semester", () => {
+    expect(matchOffering(published, { semester: "Semester 1", year: null })).toEqual({
+      ...published,
+      ...s1_2026,
+    })
+  })
+
+  it("narrows to the newest offering in the year", () => {
+    expect(matchOffering(published, { semester: null, year: 2025 })).toEqual({
+      ...published,
+      ...s1_2025,
+    })
+  })
+
+  it("narrows to the offering that matches both", () => {
+    expect(matchOffering(published, { semester: "Semester 1", year: 2025 })).toEqual({
+      ...published,
+      ...s1_2025,
+    })
+  })
+
+  // Each filter matching some offering isn't enough - they have to match the same one.
+  it("does not mix the semester of one offering with the year of another", () => {
+    const course = row({ offerings: [s2_2026, s1_2025] })
+
+    expect(matchOffering(course, { semester: "Semester 1", year: 2026 })).toBeNull()
+  })
+
+  it("returns null when no offering matches", () => {
+    expect(matchOffering(published, { semester: "Full Year", year: null })).toBeNull()
+    expect(matchOffering(published, { semester: null, year: 2030 })).toBeNull()
+  })
+
+  it("matches a draft row without offerings as itself", () => {
+    const draft = row({ status: "draft", semester: "Semester 1", year: 2027 })
+
+    expect(matchOffering(draft, { semester: "Semester 1", year: 2027 })).toEqual(draft)
+    expect(matchOffering(draft, { semester: "Semester 2", year: null })).toBeNull()
+  })
 })
 
 describe("summarizeCourses", () => {
