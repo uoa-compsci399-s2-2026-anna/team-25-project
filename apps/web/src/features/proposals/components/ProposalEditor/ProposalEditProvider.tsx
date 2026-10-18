@@ -4,6 +4,7 @@ import { updateProposalSchema } from "@repo/shared/schemas/proposals"
 import type { ReactNode } from "react"
 import { EditProvider, zodFormErrors } from "@/components/Editor/EditContext"
 import { updateProposal } from "../../actions/postProposal"
+import type { ProposalValues } from "./proposalEditFields"
 
 const validateProposal = zodFormErrors(updateProposalSchema)
 
@@ -15,7 +16,10 @@ export const ProposalEditProvider = ({
   children: ReactNode
   proposalId: number
 }) => (
-  <EditProvider onSave={(values) => updateProposal(proposalId, values)} validate={validateProposal}>
+  <EditProvider<ProposalValues>
+    onSave={(values) => updateProposal(proposalId, values)}
+    validate={validateProposal}
+  >
     {children}
   </EditProvider>
 )

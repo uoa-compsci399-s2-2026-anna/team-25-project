@@ -6,9 +6,7 @@ import {
 import type { Proposal } from "@repo/shared/payload-types"
 import { toSelectOptions } from "@repo/shared/utils/select-options"
 import { cn } from "@repo/ui/lib/utils"
-import { EditInput } from "@/components/Editor/EditInput"
-import { EditNumberInput } from "@/components/Editor/EditNumberInput"
-import { EditSelect } from "@/components/Editor/EditSelect"
+import { ProposalEdit } from "../ProposalEditor/proposalEditFields"
 
 export const formatTimeframe = (timeframe: Proposal["timeframe"]) => {
   const start = `${ProposalTimeframeStartPeriodLabels[timeframe.startPeriod]} ${timeframe.startYear}`
@@ -36,14 +34,14 @@ export const ProposalMeta = ({
       // Edited together so the timeframe is always sent whole; its end is kept as saved.
       value: (
         <div className="flex gap-2">
-          <EditSelect
+          <ProposalEdit.Select
             label="Start period"
             name="timeframe.startPeriod"
             options={toSelectOptions(ProposalTimeframeStartPeriodLabels)}
             value={timeframe.startPeriod}
             view={formatTimeframe(timeframe)}
           />
-          <EditNumberInput
+          <ProposalEdit.NumberInput
             className="w-24"
             label="Start year"
             name="timeframe.startYear"
@@ -55,7 +53,7 @@ export const ProposalMeta = ({
     {
       label: "Output target",
       value: (
-        <EditInput
+        <ProposalEdit.Input
           label="Output target"
           name="outputTarget"
           value={outputTarget}
@@ -66,7 +64,7 @@ export const ProposalMeta = ({
     {
       label: "Ethics",
       value: (
-        <EditSelect
+        <ProposalEdit.Select
           label="Ethics"
           name="ethics"
           options={toSelectOptions(ProposalEthicsStatusLabels)}

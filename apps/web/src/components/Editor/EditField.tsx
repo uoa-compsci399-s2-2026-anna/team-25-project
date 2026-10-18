@@ -62,8 +62,8 @@ export const EditField = <V,>({
   return (
     <EditSwitch view={view}>
       {/* The shared form is typed loosely (see EditContext), so TanStack only knows a field's
-          value as unknown. These casts (and the one in toFieldValidator) bridge it to V, the
-          type of the value passed in, so callers stay fully typed. */}
+          value as unknown. These casts (and the one in toFieldValidator) bridge it to V.
+          createEditFields only lets a control name a field that holds V, so they hold. */}
       <form.Field
         defaultValue={value as never}
         name={name}

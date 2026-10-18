@@ -3,8 +3,8 @@ import { toSelectOptions } from "@repo/shared/utils/select-options"
 import { Card } from "@repo/ui/components/ui"
 import { EditButton } from "@/components/Editor/EditButton"
 import { EditSwitch } from "@/components/Editor/EditField"
-import { EditTabs } from "@/components/Editor/EditTabs"
 import { StartEditingOnLoad } from "@/components/Editor/StartEditingOnLoad"
+import { ProposalEdit } from "../ProposalEditor/proposalEditFields"
 
 const dateFormatter = new Intl.DateTimeFormat("en-NZ", {
   day: "numeric",
@@ -26,7 +26,7 @@ export const StatusAuthorCard = ({
 
       {/* Only while editing - the page's status badge shows it otherwise. Saved with Done. */}
       <EditSwitch>
-        <EditTabs
+        <ProposalEdit.Tabs
           label="Status"
           name="status"
           options={toSelectOptions(ProposalStatusLabels)}

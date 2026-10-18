@@ -2,8 +2,8 @@ import { ProposalTagLabels } from "@repo/shared/enums/proposals"
 import type { Proposal } from "@repo/shared/payload-types"
 import { toSelectOptions } from "@repo/shared/utils/select-options"
 import { Badge, Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/ui"
-import { EditCheckboxList } from "@/components/Editor/EditCheckboxList"
 import { EditSwitch } from "@/components/Editor/EditField"
+import { ProposalEdit } from "../ProposalEditor/proposalEditFields"
 
 export const TagsCard = ({ tags }: { tags: Proposal["tags"] }) => {
   const hasTags = Boolean(tags && tags.length > 0)
@@ -16,7 +16,7 @@ export const TagsCard = ({ tags }: { tags: Proposal["tags"] }) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-wrap gap-2">
-        <EditCheckboxList
+        <ProposalEdit.CheckboxList
           label="Tags"
           name="tags"
           options={toSelectOptions(ProposalTagLabels)}

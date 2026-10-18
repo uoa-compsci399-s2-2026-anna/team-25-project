@@ -6,7 +6,7 @@ import type { z } from "zod"
 
 /**
  * The values an Edit component can bind to, keyed by form field name. Typed loosely so
- * one editor serves every feature - each feature's schema checks the values on submit.
+ * one editor serves every feature - createEditFields types each feature's field names.
  */
 export type EditValues = Record<string, unknown>
 
@@ -63,21 +63,22 @@ type EditContextValue = {
 
 const EditContext = createContext<EditContextValue | null>(null)
 
-export const EditProvider = ({
+export const EditProvider = <T extends EditValues>({
   children,
   onSave,
   validate,
 }: {
   children: ReactNode
   /** Persists the edited values - called on Done once validation passes. */
-  onSave: (values: EditValues) => Promise<SaveResult>
+  onSave: (values: Partial<T>) => Promise<SaveResult>
   validate: Validate
 }) => {
   const [isEditing, setEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const form = useEditForm(
     validate,
-    onSave,
+    // The form only holds the fields on screen, and createEditFields names those from T.
+    (values) => onSave(values as Partial<T>),
     () => {
       setError(null)
       setEditing(false)

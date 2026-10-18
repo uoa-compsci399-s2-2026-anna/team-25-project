@@ -1,7 +1,5 @@
 import { AnimatedSuspense, Heading } from "@repo/ui/components/ui"
 import { notFound } from "next/navigation"
-import { EditInput } from "@/components/Editor/EditInput"
-import { EditRichText } from "@/components/Editor/EditRichText"
 import { RichTextContent } from "@/components/RichTextContent"
 import { AuthorByline } from "@/features/proposals/components/AuthorByline/AuthorByline"
 import { ProposalEditProvider } from "@/features/proposals/components/ProposalEditor/ProposalEditProvider"
@@ -10,6 +8,7 @@ import { ProposalStatusRow } from "@/features/proposals/components/ProposalStatu
 import { StatusAuthorCardServer } from "@/features/proposals/components/StatusAuthorCard/StatusAuthorCardServer"
 import { TagsCard } from "@/features/proposals/components/TagsCard/TagsCard"
 import { getProposalByIdCached } from "@/features/proposals/proposals.queries"
+import { ProposalEdit } from "../ProposalEditor/proposalEditFields"
 
 // pulls the id off the front, e.g. "12-peer-review" or just "12"
 const parseProposalId = (idSlug: string) => {
@@ -41,14 +40,14 @@ export const ProposalPage = async ({ params }: { params: Promise<{ idSlug: strin
           status={proposal.status}
           updatedAt={proposal.updatedAt}
         />
-        <EditInput
+        <ProposalEdit.Input
           label="Title"
           name="title"
           value={proposal.title}
           view={<Heading level="h1">{proposal.title}</Heading>}
         />
         <AuthorByline authors={authors} />
-        <EditInput
+        <ProposalEdit.Input
           label="Summary"
           maxLength={500}
           multiline
@@ -56,7 +55,7 @@ export const ProposalPage = async ({ params }: { params: Promise<{ idSlug: strin
           value={proposal.summary}
           view={<p className="text-muted-foreground">{proposal.summary}</p>}
         />
-        <EditRichText
+        <ProposalEdit.RichText
           className="[&_[contenteditable]]:min-h-72"
           label="Body"
           name="body"
