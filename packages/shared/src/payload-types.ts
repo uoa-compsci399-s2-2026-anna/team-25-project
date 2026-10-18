@@ -354,7 +354,12 @@ export interface Course {
 export interface CourseVersion {
   id: number;
   course: number | Course;
-  period: string;
+  term?: ('summerSchool' | 'semester1' | 'semester2' | 'fullYear') | null;
+  year?: number | null;
+  /**
+   * Derived from the term and year.
+   */
+  period?: string | null;
   startDate: string;
   endDate: string;
   /**
@@ -824,6 +829,8 @@ export interface CoursesSelect<T extends boolean = true> {
  */
 export interface CourseVersionsSelect<T extends boolean = true> {
   course?: T;
+  term?: T;
+  year?: T;
   period?: T;
   startDate?: T;
   endDate?: T;

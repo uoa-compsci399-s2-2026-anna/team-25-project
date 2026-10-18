@@ -1,4 +1,5 @@
 import { isDeepStrictEqual } from "node:util"
+import { derivePeriod } from "@repo/shared/enums/courses"
 import type { Course, CourseVersion } from "@repo/shared/payload-types"
 import type {
   CollectionAfterChangeHook,
@@ -47,8 +48,10 @@ const publicationKeys = [
 ] as const
 
 // Optional, so publication does not require it, but a correction can still change it.
+// `period` is left out: it is derived from term and year, so they already cover it.
 const contentKeys = [
-  "period",
+  "term",
+  "year",
   "startDate",
   "endDate",
   ...publicationKeys,
@@ -157,10 +160,42 @@ export function validateVersionChanges(
 function validatePeriod(version: Partial<CourseVersion>) {
   const start = Date.parse(version.startDate ?? "")
   const end = Date.parse(version.endDate ?? "")
-  if (!version.period?.trim() || !Number.isFinite(start) || !Number.isFinite(end))
-    fail("A period label and valid start and end dates are required.")
+  if (!version.term || !version.year || !Number.isFinite(start) || !Number.isFinite(end))
+    fail("A term, year and valid start and end dates are required.")
 
   if (end < start) fail("The end date cannot precede the start date.")
+}
+
+// Re-exported for the hook's tests; the label rule itself lives in shared.
+export { derivePeriod }
+
+// The unique index on (course, year, term) is the backstop; this names the clash
+// instead of surfacing a constraint violation. It reads the collection table, so
+// it sees every published offering and every never-published draft, and runs
+// under the course lock prepareVersion already holds.
+async function assertPeriodFree(
+  req: PayloadRequest,
+  courseId: number,
+  version: Partial<CourseVersion>,
+  ownId?: number,
+) {
+  const period = derivePeriod(version)
+  if (!period) return
+
+  const { totalDocs } = await req.payload.count({
+    collection: Slugs.Collections.COURSE_VERSIONS,
+    where: {
+      and: [
+        { course: { equals: courseId } },
+        { term: { equals: version.term } },
+        { year: { equals: version.year } },
+        ...(ownId ? [{ id: { not_equals: ownId } }] : []),
+      ],
+    },
+    req,
+    overrideAccess: true,
+  })
+  if (totalDocs > 0) fail(`This course already has an offering for ${period}.`, 409)
 }
 
 async function snapshotTeachingTeam(req: PayloadRequest, version: Partial<CourseVersion>) {
@@ -288,7 +323,9 @@ export const prepareVersion: CollectionBeforeValidateHook<CourseVersion> = async
 
   data.course = course.id
   const next = mergeWithSaved(latest, data)
+  next.period = data.period = derivePeriod(next)
   if (!savingDraft) validatePeriod(next)
+  await assertPeriodFree(req, course.id, next, latest ? requireID(latest.id) : undefined)
 
   // Publication is the only writer of the metadata. Dropping the keys otherwise
   // leaves the stored columns untouched, so the guard above decides whether a

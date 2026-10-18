@@ -1,4 +1,6 @@
-import { CourseDeliveryFormat } from "@repo/shared/enums/courses"
+import { CourseDeliveryFormat, CourseTermLabels } from "@repo/shared/enums/courses"
+import { EARLIEST_OFFERING_YEAR, LATEST_OFFERING_YEAR } from "@repo/shared/schemas/courses"
+import { toSelectOptions } from "@repo/shared/utils/select-options"
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { isSignedIn } from "../access"
@@ -20,6 +22,9 @@ export const CourseVersions: CollectionConfig = {
   slug: Slugs.Collections.COURSE_VERSIONS,
   labels: { singular: "Course offering", plural: "Course offerings" },
   admin: { useAsTitle: "period", defaultColumns: ["course", "period", "startDate", "_status"] },
+  // One offering per teaching period. Drafts may leave the period unset, and
+  // Postgres never treats two NULLs as equal, so any number of them can coexist.
+  indexes: [{ fields: ["course", "year", "term"], unique: true }],
   versions: {
     drafts: {
       autosave: false,
@@ -48,7 +53,32 @@ export const CourseVersions: CollectionConfig = {
       required: true,
       index: true,
     },
-    { name: "period", type: "text", required: true },
+    {
+      type: "row",
+      fields: [
+        // Not `required`: a draft can exist before its teaching period is settled.
+        // validatePeriod requires both for anything else.
+        {
+          name: "term",
+          type: "select",
+          options: toSelectOptions(CourseTermLabels),
+          admin: { width: "50%" },
+        },
+        {
+          name: "year",
+          type: "number",
+          min: EARLIEST_OFFERING_YEAR,
+          max: LATEST_OFFERING_YEAR,
+          admin: { width: "50%" },
+        },
+      ],
+    },
+    {
+      // Derived from term and year by prepareVersion, so it can't drift from them.
+      name: "period",
+      type: "text",
+      admin: { readOnly: true, description: "Derived from the term and year." },
+    },
     { name: "startDate", type: "date", required: true, index: true },
     { name: "endDate", type: "date", required: true },
     {

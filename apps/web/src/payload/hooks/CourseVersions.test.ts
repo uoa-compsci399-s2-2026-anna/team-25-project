@@ -6,6 +6,7 @@ import { lockDocument } from "@/lib/payload/lock"
 import { Slugs } from "@/lib/payload/slugs"
 import {
   assertVersionDeletable,
+  derivePeriod,
   prepareVersion,
   revalidateCourseVersions,
   revalidateDeletedCourseVersion,
@@ -82,11 +83,17 @@ describe("publication validation", () => {
       ),
     ).toThrow("no content changes")
 
+    // `period` is derived from term and year, so on its own it is not content.
     expect(() =>
-      validatePublication(
-        { ...previous, period: "Corrected", changeSummary: "Fix period" },
-        previous,
-      ),
+      validatePublication({ ...previous, period: "Corrected", changeSummary: "Relabel" }, previous),
+    ).toThrow("no content changes")
+
+    expect(() =>
+      validatePublication({ ...previous, term: "semester2", changeSummary: "Fix term" }, previous),
+    ).not.toThrow()
+
+    expect(() =>
+      validatePublication({ ...previous, year: 2027, changeSummary: "Fix year" }, previous),
     ).not.toThrow()
 
     expect(() =>
@@ -176,11 +183,12 @@ describe("publication content detection", () => {
 describe("correction change summaries", () => {
   const previous = {
     ...complete,
-    period: "S1",
+    term: "semester1",
+    year: 2026,
     changeSummary: "Fixed assessment weighting",
   } as unknown as CourseVersion
 
-  const correction = { ...previous, period: "S2" }
+  const correction = { ...previous, term: "semester2" } as CourseVersion
 
   it("rejects a summary carried over from the previous correction", () => {
     expect(() => validatePublication(correction, previous)).toThrow(
@@ -260,7 +268,12 @@ describe("metadata comparison", () => {
   })
 })
 
-const period = { period: "S1 2026", startDate: "2026-02-23", endDate: "2026-06-27" }
+const period = {
+  term: "semester1",
+  year: 2026,
+  startDate: "2026-02-23",
+  endDate: "2026-06-27",
+} as const
 
 const publishable = { ...complete, ...period, course: 5 } as Partial<CourseVersion>
 
@@ -285,6 +298,8 @@ const request = ({
     internalAtUpdate.push(isInternal())
     return {}
   })
+  // Counts the offerings that already hold a period; none clash unless a test says so.
+  const count = vi.fn(async () => ({ totalDocs: 0 }))
   const findByID = vi.fn(async ({ collection }: { collection: string }) => {
     if (collection === Slugs.Collections.COURSE_VERSIONS) return current
     if (collection === Slugs.Collections.MEMBERS)
@@ -298,8 +313,9 @@ const request = ({
     req: {
       user,
       context: write ? { [VERSION_WRITE]: write } : {},
-      payload: { findByID, update },
+      payload: { count, findByID, update },
     } as unknown as PayloadRequest,
+    count,
     findByID,
     update,
     internalAtUpdate,
@@ -369,7 +385,7 @@ describe("prepareVersion guards", () => {
 
   it("reports an update of an offering that is not there", async () => {
     const { req } = request()
-    await expect(prepare(req, { period: "S2" }, "update")).rejects.toThrow(
+    await expect(prepare(req, { term: "semester2" }, "update")).rejects.toThrow(
       "This offering was not found.",
     )
   })
@@ -390,7 +406,8 @@ describe("prepareVersion guards", () => {
   })
 
   it.each([
-    ["a missing period label", { period: "  " }],
+    ["a missing term", { term: null }],
+    ["a missing year", { year: null }],
     ["an unparseable start date", { startDate: "not a date" }],
     ["a missing start date", { startDate: null }],
     ["a missing end date", { endDate: null }],
@@ -399,7 +416,7 @@ describe("prepareVersion guards", () => {
 
     await expect(
       prepare(req, { ...publishable, ...change } as unknown as Partial<CourseVersion>),
-    ).rejects.toThrow("A period label and valid start and end dates are required.")
+    ).rejects.toThrow("A term, year and valid start and end dates are required.")
   })
 
   it("refuses an end date before the start date", async () => {
@@ -421,12 +438,127 @@ describe("prepareVersion guards", () => {
   })
 })
 
+describe("derivePeriod", () => {
+  it("labels the term and year together", () => {
+    expect(derivePeriod({ term: "semester2", year: 2026 })).toBe("Semester 2 2026")
+    expect(derivePeriod({ term: "summerSchool", year: 2027 })).toBe("Summer School 2027")
+  })
+
+  it.each([
+    ["no term", { year: 2026 }],
+    ["no year", { term: "semester1" }],
+    ["neither", {}],
+  ] as const)("is null with %s", (_label, version) => {
+    expect(derivePeriod(version)).toBeNull()
+  })
+})
+
+describe("prepareVersion periods", () => {
+  it("derives the period label from the term and year on create", async () => {
+    const { req } = request()
+
+    await expect(prepare(req, publishable)).resolves.toMatchObject({ period: "Semester 1 2026" })
+  })
+
+  it("re-derives the period when an update changes the term", async () => {
+    const latest = { id: 3, course: 5, ...period, period: "Semester 1 2026" } as CourseVersion
+    const { req } = request({ current: latest })
+
+    await expect(prepare(req, { term: "semester2" }, "update", latest)).resolves.toMatchObject({
+      period: "Semester 2 2026",
+    })
+  })
+
+  // The halves a partial update omits are the saved ones, so the label survives it.
+  it("keeps the saved term and year when an update sends neither", async () => {
+    const latest = { id: 3, course: 5, ...period, period: "Semester 1 2026" } as CourseVersion
+    const { req } = request({ current: latest })
+
+    await expect(prepare(req, { name: "Renamed" }, "update", latest)).resolves.toMatchObject({
+      period: "Semester 1 2026",
+    })
+  })
+
+  // A caller cannot set its own label: whatever it sends is overwritten.
+  it("ignores a period label the caller sends", async () => {
+    const { req } = request()
+
+    await expect(
+      prepare(req, { ...publishable, period: "Whenever" } as Partial<CourseVersion>),
+    ).resolves.toMatchObject({ period: "Semester 1 2026" })
+  })
+
+  it.each([
+    ["no term", { year: 2026 }],
+    ["no year", { term: "semester1" }],
+  ] as const)("leaves the period null on a draft with %s", async (_label, half) => {
+    const { req, count } = request({ write: { draft: true, sentMetadataKeys: new Set() } })
+
+    await expect(prepare(req, { course: 5, name: "Draft", ...half })).resolves.toMatchObject({
+      period: null,
+    })
+    // Without a whole period there is nothing for another offering to clash with.
+    expect(count).not.toHaveBeenCalled()
+  })
+
+  it("refuses a second offering of the course for the same period", async () => {
+    const { req, count } = request()
+    count.mockResolvedValue({ totalDocs: 1 })
+
+    const write = prepare(req, publishable)
+    await expect(write).rejects.toThrow("This course already has an offering for Semester 1 2026.")
+    await expect(write).rejects.toMatchObject({ status: 409 })
+    expect(count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: Slugs.Collections.COURSE_VERSIONS,
+        where: {
+          and: [
+            { course: { equals: 5 } },
+            { term: { equals: "semester1" } },
+            { year: { equals: 2026 } },
+          ],
+        },
+      }),
+    )
+  })
+
+  // The offering being saved already holds its own period, so it must not count.
+  it("excludes the offering itself when an update checks for a clash", async () => {
+    const latest = { id: 3, course: 5, ...period } as unknown as CourseVersion
+    const { req, count } = request({ current: latest })
+
+    await prepare(req, { name: "Renamed" }, "update", latest)
+    expect(count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          and: [
+            { course: { equals: 5 } },
+            { term: { equals: "semester1" } },
+            { year: { equals: 2026 } },
+            { id: { not_equals: 3 } },
+          ],
+        },
+      }),
+    )
+  })
+
+  it("still refuses a clashing period on a draft save", async () => {
+    const { req, count } = request({ write: { draft: true, sentMetadataKeys: new Set() } })
+    count.mockResolvedValue({ totalDocs: 1 })
+
+    await expect(prepare(req, { course: 5, term: "semester2", year: 2026 })).rejects.toThrow(
+      "This course already has an offering for Semester 2 2026.",
+    )
+  })
+})
+
 describe("prepareVersion drafts", () => {
-  it("creates a draft with no period or dates yet - a draft only needs a course", async () => {
+  it("creates a draft with no term, year or dates yet - a draft only needs a course", async () => {
     const { req } = request({ write: { draft: true, sentMetadataKeys: new Set() } })
 
     await expect(prepare(req, { course: 5, name: "Working title" })).resolves.toMatchObject({
       name: "Working title",
+      period: null,
     })
   })
 
@@ -434,7 +566,7 @@ describe("prepareVersion drafts", () => {
     const { req } = request()
 
     await expect(prepare(req, { course: 5, name: "Working title" })).rejects.toThrow(
-      "A period label and valid start and end dates are required.",
+      "A term, year and valid start and end dates are required.",
     )
   })
 

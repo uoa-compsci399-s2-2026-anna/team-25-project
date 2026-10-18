@@ -1,7 +1,7 @@
 /** Seeds the local database with an admin account and development fixtures. */
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { CourseDeliveryFormat } from "@repo/shared/enums/courses"
+import { CourseDeliveryFormat, CourseTerm } from "@repo/shared/enums/courses"
 import { MemberTitle } from "@repo/shared/enums/members"
 import {
   ProposalEthicsStatus,
@@ -184,32 +184,64 @@ const courses = [
   ["COMP3900", "UNSW Sydney", "noah.taylor@unsw.edu.au", []],
 ] as const
 
+const compsci399 = {
+  course: "COMPSCI 399",
+  status: "published",
+  name: "Capstone: Computer Science",
+  programme: "Bachelor of Science",
+  deliveryFormat: CourseDeliveryFormat.IN_PERSON,
+  projectType: "Team capstone project",
+  learningOutcomes:
+    "Work in a small team to analyse a substantial problem, design a solution, build an artefact and present it.",
+  assessments: "Team project milestones, final artefact, presentation and individual reflection.",
+  additionalInfo: "Projects come from industry clients. Teams meet their client every two weeks.",
+  teachingTeam: [
+    ["arohan.patel@auckland.ac.nz", "Course coordinator"],
+    ["maya.chen@auckland.ac.nz", "Lecturer"],
+  ],
+} as const
+
 // Created as the course owner so the publication hooks write the snapshot and
-// publisher, as they would for a real publication.
+// publisher, as they would for a real publication. COMPSCI 399 runs every
+// semester, so it has ended, in-progress and upcoming offerings to switch between.
 const offerings = [
   {
-    course: "COMPSCI 399",
-    status: "published",
-    period: "2026 Semester 2",
+    ...compsci399,
+    term: CourseTerm.SEMESTER_2,
+    year: 2025,
+    startDate: "2025-07-21T00:00:00.000Z",
+    endDate: "2025-11-07T00:00:00.000Z",
+    assessments: "Team project milestones, final artefact and presentation.",
+    teachingTeam: [["arohan.patel@auckland.ac.nz", "Course coordinator"]],
+  },
+  {
+    ...compsci399,
+    term: CourseTerm.SEMESTER_1,
+    year: 2026,
+    startDate: "2026-03-02T00:00:00.000Z",
+    endDate: "2026-06-26T00:00:00.000Z",
+  },
+  {
+    ...compsci399,
+    term: CourseTerm.SEMESTER_2,
+    year: 2026,
     startDate: "2026-07-20T00:00:00.000Z",
     endDate: "2026-11-06T00:00:00.000Z",
-    name: "Capstone: Computer Science",
-    programme: "Bachelor of Science",
-    deliveryFormat: CourseDeliveryFormat.IN_PERSON,
-    projectType: "Team capstone project",
-    learningOutcomes:
-      "Work in a small team to analyse a substantial problem, design a solution, build an artefact and present it.",
-    assessments: "Team project milestones, final artefact, presentation and individual reflection.",
-    additionalInfo: "Projects come from industry clients. Teams meet their client every two weeks.",
-    teachingTeam: [
-      ["arohan.patel@auckland.ac.nz", "Course coordinator"],
-      ["maya.chen@auckland.ac.nz", "Lecturer"],
-    ],
+  },
+  {
+    ...compsci399,
+    term: CourseTerm.SEMESTER_1,
+    year: 2027,
+    startDate: "2027-03-01T00:00:00.000Z",
+    endDate: "2027-06-25T00:00:00.000Z",
+    additionalInfo:
+      "Projects come from industry clients. Teams meet their client weekly from this semester.",
   },
   {
     course: "COSC 345",
     status: "draft",
-    period: "2027 Full Year",
+    term: CourseTerm.FULL_YEAR,
+    year: 2027,
     startDate: "2027-02-22T00:00:00.000Z",
     endDate: "2027-10-15T00:00:00.000Z",
     name: "Software Engineering",
@@ -669,7 +701,13 @@ export const seed = async () => {
     const course = requiredID(courseIds, code)
     const existing = await payload.find({
       collection: Slugs.Collections.COURSE_VERSIONS,
-      where: { and: [{ course: { equals: course } }, { period: { equals: fixture.period } }] },
+      where: {
+        and: [
+          { course: { equals: course } },
+          { term: { equals: fixture.term } },
+          { year: { equals: fixture.year } },
+        ],
+      },
       depth: 0,
       limit: 1,
     })
