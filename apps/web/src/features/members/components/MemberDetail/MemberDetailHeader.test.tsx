@@ -2,9 +2,9 @@ import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getInstitutionCached } from "@/features/institutions/institutions.queries"
+import { MemberEditProvider } from "@/features/members/components/MemberEditor/MemberEditProvider"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getMemberDetailsCached } from "../../members.queries"
-import { EditProvider } from "../MemberEditor/EditContext"
 import { MemberHeader, MemberHeaderSkeleton } from "./MemberDetailHeader"
 
 vi.mock("../../members.queries", () => ({ getMemberDetailsCached: vi.fn() }))
@@ -31,12 +31,12 @@ const member = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 })
 
-// The page wraps everything in EditProvider, so the header is rendered the same way.
+// The page wraps everything in MemberEditProvider, so the header is rendered the same way.
 const renderHeader = async () =>
   render(
-    <EditProvider>
+    <MemberEditProvider>
       {await MemberHeader({ params: Promise.resolve({ memberId: "7" }) })}
-    </EditProvider>,
+    </MemberEditProvider>,
   )
 
 describe("MemberHeader", () => {

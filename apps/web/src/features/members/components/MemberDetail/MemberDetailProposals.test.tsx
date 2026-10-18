@@ -5,6 +5,8 @@ import { getMemberProposalsCached } from "../../members.queries"
 import { MemberProposals, MemberProposalsSkeleton } from "./MemberDetailProposals"
 
 vi.mock("../../members.queries", () => ({ getMemberProposalsCached: vi.fn() }))
+// Someone else's profile, so no Edit links.
+vi.mock("../../members.ownership", () => ({ isOwnProfile: vi.fn().mockResolvedValue(false) }))
 
 const renderProposals = async () =>
   render(await MemberProposals({ params: Promise.resolve({ memberId: "7" }) }))

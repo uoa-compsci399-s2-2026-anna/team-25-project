@@ -12,15 +12,13 @@ import {
   Skeleton,
 } from "@repo/ui/components/ui"
 import { notFound } from "next/navigation"
+import { EditButton } from "@/components/Editor/EditButton"
+import { EditSwitch, ViewOnly } from "@/components/Editor/EditField"
 import { getInstitutionCached } from "@/features/institutions/institutions.queries"
 import { isOwnProfile } from "../../members.ownership"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberDetailsCached } from "../../members.queries"
-import { EditButton } from "../MemberEditor/EditButton"
-import { EditSwitch, ViewOnly } from "../MemberEditor/EditField"
-import { EditInput } from "../MemberEditor/EditInput"
-import { EditSelect } from "../MemberEditor/EditSelect"
-import { EditUploadAvatar } from "../MemberEditor/EditUploadAvatar"
+import { MemberEdit } from "../MemberEditor/memberEditFields"
 
 // Built from the enum, so the dropdown can only offer approved titles.
 const titleOptions = toSelectOptions(MemberTitleLabels)
@@ -55,7 +53,7 @@ export const MemberHeader = async ({ params }: { params: MembersRouteParams }) =
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-6 max-md:flex-col max-md:text-center">
-        <EditUploadAvatar
+        <MemberEdit.UploadAvatar
           fallback={<span className="text-3xl">{memberInitials}</span>}
           image={avatarUrl ? { alt: "", src: avatarUrl } : undefined}
           name="avatar"
@@ -69,7 +67,7 @@ export const MemberHeader = async ({ params }: { params: MembersRouteParams }) =
         <div className="flex min-w-0 flex-1 flex-col gap-2 max-md:items-center">
           <EditSwitch view={<Heading level="h1">{fullName}</Heading>}>
             <div className="flex flex-wrap items-start gap-2 max-md:justify-center">
-              <EditSelect
+              <MemberEdit.Select
                 className="w-32"
                 label="Title"
                 name="title"
@@ -77,13 +75,13 @@ export const MemberHeader = async ({ params }: { params: MembersRouteParams }) =
                 options={titleOptions}
                 value={member.title}
               />
-              <EditInput
+              <MemberEdit.Input
                 className="w-40"
                 label="First name"
                 name="firstName"
                 value={member.firstName}
               />
-              <EditInput
+              <MemberEdit.Input
                 className="w-40"
                 label="Last name"
                 name="lastName"
@@ -92,7 +90,7 @@ export const MemberHeader = async ({ params }: { params: MembersRouteParams }) =
             </div>
           </EditSwitch>
           <div className="flex flex-row flex-wrap items-center gap-1 text-muted-foreground max-md:justify-center max-md:text-sm">
-            <EditInput
+            <MemberEdit.Input
               className="max-w-xs"
               label="Position"
               maxLength={POSITION_MAX_LENGTH}

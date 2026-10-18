@@ -7,7 +7,7 @@ import { formatDate } from "@/features/courses/courses.format"
 import { Routes } from "@/lib/routes"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberCoursesCached, getMemberDetailsCached } from "../../members.queries"
-import { EditTagList } from "../MemberEditor/EditTagList"
+import { MemberEdit } from "../MemberEditor/memberEditFields"
 import { mobileSection } from "./mobileSection"
 
 // A sidebar card on wide screens; on phones a plain section like the rest of the profile.
@@ -81,7 +81,7 @@ export const MemberStats = async ({ params }: { params: MembersRouteParams }) =>
         )}
       </StatCard>
       <StatCard className="max-md:order-8" label="Research interests">
-        <EditTagList
+        <MemberEdit.TagList
           itemLabel="research interest"
           label="Research interests"
           max={RESEARCH_INTERESTS_MAX}

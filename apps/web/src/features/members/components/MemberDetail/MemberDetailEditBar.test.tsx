@@ -1,8 +1,8 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { MemberEditProvider } from "@/features/members/components/MemberEditor/MemberEditProvider"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
-import { EditProvider } from "../MemberEditor/EditContext"
 import { MemberEditBar } from "./MemberDetailEditBar"
 
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
@@ -13,12 +13,12 @@ vi.mock("next/navigation", () => ({
   }),
 }))
 
-// The page wraps everything in EditProvider, so the bar is rendered the same way.
+// The page wraps everything in MemberEditProvider, so the bar is rendered the same way.
 const renderBar = async () =>
   render(
-    <EditProvider>
+    <MemberEditProvider>
       {await MemberEditBar({ params: Promise.resolve({ memberId: "7" }) })}
-    </EditProvider>,
+    </MemberEditProvider>,
   )
 
 describe("MemberEditBar", () => {

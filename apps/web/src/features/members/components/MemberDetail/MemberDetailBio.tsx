@@ -1,9 +1,9 @@
 import { Skeleton } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
+import { EditDiv } from "@/components/Editor/EditDiv"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberDetailsCached } from "../../members.queries"
-import { EditDiv } from "../MemberEditor/EditDiv"
-import { EditInput } from "../MemberEditor/EditInput"
+import { MemberEdit } from "../MemberEditor/memberEditFields"
 import { mobileSection } from "./mobileSection"
 
 export const MemberBio = async ({ params }: { params: MembersRouteParams }) => {
@@ -19,7 +19,7 @@ export const MemberBio = async ({ params }: { params: MembersRouteParams }) => {
     >
       <EditDiv view={member?.bio?.trim() && heading}>{heading}</EditDiv>
 
-      <EditInput
+      <MemberEdit.Input
         label="About"
         multiline
         name="bio"

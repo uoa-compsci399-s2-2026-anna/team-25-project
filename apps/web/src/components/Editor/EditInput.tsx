@@ -2,7 +2,10 @@
 
 import { Input, TextArea } from "@repo/ui/components/ui"
 import type { ComponentProps, ReactNode } from "react"
-import { EditField, type FieldsOfType } from "./EditField"
+import { EditField } from "./EditField"
+
+/** What EditInput writes to its field. */
+export type EditInputValue = string
 
 /** A text attribute - single line by default, `multiline` for longer text like a bio. */
 export const EditInput = ({
@@ -19,13 +22,13 @@ export const EditInput = ({
   label: string
   maxLength?: number
   multiline?: boolean
-  name: FieldsOfType<string>
+  name: string
   placeholder?: string
   /** Payload leaves optional text fields null/undefined, so both are accepted. */
   value: string | null | undefined
   view?: ReactNode
 }) => (
-  <EditField label={label} name={name} value={value ?? ""} view={view}>
+  <EditField<EditInputValue> label={label} name={name} value={value ?? ""} view={view}>
     {(control) => {
       const props = {
         "aria-invalid": control.invalid || undefined,

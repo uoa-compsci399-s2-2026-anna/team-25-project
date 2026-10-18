@@ -2,7 +2,10 @@
 
 import { Badge, Button, Input } from "@repo/ui/components/ui"
 import type { ReactNode } from "react"
-import { EditField, type FieldsOfType } from "./EditField"
+import { EditField } from "./EditField"
+
+/** What EditTagList writes to its field. */
+export type EditTagListValue = string[]
 
 export const EditTagList = ({
   itemLabel,
@@ -18,11 +21,11 @@ export const EditTagList = ({
   label: string
   max?: number
   maxLength?: number
-  name: FieldsOfType<string[]>
+  name: string
   value: string[] | null | undefined
   view?: ReactNode
 }) => (
-  <EditField label={label} name={name} value={value ?? []} view={view}>
+  <EditField<EditTagListValue> label={label} name={name} value={value ?? []} view={view}>
     {({ disabled, label: listLabel, setValue, value: items }) => {
       const update = (index: number, next: string) =>
         setValue(items.map((item, i) => (i === index ? next : item)))
