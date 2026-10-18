@@ -50,11 +50,12 @@ const publishInput = {
   endDate: "2026-11-06",
   intent: "publish" as const,
   learningOutcomes: richText("Design and ship a production system."),
-  period: "Semester 2, 2026",
   programme: "Bachelor of Computer Science",
   projectType: "Industry-sponsored",
   role: "Course Coordinator",
   startDate: "2026-07-13",
+  term: "semester2" as const,
+  year: "2026",
 }
 
 const member = { collection: "members" as const, user: { firstName: "Anna", id: 7 } }
@@ -167,10 +168,11 @@ describe("updateDraftCourse", () => {
         assessments: null,
         deliveryFormat: "",
         endDate: "",
-        period: "",
         programme: "",
         projectType: "",
         startDate: "",
+        term: "",
+        year: "",
       })
 
       expect(versionUpdate(payload)?.data).toEqual(
@@ -180,12 +182,25 @@ describe("updateDraftCourse", () => {
           deliveryFormat: null,
           endDate: null,
           learningOutcomes: null,
-          period: null,
           programme: null,
           projectType: null,
           startDate: null,
+          term: null,
+          year: null,
         }),
       )
+    })
+
+    it("saves the term and year it is sent, the year as a number", async () => {
+      const payload = mockPayload()
+
+      await updateDraftCourse({ ...draftInput, term: "summerSchool", year: "2027" })
+
+      expect(versionUpdate(payload)?.data).toEqual(
+        expect.objectContaining({ term: "summerSchool", year: 2027 }),
+      )
+      // prepareVersion derives the label from these, so the action never sends one.
+      expect(versionUpdate(payload)?.data).not.toHaveProperty("period")
     })
 
     it("leaves the course alone when its code hasn't changed", async () => {
@@ -230,6 +245,8 @@ describe("updateDraftCourse", () => {
             _status: "published",
             name: publishInput.name,
             teachingTeam: [{ member: member.user.id, role: publishInput.role }],
+            term: "semester2",
+            year: 2026,
           }),
           draft: false,
           id: 100,

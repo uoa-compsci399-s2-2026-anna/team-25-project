@@ -103,9 +103,11 @@ export const toVersionData = <Blank extends null | undefined>(
     endDate: text(input.endDate),
     learningOutcomes: richText(input.learningOutcomes),
     name: input.name,
-    period: text(input.period),
     programme: text(input.programme),
     projectType: text(input.projectType),
     startDate: text(input.startDate),
+    // `period` is left to prepareVersion, which derives it from these two.
+    term: input.term ? input.term : blank,
+    year: input.year ? Number(input.year) : blank,
   }
 }

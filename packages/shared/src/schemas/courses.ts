@@ -1,4 +1,4 @@
-import { CourseDeliveryFormat } from "@repo/shared/enums/courses"
+import { CourseDeliveryFormat, CourseTerm } from "@repo/shared/enums/courses"
 import { z } from "zod"
 import { richTextHasText, richTextSchema } from "./shared"
 
@@ -15,7 +15,7 @@ export type CreateCourseInput = z.infer<typeof createCourseSchema>
 
 /**
  * Draft: only the two things needed to find and recognise it later. Even the
- * teaching period is settled later, before publication (see the
+ * teaching period (term and year) is settled later, before publication (see the
  * CourseVersions collection hooks' `validatePeriod`, which now skips a draft
  * save for the same reason).
  */
@@ -46,6 +46,16 @@ const offeringDate = z
     return year === null || (year >= EARLIEST_OFFERING_YEAR && year <= LATEST_OFFERING_YEAR)
   }, `Year must be between ${EARLIEST_OFFERING_YEAR} and ${LATEST_OFFERING_YEAR}`)
 
+// A text input, so the year arrives as a string; the actions convert it.
+const offeringYear = z
+  .string()
+  .trim()
+  .regex(/^\d{4}$/, "Enter a four-digit year")
+  .refine((value) => {
+    const year = Number(value)
+    return year >= EARLIEST_OFFERING_YEAR && year <= LATEST_OFFERING_YEAR
+  }, `Year must be between ${EARLIEST_OFFERING_YEAR} and ${LATEST_OFFERING_YEAR}`)
+
 const draftOfferingFields = {
   additionalInfo: richTextSchema.nullable().optional(),
   assessments: richTextSchema.nullable().optional(),
@@ -58,11 +68,13 @@ const draftOfferingFields = {
   endDate: z.union([offeringDate, z.literal("")]).optional(),
   learningOutcomes: richTextSchema.nullable().optional(),
   name: z.string().trim().min(1, "Course name is required"),
-  period: z.string().trim().optional(),
   programme: z.string().trim().optional(),
   projectType: z.string().trim().optional(),
   role: z.string().trim().optional(),
   startDate: z.union([offeringDate, z.literal("")]).optional(),
+  // Untouched, the term Select and year input send "" - like deliveryFormat.
+  term: z.union([z.enum(CourseTerm), z.literal("")]).optional(),
+  year: z.union([offeringYear, z.literal("")]).optional(),
 }
 
 /**
@@ -80,11 +92,12 @@ const publishOfferingFields = {
   endDate: z.string().min(1, "End date is required").pipe(offeringDate),
   learningOutcomes: requiredRichText("Learning outcomes are required to publish"),
   name: z.string().trim().min(1, "Course name is required to publish"),
-  period: z.string().trim().min(1, "Teaching period is required"),
   programme: z.string().trim().min(1, "Course program is required to publish"),
   projectType: z.string().trim().min(1, "Project type is required to publish"),
   role: z.string().trim().min(1, "Your role is required to publish"),
   startDate: z.string().min(1, "Start date is required").pipe(offeringDate),
+  term: z.enum(CourseTerm, { error: "Select a term to publish" }),
+  year: z.string().trim().min(1, "Year is required").pipe(offeringYear),
 }
 
 export const addCourseFormSchema = z

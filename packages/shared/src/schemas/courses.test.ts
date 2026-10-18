@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { CourseDeliveryFormat } from "../enums/courses"
+import { CourseDeliveryFormat, CourseTerm } from "../enums/courses"
 import { addCourseFormSchema, createCourseSchema } from "./courses"
 
 const richText = (text: string) => ({
@@ -28,11 +28,12 @@ const publishInput = {
   endDate: "2026-11-06",
   intent: "publish" as const,
   learningOutcomes: richText("Design and ship a production system."),
-  period: "Semester 2, 2026",
   programme: "Bachelor of Computer Science",
   projectType: "Industry-sponsored",
   role: "Course Coordinator",
   startDate: "2026-07-13",
+  term: CourseTerm.SEMESTER_2,
+  year: "2026",
 }
 
 const issueFor = (result: ReturnType<typeof addCourseFormSchema.safeParse>, field: string) =>
@@ -68,11 +69,12 @@ describe("addCourseFormSchema (draft)", () => {
       deliveryFormat: "",
       endDate: "",
       learningOutcomes: null,
-      period: "",
       programme: "",
       projectType: "",
       role: "",
       startDate: "",
+      term: "",
+      year: "",
     })
     expect(result.success).toBe(true)
   })
@@ -103,7 +105,8 @@ describe("addCourseFormSchema (publish)", () => {
 
   it.each([
     "name",
-    "period",
+    "term",
+    "year",
     "startDate",
     "endDate",
     "programme",
@@ -162,6 +165,25 @@ describe("addCourseFormSchema (publish)", () => {
 
     expect(issueFor(result, "startDate")).toBe("Enter a valid date")
     expect(issueFor(result, "endDate")).toBe("Enter a valid date")
+  })
+
+  it.each([
+    ["two digits", "26", "Enter a four-digit year"],
+    ["words", "next year", "Enter a four-digit year"],
+    ["a year before any offering", "1999", "Year must be between 2000 and 2100"],
+    ["a year past any offering", "2101", "Year must be between 2000 and 2100"],
+  ])("rejects a year given as %s", (_label, year, message) => {
+    expect(issueFor(addCourseFormSchema.safeParse({ ...publishInput, year }), "year")).toBe(message)
+  })
+
+  it("rejects a term that isn't one of the offered ones", () => {
+    const result = addCourseFormSchema.safeParse({ ...publishInput, term: "semester3" })
+    expect(issueFor(result, "term")).toBe("Select a term to publish")
+  })
+
+  it("still bounds a year a draft is saved with", () => {
+    const result = addCourseFormSchema.safeParse({ ...draftInput, year: "1999" })
+    expect(issueFor(result, "year")).toBe("Year must be between 2000 and 2100")
   })
 
   it("rejects an end date before the start date", () => {

@@ -12,6 +12,11 @@ const deliveryFormatOptions = [
   { label: "Hybrid", value: "hybrid" },
 ]
 
+const termOptions = [
+  { label: "Semester 1", value: "semester1" },
+  { label: "Semester 2", value: "semester2" },
+]
+
 const emptyValues: AddCapstoneCourseDialogValues = {
   additionalInfo: null,
   assessments: null,
@@ -20,11 +25,12 @@ const emptyValues: AddCapstoneCourseDialogValues = {
   endDate: "",
   learningOutcomes: null,
   name: "",
-  period: "",
   programme: "",
   projectType: "",
   role: "",
   startDate: "",
+  term: "",
+  year: "",
 }
 
 const meta: Meta<typeof AddCapstoneCourseDialog> = {
@@ -52,6 +58,7 @@ export const Default: Story = {
         onSaveDraft={() => simulateSubmit("draft")}
         onValueChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
         submitting={submitting}
+        termOptions={termOptions}
         trigger={
           <Button size="xl" type="button" variant="button-mauve">
             + Add your course
@@ -88,6 +95,7 @@ export const EditingDraft: Story = {
         onSaveDraft={() => simulateSubmit("draft")}
         onValueChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
         submitting={submitting}
+        termOptions={termOptions}
         title="Edit draft course"
         trigger={
           <Button size="xl" type="button" variant="button-mauve">
@@ -110,13 +118,14 @@ export const WithErrors: Story = {
         fieldErrors={{
           code: "Course code is required",
           endDate: "The end date cannot precede the start date.",
-          period: "Teaching period is required",
+          term: "Select a term to publish",
         }}
         formError="Could not save this course. Try again."
         onPublish={() => {}}
         onSaveDraft={() => {}}
         onValueChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
         open
+        termOptions={termOptions}
         trigger={
           <Button size="xl" type="button" variant="button-mauve">
             + Add your course
@@ -148,6 +157,7 @@ export const MissingPublicationFields: Story = {
         onSaveDraft={() => {}}
         onValueChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
         open
+        termOptions={termOptions}
         trigger={
           <Button size="xl" type="button" variant="button-mauve">
             + Add your course

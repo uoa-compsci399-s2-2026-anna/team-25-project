@@ -26,7 +26,10 @@ import { RichTextEditor, type RichTextValue } from "../RichTextEditor/rich-text-
 
 export type AddCapstoneCourseDialogValues = {
   code: string
-  period: string
+  /** A value from `termOptions`, or "" until one is picked. */
+  term: string
+  /** Typed into a text input, so a string until the action converts it. */
+  year: string
   startDate: string
   endDate: string
   name: string
@@ -46,11 +49,12 @@ const requiredFields: Partial<Record<keyof AddCapstoneCourseDialogValues, true>>
   deliveryFormat: true,
   endDate: true,
   name: true,
-  period: true,
   programme: true,
   projectType: true,
   role: true,
   startDate: true,
+  term: true,
+  year: true,
   learningOutcomes: true,
   assessments: true,
 }
@@ -89,6 +93,8 @@ export type AddCapstoneCourseDialogProps = {
   formError?: string
   /** Kept out of the design system so it never couples to `CourseDeliveryFormat`. */
   deliveryFormatOptions: AddCapstoneCourseDialogOption[]
+  /** Kept out of the design system so it never couples to `CourseTerm`. */
+  termOptions: AddCapstoneCourseDialogOption[]
   /** Which action is in flight, so only that button shows a loading label. */
   submitting?: "draft" | "publish" | "delete"
   onSaveDraft: () => void
@@ -112,6 +118,7 @@ export function AddCapstoneCourseDialog({
   fieldErrors,
   formError,
   deliveryFormatOptions,
+  termOptions,
   submitting,
   onSaveDraft,
   onPublish,
@@ -133,11 +140,12 @@ export function AddCapstoneCourseDialog({
     endDate: React.useId(),
     learningOutcomes: React.useId(),
     name: React.useId(),
-    period: React.useId(),
     programme: React.useId(),
     projectType: React.useId(),
     role: React.useId(),
     startDate: React.useId(),
+    term: React.useId(),
+    year: React.useId(),
   }
 
   // A field error colors only the input's border and the message below it -
@@ -161,6 +169,41 @@ export function AddCapstoneCourseDialog({
         value={values[field]}
         {...inputProps}
       />
+      {fieldErrors?.[field] && <FieldError>{fieldErrors[field]}</FieldError>}
+    </Field>
+  )
+
+  const selectField = (
+    field: "deliveryFormat" | "term",
+    label: string,
+    options: AddCapstoneCourseDialogOption[],
+    placeholder: string,
+  ) => (
+    <Field>
+      <FieldLabel htmlFor={ids[field]}>
+        {label} {requiredFields[field] && <RequiredAsterisk />}
+      </FieldLabel>
+      <Select
+        items={options}
+        onValueChange={(next) => onValueChange(field, next ?? "")}
+        value={values[field] || null}
+      >
+        <SelectTrigger
+          aria-invalid={Boolean(fieldErrors?.[field]) || undefined}
+          aria-required={requiredFields[field] || undefined}
+          className="w-full px-3 data-[size=default]:h-10"
+          id={ids[field]}
+        >
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent align="start" alignItemWithTrigger={false}>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       {fieldErrors?.[field] && <FieldError>{fieldErrors[field]}</FieldError>}
     </Field>
   )
@@ -222,47 +265,24 @@ export function AddCapstoneCourseDialog({
               {textField("programme", "Course program")}
             </FieldGroup>
 
-            <FieldGroup className="grid gap-4 md:grid-cols-3">
-              {textField("period", "Teaching period", {
-                // "<year> <term>" - the table's splitPeriod parses the first
-                // token as the year, so this order isn't just cosmetic.
-                placeholder: "e.g. 2026 Semester 2",
+            <FieldGroup className="grid gap-4 md:grid-cols-2">
+              {selectField("term", "Term", termOptions, "Select a term")}
+              {textField("year", "Year", {
+                inputMode: "numeric",
+                maxLength: 4,
+                placeholder: "e.g. 2026",
               })}
               {textField("startDate", "Start date", { type: "date" })}
               {textField("endDate", "End date", { type: "date" })}
             </FieldGroup>
 
             <FieldGroup className="grid gap-4 md:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor={ids.deliveryFormat}>
-                  Delivery format
-                  <RequiredAsterisk />
-                </FieldLabel>
-                <Select
-                  items={deliveryFormatOptions}
-                  onValueChange={(next) => onValueChange("deliveryFormat", next ?? "")}
-                  value={values.deliveryFormat || null}
-                >
-                  <SelectTrigger
-                    aria-invalid={Boolean(fieldErrors?.deliveryFormat) || undefined}
-                    aria-required={requiredFields.deliveryFormat || undefined}
-                    className="w-full px-3 data-[size=default]:h-10"
-                    id={ids.deliveryFormat}
-                  >
-                    <SelectValue placeholder="Select a delivery format" />
-                  </SelectTrigger>
-                  <SelectContent align="start" alignItemWithTrigger={false}>
-                    {deliveryFormatOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {fieldErrors?.deliveryFormat && (
-                  <FieldError>{fieldErrors.deliveryFormat}</FieldError>
-                )}
-              </Field>
+              {selectField(
+                "deliveryFormat",
+                "Delivery format",
+                deliveryFormatOptions,
+                "Select a delivery format",
+              )}
 
               {textField("projectType", "Project type")}
             </FieldGroup>

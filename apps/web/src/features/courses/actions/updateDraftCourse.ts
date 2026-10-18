@@ -111,7 +111,7 @@ export const updateDraftCourse = async (input: unknown): Promise<ActionResult> =
       await payload.update({
         collection: Slugs.Collections.COURSE_VERSIONS,
         id: versionId,
-        // Payload types period and the dates as required, which holds for the
+        // Payload types the dates as required, which holds for the
         // collection row but not a draft revision - those may still be blank.
         data: versionData as Partial<CourseVersion>,
         draft: true,

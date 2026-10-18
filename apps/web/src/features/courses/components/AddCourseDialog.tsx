@@ -1,6 +1,7 @@
 "use client"
 
-import { CourseDeliveryFormat, CourseDeliveryFormatLabels } from "@repo/shared/enums/courses"
+import { CourseDeliveryFormatLabels, CourseTermLabels } from "@repo/shared/enums/courses"
+import { toSelectOptions } from "@repo/shared/utils/select-options"
 import {
   AddCapstoneCourseDialog,
   type AddCapstoneCourseDialogValues,
@@ -22,17 +23,16 @@ const baseValues: AddCapstoneCourseDialogValues = {
   endDate: "",
   learningOutcomes: null,
   name: "",
-  period: "",
   programme: "",
   projectType: "",
   role: "",
   startDate: "",
+  term: "",
+  year: "",
 }
 
-const deliveryFormatOptions = Object.values(CourseDeliveryFormat).map((value) => ({
-  label: CourseDeliveryFormatLabels[value],
-  value,
-}))
+const deliveryFormatOptions = toSelectOptions(CourseDeliveryFormatLabels)
+const termOptions = toSelectOptions(CourseTermLabels)
 
 export interface AddCourseDialogProps {
   /**
@@ -99,6 +99,7 @@ export function AddCourseDialog({ defaultRole }: AddCourseDialogProps) {
       deliveryFormatOptions={deliveryFormatOptions}
       onOpenChange={handleOpenChange}
       open={open}
+      termOptions={termOptions}
       trigger={<AddCourseTriggerButton />}
     />
   )
@@ -155,6 +156,7 @@ export function EditDraftCourseDialog({ draft, open, onOpenChange }: EditDraftCo
       deliveryFormatOptions={deliveryFormatOptions}
       onOpenChange={onOpenChange}
       open={open}
+      termOptions={termOptions}
       title="Edit draft course"
     />
   )

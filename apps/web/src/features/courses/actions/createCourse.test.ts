@@ -48,11 +48,12 @@ const publishInput = {
   endDate: "2026-11-06",
   intent: "publish" as const,
   learningOutcomes: richText("Design and ship a production system."),
-  period: "Semester 2, 2026",
   programme: "Bachelor of Computer Science",
   projectType: "Industry-sponsored",
   role: "Course Coordinator",
   startDate: "2026-07-13",
+  term: "semester2" as const,
+  year: "2026",
 }
 
 const member = { collection: "members" as const, user: { firstName: "Anna", id: 7 } }
@@ -154,8 +155,9 @@ describe("createCourse", () => {
             course: 1,
             endDate: undefined,
             name: draftInput.name,
-            period: undefined,
             startDate: undefined,
+            term: undefined,
+            year: undefined,
           }),
           draft: true,
           req: { transactionID: 1 },
@@ -177,10 +179,11 @@ describe("createCourse", () => {
         ...draftInput,
         deliveryFormat: "",
         endDate: "",
-        period: "",
         programme: "",
         projectType: "",
         startDate: "",
+        term: "",
+        year: "",
       })
 
       expect(payload.create).toHaveBeenNthCalledWith(
@@ -189,10 +192,11 @@ describe("createCourse", () => {
           data: expect.objectContaining({
             deliveryFormat: undefined,
             endDate: undefined,
-            period: undefined,
             programme: undefined,
             projectType: undefined,
             startDate: undefined,
+            term: undefined,
+            year: undefined,
           }),
         }),
       )
@@ -231,14 +235,15 @@ describe("createCourse", () => {
       expect(payload.create).not.toHaveBeenCalled()
     })
 
-    it("still carries the teaching period through when a draft is saved with one already", async () => {
+    it("still carries the term and year through when a draft is saved with them already", async () => {
       const payload = mockPayload()
 
       await createCourse({
         ...draftInput,
         endDate: "2026-11-06",
-        period: "Semester 2, 2026",
         startDate: "2026-07-13",
+        term: "semester2",
+        year: "2026",
       })
 
       expect(payload.create).toHaveBeenNthCalledWith(
@@ -246,11 +251,21 @@ describe("createCourse", () => {
         expect.objectContaining({
           data: expect.objectContaining({
             endDate: "2026-11-06",
-            period: "Semester 2, 2026",
             startDate: "2026-07-13",
+            term: "semester2",
+            year: 2026,
           }),
         }),
       )
+    })
+
+    // prepareVersion derives the label from term and year, so the action never sends one.
+    it("leaves the period label for the hook to derive", async () => {
+      const payload = mockPayload()
+
+      await createCourse({ ...draftInput, term: "semester2", year: "2026" })
+
+      expect(payload.create.mock.calls[1]?.[0].data).not.toHaveProperty("period")
     })
   })
 
@@ -287,6 +302,8 @@ describe("createCourse", () => {
             learningOutcomes: publishInput.learningOutcomes,
             name: publishInput.name,
             teachingTeam: [{ member: member.user.id, role: publishInput.role }],
+            term: "semester2",
+            year: 2026,
           }),
           draft: false,
           req: { transactionID: 1 },
@@ -327,8 +344,8 @@ describe("createCourse", () => {
         .mockRejectedValueOnce(
           new ValidationError([
             {
-              message: "A period label and valid start and end dates are required.",
-              path: "period",
+              message: "A term, year and valid start and end dates are required.",
+              path: "term",
             },
           ]),
         ),
@@ -337,7 +354,7 @@ describe("createCourse", () => {
     const result = await createCourse(draftInput)
 
     expect(result).toEqual({
-      fieldErrors: { period: "A period label and valid start and end dates are required." },
+      fieldErrors: { term: "A term, year and valid start and end dates are required." },
       ok: false,
     })
     expect(payload.db.rollbackTransaction).toHaveBeenCalledWith(1)

@@ -12,6 +12,11 @@ const deliveryFormatOptions = [
   { label: "Online", value: "online" },
 ]
 
+const termOptions = [
+  { label: "Semester 1", value: "semester1" },
+  { label: "Semester 2", value: "semester2" },
+]
+
 const emptyValues: AddCapstoneCourseDialogValues = {
   additionalInfo: null,
   assessments: null,
@@ -20,11 +25,12 @@ const emptyValues: AddCapstoneCourseDialogValues = {
   endDate: "",
   learningOutcomes: null,
   name: "",
-  period: "",
   programme: "",
   projectType: "",
   role: "",
   startDate: "",
+  term: "",
+  year: "",
 }
 
 function renderDialog(overrides?: {
@@ -46,6 +52,7 @@ function renderDialog(overrides?: {
       onValueChange={overrides?.onValueChange ?? vi.fn()}
       open
       submitting={overrides?.submitting}
+      termOptions={termOptions}
       trigger={
         <Button size="xl" type="button" variant="button-mauve">
           + Add your course
@@ -72,7 +79,8 @@ describe("AddCapstoneCourseDialog", () => {
     // Matched loosely because a required label carries a trailing asterisk.
     for (const label of [
       "Course code",
-      "Teaching period",
+      "Term",
+      "Year",
       "Start date",
       "End date",
       "Course name",
@@ -154,7 +162,7 @@ describe("AddCapstoneCourseDialog", () => {
       "Course name",
       "Course code",
       "Course program",
-      "Teaching period",
+      "Year",
       "Start date",
       "End date",
       "Project type",
@@ -168,9 +176,10 @@ describe("AddCapstoneCourseDialog", () => {
       )
     }
     expect(screen.getByLabelText(/^Delivery format/)).toHaveAttribute("aria-required", "true")
+    expect(screen.getByLabelText(/^Term/)).toHaveAttribute("aria-required", "true")
     expect(screen.getByLabelText(/^Additional information/)).not.toHaveAttribute("aria-required")
 
-    expect(screen.getAllByText("*")).toHaveLength(11)
+    expect(screen.getAllByText("*")).toHaveLength(12)
   })
 
   it("shows a form-level error", () => {
@@ -186,6 +195,7 @@ describe("AddCapstoneCourseDialog", () => {
         onSaveDraft={vi.fn()}
         onValueChange={vi.fn()}
         open
+        termOptions={termOptions}
         title="Edit draft course"
         values={emptyValues}
       />,
@@ -204,6 +214,7 @@ describe("AddCapstoneCourseDialog", () => {
           onSaveDraft={vi.fn()}
           onValueChange={vi.fn()}
           open
+          termOptions={termOptions}
           values={emptyValues}
           {...overrides}
         />,

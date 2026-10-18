@@ -1,5 +1,6 @@
 import { toast } from "@repo/ui/components/ui"
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { createCourse } from "../actions/createCourse"
 import { AddCourseDialog } from "./AddCourseDialog"
@@ -89,13 +90,14 @@ describe("AddCourseDialog", () => {
   })
 
   it("submits the current field values to createCourse", async () => {
+    const user = userEvent.setup()
     vi.mocked(createCourse).mockResolvedValue({ ok: true })
     openDialog()
 
     fireEvent.change(screen.getByLabelText(/^Course code/), { target: { value: "CS399" } })
-    fireEvent.change(screen.getByLabelText(/^Teaching period/), {
-      target: { value: "Semester 2, 2026" },
-    })
+    await user.click(screen.getByRole("combobox", { name: /^Term/ }))
+    await user.click(await screen.findByRole("option", { name: "Semester 2" }))
+    fireEvent.change(screen.getByLabelText(/^Year/), { target: { value: "2026" } })
     fireEvent.change(screen.getByLabelText(/^Start date/), { target: { value: "2026-07-13" } })
     fireEvent.change(screen.getByLabelText(/^End date/), { target: { value: "2026-11-06" } })
     fireEvent.click(screen.getByRole("button", { name: "Save draft" }))
@@ -106,11 +108,26 @@ describe("AddCourseDialog", () => {
           code: "CS399",
           endDate: "2026-11-06",
           intent: "draft",
-          period: "Semester 2, 2026",
           startDate: "2026-07-13",
+          term: "semester2",
+          year: "2026",
         }),
       )
     })
+  })
+
+  it("offers every term, in calendar order", async () => {
+    const user = userEvent.setup()
+    openDialog()
+
+    await user.click(screen.getByRole("combobox", { name: /^Term/ }))
+
+    expect((await screen.findAllByRole("option")).map((option) => option.textContent)).toEqual([
+      "Summer School",
+      "Semester 1",
+      "Semester 2",
+      "Full Year",
+    ])
   })
 
   it("submits with a publish intent when Publish is clicked", async () => {
