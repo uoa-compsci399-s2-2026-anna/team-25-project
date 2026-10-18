@@ -6,6 +6,7 @@ import { normaliseResearchInterests } from "@repo/shared/utils/research-interest
 import { cacheLife, cacheTag } from "next/cache"
 import { connection } from "next/server"
 import type { Where } from "payload"
+import { offeringPeriod } from "@/features/courses/courses.format"
 import { publicationSortFields } from "@/features/publications/publications.queries"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
@@ -260,7 +261,14 @@ export const getMemberCourses = async (memberId: number): Promise<MemberCourse[]
     sort: ["-startDate", "-id"],
     depth: 0,
     pagination: false,
-    select: { course: true, period: true, name: true, displaySnapshot: { courseCode: true } },
+    select: {
+      course: true,
+      period: true,
+      term: true,
+      year: true,
+      name: true,
+      displaySnapshot: { courseCode: true },
+    },
   })
 
   const courses = new Map<number, MemberCourse>()
@@ -271,7 +279,7 @@ export const getMemberCourses = async (memberId: number): Promise<MemberCourse[]
       courseId,
       code: offering.displaySnapshot?.courseCode ?? null,
       name: offering.name ?? null,
-      period: offering.period,
+      period: offeringPeriod(offering),
     })
   }
   return [...courses.values()]

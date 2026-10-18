@@ -363,7 +363,14 @@ describe("getMemberCourses", () => {
       sort: ["-startDate", "-id"],
       depth: 0,
       pagination: false,
-      select: { course: true, period: true, name: true, displaySnapshot: { courseCode: true } },
+      select: {
+        course: true,
+        period: true,
+        term: true,
+        year: true,
+        name: true,
+        displaySnapshot: { courseCode: true },
+      },
     })
   })
 

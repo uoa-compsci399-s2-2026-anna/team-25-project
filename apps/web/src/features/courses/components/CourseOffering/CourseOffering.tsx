@@ -2,13 +2,15 @@ import { CourseDeliveryFormatLabels } from "@repo/shared/enums/courses"
 import type { CourseVersion } from "@repo/shared/payload-types"
 import { richTextHasText } from "@repo/shared/schemas/shared"
 import { initialsFromName } from "@repo/shared/utils/initials"
+import { CourseOfferingList } from "@repo/ui/components/composite"
 import { Avatar, AvatarFallback, Heading, Separator, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
 import { RichTextContent } from "@/components/RichTextContent"
 import { Routes } from "@/lib/routes"
-import { periodRange } from "../../courses.format"
-import { type CourseRouteParams, parseCourseId } from "../../courses.params"
-import { getPublishedOfferingsCached } from "../../courses.queries"
+import { offeringPeriod, periodRange } from "../../courses.format"
+import { offeringTiming } from "../../courses.offerings"
+import type { CourseRouteParams, CourseRouteSearchParams } from "../../courses.params"
+import { resolveCourseOffering } from "../../courses.queries"
 import {
   CourseOfferingDetail,
   CourseOfferingSection,
@@ -18,6 +20,7 @@ import {
 // Aliased as the React compiler rule reads a capitalized call inside a component as
 // a component rendered the wrong way.
 const memberHref = Routes.MEMBERS.MEMBER
+const offeringHref = Routes.COURSES.OFFERING
 
 type SnapshotMember = NonNullable<
   NonNullable<CourseVersion["displaySnapshot"]>["teachingTeam"]
@@ -52,10 +55,20 @@ const TeamMember = ({ member }: { member: SnapshotMember }) => {
   )
 }
 
-export const CourseOffering = async ({ params }: { params: CourseRouteParams }) => {
-  const courseId = await parseCourseId(params)
-
-  const [offering, ...earlier] = await getPublishedOfferingsCached(courseId)
+export const CourseOffering = async ({
+  params,
+  searchParams,
+}: {
+  params: CourseRouteParams
+  searchParams: CourseRouteSearchParams
+}) => {
+  const {
+    courseId,
+    now,
+    offerings,
+    selected: offering,
+    current,
+  } = await resolveCourseOffering(params, searchParams)
 
   // The header 404s a course with nothing published, so this is only reachable
   // mid-publication. Render nothing rather than taking down the header beside it.
@@ -96,7 +109,7 @@ export const CourseOffering = async ({ params }: { params: CourseRouteParams }) 
         <div className="grid gap-6 sm:grid-cols-3">
           <CourseOfferingDetail
             label="Teaching period"
-            value={periodRange(offering) ?? offering.period}
+            value={periodRange(offering) ?? offeringPeriod(offering)}
           />
           {offering.deliveryFormat && (
             <CourseOfferingDetail
@@ -111,8 +124,16 @@ export const CourseOffering = async ({ params }: { params: CourseRouteParams }) 
       </div>
 
       <aside className="mt-2 flex flex-col gap-4 lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:mt-0">
+        {teachingTeam.length > 0 && (
+          <CourseOfferingSidebarCard title={`Teaching team - ${teachingTeam.length}`}>
+            {teachingTeam.map((member) => (
+              <TeamMember key={member.id ?? member.name} member={member} />
+            ))}
+          </CourseOfferingSidebarCard>
+        )}
+
         <CourseOfferingSidebarCard title="Offering">
-          <CourseOfferingDetail label="Period" value={offering.period} />
+          <CourseOfferingDetail label="Period" value={offeringPeriod(offering)} />
           {offering.programme && (
             <CourseOfferingDetail label="Programme" value={offering.programme} />
           )}
@@ -128,25 +149,23 @@ export const CourseOffering = async ({ params }: { params: CourseRouteParams }) 
           )}
         </CourseOfferingSidebarCard>
 
-        {teachingTeam.length > 0 && (
-          <CourseOfferingSidebarCard title={`Teaching team - ${teachingTeam.length}`}>
-            {teachingTeam.map((member) => (
-              <TeamMember key={member.id ?? member.name} member={member} />
-            ))}
-          </CourseOfferingSidebarCard>
-        )}
-
-        {earlier.length > 0 && (
-          <CourseOfferingSidebarCard title="Earlier offerings">
-            {earlier.map((past) => (
-              <div className="flex flex-col" key={past.id}>
-                <p className="font-medium text-sm">{past.name ?? past.period}</p>
-                <p className="text-muted-foreground text-xs">
-                  {past.name ? `${past.period} - ` : ""}
-                  {periodRange(past)}
-                </p>
-              </div>
-            ))}
+        {offerings.length > 1 && (
+          <CourseOfferingSidebarCard title={`Offerings - ${offerings.length}`}>
+            <CourseOfferingList
+              items={offerings.map((other) => ({
+                id: other.id,
+                period: offeringPeriod(other),
+                timing: offeringTiming(other, now),
+                href: offeringHref(courseId, other.id, current.id),
+                // Names only differ between offerings when a course is renamed, so the
+                // name is only worth repeating when it isn't this one's.
+                detail: [other.name !== offering.name && other.name, periodRange(other)]
+                  .filter(Boolean)
+                  .join(" - "),
+              }))}
+              linkComponent={Link}
+              selectedId={offering.id}
+            />
           </CourseOfferingSidebarCard>
         )}
       </aside>
