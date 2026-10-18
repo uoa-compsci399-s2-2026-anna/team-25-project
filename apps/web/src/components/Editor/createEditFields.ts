@@ -9,15 +9,26 @@ import { EditSelect } from "./EditSelect"
 import { EditTabs } from "./EditTabs"
 import { EditTagList } from "./EditTagList"
 
+/** The keys of T holding a File - its own keys (name, size...) are not form fields. */
+type FileKeys<T> = {
+  [K in DeepKeys<T>]: File extends DeepValue<T, K> ? K : never
+}[DeepKeys<T>]
+
+/** The form fields of T: every key, less list items and the insides of a File. */
+type FieldKeys<T> = Exclude<
+  DeepKeys<T>,
+  `${string}[${number}]${string}` | `${FileKeys<T>}.${string}`
+>
+
 /** The fields of T that can hold any V, e.g. FieldsAccepting<Values, string> = "title" | ... */
 export type FieldsAccepting<T, V> = {
-  [K in DeepKeys<T>]: [V] extends [DeepValue<T, K>] ? K : never
-}[DeepKeys<T>]
+  [K in FieldKeys<T>]: [V] extends [DeepValue<T, K>] ? K : never
+}[FieldKeys<T>]
 
 /** The fields of T whose values are all a kind of V, e.g. the enum fields for V = string. */
 export type FieldsWithin<T, V> = {
-  [K in DeepKeys<T>]: [NonNullable<DeepValue<T, K>>] extends [V] ? K : never
-}[DeepKeys<T>]
+  [K in FieldKeys<T>]: [NonNullable<DeepValue<T, K>>] extends [V] ? K : never
+}[FieldKeys<T>]
 
 /** The saved value for field K - Payload leaves optional fields null/undefined, so both pass. */
 type SavedValue<T, K extends DeepKeys<T>> = DeepValue<T, K> | null | undefined
