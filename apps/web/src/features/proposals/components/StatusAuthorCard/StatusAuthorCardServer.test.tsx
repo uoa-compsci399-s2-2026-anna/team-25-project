@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { z } from "zod"
 import { EditProvider } from "@/components/Editor/EditContext"
 import { getProposalByIdCached } from "@/features/proposals/proposals.queries"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
@@ -18,7 +19,7 @@ const proposal = (overrides: { author?: Array<{ id: number } | number> } = {}) =
 
 // The card's Edit button needs an editor around it, as on the proposal page.
 const inEditor = (ui: ReactNode) => (
-  <EditProvider onSave={async () => ({ ok: true })} validate={() => undefined}>
+  <EditProvider onSave={async () => ({ ok: true })} schema={z.object({})}>
     {ui}
   </EditProvider>
 )

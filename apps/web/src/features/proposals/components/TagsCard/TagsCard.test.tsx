@@ -1,13 +1,14 @@
 import { cleanup, render as rtlRender, screen } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, describe, expect, it } from "vitest"
+import { z } from "zod"
 import { EditProvider } from "@/components/Editor/EditContext"
 import { TagsCard } from "./TagsCard"
 
 // The tags are editable, so the card renders inside an editor, as on the proposal page.
 const render = (ui: ReactNode) =>
   rtlRender(
-    <EditProvider onSave={async () => ({ ok: true })} validate={() => undefined}>
+    <EditProvider onSave={async () => ({ ok: true })} schema={z.object({})}>
       {ui}
     </EditProvider>,
   )

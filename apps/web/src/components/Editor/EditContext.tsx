@@ -2,7 +2,7 @@
 
 import { useForm } from "@tanstack/react-form"
 import { createContext, type ReactNode, useContext, useState } from "react"
-import type { z } from "zod"
+import { z } from "zod"
 
 /**
  * The values an Edit component can bind to, keyed by form field name. Typed loosely so
@@ -12,13 +12,13 @@ export type EditValues = Record<string, unknown>
 
 type FormErrors = { fields: Record<string, { message: string }> } | undefined
 type Validate = (args: { value: EditValues }) => FormErrors
-type SaveResult = { ok: boolean; formError?: string }
+export type SaveResult = { ok: boolean; formError?: string }
 
 /** Turns a zod schema into a form validator that puts each issue on its field. */
-export const zodFormErrors =
-  (schema: z.ZodType): Validate =>
+const zodFormErrors =
+  (schema: z.core.$ZodType): Validate =>
   ({ value }) => {
-    const result = schema.safeParse(value)
+    const result = z.safeParse(schema, value)
     if (result.success) return undefined
 
     const fields: Record<string, { message: string }> = {}
@@ -66,17 +66,18 @@ const EditContext = createContext<EditContextValue | null>(null)
 export const EditProvider = <T extends EditValues>({
   children,
   onSave,
-  validate,
+  schema,
 }: {
   children: ReactNode
   /** Persists the edited values - called on Done once validation passes. */
   onSave: (values: Partial<T>) => Promise<SaveResult>
-  validate: Validate
+  /** Checks the values on every change. Its input must fit T, so it checks the same fields. */
+  schema: z.core.$ZodType<unknown, Partial<T>>
 }) => {
   const [isEditing, setEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const form = useEditForm(
-    validate,
+    zodFormErrors(schema),
     // The form only holds the fields on screen, and createEditFields names those from T.
     (values) => onSave(values as Partial<T>),
     () => {

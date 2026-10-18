@@ -1,6 +1,7 @@
 import type { DeepKeys, DeepValue } from "@tanstack/react-form"
 import type { ComponentProps, ReactNode } from "react"
 import { EditCheckboxList } from "./EditCheckboxList"
+import { EditProvider } from "./EditContext"
 import { EditInput, type EditInputValue } from "./EditInput"
 import { EditNumberInput, type EditNumberInputValue } from "./EditNumberInput"
 import { EditRichText, type EditRichTextValue } from "./EditRichText"
@@ -76,6 +77,8 @@ type TypedSelect<T> = <K extends FieldsWithin<T, string>>(
 ) => ReactNode
 
 type EditFields<T> = {
+  /** The editor for these controls - its schema and onSave are typed to the same T. */
+  Provider: (props: ComponentProps<typeof EditProvider<T & Record<string, unknown>>>) => ReactNode
   CheckboxList: TypedPick<ComponentProps<typeof EditCheckboxList>, T, string[], true>
   Input: TypedEdit<ComponentProps<typeof EditInput>, T, EditInputValue>
   NumberInput: TypedEdit<ComponentProps<typeof EditNumberInput>, T, EditNumberInputValue>
@@ -86,14 +89,15 @@ type EditFields<T> = {
 }
 
 /**
- * The Edit controls, typed to one feature's values: a misspelt name, a field that can't
- * hold what the control writes, or a value or option of the wrong type fails to compile.
+ * The editor and its controls, typed to one feature's values: a misspelt name, a field that
+ * can't hold what the control writes, or a value or option of the wrong type fails to compile.
  * Kept out of "use client" so server components can use them.
  */
 export const createEditFields = <T>() =>
   // Each type only narrows its control's own props, but TypeScript can't prove that for a
   // generic T - so the controls are cast once here.
   ({
+    Provider: EditProvider,
     CheckboxList: EditCheckboxList,
     Input: EditInput,
     NumberInput: EditNumberInput,

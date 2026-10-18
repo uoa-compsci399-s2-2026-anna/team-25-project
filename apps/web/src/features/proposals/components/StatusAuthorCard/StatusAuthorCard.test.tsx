@@ -2,12 +2,13 @@ import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { ReactNode } from "react"
 import { afterEach, describe, expect, it } from "vitest"
+import { z } from "zod"
 import { EditProvider } from "@/components/Editor/EditContext"
 import { StatusAuthorCard } from "./StatusAuthorCard"
 
 // The card's Edit button needs an editor around it, as on the proposal page.
 const inEditor = (ui: ReactNode) => (
-  <EditProvider onSave={async () => ({ ok: true })} validate={() => undefined}>
+  <EditProvider onSave={async () => ({ ok: true })} schema={z.object({})}>
     {ui}
   </EditProvider>
 )
