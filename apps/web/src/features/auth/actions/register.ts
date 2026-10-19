@@ -7,12 +7,14 @@ import {
   registerProfileSchema,
 } from "@repo/shared/schemas/register"
 import { cookies } from "next/headers"
-import { ValidationError } from "payload"
+import { type Payload, ValidationError } from "payload"
 import { generatePayloadCookie } from "payload/shared"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
-import type { ActionResult } from "./types"
+import { isRecognisedEmail } from "../helpers/recognisedEmail"
+import { issueCode } from "../helpers/verificationCode"
+import type { ActionResult, SendCodeResult } from "./types"
 
 type ZodIssue = { message: string; path: PropertyKey[] }
 
@@ -91,6 +93,95 @@ const signIn = async (email: string, password: string) => {
     sameSite: cookie.sameSite?.toLowerCase() as "lax" | "none" | "strict" | undefined,
     secure: cookie.secure,
   })
+}
+
+const parseInstitutionId = (institution: string) => {
+  const institutionId = Number(institution)
+  return Number.isInteger(institutionId) ? institutionId : null
+}
+
+/**
+ * The checks `payload.create` would fail on, run before a code is sent so nobody
+ * proves an address only to have the account refused. The messages match the
+ * ones Payload and `enforceInstitutionDomain` give, which still decide on create.
+ */
+const registrationBlockers = async (
+  payload: Payload,
+  email: string,
+  institutionId: number,
+): Promise<Record<string, string> | null> => {
+  const institution = await payload.findByID({
+    collection: Slugs.Collections.INSTITUTIONS,
+    id: institutionId,
+    depth: 0,
+    disableErrors: true,
+  })
+  if (!institution) return { institution: "Selected institution does not exist." }
+
+  const domains = institution.domains.map(({ domain }) => domain)
+  if (!isRecognisedEmail(email, domains)) {
+    return {
+      email: `Email domain does not match a registered domain for ${institution.name}.`,
+    }
+  }
+
+  const { totalDocs } = await payload.count({
+    collection: Slugs.Collections.MEMBERS,
+    where: { email: { equals: email.trim().toLowerCase() } },
+  })
+  if (totalDocs > 0) return { email: "A user with the given email is already registered." }
+
+  return null
+}
+
+const formatWait = (seconds: number) =>
+  seconds < 60
+    ? `${seconds} second${seconds === 1 ? "" : "s"}`
+    : `${Math.ceil(seconds / 60)} minute${Math.ceil(seconds / 60) === 1 ? "" : "s"}`
+
+/**
+ * Step one's first submit: checks the details, then emails a code to prove the
+ * address. No account exists until `registerMember` receives that code.
+ */
+export const sendVerificationCode = async (input: RegisterDetails): Promise<SendCodeResult> => {
+  const parsed = registerDetailsSchema.safeParse(input)
+  if (!parsed.success) {
+    return { fieldErrors: fieldErrorsFromIssues(parsed.error.issues), ok: false }
+  }
+
+  const institutionId = parseInstitutionId(parsed.data.institution)
+  if (institutionId === null) {
+    return { fieldErrors: { institution: "Select your university or institution" }, ok: false }
+  }
+
+  const payload = await getPayloadClient()
+
+  // Without SES, Payload logs each email instead of sending it, and the subject
+  // carries the code. Fine locally; in production nobody would get a code and
+  // every code would sit in the server logs.
+  if (process.env.NODE_ENV === "production" && payload.email.name === "console") {
+    payload.logger.error("sendVerificationCode: no email adapter is configured")
+    return { formError: "We couldn't send your code. Try again later.", ok: false }
+  }
+
+  try {
+    const blockers = await registrationBlockers(payload, parsed.data.email, institutionId)
+    if (blockers) return { fieldErrors: blockers, ok: false }
+
+    const issued = await issueCode(parsed.data.email)
+    if (issued.ok) return { ok: true }
+    if (issued.error === "cooldown") {
+      return {
+        formError: `You can ask for a new code in ${formatWait(issued.retryAfterSeconds)}.`,
+        ok: false,
+        retryAfterSeconds: issued.retryAfterSeconds,
+      }
+    }
+    return { formError: "We couldn't send your code. Try again.", ok: false }
+  } catch (error) {
+    payload.logger.error({ err: error }, "sendVerificationCode failed")
+    return { formError: "We couldn't send your code. Try again.", ok: false }
+  }
 }
 
 export const registerMember = async (input: RegisterDetails): Promise<ActionResult> => {

@@ -1,8 +1,9 @@
 import { cookies } from "next/headers"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
-import { completeProfile, registerMember } from "./register"
+import { issueCode } from "../helpers/verificationCode"
+import { completeProfile, registerMember, sendVerificationCode } from "./register"
 
 // A local stand-in so `instanceof` still discriminates: the action and this
 // test both resolve to this same class. Declared via vi.hoisted because
@@ -32,6 +33,7 @@ vi.mock("payload/shared", () => ({
 vi.mock("next/headers", () => ({ cookies: vi.fn() }))
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
+vi.mock("../helpers/verificationCode", () => ({ issueCode: vi.fn() }))
 
 const validDetails = {
   agreedToTerms: true,
@@ -50,7 +52,14 @@ const mockPayload = (overrides: Record<string, unknown> = {}) => {
   const payload = {
     collections: { members: { config: { auth: {} } } },
     config: { cookiePrefix: "payload" },
+    count: vi.fn().mockResolvedValue({ totalDocs: 0 }),
     create: vi.fn().mockResolvedValue({ id: 1 }),
+    email: { name: "nodemailer" },
+    findByID: vi.fn().mockResolvedValue({
+      domains: [{ domain: "example.ac.nz" }],
+      id: 1,
+      name: "Example University",
+    }),
     logger: { error: vi.fn() },
     login: vi.fn().mockResolvedValue({ token: "signed-token" }),
     update: vi.fn().mockResolvedValue({ id: 1 }),
@@ -308,5 +317,123 @@ describe("completeProfile", () => {
     const result = await completeProfile(formData)
 
     expect(result).toEqual({ formError: "Could not save your profile. Try again.", ok: false })
+  })
+})
+
+describe("sendVerificationCode", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(issueCode).mockResolvedValue({ ok: true })
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it("emails a code once the details check out", async () => {
+    mockPayload()
+
+    const result = await sendVerificationCode(validDetails)
+
+    expect(result).toEqual({ ok: true })
+    expect(issueCode).toHaveBeenCalledWith(validDetails.email)
+  })
+
+  it("rejects invalid details without sending anything", async () => {
+    mockPayload()
+
+    const result = await sendVerificationCode({ ...validDetails, firstName: "" })
+
+    expect(result).toEqual({ fieldErrors: { firstName: "First name is required" }, ok: false })
+    expect(issueCode).not.toHaveBeenCalled()
+  })
+
+  it("refuses an institution that doesn't exist", async () => {
+    mockPayload({ findByID: vi.fn().mockResolvedValue(null) })
+
+    const result = await sendVerificationCode(validDetails)
+
+    expect(result).toEqual({
+      fieldErrors: { institution: "Selected institution does not exist." },
+      ok: false,
+    })
+    expect(issueCode).not.toHaveBeenCalled()
+  })
+
+  it("refuses an email outside the institution's domains", async () => {
+    mockPayload()
+
+    const result = await sendVerificationCode({ ...validDetails, email: "a.tui@gmail.com" })
+
+    expect(result).toEqual({
+      fieldErrors: {
+        email: "Email domain does not match a registered domain for Example University.",
+      },
+      ok: false,
+    })
+    expect(issueCode).not.toHaveBeenCalled()
+  })
+
+  it("refuses an email that already has an account, whatever its case", async () => {
+    const payload = mockPayload({ count: vi.fn().mockResolvedValue({ totalDocs: 1 }) })
+
+    const result = await sendVerificationCode({ ...validDetails, email: "A.Tui@Example.ac.nz" })
+
+    expect(result).toEqual({
+      fieldErrors: { email: "A user with the given email is already registered." },
+      ok: false,
+    })
+    expect(payload.count).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { email: { equals: "a.tui@example.ac.nz" } } }),
+    )
+    expect(issueCode).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    [40, "You can ask for a new code in 40 seconds."],
+    [1, "You can ask for a new code in 1 second."],
+    [2_700, "You can ask for a new code in 45 minutes."],
+  ])("passes on a %is wait before another code", async (retryAfterSeconds, message) => {
+    mockPayload()
+    vi.mocked(issueCode).mockResolvedValue({ error: "cooldown", ok: false, retryAfterSeconds })
+
+    const result = await sendVerificationCode(validDetails)
+
+    expect(result).toEqual({ formError: message, ok: false, retryAfterSeconds })
+  })
+
+  it("reports a code that couldn't be sent", async () => {
+    mockPayload()
+    vi.mocked(issueCode).mockResolvedValue({ error: "send-failed", ok: false })
+
+    const result = await sendVerificationCode(validDetails)
+
+    expect(result).toEqual({ formError: "We couldn't send your code. Try again.", ok: false })
+  })
+
+  it("reports a form error when sending throws", async () => {
+    const payload = mockPayload()
+    vi.mocked(issueCode).mockRejectedValue(new Error("connection lost"))
+
+    const result = await sendVerificationCode(validDetails)
+
+    expect(result).toEqual({ formError: "We couldn't send your code. Try again.", ok: false })
+    expect(payload.logger.error).toHaveBeenCalled()
+  })
+
+  it("refuses to send in production when no email adapter is set up", async () => {
+    vi.stubEnv("NODE_ENV", "production")
+    mockPayload({ email: { name: "console" } })
+
+    const result = await sendVerificationCode(validDetails)
+
+    expect(result).toEqual({ formError: "We couldn't send your code. Try again later.", ok: false })
+    expect(issueCode).not.toHaveBeenCalled()
+  })
+
+  it("sends through the console adapter outside production", async () => {
+    mockPayload({ email: { name: "console" } })
+
+    await expect(sendVerificationCode(validDetails)).resolves.toEqual({ ok: true })
   })
 })
