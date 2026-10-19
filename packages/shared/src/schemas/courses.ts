@@ -100,6 +100,21 @@ const publishOfferingFields = {
   year: z.string().trim().min(1, "Year is required").pipe(offeringYear),
 }
 
+// Only a question once both dates are real. NaN compares false against
+// everything, so without this an unparseable date was reported as being
+// out of order rather than unparseable.
+const datesInOrder = (value: { startDate?: string; endDate?: string }) => {
+  const start = Date.parse(value.startDate ?? "")
+  const end = Date.parse(value.endDate ?? "")
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return true
+  return start <= end
+}
+
+const datesInOrderError = {
+  error: "The end date cannot precede the start date.",
+  path: ["endDate"],
+}
+
 export const addCourseFormSchema = z
   .discriminatedUnion("intent", [
     z.object({
@@ -113,20 +128,28 @@ export const addCourseFormSchema = z
       ...publishOfferingFields,
     }),
   ])
-  .refine(
-    (value) => {
-      const start = Date.parse(value.startDate ?? "")
-      const end = Date.parse(value.endDate ?? "")
-      // Only a question once both dates are real. NaN compares false against
-      // everything, so without this an unparseable date was reported as being
-      // out of order rather than unparseable.
-      if (!Number.isFinite(start) || !Number.isFinite(end)) return true
-      return start <= end
-    },
-    {
-      error: "The end date cannot precede the start date.",
-      path: ["endDate"],
-    },
-  )
+  .refine(datesInOrder, datesInOrderError)
 
 export type AddCourseFormInput = z.infer<typeof addCourseFormSchema>
+
+/**
+ * One offering of an existing course, from the Manage offerings dialog: the
+ * add-course fields minus the code, which belongs to the course.
+ *
+ * Two things here depend on what the server finds, so the actions check them
+ * rather than this schema: "Your role" is only needed to publish an offering
+ * with no teaching team yet, and "What changed?" only to correct a published one.
+ */
+const offeringExtras = {
+  changeSummary: z.string().trim().optional(),
+  role: z.string().trim().optional(),
+}
+
+export const offeringFormSchema = z
+  .discriminatedUnion("intent", [
+    z.object({ intent: z.literal("draft"), ...draftOfferingFields, ...offeringExtras }),
+    z.object({ intent: z.literal("publish"), ...publishOfferingFields, ...offeringExtras }),
+  ])
+  .refine(datesInOrder, datesInOrderError)
+
+export type OfferingFormInput = z.infer<typeof offeringFormSchema>

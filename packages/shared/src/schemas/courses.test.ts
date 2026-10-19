@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { CourseDeliveryFormat, CourseTerm } from "../enums/courses"
-import { addCourseFormSchema, createCourseSchema } from "./courses"
+import { addCourseFormSchema, createCourseSchema, offeringFormSchema } from "./courses"
 
 const richText = (text: string) => ({
   root: {
@@ -36,8 +36,10 @@ const publishInput = {
   year: "2026",
 }
 
-const issueFor = (result: ReturnType<typeof addCourseFormSchema.safeParse>, field: string) =>
-  result.success ? undefined : result.error.issues.find((issue) => issue.path[0] === field)?.message
+const issueFor = (
+  result: { success: boolean; error?: { issues: Array<{ path: PropertyKey[]; message: string }> } },
+  field: string,
+) => result.error?.issues.find((issue) => issue.path[0] === field)?.message
 
 describe("createCourseSchema", () => {
   it("accepts a valid course code", () => {
@@ -193,5 +195,44 @@ describe("addCourseFormSchema (publish)", () => {
       startDate: "2026-02-01",
     })
     expect(result.success).toBe(false)
+  })
+})
+
+describe("offeringFormSchema", () => {
+  const { code: _code, role: _role, ...publishOffering } = publishInput
+
+  it("takes an offering without a course code, which belongs to the course", () => {
+    expect(
+      offeringFormSchema.safeParse({ intent: "draft", name: "Capstone Project" }).success,
+    ).toBe(true)
+    expect(offeringFormSchema.safeParse(publishOffering).success).toBe(true)
+  })
+
+  // Only needed when the offering has no teaching team yet, which the action knows.
+  it("leaves the role optional even to publish", () => {
+    expect(offeringFormSchema.safeParse({ ...publishOffering, role: "" }).success).toBe(true)
+  })
+
+  // Only needed to correct a published offering, which the action knows.
+  it("leaves the change summary optional, trimmed when given", () => {
+    const result = offeringFormSchema.safeParse({
+      ...publishOffering,
+      changeSummary: "  Moved week 12  ",
+    })
+    expect(result.success && result.data.changeSummary).toBe("Moved week 12")
+  })
+
+  it("still requires the publication fields to publish", () => {
+    const result = offeringFormSchema.safeParse({ ...publishOffering, term: "" })
+    expect(issueFor(result, "term")).toBe("Select a term to publish")
+  })
+
+  it("refuses an end date before the start date", () => {
+    const result = offeringFormSchema.safeParse({
+      ...publishOffering,
+      endDate: "2026-07-01",
+      startDate: "2026-07-13",
+    })
+    expect(issueFor(result, "endDate")).toBe("The end date cannot precede the start date.")
   })
 })
