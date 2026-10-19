@@ -171,8 +171,9 @@ export { derivePeriod }
 
 // The unique index on (course, year, term) is the backstop; this names the clash
 // instead of surfacing a constraint violation. It reads the collection table, so
-// it sees every published offering and every never-published draft, and runs
-// under the course lock prepareVersion already holds.
+// it sees every published offering and every never-published draft (whose row
+// writeDraftPeriod keeps current), and runs under the course lock prepareVersion
+// already holds.
 async function assertPeriodFree(
   req: PayloadRequest,
   courseId: number,
@@ -196,6 +197,23 @@ async function assertPeriodFree(
     overrideAccess: true,
   })
   if (totalDocs > 0) fail(`This course already has an offering for ${period}.`, 409)
+}
+
+// A draft save writes only a revision, so without this the row of a never-published
+// offering would keep the period it was created with: still claimed against the
+// unique index and assertPeriodFree, yet shown nowhere. Its row is its draft, so the
+// newest revision's period goes to it, in the write's transaction and under its lock.
+async function writeDraftPeriod(req: PayloadRequest, id: number, version: Partial<CourseVersion>) {
+  await req.payload.db.updateOne({
+    collection: Slugs.Collections.COURSE_VERSIONS,
+    id,
+    data: {
+      term: version.term ?? null,
+      year: version.year ?? null,
+      period: version.period ?? null,
+    },
+    req,
+  })
 }
 
 async function snapshotTeachingTeam(req: PayloadRequest, version: Partial<CourseVersion>) {
@@ -326,6 +344,9 @@ export const prepareVersion: CollectionBeforeValidateHook<CourseVersion> = async
   next.period = data.period = derivePeriod(next)
   if (!savingDraft) validatePeriod(next)
   await assertPeriodFree(req, course.id, next, latest ? requireID(latest.id) : undefined)
+  // A published offering's row is its publication, whose period a pending draft
+  // doesn't change until it is published.
+  if (savingDraft && current && !published) await writeDraftPeriod(req, current.id, next)
 
   // Publication is the only writer of the metadata. Dropping the keys otherwise
   // leaves the stored columns untouched, so the guard above decides whether a

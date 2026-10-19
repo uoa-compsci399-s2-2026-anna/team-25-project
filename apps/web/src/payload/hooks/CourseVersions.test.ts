@@ -307,17 +307,21 @@ const request = ({
     return { id: 3, name: "University of Auckland" }
   })
 
+  // Writes the collection row directly, as Payload does not on a draft save.
+  const updateOne = vi.fn(async () => ({}))
+
   vi.mocked(lockDocument).mockResolvedValue({ ...course, hasPublishedVersion } as never)
 
   return {
     req: {
       user,
       context: write ? { [VERSION_WRITE]: write } : {},
-      payload: { count, findByID, update },
+      payload: { count, findByID, update, db: { updateOne } },
     } as unknown as PayloadRequest,
     count,
     findByID,
     update,
+    updateOne,
     internalAtUpdate,
   }
 }
@@ -549,6 +553,62 @@ describe("prepareVersion periods", () => {
     await expect(prepare(req, { course: 5, term: "semester2", year: 2026 })).rejects.toThrow(
       "This course already has an offering for Semester 2 2026.",
     )
+  })
+})
+
+// A draft save only writes a revision, so the never-published offering's row would
+// otherwise keep holding the period it was created with.
+describe("prepareVersion draft periods", () => {
+  const draftWrite = { draft: true, sentMetadataKeys: new Set<VersionMetadataKey>() }
+  const draftRow = { id: 3, course: 5, _status: "draft", ...period } as unknown as CourseVersion
+
+  it("moves a never-published draft's row to the period it is re-saved with", async () => {
+    const { req, updateOne } = request({ current: draftRow, write: draftWrite })
+
+    await prepare(req, { term: "semester2" }, "update", draftRow)
+    expect(updateOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: Slugs.Collections.COURSE_VERSIONS,
+        id: 3,
+        data: { term: "semester2", year: 2026, period: "Semester 2 2026" },
+      }),
+    )
+  })
+
+  it("clears the row's period when a draft drops its term", async () => {
+    const { req, updateOne } = request({ current: draftRow, write: draftWrite })
+
+    await prepare(req, { term: null }, "update", draftRow)
+    expect(updateOne).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { term: null, year: 2026, period: null } }),
+    )
+  })
+
+  it("leaves the row alone when the new period clashes", async () => {
+    const { req, count, updateOne } = request({ current: draftRow, write: draftWrite })
+    count.mockResolvedValue({ totalDocs: 1 })
+
+    await expect(prepare(req, { term: "semester2" }, "update", draftRow)).rejects.toThrow(
+      "This course already has an offering for Semester 2 2026.",
+    )
+    expect(updateOne).not.toHaveBeenCalled()
+  })
+
+  // The row is the publication, which a pending draft does not change.
+  it("leaves a published offering's row alone on a draft save", async () => {
+    const publishedRow = { ...draftRow, _status: "published" } as CourseVersion
+    const { req, updateOne } = request({ current: publishedRow, write: draftWrite })
+
+    await prepare(req, { term: "semester2" }, "update", publishedRow)
+    expect(updateOne).not.toHaveBeenCalled()
+  })
+
+  // Payload writes the row itself on a create and on any save that isn't a draft.
+  it("leaves the row to Payload on a create", async () => {
+    const { req, updateOne } = request({ write: draftWrite })
+
+    await prepare(req, { course: 5, ...period })
+    expect(updateOne).not.toHaveBeenCalled()
   })
 })
 
