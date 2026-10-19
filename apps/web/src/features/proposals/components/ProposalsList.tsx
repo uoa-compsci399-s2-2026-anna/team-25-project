@@ -38,20 +38,20 @@ export const ProposalsList = async ({ searchParams }: { searchParams: Promise<Se
       return (
         <EmptyState
           action={{ href: getPageHref(totalPages), label: "Go to the last page" }}
-          className="p-10 md:p-12"
           description="This page is past the end of the results."
           icon={<SearchX />}
           title="No more results"
+          variant="list"
         />
       )
     }
 
     return (
       <EmptyState
-        className="p-10 md:p-12"
         description="No proposals match these filters."
         icon={<Lightbulb />}
         title="No proposals found"
+        variant="list"
       />
     )
   }

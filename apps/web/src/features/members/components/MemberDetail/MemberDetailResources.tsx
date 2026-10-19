@@ -46,9 +46,7 @@ export const MemberResources = async ({ params }: { params: MembersRouteParams }
 
 const ResourceList = ({ resources }: { resources: MemberResource[] }) => {
   if (resources.length === 0) {
-    return (
-      <EmptyState className="border p-6" icon={<FolderOpen />} title="No resources shared yet" />
-    )
+    return <EmptyState icon={<FolderOpen />} title="No resources shared yet" variant="section" />
   }
 
   return (

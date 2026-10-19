@@ -28,10 +28,10 @@ export const CourseResources = async ({ params }: { params: CourseRouteParams })
       <CourseOfferingSection title={`Resources - ${total}`}>
         {resources.length === 0 ? (
           <EmptyState
-            className="border p-6"
             description="No resources are linked to this course yet."
             icon={<FolderOpen />}
             title="No resources yet"
+            variant="section"
           />
         ) : (
           <div className="flex flex-col gap-4">

@@ -54,7 +54,7 @@ export const MemberStats = async ({ params }: { params: MembersRouteParams }) =>
     <div className="flex flex-col gap-4 max-md:contents">
       <StatCard className="max-md:order-6" label="Courses convened">
         {courses.length === 0 ? (
-          <EmptyState className="border p-4" icon={<GraduationCap />} title="No courses yet" />
+          <EmptyState icon={<GraduationCap />} title="No courses yet" variant="card" />
         ) : (
           <ul className="flex flex-col divide-y divide-border">
             {courses.map((course) => (
@@ -100,7 +100,7 @@ export const MemberStats = async ({ params }: { params: MembersRouteParams }) =>
                 ))}
               </ul>
             ) : (
-              <EmptyState className="border p-4" icon={<Tag />} title="No interests yet" />
+              <EmptyState icon={<Tag />} title="No interests yet" variant="card" />
             )
           }
         />

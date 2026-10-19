@@ -47,10 +47,10 @@ export const PublicationsList = async ({
       return (
         <EmptyState
           action={{ href: getPageHref(totalPages), label: "Go to the last page" }}
-          className="p-10 md:p-12"
           description="This page is past the end of the results."
           icon={<SearchX />}
           title="No more results"
+          variant="list"
         />
       )
     }
@@ -58,10 +58,10 @@ export const PublicationsList = async ({
     return (
       <EmptyState
         action={hasFilters ? { href: Routes.PUBLICATIONS, label: "Clear filters" } : undefined}
-        className="p-10 md:p-12"
         description="No publications match these filters."
         icon={<BookOpen />}
         title="No publications found"
+        variant="list"
       />
     )
   }

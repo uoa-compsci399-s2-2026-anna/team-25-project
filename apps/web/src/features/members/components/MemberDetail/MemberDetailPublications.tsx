@@ -29,7 +29,7 @@ export const MemberPublications = async ({ params }: { params: MembersRouteParam
           />
         ))
       ) : (
-        <EmptyState className="border p-6" icon={<BookOpen />} title="No publications yet" />
+        <EmptyState icon={<BookOpen />} title="No publications yet" variant="section" />
       )}
     </section>
   )

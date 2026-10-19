@@ -73,7 +73,7 @@ const ProposalList = ({
   emptyTitle: string
 }) => {
   if (proposals.length === 0) {
-    return <EmptyState className="border p-6" icon={<Lightbulb />} title={emptyTitle} />
+    return <EmptyState icon={<Lightbulb />} title={emptyTitle} variant="section" />
   }
 
   return (
