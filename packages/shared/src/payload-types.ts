@@ -78,6 +78,7 @@ export interface Config {
     publications: Publication;
     resources: Resource;
     resourceAttachments: ResourceAttachment;
+    emailVerificationCodes: EmailVerificationCode;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -95,6 +96,7 @@ export interface Config {
     publications: PublicationsSelect<false> | PublicationsSelect<true>;
     resources: ResourcesSelect<false> | ResourcesSelect<true>;
     resourceAttachments: ResourceAttachmentsSelect<false> | ResourceAttachmentsSelect<true>;
+    emailVerificationCodes: EmailVerificationCodesSelect<false> | EmailVerificationCodesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -559,6 +561,22 @@ export interface ResourceAttachment {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "emailVerificationCodes".
+ */
+export interface EmailVerificationCode {
+  id: number;
+  email: string;
+  codeHash: string;
+  sentAt: string;
+  expiresAt: string;
+  attempts: number;
+  sendsInWindow: number;
+  windowStartedAt: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -620,6 +638,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'resourceAttachments';
         value: number | ResourceAttachment;
+      } | null)
+    | ({
+        relationTo: 'emailVerificationCodes';
+        value: number | EmailVerificationCode;
       } | null);
   globalSlug?: string | null;
   user:
@@ -923,6 +945,21 @@ export interface ResourceAttachmentsSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "emailVerificationCodes_select".
+ */
+export interface EmailVerificationCodesSelect<T extends boolean = true> {
+  email?: T;
+  codeHash?: T;
+  sentAt?: T;
+  expiresAt?: T;
+  attempts?: T;
+  sendsInWindow?: T;
+  windowStartedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

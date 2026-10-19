@@ -12,6 +12,7 @@ import sharp from "sharp"
 import { Admin } from "./payload/collections/Admin"
 import { Courses } from "./payload/collections/Courses"
 import { CourseVersions } from "./payload/collections/CourseVersions"
+import { EmailVerificationCodes } from "./payload/collections/EmailVerificationCodes"
 import { Institutions } from "./payload/collections/Institutions"
 import { Media } from "./payload/collections/Media"
 import { Members } from "./payload/collections/Members"
@@ -54,6 +55,7 @@ export default buildConfig({
     Publications,
     Resources,
     ResourceAttachments,
+    EmailVerificationCodes,
   ],
   globals: [PrivacyPolicy, CommunityGuidelines],
   editor: lexicalEditor({ features: richTextFeatures }),
