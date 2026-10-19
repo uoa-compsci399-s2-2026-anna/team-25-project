@@ -6,6 +6,10 @@ FROM node:${NODE_VERSION}-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
+# pg verifies the RDS certificate, and Node does not trust the RDS CA by default.
+ADD --chmod=644 https://truststore.pki.rds.amazonaws.com/ap-southeast-2/ap-southeast-2-bundle.pem /etc/ssl/rds-ca.pem
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/rds-ca.pem
+
 RUN npm install -g corepack && corepack enable pnpm
 
 # Stage 1: Prune the workspace down to web and its dependencies
@@ -60,6 +64,9 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+
+COPY --from=base /etc/ssl/rds-ca.pem /etc/ssl/rds-ca.pem
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/rds-ca.pem
 
 # Standalone mirrors the monorepo layout, so server.js is under apps/web/.
 COPY --from=builder --chown=node:node /app/apps/web/.next/standalone ./

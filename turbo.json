@@ -5,6 +5,7 @@
     "build": {
       "dependsOn": ["^build"],
       "env": ["DATABASE_URL", "PAYLOAD_SECRET"],
+      "passThroughEnv": ["NODE_EXTRA_CA_CERTS"],
       "inputs": ["$TURBO_DEFAULT$", ".env", ".env.local"],
       "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**", "dist/**"]
     },
