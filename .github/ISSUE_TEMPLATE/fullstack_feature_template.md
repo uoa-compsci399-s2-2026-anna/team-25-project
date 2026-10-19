@@ -23,7 +23,6 @@ _Acceptance Criteria_
 
 **BEFORE MERGING**
 
-- [ ] API Routes are annotated with OpenAPI/Scalar
 - [ ] Code generation run (_hint_: `pnpm types:generate`)
 - [ ] Storybooks created for relevant components
 - [ ] Tests written for services and critical interactions with [Vitest](https://vitest.dev/)
