@@ -33,6 +33,9 @@ export const ProposalsList = async ({ searchParams }: { searchParams: Promise<Se
   const getPageHref = (page: number) =>
     serializeProposalSearchParams(Routes.PROPOSALS.ROOT, { ...params, page }) as Route
 
+  // The serializer leaves out defaults, so any query string means a filter is set.
+  const hasFilters = getPageHref(1) !== Routes.PROPOSALS.ROOT
+
   if (proposals.length === 0) {
     if (totalDocs > 0) {
       return (
@@ -48,6 +51,7 @@ export const ProposalsList = async ({ searchParams }: { searchParams: Promise<Se
 
     return (
       <EmptyState
+        action={hasFilters ? { href: Routes.PROPOSALS.ROOT, label: "Clear filters" } : undefined}
         description="No proposals match these filters."
         icon={<Lightbulb />}
         title="No proposals found"

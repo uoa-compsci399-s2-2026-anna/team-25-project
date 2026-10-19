@@ -31,6 +31,9 @@ export const MembersList = async ({ searchParams }: { searchParams: Promise<Sear
   const getPageHref = (page: number) =>
     serializeMemberSearchParams(Routes.MEMBERS.ROOT, { ...params, page }) as Route
 
+  // The serializer leaves out defaults, so any query string means a filter is set.
+  const hasFilters = getPageHref(1) !== Routes.MEMBERS.ROOT
+
   if (members.length === 0) {
     // find() reports no totals past the end of a relationship-filtered query, so both
     // the empty state and the page to recover to come from a count instead.
@@ -53,6 +56,7 @@ export const MembersList = async ({ searchParams }: { searchParams: Promise<Sear
 
     return (
       <EmptyState
+        action={hasFilters ? { href: Routes.MEMBERS.ROOT, label: "Clear filters" } : undefined}
         description="No members match these filters."
         icon={<Users />}
         title="No members found"
