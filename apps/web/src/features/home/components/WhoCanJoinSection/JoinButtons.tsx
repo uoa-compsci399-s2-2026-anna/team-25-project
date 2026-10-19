@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Routes } from "@/lib/routes"
 
 export const JoinButtons = async () => {
-  const { collection: _, user } = await getCurrentUser()
+  const { user } = await getCurrentUser()
 
   if (user) {
     return (
