@@ -1,77 +1,25 @@
 "use client"
 
-import {
-  Button,
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogTitle,
-  DialogTrigger,
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/ui/components/ui"
-import { cn } from "@repo/ui/lib/utils"
 import * as React from "react"
-import { RichTextEditor, type RichTextValue } from "../RichTextEditor/rich-text-editor"
+import {
+  CourseFormDialog,
+  CourseFormFooter,
+  type CourseFormOption,
+  type CourseFormSubmitting,
+  CourseFormTextField,
+  CourseOfferingFields,
+  type CourseOfferingFieldValues,
+} from "../CourseForm/course-form"
 
-export type AddCapstoneCourseDialogValues = {
+export type AddCapstoneCourseDialogValues = CourseOfferingFieldValues & {
   code: string
-  /** A value from `termOptions`, or "" until one is picked. */
-  term: string
-  /** Typed into a text input, so a string until the action converts it. */
-  year: string
-  startDate: string
-  endDate: string
-  name: string
-  programme: string
-  deliveryFormat: string
-  projectType: string
-  /** `null` until the editor first reports a change. */
-  learningOutcomes: RichTextValue | null
-  assessments: RichTextValue | null
-  additionalInfo: RichTextValue | null
-  /** The signed-in creator's role in the offering - only required to publish. */
-  role: string
 }
-
-const requiredFields: Partial<Record<keyof AddCapstoneCourseDialogValues, true>> = {
-  code: true,
-  deliveryFormat: true,
-  endDate: true,
-  name: true,
-  programme: true,
-  projectType: true,
-  role: true,
-  startDate: true,
-  term: true,
-  year: true,
-  learningOutcomes: true,
-  assessments: true,
-}
-
-const RequiredAsterisk = () => (
-  <span aria-hidden="true" className="text-destructive">
-    *
-  </span>
-)
-
-type RichTextField = "learningOutcomes" | "assessments" | "additionalInfo"
 
 export type AddCapstoneCourseDialogFieldErrors = Partial<
   Record<keyof AddCapstoneCourseDialogValues, string>
 >
 
-export type AddCapstoneCourseDialogOption = { label: string; value: string }
+export type AddCapstoneCourseDialogOption = CourseFormOption
 
 export type AddCapstoneCourseDialogProps = {
   /**
@@ -96,7 +44,7 @@ export type AddCapstoneCourseDialogProps = {
   /** Kept out of the design system so it never couples to `CourseTerm`. */
   termOptions: AddCapstoneCourseDialogOption[]
   /** Which action is in flight, so only that button shows a loading label. */
-  submitting?: "draft" | "publish" | "delete"
+  submitting?: CourseFormSubmitting
   onSaveDraft: () => void
   onPublish: () => void
   /** Shows a "Delete draft" button, which asks to confirm before calling this. */
@@ -124,248 +72,45 @@ export function AddCapstoneCourseDialog({
   onPublish,
   onDelete,
 }: AddCapstoneCourseDialogProps) {
-  const [confirmingDelete, setConfirmingDelete] = React.useState(false)
-
-  // Closing backs out of a pending delete confirm.
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) setConfirmingDelete(false)
-    onOpenChange?.(nextOpen)
-  }
-
-  const ids = {
-    additionalInfo: React.useId(),
-    assessments: React.useId(),
-    code: React.useId(),
-    deliveryFormat: React.useId(),
-    endDate: React.useId(),
-    learningOutcomes: React.useId(),
-    name: React.useId(),
-    programme: React.useId(),
-    projectType: React.useId(),
-    role: React.useId(),
-    startDate: React.useId(),
-    term: React.useId(),
-    year: React.useId(),
-  }
-
-  // A field error colors only the input's border and the message below it -
-  // never the label - so `Field`'s own `data-invalid` (which would also tint
-  // the label text) is never set here.
-  const textField = (
-    field: Exclude<keyof AddCapstoneCourseDialogValues, RichTextField>,
-    label: string,
-    inputProps?: React.ComponentProps<typeof Input>,
-    className?: string,
-  ) => (
-    <Field className={className}>
-      <FieldLabel htmlFor={ids[field]}>
-        {label} {requiredFields[field] && <RequiredAsterisk />}
-      </FieldLabel>
-      <Input
-        aria-invalid={Boolean(fieldErrors?.[field]) || undefined}
-        aria-required={requiredFields[field] || undefined}
-        id={ids[field]}
-        onChange={(event) => onValueChange(field, event.target.value)}
-        value={values[field]}
-        {...inputProps}
-      />
-      {fieldErrors?.[field] && <FieldError>{fieldErrors[field]}</FieldError>}
-    </Field>
-  )
-
-  const selectField = (
-    field: "deliveryFormat" | "term",
-    label: string,
-    options: AddCapstoneCourseDialogOption[],
-    placeholder: string,
-  ) => (
-    <Field>
-      <FieldLabel htmlFor={ids[field]}>
-        {label} {requiredFields[field] && <RequiredAsterisk />}
-      </FieldLabel>
-      <Select
-        items={options}
-        onValueChange={(next) => onValueChange(field, next ?? "")}
-        value={values[field] || null}
-      >
-        <SelectTrigger
-          aria-invalid={Boolean(fieldErrors?.[field]) || undefined}
-          aria-required={requiredFields[field] || undefined}
-          className="w-full px-3 data-[size=default]:h-10"
-          id={ids[field]}
-        >
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent align="start" alignItemWithTrigger={false}>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {fieldErrors?.[field] && <FieldError>{fieldErrors[field]}</FieldError>}
-    </Field>
-  )
-
-  // The editor is uncontrolled, so `values` only seeds it. It remounts empty each time the
-  // dialog opens, because the dialog unmounts its content when it closes.
-  const richTextField = (field: RichTextField, label: string) => (
-    <Field>
-      <FieldLabel htmlFor={ids[field]} id={`${ids[field]}-label`}>
-        {label} {requiredFields[field] && <RequiredAsterisk />}
-      </FieldLabel>
-      <RichTextEditor
-        aria-invalid={Boolean(fieldErrors?.[field]) || undefined}
-        aria-labelledby={`${ids[field]}-label`}
-        aria-required={requiredFields[field] || undefined}
-        defaultValue={values[field]}
-        id={ids[field]}
-        onChange={(value) => onValueChange(field, value)}
-      />
-      {fieldErrors?.[field] && <FieldError>{fieldErrors[field]}</FieldError>}
-    </Field>
-  )
+  const codeId = React.useId()
 
   return (
-    <Dialog onOpenChange={handleOpenChange} open={open}>
-      {trigger && <DialogTrigger render={trigger} />}
-      {/* The popup only clips to its rounded corners; the inner wrapper does the
-          scrolling. Scrolling the popup itself paints the scrollbar square over
-          its right-hand corners. */}
-      <DialogContent
-        className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl"
-        showCloseButton={false}
-      >
-        <div className="min-h-0 overflow-y-auto p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <DialogTitle className="font-bold text-2xl">{title}</DialogTitle>
-              {/* The asterisk is described in words rather than shown inline, so this
-                  still reads as a sentence with the decorative marks stripped out. */}
-              <DialogDescription>
-                Course code and name are all a draft needs - fields marked with an asterisk are
-                required to publish.
-              </DialogDescription>
-            </div>
-            <DialogClose render={<Button size="sm" variant="button-transparent" />}>
-              Cancel
-            </DialogClose>
-          </div>
-
-          {/* Grouped by real-world category (identity, schedule, description,
-              content, publishing) rather than one flat list - no labels on the
-              groups themselves, just wider gaps between them than within them,
-              so proximity alone reads as the grouping. Long or free-form fields
-              span the full width; short ones share a row. */}
-          <div className="flex flex-col gap-8 pt-6">
-            <FieldGroup className="grid gap-4 md:grid-cols-2">
-              {textField("name", "Course name", undefined, "md:col-span-2")}
-              {textField("code", "Course code", { placeholder: "e.g. CS399" })}
-              {textField("programme", "Course program")}
-            </FieldGroup>
-
-            <FieldGroup className="grid gap-4 md:grid-cols-2">
-              {selectField("term", "Term", termOptions, "Select a term")}
-              {textField("year", "Year", {
-                inputMode: "numeric",
-                maxLength: 4,
-                placeholder: "e.g. 2026",
-              })}
-              {textField("startDate", "Start date", { type: "date" })}
-              {textField("endDate", "End date", { type: "date" })}
-            </FieldGroup>
-
-            <FieldGroup className="grid gap-4 md:grid-cols-2">
-              {selectField(
-                "deliveryFormat",
-                "Delivery format",
-                deliveryFormatOptions,
-                "Select a delivery format",
-              )}
-
-              {textField("projectType", "Project type")}
-            </FieldGroup>
-
-            <FieldGroup className="gap-4">
-              {richTextField("learningOutcomes", "Learning outcomes")}
-              {richTextField("assessments", "Assessments")}
-              {richTextField("additionalInfo", "Additional information")}
-            </FieldGroup>
-
-            <FieldGroup className="grid gap-4 md:grid-cols-2">
-              {textField("role", "Your role", { placeholder: "e.g. Course Coordinator" })}
-            </FieldGroup>
-          </div>
-
-          {formError && (
-            <FieldError className="mt-4" role="alert">
-              {formError}
-            </FieldError>
-          )}
-
-          <DialogFooter className={cn("mt-6", onDelete && "sm:items-center sm:justify-between")}>
-            {confirmingDelete ? (
-              <>
-                <p className="text-sm">Delete this draft? This can't be undone.</p>
-                <div className="flex flex-col-reverse gap-2 sm:flex-row">
-                  <Button
-                    borderColor="charcoal"
-                    onClick={() => setConfirmingDelete(false)}
-                    type="button"
-                    variant="button-transparent"
-                  >
-                    {/* Not "Cancel" - the header already has one. */}
-                    Keep draft
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setConfirmingDelete(false)
-                      onDelete?.()
-                    }}
-                    type="button"
-                    variant="button-destructive"
-                  >
-                    Confirm delete
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                {onDelete && (
-                  <Button
-                    disabled={Boolean(submitting)}
-                    onClick={() => setConfirmingDelete(true)}
-                    type="button"
-                    variant="button-destructive-outline"
-                  >
-                    {submitting === "delete" ? "Deleting..." : "Delete draft"}
-                  </Button>
-                )}
-                <div className="flex flex-col-reverse gap-2 sm:flex-row">
-                  <Button
-                    borderColor="charcoal"
-                    disabled={Boolean(submitting)}
-                    onClick={onSaveDraft}
-                    type="button"
-                    variant="button-transparent"
-                  >
-                    {submitting === "draft" ? "Saving..." : "Save draft"}
-                  </Button>
-                  <Button
-                    disabled={Boolean(submitting)}
-                    onClick={onPublish}
-                    type="button"
-                    variant="button-mauve"
-                  >
-                    {submitting === "publish" ? "Publishing..." : "Publish"}
-                  </Button>
-                </div>
-              </>
-            )}
-          </DialogFooter>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <CourseFormDialog
+      // The asterisk is described in words rather than shown inline, so this
+      // still reads as a sentence with the decorative marks stripped out.
+      description="Course code and name are all a draft needs - fields marked with an asterisk are required to publish."
+      footer={
+        <CourseFormFooter
+          onDelete={onDelete}
+          onPublish={onPublish}
+          onSaveDraft={onSaveDraft}
+          submitting={submitting}
+        />
+      }
+      formError={formError}
+      onOpenChange={onOpenChange}
+      open={open}
+      title={title}
+      trigger={trigger}
+    >
+      <CourseOfferingFields
+        deliveryFormatOptions={deliveryFormatOptions}
+        fieldErrors={fieldErrors}
+        identityField={
+          <CourseFormTextField
+            error={fieldErrors?.code}
+            id={codeId}
+            label="Course code"
+            onValueChange={(value) => onValueChange("code", value)}
+            placeholder="e.g. CS399"
+            required
+            value={values.code}
+          />
+        }
+        onValueChange={onValueChange}
+        termOptions={termOptions}
+        values={values}
+      />
+    </CourseFormDialog>
   )
 }
