@@ -66,7 +66,7 @@ export type CourseOfferingDialogProps = {
 const defaultTitles: Record<CourseOfferingDialogMode, string> = {
   add: "Add an offering",
   editDraft: "Edit draft offering",
-  correct: "Correct offering",
+  correct: "Edit offering",
 }
 
 const descriptions: Record<CourseOfferingDialogMode, string> = {

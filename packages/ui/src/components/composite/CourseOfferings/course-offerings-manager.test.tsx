@@ -34,13 +34,13 @@ describe("CourseOfferingsManager", () => {
     expect(rows[1]).toHaveTextContent("Semester 1 2027Published")
   })
 
-  it("offers to edit a draft and to correct a published offering", async () => {
+  it("offers to edit every offering, drafts and published alike", async () => {
     const user = userEvent.setup()
     const onOpen = vi.fn()
     renderManager({ onOpen })
 
     await user.click(screen.getByRole("button", { name: "Edit Semester 2 2027" }))
-    await user.click(screen.getByRole("button", { name: "Correct Semester 1 2027" }))
+    await user.click(screen.getByRole("button", { name: "Edit Semester 1 2027" }))
 
     expect(onOpen.mock.calls).toEqual([[5], [4]])
   })

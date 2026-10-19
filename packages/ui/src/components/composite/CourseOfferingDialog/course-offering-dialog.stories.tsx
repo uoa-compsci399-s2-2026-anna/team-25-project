@@ -163,7 +163,7 @@ export const CorrectPublished: Story = {
       mode="correct"
       showRole={false}
       termOptions={termOptions}
-      title="Correct Semester 1 2027"
+      title="Edit Semester 1 2027"
     />
   ),
 }

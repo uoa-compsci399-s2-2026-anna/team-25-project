@@ -44,7 +44,7 @@ export type CourseOfferingsManagerProps = {
   /** Every offering, drafts included, in the order to list them. */
   items: CourseOfferingsManagerItem[]
   onAdd: () => void
-  /** Opens the offering: a draft to edit, a published one to correct. */
+  /** Opens the offering to edit: a draft freely, a published one as a correction. */
   onOpen: (id: number) => void
 }
 
@@ -95,7 +95,7 @@ export function CourseOfferingsManager({
                   )}
                 </div>
                 <Button
-                  aria-label={`${item.status === "draft" ? "Edit" : "Correct"} ${item.period}`}
+                  aria-label={`Edit ${item.period}`}
                   borderColor="charcoal"
                   className="shrink-0"
                   onClick={() => onOpen(item.id)}
@@ -103,7 +103,7 @@ export function CourseOfferingsManager({
                   type="button"
                   variant="button-transparent"
                 >
-                  {item.status === "draft" ? "Edit" : "Correct"}
+                  Edit
                 </Button>
               </li>
             ))}

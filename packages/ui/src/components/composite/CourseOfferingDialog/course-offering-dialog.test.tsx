@@ -53,8 +53,8 @@ describe("CourseOfferingDialog", () => {
     renderDialog({ mode: "editDraft" })
     expect(screen.getByRole("dialog", { name: "Edit draft offering" })).toBeInTheDocument()
     cleanup()
-    renderDialog({ mode: "correct", title: "Correct Semester 1 2027" })
-    expect(screen.getByRole("dialog", { name: "Correct Semester 1 2027" })).toBeInTheDocument()
+    renderDialog({ mode: "correct", title: "Edit Semester 1 2027" })
+    expect(screen.getByRole("dialog", { name: "Edit Semester 1 2027" })).toBeInTheDocument()
   })
 
   describe("adding", () => {

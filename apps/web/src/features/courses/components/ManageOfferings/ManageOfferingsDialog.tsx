@@ -156,7 +156,7 @@ function OfferingEditor({
           : undefined
       }
       termOptions={termOptions}
-      title={offering && editing.mode === "correct" ? `Correct ${offering.period}` : undefined}
+      title={offering && editing.mode === "correct" ? `Edit ${offering.period}` : undefined}
     />
   )
 }

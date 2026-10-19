@@ -71,7 +71,7 @@ describe("ManageOfferingsDialog", () => {
 
     expect(screen.getByRole("dialog", { name: "Manage offerings" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Edit Semester 2 2027" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Correct Semester 1 2027" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Edit Semester 1 2027" })).toBeInTheDocument()
   })
 
   describe("adding", () => {
@@ -185,9 +185,9 @@ describe("ManageOfferingsDialog", () => {
     const user = userEvent.setup()
     vi.mocked(updateOffering).mockResolvedValue({ ok: true })
     await openManager(user)
-    await user.click(screen.getByRole("button", { name: "Correct Semester 1 2027" }))
+    await user.click(screen.getByRole("button", { name: "Edit Semester 1 2027" }))
 
-    expect(screen.getByRole("dialog", { name: "Correct Semester 1 2027" })).toBeInTheDocument()
+    expect(screen.getByRole("dialog", { name: "Edit Semester 1 2027" })).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Save draft" })).not.toBeInTheDocument()
     await user.type(screen.getByLabelText(/What changed/), "Fixed the dates")
     await user.click(screen.getByRole("button", { name: "Publish correction" }))
@@ -210,12 +210,12 @@ describe("ManageOfferingsDialog", () => {
       ok: false,
     })
     await openManager(user)
-    await user.click(screen.getByRole("button", { name: "Correct Semester 1 2027" }))
+    await user.click(screen.getByRole("button", { name: "Edit Semester 1 2027" }))
     await user.click(screen.getByRole("button", { name: "Publish correction" }))
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "The correction has no content changes.",
     )
-    expect(screen.getByRole("dialog", { name: "Correct Semester 1 2027" })).toBeInTheDocument()
+    expect(screen.getByRole("dialog", { name: "Edit Semester 1 2027" })).toBeInTheDocument()
   })
 })
