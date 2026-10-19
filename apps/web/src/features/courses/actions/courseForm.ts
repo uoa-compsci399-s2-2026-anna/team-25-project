@@ -1,13 +1,14 @@
 import type { Member } from "@repo/shared/payload-types"
-import type { AddCourseFormInput } from "@repo/shared/schemas/courses"
+import type { AddCourseFormInput, OfferingFormInput } from "@repo/shared/schemas/courses"
 import { richTextHasText } from "@repo/shared/schemas/shared"
 import { APIError, type Payload, type PayloadRequest, ValidationError } from "payload"
 import type { ActionResult } from "@/features/auth/actions/types"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
+import { relationID } from "@/payload/access/Courses/helpers"
 
-// Shared by the course dialog's actions (createCourse, updateDraftCourse). Kept
-// out of those "use server" files, which may only export async actions.
+// Shared by the course and offering dialogs' actions. Kept out of those
+// "use server" files, which may only export async actions.
 
 type ZodIssue = { message: string; path: PropertyKey[] }
 
@@ -122,7 +123,7 @@ export const requireMember = async (messages: {
  * typed in and then cleared still holds an empty paragraph.
  */
 export const toVersionData = <Blank extends null | undefined>(
-  input: AddCourseFormInput,
+  input: AddCourseFormInput | OfferingFormInput,
   blank: Blank,
 ) => {
   const text = (value: string | undefined) => (value ? value : blank)
@@ -144,3 +145,12 @@ export const toVersionData = <Blank extends null | undefined>(
     year: input.year ? Number(input.year) : blank,
   }
 }
+
+type TeachingTeamRow = { member?: unknown; role?: string | null }
+
+/** An offering's teaching team as Payload takes it back: member IDs, not populated members. */
+export const teachingTeamData = (team: TeachingTeamRow[] | null | undefined) =>
+  (team ?? []).flatMap((row) => {
+    const member = relationID(row.member)
+    return member ? [{ member, role: row.role ?? "" }] : []
+  })
