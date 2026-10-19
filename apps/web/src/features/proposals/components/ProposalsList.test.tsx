@@ -54,6 +54,33 @@ describe("ProposalsList", () => {
     expect(screen.getByText(message)).toBeInTheDocument()
   })
 
+  it("links to the unfiltered list when the filters match nothing", async () => {
+    vi.mocked(loadProposalsPage).mockResolvedValue({
+      docs: [],
+      totalDocs: 0,
+      totalPages: 0,
+    } as unknown as ProposalsPage)
+
+    render(await ProposalsList({ searchParams: Promise.resolve({ q: "peer" }) }))
+
+    expect(screen.getByRole("link", { name: "Clear filters" })).toHaveAttribute(
+      "href",
+      "/proposals",
+    )
+  })
+
+  it("has no clear link when no filter is set", async () => {
+    vi.mocked(loadProposalsPage).mockResolvedValue({
+      docs: [],
+      totalDocs: 0,
+      totalPages: 0,
+    } as unknown as ProposalsPage)
+
+    render(await ProposalsList({ searchParams: Promise.resolve({}) }))
+
+    expect(screen.queryByRole("link", { name: "Clear filters" })).not.toBeInTheDocument()
+  })
+
   it("links to the last page from past the end of the results", async () => {
     vi.mocked(loadProposalsPage).mockResolvedValue({
       docs: [],

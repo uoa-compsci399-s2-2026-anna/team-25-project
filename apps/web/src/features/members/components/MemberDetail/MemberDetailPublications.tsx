@@ -1,6 +1,8 @@
 import { PublicationCard, PublicationCardSkeleton } from "@repo/ui/components/composite"
 import { Heading } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
+import { BookOpen } from "lucide-react"
+import { EmptyState } from "@/components/EmptyState"
 import { StringHrefLink } from "@/components/StringHrefLink"
 import { Routes } from "@/lib/routes"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
@@ -27,7 +29,7 @@ export const MemberPublications = async ({ params }: { params: MembersRouteParam
           />
         ))
       ) : (
-        <p className="text-muted-foreground text-sm">No publications yet.</p>
+        <EmptyState icon={<BookOpen />} title="No publications yet" variant="section" />
       )}
     </section>
   )

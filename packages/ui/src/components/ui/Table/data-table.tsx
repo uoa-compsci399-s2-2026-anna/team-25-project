@@ -1,5 +1,6 @@
 "use client"
 
+import { Empty, EmptyHeader, EmptyTitle } from "@repo/ui/components/ui/Empty/empty"
 import {
   Table,
   TableBody,
@@ -73,11 +74,12 @@ function DataTable<TData extends RowData>({
       <TableBody>
         {rows.length === 0 ? (
           <TableRow>
-            <TableCell
-              className="h-24 text-center text-muted-foreground"
-              colSpan={table.getAllLeafColumns().length}
-            >
-              {emptyMessage}
+            <TableCell className="whitespace-normal" colSpan={table.getAllLeafColumns().length}>
+              <Empty className="p-6">
+                <EmptyHeader>
+                  <EmptyTitle>{emptyMessage}</EmptyTitle>
+                </EmptyHeader>
+              </Empty>
             </TableCell>
           </TableRow>
         ) : (
