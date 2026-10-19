@@ -12,8 +12,8 @@ import { Slugs } from "@/lib/payload/slugs"
 import {
   fieldErrorsFromIssues,
   requireMember,
-  resultFromWriteError,
   toVersionData,
+  withCourseTransaction,
 } from "./courseForm"
 
 const draftIdsSchema = z.object({
@@ -55,81 +55,74 @@ export const updateDraftCourse = async (input: unknown): Promise<ActionResult> =
   const publishing = intent === "publish"
 
   const payload = await getPayloadClient()
-  const transactionID = await payload.db.beginTransaction()
-  const req = transactionID ? { transactionID } : undefined
-
-  try {
-    const course = await payload.findByID({
-      collection: Slugs.Collections.COURSES,
-      id: courseId,
-      depth: 0,
-      overrideAccess: false,
-      req,
-      user,
-    })
-    // The table only offers never-published courses for editing, but a second tab
-    // may have published this one since - after which it's a correction, which
-    // this dialog has no change summary for.
-    if (course.hasPublishedVersion) {
-      if (transactionID) await payload.db.rollbackTransaction(transactionID)
-      return { formError: "This course has already been published.", ok: false }
-    }
-
-    // prepareCourse trims and upper-cases the code, and refuses a code change once
-    // the course is published - not a concern for a course reaching this point.
-    if (code !== course.code) {
-      await payload.update({
+  const result = await withCourseTransaction(
+    payload,
+    "updateDraftCourse",
+    FALLBACK_ERROR,
+    async (req) => {
+      const course = await payload.findByID({
         collection: Slugs.Collections.COURSES,
         id: courseId,
-        data: { code },
+        depth: 0,
         overrideAccess: false,
         req,
         user,
       })
-    }
+      // The table only offers never-published courses for editing, but a second tab
+      // may have published this one since - after which it's a correction, which
+      // this dialog has no change summary for.
+      if (course.hasPublishedVersion) {
+        return { formError: "This course has already been published.", ok: false }
+      }
 
-    // `null`, not `undefined`, for a blank field: see `toVersionData`.
-    const versionData = { ...toVersionData(parsed.data, null), course: courseId }
+      // prepareCourse trims and upper-cases the code, and refuses a code change once
+      // the course is published - not a concern for a course reaching this point.
+      if (code !== course.code) {
+        await payload.update({
+          collection: Slugs.Collections.COURSES,
+          id: courseId,
+          data: { code },
+          overrideAccess: false,
+          req,
+          user,
+        })
+      }
 
-    // Separate calls for the same reason as in `createCourse`: `draft` has to stay
-    // a literal, and publishing has to send `_status` for prepareVersion to see it.
-    if (publishing) {
-      await payload.update({
-        collection: Slugs.Collections.COURSE_VERSIONS,
-        id: versionId,
-        data: {
-          ...versionData,
-          _status: "published",
-          teachingTeam: [{ member: user.id, role }],
-        } as RequiredDataFromCollectionSlug<"courseVersions">,
-        draft: false,
-        overrideAccess: false,
-        req,
-        user,
-      })
-    } else {
-      await payload.update({
-        collection: Slugs.Collections.COURSE_VERSIONS,
-        id: versionId,
-        // Payload types the dates as required, which holds for the
-        // collection row but not a draft revision - those may still be blank.
-        data: versionData as Partial<CourseVersion>,
-        draft: true,
-        overrideAccess: false,
-        req,
-        user,
-      })
-    }
+      // `null`, not `undefined`, for a blank field: see `toVersionData`.
+      const versionData = { ...toVersionData(parsed.data, null), course: courseId }
 
-    if (transactionID) await payload.db.commitTransaction(transactionID)
-  } catch (error) {
-    if (transactionID) await payload.db.rollbackTransaction(transactionID)
-
-    const result = resultFromWriteError(error, FALLBACK_ERROR)
-    if (result) return result
-    payload.logger.error({ err: error }, "updateDraftCourse failed")
-    return { formError: FALLBACK_ERROR, ok: false }
-  }
+      // Separate calls for the same reason as in `createCourse`: `draft` has to stay
+      // a literal, and publishing has to send `_status` for prepareVersion to see it.
+      if (publishing) {
+        await payload.update({
+          collection: Slugs.Collections.COURSE_VERSIONS,
+          id: versionId,
+          data: {
+            ...versionData,
+            _status: "published",
+            teachingTeam: [{ member: user.id, role }],
+          } as RequiredDataFromCollectionSlug<"courseVersions">,
+          draft: false,
+          overrideAccess: false,
+          req,
+          user,
+        })
+      } else {
+        await payload.update({
+          collection: Slugs.Collections.COURSE_VERSIONS,
+          id: versionId,
+          // Payload types the dates as required, which holds for the
+          // collection row but not a draft revision - those may still be blank.
+          data: versionData as Partial<CourseVersion>,
+          draft: true,
+          overrideAccess: false,
+          req,
+          user,
+        })
+      }
+    },
+  )
+  if (!result.ok) return result
 
   updateTag(QueryKeys.COURSES.ROOT)
 

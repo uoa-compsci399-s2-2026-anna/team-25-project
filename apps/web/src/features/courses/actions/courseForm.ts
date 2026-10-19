@@ -1,7 +1,7 @@
 import type { Member } from "@repo/shared/payload-types"
 import type { AddCourseFormInput } from "@repo/shared/schemas/courses"
 import { richTextHasText } from "@repo/shared/schemas/shared"
-import { APIError, ValidationError } from "payload"
+import { APIError, type Payload, type PayloadRequest, ValidationError } from "payload"
 import type { ActionResult } from "@/features/auth/actions/types"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
@@ -56,6 +56,39 @@ export const resultFromWriteError = (
     return { formError: error.message, ok: false }
   }
   return undefined
+}
+
+/**
+ * Runs a course action's writes in one transaction, passing `write` the `req` each
+ * Payload call takes. `write` returns a refusal to roll back and show, or nothing
+ * to commit. A thrown error is rolled back too and shown as `resultFromWriteError`
+ * maps it, or logged under `name` and shown as `fallbackFormError`.
+ */
+export const withCourseTransaction = async (
+  payload: Payload,
+  name: string,
+  fallbackFormError: string,
+  write: (req: Partial<PayloadRequest> | undefined) => Promise<ActionResult | undefined>,
+): Promise<ActionResult> => {
+  const transactionID = await payload.db.beginTransaction()
+  const req = transactionID ? { transactionID } : undefined
+
+  try {
+    const refusal = await write(req)
+    if (refusal) {
+      if (transactionID) await payload.db.rollbackTransaction(transactionID)
+      return refusal
+    }
+    if (transactionID) await payload.db.commitTransaction(transactionID)
+    return { ok: true }
+  } catch (error) {
+    if (transactionID) await payload.db.rollbackTransaction(transactionID)
+
+    const result = resultFromWriteError(error, fallbackFormError)
+    if (result) return result
+    payload.logger.error({ err: error }, `${name} failed`)
+    return { formError: fallbackFormError, ok: false }
+  }
 }
 
 /**

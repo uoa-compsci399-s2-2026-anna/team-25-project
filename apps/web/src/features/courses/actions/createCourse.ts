@@ -10,8 +10,8 @@ import { Slugs } from "@/lib/payload/slugs"
 import {
   fieldErrorsFromIssues,
   requireMember,
-  resultFromWriteError,
   toVersionData,
+  withCourseTransaction,
 } from "./courseForm"
 
 /**
@@ -43,67 +43,61 @@ export const createCourse = async (input: unknown): Promise<ActionResult> => {
   const { code, intent, role } = parsed.data
   const publishing = intent === "publish"
 
-  const transactionID = await payload.db.beginTransaction()
-  const req = transactionID ? { transactionID } : undefined
-
-  try {
-    const course = await payload.create({
-      collection: Slugs.Collections.COURSES,
-      // institution/owner are required by the type, but prepareCourse's
-      // assignMemberOwner hook fills both in for a member-created course
-      // before Payload validates this data.
-      data: { code } as RequiredDataFromCollectionSlug<"courses">,
-      draft: false,
-      overrideAccess: false,
-      req,
-      user,
-    })
-
-    const versionData = { ...toVersionData(parsed.data, undefined), course: course.id }
-
-    // A draft's fields are all optional by the collection's own type, but
-    // publishing needs the full shape - kept as separate calls so `draft`
-    // stays a literal Payload can use to pick the matching one.
-    if (publishing) {
-      await payload.create({
-        collection: Slugs.Collections.COURSE_VERSIONS,
-        data: {
-          ...versionData,
-          // `draft: false` alone only tells Payload's own versioning system
-          // not to save a draft - the collection's own prepareVersion hook
-          // decides whether *this* write counts as a publish (running the
-          // hooks that stamp publishedAt/displaySnapshot and flip the
-          // course's hasPublishedVersion) by reading `data._status`, so that
-          // has to be sent explicitly too. Matches the seed script's own
-          // published-offering writes.
-          _status: "published",
-          teachingTeam: [{ member: user.id, role }],
-        } as RequiredDataFromCollectionSlug<"courseVersions">,
+  const result = await withCourseTransaction(
+    payload,
+    "createCourse",
+    "Could not add this course. Try again.",
+    async (req) => {
+      const course = await payload.create({
+        collection: Slugs.Collections.COURSES,
+        // institution/owner are required by the type, but prepareCourse's
+        // assignMemberOwner hook fills both in for a member-created course
+        // before Payload validates this data.
+        data: { code } as RequiredDataFromCollectionSlug<"courses">,
         draft: false,
         overrideAccess: false,
         req,
         user,
       })
-    } else {
-      await payload.create({
-        collection: Slugs.Collections.COURSE_VERSIONS,
-        data: versionData,
-        draft: true,
-        overrideAccess: false,
-        req,
-        user,
-      })
-    }
 
-    if (transactionID) await payload.db.commitTransaction(transactionID)
-  } catch (error) {
-    if (transactionID) await payload.db.rollbackTransaction(transactionID)
+      const versionData = { ...toVersionData(parsed.data, undefined), course: course.id }
 
-    const result = resultFromWriteError(error, "Could not add this course. Try again.")
-    if (result) return result
-    payload.logger.error({ err: error }, "createCourse failed")
-    return { formError: "Could not add this course. Try again.", ok: false }
-  }
+      // A draft's fields are all optional by the collection's own type, but
+      // publishing needs the full shape - kept as separate calls so `draft`
+      // stays a literal Payload can use to pick the matching one.
+      if (publishing) {
+        await payload.create({
+          collection: Slugs.Collections.COURSE_VERSIONS,
+          data: {
+            ...versionData,
+            // `draft: false` alone only tells Payload's own versioning system
+            // not to save a draft - the collection's own prepareVersion hook
+            // decides whether *this* write counts as a publish (running the
+            // hooks that stamp publishedAt/displaySnapshot and flip the
+            // course's hasPublishedVersion) by reading `data._status`, so that
+            // has to be sent explicitly too. Matches the seed script's own
+            // published-offering writes.
+            _status: "published",
+            teachingTeam: [{ member: user.id, role }],
+          } as RequiredDataFromCollectionSlug<"courseVersions">,
+          draft: false,
+          overrideAccess: false,
+          req,
+          user,
+        })
+      } else {
+        await payload.create({
+          collection: Slugs.Collections.COURSE_VERSIONS,
+          data: versionData,
+          draft: true,
+          overrideAccess: false,
+          req,
+          user,
+        })
+      }
+    },
+  )
+  if (!result.ok) return result
 
   updateTag(QueryKeys.COURSES.ROOT)
 
