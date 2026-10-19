@@ -8,8 +8,6 @@ import {
   getMemberCounts,
   getMemberCourses,
   getMemberCoursesCached,
-  getMemberCoursesConvenedCount,
-  getMemberCoursesConvenedCountCached,
   getMemberDetails,
   getMemberDetailsCached,
   getMemberProposals,
@@ -331,23 +329,6 @@ describe("getMemberPublications", () => {
   it("is cached under the publications and members tags", async () => {
     await expect(getMemberPublicationsCached(7)).resolves.toEqual([])
     expect(cacheTag).toHaveBeenCalledWith("publications", "members", "member:7")
-  })
-})
-
-describe("getMemberCoursesConvenedCount", () => {
-  it("counts the courses the member owns", async () => {
-    count.mockResolvedValue({ totalDocs: 3 })
-
-    await expect(getMemberCoursesConvenedCount(7)).resolves.toBe(3)
-    expect(count).toHaveBeenCalledWith({
-      collection: "courses",
-      where: { owner: { equals: 7 } },
-    })
-  })
-
-  it("is cached under the courses tag", async () => {
-    await expect(getMemberCoursesConvenedCountCached(7)).resolves.toBe(0)
-    expect(cacheTag).toHaveBeenCalledWith("courses")
   })
 })
 

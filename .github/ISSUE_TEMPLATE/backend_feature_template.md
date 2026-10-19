@@ -24,7 +24,6 @@ _Acceptance Criteria_
 **BEFORE MERGING**
 
 - [ ] Tests written for services using [Vitest](https://vitest.dev/)
-- [ ] API Routes are annotated with OpenAPI/Scalar
 - [ ] Appropriate mocks created where possible
 - [ ] Code generation run (_hint_: `pnpm types:generate`)
 - [ ] PR Reviewed
