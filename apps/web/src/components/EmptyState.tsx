@@ -19,6 +19,10 @@ const variantClassNames = {
   card: "border p-4",
 }
 
+// A not-found page has only the one way out, so its action is the main button.
+const pageActionClassName = buttonVariants({ size: "lg", variant: "button-charcoal" })
+const actionClassName = buttonVariants({ borderColor: "charcoal", variant: "button-transparent" })
+
 type EmptyStateProps = {
   variant: keyof typeof variantClassNames
   icon: ReactNode
@@ -47,7 +51,7 @@ export const EmptyState = ({
       <EmptyContent>
         {/* A link styled as a button, so it keeps the link role. */}
         <Link
-          className={buttonVariants({ borderColor: "charcoal", variant: "button-transparent" })}
+          className={variant === "page" ? pageActionClassName : actionClassName}
           href={action.href}
         >
           {action.label}
