@@ -2,7 +2,7 @@ import { cookies } from "next/headers"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
-import { issueCode } from "../helpers/verificationCode"
+import { checkCode, consumeCode, issueCode } from "../helpers/verificationCode"
 import { completeProfile, registerMember, sendVerificationCode } from "./register"
 
 // A local stand-in so `instanceof` still discriminates: the action and this
@@ -33,7 +33,11 @@ vi.mock("payload/shared", () => ({
 vi.mock("next/headers", () => ({ cookies: vi.fn() }))
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
-vi.mock("../helpers/verificationCode", () => ({ issueCode: vi.fn() }))
+vi.mock("../helpers/verificationCode", () => ({
+  checkCode: vi.fn(),
+  consumeCode: vi.fn(),
+  issueCode: vi.fn(),
+}))
 
 const validDetails = {
   agreedToTerms: true,
@@ -45,6 +49,8 @@ const validDetails = {
   position: "Senior Lecturer",
   title: null,
 }
+
+const validRegistration = { ...validDetails, code: "482913" }
 
 const setCookie = vi.fn()
 
@@ -74,12 +80,90 @@ describe("registerMember", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(cookies).mockResolvedValue({ set: setCookie } as never)
+    vi.mocked(checkCode).mockResolvedValue("ok")
+    vi.mocked(consumeCode).mockResolvedValue(undefined)
+  })
+
+  it("rejects a malformed code without spending one of its tries", async () => {
+    const payload = mockPayload()
+
+    const result = await registerMember({ ...validRegistration, code: "12ab" })
+
+    expect(result).toEqual({
+      fieldErrors: { code: "Enter the 6-digit code from the email" },
+      ok: false,
+    })
+    expect(checkCode).not.toHaveBeenCalled()
+    expect(payload.create).not.toHaveBeenCalled()
+  })
+
+  it("checks the details before the code, since every check spends a try", async () => {
+    mockPayload()
+
+    await registerMember({ ...validRegistration, firstName: "" })
+
+    expect(checkCode).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ["invalid", "That code isn't right. Check the email and try again."],
+    ["expired", "This code has expired. Send a new one."],
+    ["locked", "Too many incorrect tries. Send a new code."],
+  ] as const)("refuses an %s code without creating the account", async (outcome, message) => {
+    const payload = mockPayload()
+    vi.mocked(checkCode).mockResolvedValue(outcome)
+
+    const result = await registerMember(validRegistration)
+
+    expect(result).toEqual({ fieldErrors: { code: message }, ok: false })
+    expect(payload.create).not.toHaveBeenCalled()
+    expect(consumeCode).not.toHaveBeenCalled()
+  })
+
+  it("reports a form error when the code can't be checked", async () => {
+    const payload = mockPayload()
+    vi.mocked(checkCode).mockRejectedValue(new Error("connection lost"))
+
+    const result = await registerMember(validRegistration)
+
+    expect(result).toEqual({ formError: "We couldn't check your code. Try again.", ok: false })
+    expect(payload.create).not.toHaveBeenCalled()
+  })
+
+  it("uses up the code only after the account exists, then signs in", async () => {
+    const payload = mockPayload()
+
+    await registerMember(validRegistration)
+
+    expect(checkCode).toHaveBeenCalledWith(validDetails.email, "482913")
+    const order = [checkCode, payload.create, consumeCode, payload.login].map(
+      (fn) => vi.mocked(fn).mock.invocationCallOrder[0],
+    )
+    expect(order).toEqual([...order].sort((a, b) => a - b))
+  })
+
+  it("keeps the code when creating the account fails, so it can be retried", async () => {
+    mockPayload({ create: vi.fn().mockRejectedValue(new Error("connection lost")) })
+
+    await registerMember(validRegistration)
+
+    expect(consumeCode).not.toHaveBeenCalled()
+  })
+
+  it("still signs the member in when the used code can't be removed", async () => {
+    const payload = mockPayload()
+    vi.mocked(consumeCode).mockRejectedValue(new Error("connection lost"))
+
+    const result = await registerMember(validRegistration)
+
+    expect(result).toEqual({ ok: true })
+    expect(payload.logger.error).toHaveBeenCalled()
   })
 
   it("rejects invalid input without touching Payload", async () => {
     const payload = mockPayload()
 
-    const result = await registerMember({ ...validDetails, firstName: "" })
+    const result = await registerMember({ ...validRegistration, firstName: "" })
 
     expect(result).toEqual({ fieldErrors: { firstName: "First name is required" }, ok: false })
     expect(payload.create).not.toHaveBeenCalled()
@@ -88,7 +172,7 @@ describe("registerMember", () => {
   it("requires a position", async () => {
     const payload = mockPayload()
 
-    const result = await registerMember({ ...validDetails, position: "   " })
+    const result = await registerMember({ ...validRegistration, position: "   " })
 
     expect(result).toEqual({ fieldErrors: { position: "Position is required" }, ok: false })
     expect(payload.create).not.toHaveBeenCalled()
@@ -97,7 +181,7 @@ describe("registerMember", () => {
   it("passes the chosen title through to Payload", async () => {
     const payload = mockPayload()
 
-    await registerMember({ ...validDetails, title: "dr" })
+    await registerMember({ ...validRegistration, title: "dr" })
 
     expect(payload.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ title: "dr" }) }),
@@ -107,7 +191,7 @@ describe("registerMember", () => {
   it("requires the community guidelines to be accepted", async () => {
     mockPayload()
 
-    const result = await registerMember({ ...validDetails, agreedToTerms: false })
+    const result = await registerMember({ ...validRegistration, agreedToTerms: false })
 
     expect(result.ok).toBe(false)
     expect(result).toHaveProperty("fieldErrors.agreedToTerms")
@@ -116,7 +200,7 @@ describe("registerMember", () => {
   it("creates the member, signs them in and sets the auth cookie", async () => {
     const payload = mockPayload()
 
-    const result = await registerMember(validDetails)
+    const result = await registerMember(validRegistration)
 
     expect(result).toEqual({ ok: true })
     expect(payload.create).toHaveBeenCalledWith(
@@ -145,7 +229,7 @@ describe("registerMember", () => {
         ),
     })
 
-    const result = await registerMember(validDetails)
+    const result = await registerMember(validRegistration)
 
     expect(result).toEqual({
       fieldErrors: { email: "Email domain does not match a registered domain." },
@@ -156,7 +240,7 @@ describe("registerMember", () => {
   it("reports a generic failure when Payload throws something else", async () => {
     mockPayload({ create: vi.fn().mockRejectedValue(new Error("connection lost")) })
 
-    const result = await registerMember(validDetails)
+    const result = await registerMember(validRegistration)
 
     expect(result).toEqual({ formError: "Could not create your account. Try again.", ok: false })
   })
@@ -164,7 +248,7 @@ describe("registerMember", () => {
   it("falls back to a form error when a validation error has no usable field path", async () => {
     mockPayload({ create: vi.fn().mockRejectedValue(new ValidationError([])) })
 
-    const result = await registerMember(validDetails)
+    const result = await registerMember(validRegistration)
 
     expect(result).toEqual({ formError: "Could not create your account. Try again.", ok: false })
   })
@@ -172,7 +256,7 @@ describe("registerMember", () => {
   it("says the account exists when sign-in fails after creation", async () => {
     mockPayload({ login: vi.fn().mockRejectedValue(new Error("nope")) })
 
-    const result = await registerMember(validDetails)
+    const result = await registerMember(validRegistration)
 
     expect(result).toEqual({
       formError: "Account created, but signing you in failed. Try logging in.",
@@ -183,7 +267,7 @@ describe("registerMember", () => {
   it("says the account exists when Payload logs in with no token", async () => {
     mockPayload({ login: vi.fn().mockResolvedValue({}) })
 
-    const result = await registerMember(validDetails)
+    const result = await registerMember(validRegistration)
 
     expect(result).toEqual({
       formError: "Account created, but signing you in failed. Try logging in.",
