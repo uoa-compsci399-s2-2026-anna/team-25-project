@@ -1,6 +1,10 @@
 import { CourseTermLabels, derivePeriod } from "@repo/shared/enums/courses"
 import type { Course, CourseVersion, Member } from "@repo/shared/payload-types"
-import type { AddCapstoneCourseDialogValues } from "@repo/ui/components/composite"
+import type {
+  AddCapstoneCourseDialogValues,
+  CourseOfferingDialogValues,
+  CourseOfferingFieldValues,
+} from "@repo/ui/components/composite"
 import type { CourseTableOffering, CourseTableRow } from "./components/CoursesTable"
 
 const asPopulated = <T>(value: number | T | null | undefined): T | undefined =>
@@ -131,7 +135,26 @@ export interface MyDraftCourses {
 // Payload hands dates back as full ISO timestamps; a date input only takes the day.
 const toDateInput = (value: string | null | undefined) => (value ? value.slice(0, 10) : "")
 
-type DialogRichText = AddCapstoneCourseDialogValues["learningOutcomes"]
+type DialogRichText = CourseOfferingFieldValues["learningOutcomes"]
+
+/** An offering's saved fields, as the course dialogs hold them. */
+export const toOfferingFieldValues = (
+  version: CourseVersion,
+  role: string,
+): CourseOfferingFieldValues => ({
+  additionalInfo: (version.additionalInfo ?? null) as DialogRichText,
+  assessments: (version.assessments ?? null) as DialogRichText,
+  deliveryFormat: version.deliveryFormat ?? "",
+  endDate: toDateInput(version.endDate),
+  learningOutcomes: (version.learningOutcomes ?? null) as DialogRichText,
+  name: version.name ?? "",
+  programme: version.programme ?? "",
+  projectType: version.projectType ?? "",
+  role,
+  startDate: toDateInput(version.startDate),
+  term: version.term ?? "",
+  year: version.year ? String(version.year) : "",
+})
 
 /**
  * Pre-fills the dialog from a draft. Drafts never store "Your role" - it only
@@ -146,21 +169,73 @@ export const toEditableDraftCourse = (
   canDelete: ownerIdOf(course) === viewer.id,
   courseId: course.id,
   versionId: version.id,
-  values: {
-    additionalInfo: (version.additionalInfo ?? null) as DialogRichText,
-    assessments: (version.assessments ?? null) as DialogRichText,
-    code: course.code,
-    deliveryFormat: version.deliveryFormat ?? "",
-    endDate: toDateInput(version.endDate),
-    learningOutcomes: (version.learningOutcomes ?? null) as DialogRichText,
-    name: version.name ?? "",
-    programme: version.programme ?? "",
-    projectType: version.projectType ?? "",
-    role: viewer.role,
-    startDate: toDateInput(version.startDate),
-    term: version.term ?? "",
-    year: version.year ? String(version.year) : "",
-  },
+  values: { ...toOfferingFieldValues(version, viewer.role), code: course.code },
+})
+
+/** One offering in Manage offerings, with what its dialog opens with. */
+export interface ManageableOffering {
+  id: number
+  /** The collection row's status: a published offering never reopens as a draft. */
+  status: "draft" | "published"
+  period: string
+  /** Its name and dates, for the second line of its row. */
+  detail: string
+  /** Without one, publishing makes the viewer its teaching team, so asks their role. */
+  hasTeachingTeam: boolean
+  values: CourseOfferingDialogValues
+}
+
+/** A course's offerings for one of its owner or editors, drafts included. */
+export interface ManageableOfferings {
+  courseId: number
+  courseCode: string
+  /** The viewer's profile position, the default "Your role". */
+  role: string
+  /** Unscheduled drafts first, then newest first. */
+  offerings: ManageableOffering[]
+}
+
+export const toManageableOffering = (
+  version: CourseVersion,
+  status: ManageableOffering["status"],
+  role: string,
+): ManageableOffering => ({
+  detail: [version.name, periodRange(version)].filter(Boolean).join(" - "),
+  hasTeachingTeam: Boolean(version.teachingTeam?.length),
+  id: version.id,
+  period: offeringPeriod(version),
+  status,
+  // A correction always needs a new summary, so the last one never carries over.
+  values: { ...toOfferingFieldValues(version, role), changeSummary: "" },
+})
+
+export const blankOfferingValues = (role: string): CourseOfferingDialogValues => ({
+  additionalInfo: null,
+  assessments: null,
+  changeSummary: "",
+  deliveryFormat: "",
+  endDate: "",
+  learningOutcomes: null,
+  name: "",
+  programme: "",
+  projectType: "",
+  role,
+  startDate: "",
+  term: "",
+  year: "",
+})
+
+/**
+ * A new offering copying `source`'s content. Its period, dates and change summary
+ * start empty: those describe one teaching period, and the period must be new.
+ */
+export const startFromOffering = (source: ManageableOffering): CourseOfferingDialogValues => ({
+  ...source.values,
+  changeSummary: "",
+  endDate: "",
+  startDate: "",
+  term: "",
+  year: "",
 })
 
 export interface CoursesSummaryStats {

@@ -2,19 +2,23 @@ import { QueryKeys } from "@repo/shared/constants/query-keys"
 import type { Course, CourseVersion } from "@repo/shared/payload-types"
 import { cacheLife, cacheTag } from "next/cache"
 import { connection } from "next/server"
-import type { Where } from "payload"
+import { Forbidden, NotFound, type PayloadRequest, type Where } from "payload"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
+import { canEditCourse } from "@/payload/access/Courses/Courses"
 import type { CourseTableRow } from "./components/CoursesTable"
 import {
   type CoursesSummaryStats,
+  type ManageableOffering,
+  type ManageableOfferings,
   type MyCoursesSummary,
   type MyDraftCourses,
   summarizeCourses,
   summarizeMyCourses,
   toCourseTableRow,
   toEditableDraftCourse,
+  toManageableOffering,
 } from "./courses.format"
 import { currentOffering, selectOffering } from "./courses.offerings"
 import {
@@ -267,4 +271,80 @@ export const resolveCourseOffering = async (
   await connection()
   const now = new Date()
   return { courseId, now, ...selectOffering(offerings, offering, now) }
+}
+
+// Unscheduled drafts sort first: they're the ones still being written.
+const byStartNewestFirst = (a: ManageableOfferingSource, b: ManageableOfferingSource) => {
+  const start = (version: CourseVersion) =>
+    version.startDate ? Date.parse(version.startDate) : Number.POSITIVE_INFINITY
+  return start(b.version) - start(a.version) || b.version.id - a.version.id
+}
+
+type ManageableOfferingSource = { version: CourseVersion; status: ManageableOffering["status"] }
+
+/**
+ * Every offering of a course, drafts included, for Manage offerings - or `null`
+ * unless the viewer is a member who owns or edits it. Admins get `null` too: the
+ * offering actions refuse them, as the course actions do, so the button would
+ * only lead to errors.
+ *
+ * Viewer-specific like `getMyDraftCourses`, so it stays uncached and reads as the
+ * member. Each offering comes from two reads: the collection row says whether it
+ * is published and holds the publication, while a draft's newest revision only
+ * lives in its versions, so drafts are read with `draft: true`.
+ */
+export const getManageableOfferings = async (
+  courseId: number,
+): Promise<ManageableOfferings | null> => {
+  const { collection, user } = await getCurrentUser()
+  if (collection !== Slugs.Collections.MEMBERS) return null
+
+  const payload = await getPayloadClient()
+  const course = await payload
+    .findByID({
+      collection: Slugs.Collections.COURSES,
+      id: courseId,
+      depth: 0,
+      overrideAccess: false,
+      user,
+    })
+    .catch((error: unknown) => {
+      // A course the member can't read is simply not theirs to manage. Anything
+      // else still hides the button, but is worth knowing about.
+      if (!(error instanceof NotFound || error instanceof Forbidden))
+        payload.logger.error({ err: error }, "getManageableOfferings failed")
+      return null
+    })
+  // The rule the course hooks enforce, so the button shows exactly when they allow it.
+  if (!course || !canEditCourse({ user: { ...user, collection } } as PayloadRequest, course))
+    return null
+
+  const read = (draft: boolean) =>
+    payload.find({
+      collection: Slugs.Collections.COURSE_VERSIONS,
+      where: { course: { equals: courseId } },
+      depth: 0,
+      draft,
+      overrideAccess: false,
+      pagination: false,
+      user,
+    })
+  const [{ docs: rows }, { docs: revisions }] = await Promise.all([read(false), read(true)])
+
+  const newestRevision = new Map(revisions.map((revision) => [revision.id, revision]))
+  const sources: ManageableOfferingSource[] = rows.map((row) =>
+    row._status === "published"
+      ? { status: "published", version: row }
+      : { status: "draft", version: newestRevision.get(row.id) ?? row },
+  )
+
+  const role = user.position ?? ""
+  return {
+    courseCode: course.code,
+    courseId,
+    offerings: sources
+      .sort(byStartNewestFirst)
+      .map(({ version, status }) => toManageableOffering(version, status, role)),
+    role,
+  }
 }

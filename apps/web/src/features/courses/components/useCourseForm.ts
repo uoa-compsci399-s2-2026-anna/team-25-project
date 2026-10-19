@@ -1,19 +1,22 @@
 "use client"
 
-import type { AddCapstoneCourseDialogValues } from "@repo/ui/components/composite"
+import type {
+  AddCapstoneCourseDialogValues,
+  CourseOfferingDialogValues,
+} from "@repo/ui/components/composite"
 import { useState } from "react"
 import type { ActionResult } from "@/features/auth/actions/types"
 
-type FieldErrors = Partial<Record<keyof AddCapstoneCourseDialogValues, string>>
+type FieldErrors<Values> = Partial<Record<keyof Values, string>>
 export type CourseFormIntent = "draft" | "publish"
 type Submitting = CourseFormIntent | "delete"
 
-export interface UseCourseFormOptions {
-  initialValues: AddCapstoneCourseDialogValues
+export interface UseCourseFormOptions<Values> {
+  initialValues: Values
   /** The server action behind both buttons. */
-  save: (values: AddCapstoneCourseDialogValues, intent: CourseFormIntent) => Promise<ActionResult>
+  save: (values: Values, intent: CourseFormIntent) => Promise<ActionResult>
   /** Runs after a successful save, e.g. to toast and close the dialog. */
-  onSaved: (values: AddCapstoneCourseDialogValues, intent: CourseFormIntent) => void
+  onSaved: (values: Values, intent: CourseFormIntent) => void
   /** Shown when `save` itself throws rather than returning an error. */
   failureMessage: string
   /** Enables the dialog's "Delete draft" button. */
@@ -25,23 +28,20 @@ export interface UseCourseFormOptions {
 }
 
 /**
- * The form state and submit flow `AddCapstoneCourseDialog` needs, shared by
- * adding a course and reopening a draft. `dialogProps` spreads straight onto
- * the dialog; `reset` starts the form over, e.g. each time it opens.
+ * The form state and submit flow the course dialogs need, shared by adding a
+ * course, reopening a draft, and adding or editing an offering. `dialogProps`
+ * spreads straight onto `AddCapstoneCourseDialog` or `CourseOfferingDialog`;
+ * `reset` starts the form over, e.g. each time it opens.
  */
-export function useCourseForm({
-  initialValues,
-  save,
-  onSaved,
-  failureMessage,
-  remove,
-}: UseCourseFormOptions) {
+export function useCourseForm<
+  Values extends AddCapstoneCourseDialogValues | CourseOfferingDialogValues,
+>({ initialValues, save, onSaved, failureMessage, remove }: UseCourseFormOptions<Values>) {
   const [values, setValues] = useState(initialValues)
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors<Values>>({})
   const [formError, setFormError] = useState<string | undefined>(undefined)
   const [submitting, setSubmitting] = useState<Submitting | undefined>(undefined)
 
-  const reset = (nextValues: AddCapstoneCourseDialogValues) => {
+  const reset = (nextValues: Values) => {
     setValues(nextValues)
     setFieldErrors({})
     setFormError(undefined)
@@ -65,7 +65,7 @@ export function useCourseForm({
         return
       }
 
-      setFieldErrors((result.fieldErrors as FieldErrors | undefined) ?? {})
+      setFieldErrors((result.fieldErrors as FieldErrors<Values> | undefined) ?? {})
       setFormError(result.formError)
     } catch {
       setFormError(thrownMessage)
@@ -91,10 +91,8 @@ export function useCourseForm({
         (() => void run("delete", remove.action, remove.onRemoved, remove.failureMessage)),
       onPublish: () => void submit("publish"),
       onSaveDraft: () => void submit("draft"),
-      onValueChange: <Field extends keyof AddCapstoneCourseDialogValues>(
-        field: Field,
-        value: AddCapstoneCourseDialogValues[Field],
-      ) => setValues((current) => ({ ...current, [field]: value })),
+      onValueChange: <Field extends keyof Values>(field: Field, value: Values[Field]) =>
+        setValues((current) => ({ ...current, [field]: value })),
       submitting,
       values,
     },

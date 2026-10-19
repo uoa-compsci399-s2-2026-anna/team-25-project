@@ -1,10 +1,12 @@
 import type { Admin, Course, CourseVersion, Member } from "@repo/shared/payload-types"
 import { connection } from "next/server"
+import { NotFound } from "payload"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import {
   getCoursesTableData,
+  getManageableOfferings,
   getMyCoursesSummary,
   getMyDraftCourses,
   getPublishedCourse,
@@ -519,6 +521,130 @@ describe("resolveCourseOffering", () => {
       offerings: [],
       selected: undefined,
       current: undefined,
+    })
+  })
+})
+
+describe("getManageableOfferings", () => {
+  const member = { id: 1, position: "Senior Lecturer" } as Member
+  const findByID = vi.fn()
+  const logger = { error: vi.fn() }
+
+  beforeEach(() => {
+    find.mockReset()
+    logger.error.mockReset()
+    findByID.mockReset().mockResolvedValue(course({ id: 7, owner: 1 }))
+    vi.mocked(getPayloadClient).mockResolvedValue({
+      find,
+      findByID,
+      logger,
+    } as unknown as Awaited<ReturnType<typeof getPayloadClient>>)
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: member })
+  })
+
+  // Collection rows first, then newest revisions, as the query reads them.
+  const offerings = (rows: CourseVersion[], revisions: CourseVersion[] = rows) =>
+    find.mockResolvedValueOnce({ docs: rows }).mockResolvedValueOnce({ docs: revisions })
+
+  it("returns nothing for an admin, whom the offering actions refuse", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "admin", user: { id: 1 } as Admin })
+
+    expect(await getManageableOfferings(7)).toBeNull()
+    expect(findByID).not.toHaveBeenCalled()
+  })
+
+  it("returns nothing to a member who neither owns nor edits the course", async () => {
+    findByID.mockResolvedValue(course({ id: 7, owner: 2, editors: [3] }))
+
+    expect(await getManageableOfferings(7)).toBeNull()
+    expect(find).not.toHaveBeenCalled()
+  })
+
+  it("returns nothing when the member can't read the course", async () => {
+    findByID.mockRejectedValue(new NotFound())
+
+    expect(await getManageableOfferings(7)).toBeNull()
+    expect(logger.error).not.toHaveBeenCalled()
+  })
+
+  // Still hides the button, which only leads to the same failure, but is logged.
+  it("logs any other failure to read the course", async () => {
+    const outage = new Error("connection refused")
+    findByID.mockRejectedValue(outage)
+
+    expect(await getManageableOfferings(7)).toBeNull()
+    expect(logger.error).toHaveBeenCalledWith({ err: outage }, "getManageableOfferings failed")
+  })
+
+  it("lists every offering for an editor, read as them", async () => {
+    findByID.mockResolvedValue(course({ id: 7, owner: 2, editors: [{ id: 1 }] }))
+    offerings([version({ id: 3 })])
+
+    const result = await getManageableOfferings(7)
+
+    expect(result).toMatchObject({
+      courseCode: "COMPSCI 399",
+      courseId: 7,
+      role: "Senior Lecturer",
+    })
+    expect(result?.offerings.map((offering) => offering.id)).toEqual([3])
+    for (const draft of [false, true]) {
+      expect(find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          collection: "courseVersions",
+          draft,
+          overrideAccess: false,
+          user: member,
+          where: { course: { equals: 7 } },
+        }),
+      )
+    }
+  })
+
+  it("takes a draft from its newest revision, and a published offering from its row", async () => {
+    offerings(
+      [
+        version({ id: 3, name: "Published" }),
+        version({ _status: "draft", id: 4, name: "First save", startDate: "2027-07-12" }),
+      ],
+      [
+        version({ _status: "draft", id: 3, name: "Pending admin edit" }),
+        version({ _status: "draft", id: 4, name: "Latest save", startDate: "2027-07-12" }),
+      ],
+    )
+
+    const result = await getManageableOfferings(7)
+
+    expect(result?.offerings.map(({ id, status, values }) => [id, status, values.name])).toEqual([
+      [4, "draft", "Latest save"],
+      [3, "published", "Published"],
+    ])
+  })
+
+  it("lists unscheduled drafts first, then newest first", async () => {
+    offerings([
+      version({ id: 1, startDate: "2025-07-21" }),
+      version({ id: 2, startDate: "2026-07-20" }),
+      version({ _status: "draft", id: 5, startDate: undefined, term: undefined, year: undefined }),
+    ])
+
+    const result = await getManageableOfferings(7)
+
+    expect(result?.offerings.map((offering) => offering.id)).toEqual([5, 2, 1])
+  })
+
+  it("says whether each has a teaching team, and never carries a change summary over", async () => {
+    offerings([
+      version({ changeSummary: "Old fix", id: 3, teachingTeam: [{ member: 1, role: "Lecturer" }] }),
+    ])
+
+    const [offering] = (await getManageableOfferings(7))?.offerings ?? []
+
+    expect(offering).toMatchObject({ hasTeachingTeam: true, period: "Semester 2 2026" })
+    expect(offering.values).toMatchObject({
+      changeSummary: "",
+      role: "Senior Lecturer",
+      year: "2026",
     })
   })
 })
