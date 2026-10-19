@@ -1,9 +1,12 @@
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2"
 import { postgresAdapter } from "@payloadcms/db-postgres"
+import { nodemailerAdapter } from "@payloadcms/email-nodemailer"
 import { lexicalEditor } from "@payloadcms/richtext-lexical"
 import { s3Storage } from "@payloadcms/storage-s3"
 import type { Config } from "@repo/shared/payload-types"
+import nodemailer from "nodemailer"
 import { buildConfig } from "payload"
 import sharp from "sharp"
 import { Admin } from "./payload/collections/Admin"
@@ -73,6 +76,19 @@ export default buildConfig({
     migrationDir: path.resolve(dirname, "./payload/migrations"),
     push: false,
   }),
+  // Unset, Payload falls back to logging each email's recipient and subject.
+  email: process.env.SES_FROM_ADDRESS
+    ? nodemailerAdapter({
+        defaultFromAddress: process.env.SES_FROM_ADDRESS,
+        defaultFromName: "CCCA",
+        transport: nodemailer.createTransport({
+          SES: {
+            sesClient: new SESv2Client({ region: process.env.SES_REGION || undefined }),
+            SendEmailCommand,
+          },
+        }),
+      })
+    : undefined,
   sharp,
   upload: {
     limits: { fileSize: 50 * 1024 * 1024 },

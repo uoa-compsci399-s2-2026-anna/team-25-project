@@ -51,6 +51,8 @@ Copy `.env.example` to `.env` and fill in:
 | `AWS_PROFILE` | Optional local AWS profile, such as an AWS SSO profile |
 | `AWS_ACCESS_KEY_ID` | Optional local AWS credential; deployed environments can use an IAM role |
 | `AWS_SECRET_ACCESS_KEY` | Optional local AWS credential; deployed environments can use an IAM role |
+| `SES_REGION` | AWS region of the SES sending identity; leave empty to use `AWS_REGION` or the AWS profile's region |
+| `SES_FROM_ADDRESS` | Verified SES sender address; leave empty to log emails to the console instead of sending them |
 
 ## Development
 
