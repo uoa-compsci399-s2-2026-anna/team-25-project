@@ -6,6 +6,7 @@ import { CourseOfferingList } from "@repo/ui/components/composite"
 import { Avatar, AvatarFallback, Heading, Separator, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
 import { RichTextContent } from "@/components/RichTextContent"
+import { StringHrefLink } from "@/components/StringHrefLink"
 import { Routes } from "@/lib/routes"
 import { offeringPeriod, periodRange } from "../../courses.format"
 import { offeringTiming } from "../../courses.offerings"
@@ -163,7 +164,7 @@ export const CourseOffering = async ({
                   .filter(Boolean)
                   .join(" - "),
               }))}
-              linkComponent={Link}
+              linkComponent={StringHrefLink}
               selectedId={offering.id}
             />
           </CourseOfferingSidebarCard>

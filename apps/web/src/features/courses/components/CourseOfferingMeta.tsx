@@ -1,6 +1,6 @@
 import { CourseOfferingNotice, CourseOfferingPeriodBadge } from "@repo/ui/components/composite"
 import { Skeleton } from "@repo/ui/components/ui"
-import Link from "next/link"
+import { StringHrefLink } from "@/components/StringHrefLink"
 import { Routes } from "@/lib/routes"
 import { formatDate, offeringPeriod } from "../courses.format"
 import { offeringTiming } from "../courses.offerings"
@@ -37,7 +37,7 @@ export const CourseOfferingMeta = async ({
         <CourseOfferingNotice
           currentHref={offeringHref(courseId)}
           currentPeriod={offeringPeriod(current)}
-          linkComponent={Link}
+          linkComponent={StringHrefLink}
           period={offeringPeriod(selected)}
           timing={timing}
         />
