@@ -1,6 +1,7 @@
 import {
   Avatar,
   AvatarFallback,
+  AvatarGroupCount,
   AvatarImage,
   Badge,
   type BadgeProps,
@@ -17,6 +18,7 @@ import {
 import { cn } from "@repo/ui/lib/utils"
 import type * as React from "react"
 import { Fragment } from "react"
+import { BylineFade } from "./byline-fade"
 
 /** Matches `ProposalStatus` by value, without coupling the design system to it. */
 type ProposalCardStatus = "active" | "closed"
@@ -79,13 +81,6 @@ const initials = (name: string) =>
     .map((part) => [...part].slice(0, 1).join(""))
     .join("")
     .toUpperCase() || "?"
-
-/**
- * Clips to one line and fades the last 3rem to nothing, so a byline too long for the card
- * trails off instead of wrapping. Text that fits ends before the fade and is left as is.
- */
-const bylineFade =
-  "overflow-hidden whitespace-nowrap [mask-image:linear-gradient(to_right,black_calc(100%-3rem),transparent)]"
 
 function ProposalCard({
   authors,
@@ -171,7 +166,7 @@ function ProposalCard({
         <div className="flex min-w-0 items-center gap-3">
           {/* The names sit right beside them, so the photos and initials are decorative. */}
           <div aria-hidden className="flex shrink-0 -space-x-3">
-            {authors.map((author) => (
+            {authors.slice(0, 3).map((author) => (
               <Avatar
                 className="ring-2 ring-brand-cream group-data-[status=closed]/card:opacity-60"
                 key={author.href ?? author.name}
@@ -180,9 +175,14 @@ function ProposalCard({
                 <AvatarFallback>{initials(author.name)}</AvatarFallback>
               </Avatar>
             ))}
+            {authors.length > 3 && (
+              <AvatarGroupCount className="ring-brand-cream">
+                +{authors.length - 3}
+              </AvatarGroupCount>
+            )}
           </div>
           <div className="min-w-0 flex-1 text-sm leading-snug">
-            <p className={cn(bylineFade, "font-medium")}>
+            <BylineFade className="font-medium">
               {authors.map((author, index) => (
                 <Fragment key={author.href ?? author.name}>
                   {index > 0 && ", "}
@@ -195,16 +195,11 @@ function ProposalCard({
                   )}
                 </Fragment>
               ))}
-            </p>
+            </BylineFade>
             {institutions && (
-              <p
-                className={cn(
-                  bylineFade,
-                  "text-muted-foreground group-data-[status=closed]/card:text-neutral-400",
-                )}
-              >
+              <BylineFade className="text-muted-foreground group-data-[status=closed]/card:text-neutral-400">
                 {institutions}
-              </p>
+              </BylineFade>
             )}
           </div>
         </div>

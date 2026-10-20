@@ -44,6 +44,15 @@ describe("ProposalCard", () => {
     expect(screen.getByText("University of Example, Victoria University")).toBeInTheDocument()
   })
 
+  it("shows at most three avatars, with a count of the rest", () => {
+    const names = ["Anna Tui", "Ben Lee", "Cara Diaz", "Dan Ng", "Eve Ora"]
+    render(<ProposalCard {...props} authors={names.map((name) => ({ name }))} />)
+
+    expect(screen.getByText("CD")).toBeInTheDocument()
+    expect(screen.queryByText("DN")).not.toBeInTheDocument()
+    expect(screen.getByText("+2")).toBeInTheDocument()
+  })
+
   it("only lists an institution once when authors share it", () => {
     render(
       <ProposalCard
