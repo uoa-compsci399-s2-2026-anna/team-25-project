@@ -11,7 +11,7 @@ import { getProposalByIdCached } from "@/features/proposals/proposals.queries"
 import { ProposalEdit } from "../ProposalEditor/proposalEditFields"
 
 // pulls the id off the front, e.g. "12-peer-review" or just "12"
-const parseProposalId = (idSlug: string) => {
+export const parseProposalId = (idSlug: string) => {
   const id = Number(idSlug.split("-")[0])
   return Number.isInteger(id) ? id : null
 }

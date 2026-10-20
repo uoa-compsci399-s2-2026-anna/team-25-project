@@ -1,5 +1,6 @@
 import { initials } from "@repo/shared/utils/initials"
 import { AnimatedSuspense, Heading } from "@repo/ui/components/ui"
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import type { SearchParams } from "nuqs/server"
 import {
@@ -12,6 +13,11 @@ import { loadRedirectParam, redirectTarget, withRedirect } from "@/features/auth
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
 import { Routes } from "@/lib/routes"
+
+export const metadata: Metadata = {
+  title: "Complete your profile",
+  description: "Add the details other members see in the directory.",
+}
 
 /**
  * Isolated so only this reads headers() (via getCurrentUser) - the heading and

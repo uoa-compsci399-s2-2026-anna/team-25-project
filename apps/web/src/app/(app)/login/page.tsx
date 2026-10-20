@@ -1,6 +1,12 @@
 import { Heading } from "@repo/ui/components/ui"
+import type { Metadata } from "next"
 import { Suspense } from "react"
 import { LoginForm } from "@/features/auth/components/LoginForm/LoginForm"
+
+export const metadata: Metadata = {
+  title: "Log in",
+  description: "Log in to see proposals, course data and member contact details.",
+}
 
 export default function Page() {
   return (

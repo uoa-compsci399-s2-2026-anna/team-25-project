@@ -2,7 +2,10 @@ import type { Metadata } from "next"
 import { PageContainer, PageHeader } from "@/features/layout/components"
 import { PrivacyPolicy } from "@/features/legal/components/PrivacyPolicy"
 
-export const metadata: Metadata = { title: "Privacy Policy" }
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: "How CCCA collects, uses and protects your information.",
+}
 
 export default function Page() {
   return (

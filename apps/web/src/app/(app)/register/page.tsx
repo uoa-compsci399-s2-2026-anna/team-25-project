@@ -1,7 +1,13 @@
 import { Heading } from "@repo/ui/components/ui"
+import type { Metadata } from "next"
 import { Suspense } from "react"
 import { RegisterDetailsForm, RegisterStepper } from "@/features/auth/components"
 import { getInstitutionsCached } from "@/features/institutions/queries"
+
+export const metadata: Metadata = {
+  title: "Join CCCA",
+  description: "Free membership for academics who teach or research computing capstone courses.",
+}
 
 export default async function Page() {
   const institutions = await getInstitutionsCached()
