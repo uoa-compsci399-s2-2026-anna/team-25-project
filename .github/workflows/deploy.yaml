@@ -1,0 +1,100 @@
+name: Deploy
+
+on:
+  push:
+    tags: ['v*']
+  # To rerun a deploy, pick the tag in "Use workflow from".
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+
+jobs:
+  deploy:
+    name: Deploy Web
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    env:
+      RULE_TAG: cmo-deploy-${{ github.run_id }}
+      DB_SECURITY_GROUP: ${{ vars.DB_SECURITY_GROUP }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Anyone with write access can push a tag, so only deploy commits that main CI has passed.
+      - name: Check the tag is on main
+        run: |
+          git merge-base --is-ancestor HEAD origin/main || {
+            echo "::error::$GITHUB_REF_NAME is not on main."
+            exit 1
+          }
+
+      - name: Check CI passed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          runs="$(gh run list --workflow "CI Pipeline" --branch main --commit "$GITHUB_SHA" --status success --json databaseId --jq length)"
+          if [ "$runs" = "0" ]; then
+            echo "::error::CI Pipeline has not passed on main for $GITHUB_SHA."
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v6
+        id: cache
+        with:
+          path: |
+            node_modules
+            */node_modules
+            packages/*/node_modules
+            apps/*/node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node_modules-
+
+      - name: Install dependencies if cache misses
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ap-southeast-2
+          mask-aws-account-id: true
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Deploy
+        env:
+          ECS_SERVICE_ARN: ${{ vars.ECS_SERVICE_ARN }}
+        run: scripts/deploy.sh
+
+      # deploy.sh closes its rule in a trap. This catches a run that was killed before the trap ran.
+      - name: Remove the temporary database rule
+        if: always()
+        run: |
+          ids="$(aws ec2 describe-security-group-rules --filters "Name=group-id,Values=$DB_SECURITY_GROUP" \
+            --query "SecurityGroupRules[?Description=='$RULE_TAG'].SecurityGroupRuleId" --output text)"
+          for id in $ids; do
+            aws ec2 revoke-security-group-ingress --group-id "$DB_SECURITY_GROUP" --security-group-rule-ids "$id"
+          done
