@@ -68,7 +68,7 @@ type TypedPick<
 ) => ReactNode
 
 /** Select can also clear to null, so `nullLabel` is only offered where the field allows null. */
-type TypedSelect<T> = <K extends FieldsWithin<T, string>>(
+type TypedSelect<T> = <K extends FieldsWithin<T, string | number>>(
   props: Omit<ComponentProps<typeof EditSelect>, "name" | "value" | "options" | "nullLabel"> & {
     name: K
     options: Option<NonNullable<DeepValue<T, K>>>[]

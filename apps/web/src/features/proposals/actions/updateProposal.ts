@@ -5,10 +5,10 @@ import { updateProposalSchema } from "@repo/shared/schemas/proposals"
 import { updateTag } from "next/cache"
 import { ValidationError } from "payload"
 import type { ActionResult } from "@/features/auth/actions/types"
+import { fieldErrorsFromIssues, resultFromValidationError } from "@/lib/actions/validationErrors"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
-import { fieldErrorsFromIssues, resultFromValidationError } from "./validationErrors"
 
 const SAVE_FAILED = "Could not save your changes. Try again."
 

@@ -4,7 +4,7 @@ import {
   RESOURCE_ATTACHMENTS_MAX_FILES,
   RESOURCE_ATTACHMENTS_MAX_MB,
 } from "../constants/resource-attachments"
-import { addResourceFormSchema, resourceAttachmentsError } from "./resources"
+import { addResourceFormSchema, resourceAttachmentsError, updateResourceSchema } from "./resources"
 
 const description = (text: string) => ({
   root: {
@@ -37,6 +37,29 @@ describe("addResourceFormSchema", () => {
   ])("refuses %s", (_label, overrides, message) => {
     const result = addResourceFormSchema.safeParse({ ...valid, ...overrides })
     expect(result.error?.issues[0]?.message).toBe(message)
+  })
+})
+
+describe("updateResourceSchema", () => {
+  it("accepts any subset of the fields, so a left-out field is kept as is", () => {
+    expect(updateResourceSchema.safeParse({}).success).toBe(true)
+    expect(updateResourceSchema.parse({ title: " New title " })).toEqual({ title: "New title" })
+  })
+
+  it("accepts a course id, or null to unlink it", () => {
+    expect(updateResourceSchema.parse({ course: 4 })).toEqual({ course: 4 })
+    expect(updateResourceSchema.parse({ course: null })).toEqual({ course: null })
+  })
+
+  it.each([0, -1, 1.5, "4"])("refuses a course that isn't an id (%o)", (course) => {
+    expect(updateResourceSchema.safeParse({ course }).success).toBe(false)
+  })
+
+  it.each([
+    [{ title: "  " }, "Title is required"],
+    [{ description: description("") }, "Description is required"],
+  ])("still refuses an emptied field (%o)", (input, message) => {
+    expect(updateResourceSchema.safeParse(input).error?.issues[0]?.message).toBe(message)
   })
 })
 

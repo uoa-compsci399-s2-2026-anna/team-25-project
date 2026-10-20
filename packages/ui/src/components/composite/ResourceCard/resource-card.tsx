@@ -29,6 +29,8 @@ type ResourceCardLinkProps = {
 }
 
 type ResourceCardProps = Omit<React.ComponentProps<"div">, "title"> & {
+  /** At the end of the footer, beside the owner - e.g. an Edit link. */
+  action?: React.ReactNode
   title: string
   href?: string
   linkComponent?: React.ElementType<ResourceCardLinkProps>
@@ -50,6 +52,7 @@ const sharedFormatter = new Intl.DateTimeFormat("en-NZ", {
 })
 
 function ResourceCard({
+  action,
   className,
   course,
   href,
@@ -112,13 +115,19 @@ function ResourceCard({
 
       <CardFooter className="flex-col items-stretch gap-3 border-t-0 bg-transparent pt-0">
         <Separator />
-        {owner.href ? (
-          <LinkComponent className="group/owner flex min-w-0 items-center gap-2" href={owner.href}>
-            {byline}
-          </LinkComponent>
-        ) : (
-          <div className="flex min-w-0 items-center gap-2">{byline}</div>
-        )}
+        <div className="flex items-center justify-between gap-3">
+          {owner.href ? (
+            <LinkComponent
+              className="group/owner flex min-w-0 items-center gap-2"
+              href={owner.href}
+            >
+              {byline}
+            </LinkComponent>
+          ) : (
+            <div className="flex min-w-0 items-center gap-2">{byline}</div>
+          )}
+          {action}
+        </div>
       </CardFooter>
     </Card>
   )
