@@ -1,0 +1,40 @@
+# Unlike .gitignore, Docker matches these against the whole path relative to the
+# build context root, so recursive entries need an explicit **/ prefix.
+
+# dependencies
+**/node_modules
+
+# testing
+**/coverage
+**/test-results
+
+# next.js
+**/.next
+**/out
+
+# production
+**/build
+**/dist
+
+# turborepo
+**/.turbo
+
+# misc
+**/.DS_Store
+**/*.pem
+
+# local env files
+**/.env*
+
+# typescript
+**/*.tsbuildinfo
+**/next-env.d.ts
+
+# storybook
+**/storybook-static
+
+# vcs / ci / tools
+.git
+.github
+.claude
+.agents
