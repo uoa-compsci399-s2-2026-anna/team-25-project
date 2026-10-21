@@ -21,7 +21,6 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     env:
-      RULE_TAG: cmo-deploy-${{ github.run_id }}
       DB_SECURITY_GROUP: ${{ vars.DB_SECURITY_GROUP }}
     steps:
       - name: Checkout
@@ -90,11 +89,12 @@ jobs:
         run: scripts/deploy.sh
 
       # deploy.sh closes its rule in a trap. This catches a run that was killed before the trap ran.
+      # deploy.sh tags the rule cmo-deploy-<time>-<run id>, so match on the run id.
       - name: Remove the temporary database rule
         if: always()
         run: |
           ids="$(aws ec2 describe-security-group-rules --filters "Name=group-id,Values=$DB_SECURITY_GROUP" \
-            --query "SecurityGroupRules[?Description=='$RULE_TAG'].SecurityGroupRuleId" --output text)"
+            --query "SecurityGroupRules[?Description && starts_with(Description, 'cmo-deploy-') && ends_with(Description, '-$GITHUB_RUN_ID')].SecurityGroupRuleId" --output text)"
           for id in $ids; do
             aws ec2 revoke-security-group-ingress --group-id "$DB_SECURITY_GROUP" --security-group-rule-ids "$id"
           done
