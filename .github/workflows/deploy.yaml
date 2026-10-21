@@ -77,6 +77,7 @@ jobs:
         run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Configure AWS credentials
+        id: aws
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
@@ -95,7 +96,7 @@ jobs:
       # deploy.sh closes its rule in a trap. This catches a run that was killed before the trap ran.
       # deploy.sh tags the rule cmo-deploy-<time>-<run id>, so match on the run id.
       - name: Remove the temporary database rule
-        if: always()
+        if: always() && steps.aws.outcome == 'success'
         run: |
           ids="$(aws ec2 describe-security-group-rules --filters "Name=group-id,Values=$DB_SECURITY_GROUP" \
             --query "SecurityGroupRules[?Description && starts_with(Description, 'cmo-deploy-') && ends_with(Description, '-$GITHUB_RUN_ID')].SecurityGroupRuleId" --output text)"
