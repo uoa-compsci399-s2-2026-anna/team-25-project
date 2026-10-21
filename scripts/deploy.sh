@@ -8,7 +8,8 @@ set -euo pipefail
 export AWS_REGION="${AWS_REGION:-ap-southeast-2}"
 : "${ECS_SERVICE_ARN:?Set ECS_SERVICE_ARN}"
 : "${DB_SECURITY_GROUP:?Set DB_SECURITY_GROUP}"
-RULE_TAG="${RULE_TAG:-cmo-deploy-${GITHUB_RUN_ID:-local-$(date +%s)}}"
+# The tag starts with the creation time, so a later run can tell when a rule is stale.
+RULE_TAG="cmo-deploy-$(date +%s)-${GITHUB_RUN_ID:-local}"
 
 cd "$(git rev-parse --show-toplevel)"
 
@@ -52,9 +53,13 @@ DATABASE_URL="$(aws secretsmanager get-secret-value --secret-id "$(secret_arn DA
 PAYLOAD_SECRET="$(aws secretsmanager get-secret-value --secret-id "$(secret_arn PAYLOAD_SECRET)" --query SecretString --output text)"
 export DATABASE_URL PAYLOAD_SECRET
 
-# A killed run can leave its rule open, so remove old ones before adding a new one.
+# A killed run can leave its rule open, so remove rules older than an hour before adding a new one.
+# A younger rule can belong to a deploy that is still running. A rule with no timestamp counts as stale.
 STALE_RULES="$(aws ec2 describe-security-group-rules --filters "Name=group-id,Values=$DB_SECURITY_GROUP" --output json |
-  jq -r '.SecurityGroupRules[] | select(.IsEgress | not) | select((.Description // "") | startswith("cmo-deploy-")) | .SecurityGroupRuleId')"
+  jq -r --argjson cutoff "$(($(date +%s) - 3600))" '.SecurityGroupRules[] | select(.IsEgress | not)
+    | select((.Description // "") | startswith("cmo-deploy-"))
+    | select(((.Description | capture("^cmo-deploy-(?<t>[0-9]+)-").t | tonumber) // 0) < $cutoff)
+    | .SecurityGroupRuleId')"
 for id in $STALE_RULES; do
   echo "Removing stale rule $id"
   aws ec2 revoke-security-group-ingress --group-id "$DB_SECURITY_GROUP" --security-group-rule-ids "$id" >/dev/null
