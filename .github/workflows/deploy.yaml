@@ -19,6 +19,9 @@ jobs:
   deploy:
     name: Deploy Web
     if: startsWith(github.ref, 'refs/tags/v')
+    # The run uses the workflow file from the tagged commit, which can remove the checks below. The AWS role
+    # only trusts this environment, and the environment only allows v* tags, so other refs get no credentials.
+    environment: production
     runs-on: ubuntu-latest
     env:
       DB_SECURITY_GROUP: ${{ vars.DB_SECURITY_GROUP }}
