@@ -67,12 +67,12 @@ RULE_ID="$(aws ec2 authorize-security-group-ingress --group-id "$DB_SECURITY_GRO
   --query 'SecurityGroupRules[0].SecurityGroupRuleId' --output text)"
 echo "Opened $RULE_ID"
 
-pnpm --filter web migrate
-
 aws ecr get-login-password | docker login --username AWS --password-stdin "$REGISTRY"
 
 # The docker driver cannot export a registry cache, so use a docker-container builder.
 docker buildx inspect cmo-deploy >/dev/null 2>&1 || docker buildx create --name cmo-deploy --driver docker-container >/dev/null
+
+pnpm --filter web migrate
 
 # --provenance=false stops attestation manifests from filling the ECR lifecycle limit.
 BUILD_SECRETS_HASH="$(printf '%s\n%s' "$DATABASE_URL" "$PAYLOAD_SECRET" | sha256sum | cut -d' ' -f1)"
