@@ -64,11 +64,22 @@ export const ProposalsList = async ({ searchParams }: { searchParams: Promise<Se
     <div className="flex w-full flex-col gap-8 p-10 md:p-12">
       <div className="grid w-full gap-8 lg:grid-cols-2 lg:gap-10">
         {proposals.map((proposal) => {
-          const author = proposal.author.find((author) => typeof author !== "number")
-          const institution =
-            author && typeof author.institution !== "number" ? author.institution : undefined
-          const avatar =
-            author?.avatar && typeof author.avatar !== "number" ? author.avatar : undefined
+          // An id instead of a member means it wasn't populated, so there's nothing to show.
+          const authors = proposal.author.flatMap((author) => {
+            if (typeof author === "number") return []
+            const institution =
+              typeof author.institution !== "number" ? author.institution : undefined
+            const avatar =
+              author.avatar && typeof author.avatar !== "number" ? author.avatar : undefined
+            return [
+              {
+                avatarSrc: avatar?.url ?? undefined,
+                href: Routes.MEMBERS.MEMBER(author.id),
+                institution: institution?.name,
+                name: `${author.firstName} ${author.lastName}`,
+              },
+            ]
+          })
           const href = Routes.PROPOSALS.PROPOSAL(proposal.id, proposal.proposalSlug)
           // Same rule as StatusAuthorCardServer: admins, and the proposal's authors.
           const canEdit =
@@ -93,12 +104,7 @@ export const ProposalsList = async ({ searchParams }: { searchParams: Promise<Se
                   </Button>
                 )
               }
-              author={{
-                avatarSrc: avatar?.url ?? undefined,
-                href: author ? Routes.MEMBERS.MEMBER(author.id) : undefined,
-                institution: institution?.name,
-                name: author ? `${author.firstName} ${author.lastName}` : "Unknown author",
-              }}
+              authors={authors.length > 0 ? authors : [{ name: "Unknown author" }]}
               href={href}
               key={proposal.id}
               linkComponent={StringHrefLink}
