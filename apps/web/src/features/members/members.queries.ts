@@ -132,6 +132,25 @@ export const getMemberCounts = async (filters: MemberFilters) => {
   return { shown, total }
 }
 
+/** Every member profile, for the sitemap. */
+export const getMemberSitemapEntries = async () => {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: Slugs.Collections.MEMBERS,
+    depth: 0,
+    pagination: false,
+    select: { updatedAt: true },
+  })
+  return docs
+}
+
+export const getMemberSitemapEntriesCached = async () => {
+  "use cache"
+  cacheLife("max")
+  cacheTag(QueryKeys.MEMBERS.ROOT)
+  return getMemberSitemapEntries()
+}
+
 // The local API overrides access, so `email` is always on the result regardless
 // of `showEmailPublicly` - anything rendering it must gate it itself.
 export const getMemberDetails = async (memberId: number): Promise<Member | null> => {

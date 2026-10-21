@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next"
+import { getMemberSitemapEntriesCached } from "@/features/members/members.queries"
 import { Routes } from "@/lib/routes"
 import { siteUrl } from "@/lib/siteUrl"
 
@@ -12,6 +13,13 @@ const publicRoutes = [
   Routes.PRIVACY,
 ]
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  return publicRoutes.map((route) => ({ url: new URL(route, siteUrl).href }))
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const members = await getMemberSitemapEntriesCached()
+  return [
+    ...publicRoutes.map((route) => ({ url: new URL(route, siteUrl).href })),
+    ...members.map((member) => ({
+      url: new URL(Routes.MEMBERS.MEMBER(member.id), siteUrl).href,
+      lastModified: member.updatedAt,
+    })),
+  ]
 }
