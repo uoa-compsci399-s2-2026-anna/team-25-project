@@ -23,7 +23,6 @@ export const Routes = {
     PROPOSAL: (proposalId: number, proposalSlug?: string | null) =>
       route(`/proposals/${proposalSlug ? `${proposalId}-${proposalSlug}` : String(proposalId)}`),
   },
-  ABOUT: route("/about"),
   NEWS: route("/news"),
   RESOURCES: {
     ROOT: route("/resources"),
