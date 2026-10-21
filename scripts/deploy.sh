@@ -99,4 +99,14 @@ CONTAINER="$(jq -c --arg img "$IMAGE:$SHA" '.service.activeConfigurations[0].pri
 aws ecs update-express-gateway-service --service-arn "$ECS_SERVICE_ARN" --primary-container "$CONTAINER" >/dev/null
 echo "Waiting for the service to become stable"
 aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE"
+
+# services-stable also passes after a rollback, so check that the primary deployment runs the new image.
+TASK_DEF="$(aws ecs describe-services --cluster "$CLUSTER" --services "$SERVICE" --output json |
+  jq -r '.services[0].deployments[] | select(.status == "PRIMARY") | .taskDefinition')"
+RUNNING_IMAGES="$(aws ecs describe-task-definition --task-definition "$TASK_DEF" --output json |
+  jq -r '.taskDefinition.containerDefinitions[].image')"
+if ! grep -qxF "$IMAGE:$SHA" <<<"$RUNNING_IMAGES"; then
+  echo "Rollout failed. The primary deployment runs $TASK_DEF, which does not use image $SHA." >&2
+  exit 1
+fi
 echo "Deployed image $SHA"
