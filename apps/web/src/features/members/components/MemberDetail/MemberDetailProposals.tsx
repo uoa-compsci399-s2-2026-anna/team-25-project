@@ -17,7 +17,9 @@ import { Lightbulb } from "lucide-react"
 import Link from "next/link"
 import { withEditHash } from "@/components/Editor/editOnLoad"
 import { EmptyState } from "@/components/EmptyState"
+import { withRedirect } from "@/features/auth/redirect"
 import { formatDate } from "@/features/courses/courses.format"
+import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Routes } from "@/lib/routes"
 import { isOwnProfile } from "../../members.ownership"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
@@ -25,9 +27,29 @@ import { getMemberProposalsCached } from "../../members.queries"
 import { mobileSection } from "./mobileSection"
 
 type MemberProposal = Awaited<ReturnType<typeof getMemberProposalsCached>>[number]
+const memberHref = Routes.MEMBERS.MEMBER
 
 export const MemberProposals = async ({ params }: { params: MembersRouteParams }) => {
   const memberId = await parseMemberId(params)
+  const { user } = await getCurrentUser()
+
+  if (!user) {
+    return (
+      <section className={cn("flex flex-col gap-4 max-md:order-4", mobileSection)}>
+        <Heading level="h2">Proposals</Heading>
+        <p className="text-muted-foreground text-sm">
+          <Link
+            className="underline underline-offset-2"
+            href={withRedirect(Routes.LOGIN, memberHref(memberId))}
+          >
+            Sign in
+          </Link>{" "}
+          to see the proposals this member has posted.
+        </p>
+      </section>
+    )
+  }
+
   const [proposals, canEdit] = await Promise.all([
     getMemberProposalsCached(memberId),
     isOwnProfile(memberId),
