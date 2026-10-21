@@ -47,6 +47,27 @@ describe("AvatarUpload", () => {
     expect(screen.getByRole("button", { name: "Upload photo" })).toBeDisabled()
   })
 
+  it("hides Remove when there's no photo", () => {
+    render(<AvatarUpload fallback="JD" />)
+    expect(screen.queryByRole("button", { name: "Remove" })).not.toBeInTheDocument()
+  })
+
+  it("offers Remove for a saved photo, and clears it when pressed", () => {
+    const onFileSelect = vi.fn()
+    render(
+      <AvatarUpload
+        fallback="JD"
+        image={{ alt: "", src: "/anna.png" }}
+        onFileSelect={onFileSelect}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }))
+
+    expect(onFileSelect).toHaveBeenCalledWith(undefined)
+    expect(screen.queryByRole("button", { name: "Remove" })).not.toBeInTheDocument()
+  })
+
   it("forwards the xxl size to the avatar", () => {
     const { container } = render(<AvatarUpload fallback="JD" size="xxl" />)
     expect(container.querySelector('[data-size="xxl"]')).toBeInTheDocument()

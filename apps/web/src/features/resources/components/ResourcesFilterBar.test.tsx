@@ -13,10 +13,10 @@ const institutions = [
   { label: "University of Canterbury", value: 3 },
 ]
 
-const renderFilterBar = (searchParams = "") => {
+const renderFilterBar = (searchParams = "", { hasMemory = false } = {}) => {
   const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
   render(<ResourcesFilterBar courses={courses} institutions={institutions} />, {
-    wrapper: withNuqsTestingAdapter({ onUrlUpdate, searchParams }),
+    wrapper: withNuqsTestingAdapter({ hasMemory, onUrlUpdate, searchParams }),
   })
   return onUrlUpdate
 }
@@ -67,7 +67,9 @@ describe("ResourcesFilterBar", () => {
 
   it("searches by text, resetting the page", async () => {
     const user = userEvent.setup()
-    const onUrlUpdate = renderFilterBar("?page=3")
+    // nuqs debounces each key on its own timer, so on a slow runner q and the page reset can
+    // reach the URL in separate updates - memory makes the later one build on the earlier.
+    const onUrlUpdate = renderFilterBar("?page=3", { hasMemory: true })
 
     // Pasted rather than typed, so the debounce restarts once, not once per key. The wait
     // allows for a slow CI runner under coverage; it returns as soon as the URL updates.

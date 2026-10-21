@@ -2,24 +2,24 @@ import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { AVATAR_KEY, PROFILE_KEY } from "../../actions/profileFormData"
+import { EditButton } from "@/components/Editor/EditButton"
+import { EditSwitch } from "@/components/Editor/EditField"
+import { EditInput } from "@/components/Editor/EditInput"
+import { EditSelect } from "@/components/Editor/EditSelect"
+import { EditTagList } from "@/components/Editor/EditTagList"
+import { AVATAR_KEY, PROFILE_KEY, REMOVE_AVATAR } from "../../actions/profileFormData"
 import { updateMemberProfile } from "../../actions/updateMemberProfile"
-import { EditButton } from "./EditButton"
-import { EditProvider } from "./EditContext"
-import { EditSwitch } from "./EditField"
-import { EditInput } from "./EditInput"
-import { EditSelect } from "./EditSelect"
-import { EditTagList } from "./EditTagList"
 import { EditUploadAvatar } from "./EditUploadAvatar"
+import { MemberEditProvider } from "./MemberEditProvider"
 
 vi.mock("../../actions/updateMemberProfile", () => ({ updateMemberProfile: vi.fn() }))
 
 const renderEditable = (ui: ReactNode) =>
   render(
-    <EditProvider>
+    <MemberEditProvider>
       {ui}
       <EditButton />
-    </EditProvider>,
+    </MemberEditProvider>,
   )
 
 /** The FormData the form last sent to updateMemberProfile. */
@@ -278,6 +278,51 @@ describe("Edit components", () => {
 
       expect(await screen.findByRole("button", { name: "Edit" })).toBeInTheDocument()
       expect(submittedFormData().get(AVATAR_KEY)).toEqual(photo)
+    })
+
+    it("drops the picked photo when it's removed, keeping the current one", async () => {
+      const user = userEvent.setup()
+      const { container } = renderAvatar()
+
+      await startEditing(user)
+      await pickFile(container, new File(["ok"], "me.png", { type: "image/png" }))
+      await user.click(screen.getByRole("button", { name: "Remove" }))
+      expect(screen.queryByRole("button", { name: "Remove" })).not.toBeInTheDocument()
+      await user.click(screen.getByRole("button", { name: "Done" }))
+
+      expect(await screen.findByRole("button", { name: "Edit" })).toBeInTheDocument()
+      expect(submittedFormData().get(AVATAR_KEY)).toBeNull()
+    })
+
+    it("offers Remove for a saved photo and asks the server to clear it", async () => {
+      const user = userEvent.setup()
+      renderEditable(
+        <EditUploadAvatar
+          fallback="AT"
+          image={{ alt: "", src: "/anna.png" }}
+          name="avatar"
+          view={<span>Photo</span>}
+        />,
+      )
+
+      await startEditing(user)
+      await user.click(screen.getByRole("button", { name: "Remove" }))
+      await user.click(screen.getByRole("button", { name: "Done" }))
+
+      expect(await screen.findByRole("button", { name: "Edit" })).toBeInTheDocument()
+      expect(submittedFormData().get(AVATAR_KEY)).toBe(REMOVE_AVATAR)
+    })
+
+    it("clears the error when a rejected photo is removed", async () => {
+      const user = userEvent.setup()
+      const { container } = renderAvatar()
+
+      await startEditing(user)
+      await pickFile(container, new File(["x".repeat(11)], "big.png", { type: "image/png" }))
+      expect(screen.getByRole("alert")).toBeInTheDocument()
+
+      await user.click(screen.getByRole("button", { name: "Remove" }))
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument()
     })
   })
 })

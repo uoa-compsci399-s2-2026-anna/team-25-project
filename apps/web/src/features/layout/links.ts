@@ -13,6 +13,16 @@ export const siteLinks = {
   privacy: { name: "Privacy", href: Routes.PRIVACY, membersOnly: false },
 } as const
 
+// Shown by both the desktop and mobile navbars.
+export const navbarLinks = [
+  siteLinks.home,
+  siteLinks.members,
+  siteLinks.courses,
+  siteLinks.proposals,
+  siteLinks.publications,
+  siteLinks.resources,
+]
+
 export type SiteLink = (typeof siteLinks)[keyof typeof siteLinks]
 
 export const visibleLinks = <T extends { membersOnly: boolean }>(

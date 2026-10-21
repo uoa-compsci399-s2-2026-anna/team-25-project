@@ -6,6 +6,10 @@ import { loadProposalsPage } from "../proposals.queries"
 import { ProposalsList, ProposalsListSkeleton } from "./ProposalsList"
 
 vi.mock("../proposals.queries", () => ({ loadProposalsPage: vi.fn() }))
+// Signed out, so no Edit links.
+vi.mock("@/lib/payload/getCurrentUser", () => ({
+  getCurrentUser: vi.fn().mockResolvedValue({ collection: null, user: null }),
+}))
 
 const proposal = (overrides: Partial<Proposal> = {}): Proposal =>
   ({
@@ -48,6 +52,33 @@ describe("ProposalsList", () => {
       page: 4,
     })
     expect(screen.getByText(message)).toBeInTheDocument()
+  })
+
+  it("links to the unfiltered list when the filters match nothing", async () => {
+    vi.mocked(loadProposalsPage).mockResolvedValue({
+      docs: [],
+      totalDocs: 0,
+      totalPages: 0,
+    } as unknown as ProposalsPage)
+
+    render(await ProposalsList({ searchParams: Promise.resolve({ q: "peer" }) }))
+
+    expect(screen.getByRole("link", { name: "Clear filters" })).toHaveAttribute(
+      "href",
+      "/proposals",
+    )
+  })
+
+  it("has no clear link when no filter is set", async () => {
+    vi.mocked(loadProposalsPage).mockResolvedValue({
+      docs: [],
+      totalDocs: 0,
+      totalPages: 0,
+    } as unknown as ProposalsPage)
+
+    render(await ProposalsList({ searchParams: Promise.resolve({}) }))
+
+    expect(screen.queryByRole("link", { name: "Clear filters" })).not.toBeInTheDocument()
   })
 
   it("links to the last page from past the end of the results", async () => {
@@ -140,7 +171,8 @@ describe("ProposalsList", () => {
       "href",
       "/proposals/1-peer-assessment",
     )
-    expect(screen.getByText("Anna Tui - University of Auckland")).toBeInTheDocument()
+    expect(screen.getByText("Anna Tui")).toBeInTheDocument()
+    expect(screen.getByText("University of Auckland")).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Unknown author proposal" })).toHaveAttribute(
       "href",
       "/proposals/2",
@@ -148,6 +180,39 @@ describe("ProposalsList", () => {
     expect(screen.getByText("Unknown author")).toBeInTheDocument()
     expect(screen.getByText("Hemi Rangi")).toBeInTheDocument()
     expect(screen.getAllByText("Assessment")).toHaveLength(2)
+  })
+
+  it("lists every populated author, each linked to their profile", async () => {
+    vi.mocked(loadProposalsPage).mockResolvedValue({
+      docs: [
+        proposal({
+          author: [
+            {
+              firstName: "Anna",
+              id: 1,
+              institution: { name: "University of Auckland" },
+              lastName: "Tui",
+            },
+            {
+              firstName: "Ben",
+              id: 2,
+              institution: { name: "Victoria University" },
+              lastName: "Lee",
+            },
+            99,
+          ] as unknown as Proposal["author"],
+        }),
+      ],
+      totalDocs: 1,
+      totalPages: 1,
+    } as unknown as ProposalsPage)
+
+    render(await ProposalsList({ searchParams: Promise.resolve({}) }))
+
+    expect(screen.getByRole("link", { name: "Anna Tui" })).toHaveAttribute("href", "/members/1")
+    expect(screen.getByRole("link", { name: "Ben Lee" })).toHaveAttribute("href", "/members/2")
+    expect(screen.getByText("University of Auckland, Victoria University")).toBeInTheDocument()
+    expect(screen.queryByText("Unknown author")).not.toBeInTheDocument()
   })
 })
 

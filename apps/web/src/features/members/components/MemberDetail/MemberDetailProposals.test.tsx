@@ -12,6 +12,8 @@ type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>
 
 const signedIn = { collection: "members", user: { id: 1 } } as unknown as CurrentUser
 const guest = { collection: null, user: null } as unknown as CurrentUser
+// Someone else's profile, so no Edit links.
+vi.mock("../../members.ownership", () => ({ isOwnProfile: vi.fn().mockResolvedValue(false) }))
 
 const renderProposals = async () =>
   render(await MemberProposals({ params: Promise.resolve({ memberId: "7" }) }))
@@ -45,10 +47,10 @@ describe("MemberProposals", () => {
     const user = userEvent.setup()
 
     await renderProposals()
-    expect(screen.getByText("No active proposals.")).toBeInTheDocument()
+    expect(screen.getByText("No active proposals")).toBeInTheDocument()
 
     await user.click(screen.getByRole("tab", { name: "Closed - 0" }))
-    expect(screen.getByText("No closed proposals.")).toBeInTheDocument()
+    expect(screen.getByText("No closed proposals")).toBeInTheDocument()
   })
 
   it("links each proposal to its page", async () => {

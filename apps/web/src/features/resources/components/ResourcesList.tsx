@@ -1,7 +1,8 @@
 import { PaginationNav, ResourceCard, ResourceCardSkeleton } from "@repo/ui/components/composite"
+import { FolderOpen, SearchX } from "lucide-react"
 import type { Route } from "next"
-import Link from "next/link"
 import type { SearchParams } from "nuqs/server"
+import { EmptyState } from "@/components/EmptyState"
 import { StringHrefLink } from "@/components/StringHrefLink"
 import { Routes } from "@/lib/routes"
 import { toResourceCardProps } from "../resource-card-props"
@@ -35,26 +36,26 @@ export const ResourcesList = async ({ searchParams }: { searchParams: Promise<Se
   const hasFilters = getPageHref(1) !== Routes.RESOURCES.ROOT
 
   if (resources.length === 0) {
+    if (totalDocs > 0) {
+      return (
+        <EmptyState
+          action={{ href: getPageHref(totalPages), label: "Go to the last page" }}
+          description="This page is past the end of the results."
+          icon={<SearchX />}
+          title="No more results"
+          variant="list"
+        />
+      )
+    }
+
     return (
-      <div className="flex flex-col items-center gap-2 p-10 text-center text-muted-foreground md:p-12">
-        {totalDocs > 0 ? (
-          <>
-            <p>This page is past the end of the results.</p>
-            <Link className="underline underline-offset-2" href={getPageHref(totalPages)}>
-              Go to the last page
-            </Link>
-          </>
-        ) : (
-          <>
-            <p>No resources match these filters.</p>
-            {hasFilters && (
-              <Link className="underline underline-offset-2" href={Routes.RESOURCES.ROOT}>
-                Clear filters
-              </Link>
-            )}
-          </>
-        )}
-      </div>
+      <EmptyState
+        action={hasFilters ? { href: Routes.RESOURCES.ROOT, label: "Clear filters" } : undefined}
+        description="No resources match these filters."
+        icon={<FolderOpen />}
+        title="No resources found"
+        variant="list"
+      />
     )
   }
 

@@ -252,4 +252,18 @@ describe("FilterBarSkeleton", () => {
     expect(group).toBeInTheDocument()
     expect(group?.querySelectorAll('[data-slot="filter-bar-skeleton-filter"]')).toHaveLength(2)
   })
+
+  it("lays a grouped skeleton out exactly like the grouped bar it stands in for", () => {
+    const { container } = render(
+      <>
+        <FilterBar {...props()} groupControls />
+        <FilterBarSkeleton filterCount={2} groupControls />
+      </>,
+    )
+
+    const bar = container.querySelector('[data-slot="filter-bar"]')
+    const skeleton = container.querySelector('[data-slot="filter-bar-skeleton"]')
+    expect(bar?.className).toContain("md:justify-center")
+    expect(skeleton?.className).toBe(bar?.className)
+  })
 })

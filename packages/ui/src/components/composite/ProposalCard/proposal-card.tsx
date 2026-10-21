@@ -1,6 +1,7 @@
 import {
   Avatar,
   AvatarFallback,
+  AvatarGroupCount,
   AvatarImage,
   Badge,
   type BadgeProps,
@@ -16,6 +17,8 @@ import {
 } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import type * as React from "react"
+import { Fragment } from "react"
+import { BylineFade } from "./byline-fade"
 
 /** Matches `ProposalStatus` by value, without coupling the design system to it. */
 type ProposalCardStatus = "active" | "closed"
@@ -41,11 +44,14 @@ type ProposalCardLinkProps = {
 }
 
 type ProposalCardProps = Omit<React.ComponentProps<"div">, "title"> & {
+  /** At the end of the footer, beside the author - e.g. an Edit link. */
+  action?: React.ReactNode
   title: string
   href?: string
   linkComponent?: React.ElementType<ProposalCardLinkProps>
   summary: string
-  author: ProposalCardAuthor
+  /** Every author, in order. A long list fades out at the end of the byline rather than wrapping. */
+  authors: ProposalCardAuthor[]
   /** A `Date`, or any string `Date` can parse (an ISO timestamp from Payload). */
   postedAt: Date | string
   status?: ProposalCardStatus
@@ -79,7 +85,8 @@ const initials = (name: string) =>
     .toUpperCase() || "?"
 
 function ProposalCard({
-  author,
+  action,
+  authors,
   className,
   href,
   linkComponent: LinkComponent = "a",
@@ -97,18 +104,10 @@ function ProposalCard({
   const posted = new Date(postedAt)
   const postedLabel = Number.isNaN(posted.getTime()) ? null : postedFormatter.format(posted)
 
-  const byline = (
-    <>
-      {/* The name sits right beside it, so the photo and initials are decorative. */}
-      <Avatar aria-hidden className="group-data-[status=closed]/card:opacity-60">
-        {author.avatarSrc && <AvatarImage alt="" src={author.avatarSrc} />}
-        <AvatarFallback>{initials(author.name)}</AvatarFallback>
-      </Avatar>
-      <p className="truncate text-muted-foreground text-sm group-hover/author:underline group-data-[status=closed]/card:text-neutral-400">
-        {author.institution ? `${author.name} - ${author.institution}` : author.name}
-      </p>
-    </>
-  )
+  // Listed once each, as on the proposal's own page, when authors share an institution.
+  const institutions = [
+    ...new Set(authors.flatMap(({ institution }) => (institution ? [institution] : []))),
+  ].join(", ")
 
   return (
     <Card
@@ -167,16 +166,47 @@ function ProposalCard({
 
       <CardFooter className="flex-col items-stretch gap-3 border-t-0 bg-transparent pt-0">
         <Separator />
-        {author.href ? (
-          <LinkComponent
-            className="group/author flex min-w-0 items-center gap-2"
-            href={author.href}
-          >
-            {byline}
-          </LinkComponent>
-        ) : (
-          <div className="flex min-w-0 items-center gap-2">{byline}</div>
-        )}
+        <div className="flex min-w-0 items-center gap-3">
+          {/* The names sit right beside them, so the photos and initials are decorative. */}
+          <div aria-hidden className="flex shrink-0 -space-x-3">
+            {authors.slice(0, 3).map((author) => (
+              <Avatar
+                className="ring-2 ring-brand-cream group-data-[status=closed]/card:opacity-60"
+                key={author.href ?? author.name}
+              >
+                {author.avatarSrc && <AvatarImage alt="" src={author.avatarSrc} />}
+                <AvatarFallback>{initials(author.name)}</AvatarFallback>
+              </Avatar>
+            ))}
+            {authors.length > 3 && (
+              <AvatarGroupCount className="ring-brand-cream">
+                +{authors.length - 3}
+              </AvatarGroupCount>
+            )}
+          </div>
+          <div className="min-w-0 flex-1 text-sm leading-snug">
+            <BylineFade className="font-medium">
+              {authors.map((author, index) => (
+                <Fragment key={author.href ?? author.name}>
+                  {index > 0 && ", "}
+                  {author.href ? (
+                    <LinkComponent className="hover:underline" href={author.href}>
+                      {author.name}
+                    </LinkComponent>
+                  ) : (
+                    author.name
+                  )}
+                </Fragment>
+              ))}
+            </BylineFade>
+            {institutions && (
+              <BylineFade className="text-muted-foreground group-data-[status=closed]/card:text-neutral-400">
+                {institutions}
+              </BylineFade>
+            )}
+          </div>
+          {action}
+        </div>
       </CardFooter>
     </Card>
   )

@@ -13,8 +13,7 @@
   "exports": {
     "./ui": "./dist/configs/ui-config.js",
     "./backend": "./dist/configs/backend-config.js",
-    "./frontend": "./dist/configs/frontend-config.js",
-    "./setups/dom": "./dist/setups/dom-setup.js"
+    "./frontend": "./dist/configs/frontend-config.js"
   },
   "dependencies": {
     "@vitejs/plugin-react-swc": "^4"

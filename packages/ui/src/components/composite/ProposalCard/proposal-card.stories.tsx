@@ -5,7 +5,7 @@ const meta: Meta<typeof ProposalCard> = {
   title: "composite/ProposalCard",
   component: ProposalCard,
   args: {
-    author: { institution: "University of Example", name: "Dr Anna Tui" },
+    authors: [{ institution: "University of Example", name: "Dr Anna Tui" }],
     postedAt: "2026-08-03T00:00:00.000Z",
     size: "default",
     status: "active",
@@ -54,30 +54,49 @@ export const WithoutTags: Story = {
 
 export const WithAvatar: Story = {
   args: {
-    author: {
-      avatarSrc: "https://github.com/shadcn.png",
-      institution: "University of Example",
-      name: "Dr Anna Tui",
-    },
+    authors: [
+      {
+        avatarSrc: "https://github.com/shadcn.png",
+        institution: "University of Example",
+        name: "Dr Anna Tui",
+      },
+    ],
   },
 }
 
 export const WithAuthorLink: Story = {
   args: {
-    author: {
-      href: "/members/1",
-      institution: "University of Example",
-      name: "Dr Anna Tui",
-    },
+    authors: [
+      {
+        href: "/members/1",
+        institution: "University of Example",
+        name: "Dr Anna Tui",
+      },
+    ],
+  },
+}
+
+/** Every author is listed; a byline too long for the card fades out instead of wrapping. */
+export const ManyAuthors: Story = {
+  args: {
+    authors: [
+      { href: "/members/1", institution: "University of Example", name: "Dr Anna Tui" },
+      { href: "/members/2", institution: "Victoria University", name: "Ben Lee" },
+      { href: "/members/3", institution: "University of Auckland", name: "Cara Diaz" },
+      { href: "/members/4", institution: "University of Example", name: "Dr Hemi Walker" },
+      { href: "/members/5", institution: "Monash University", name: "Priya Natarajan" },
+    ],
   },
 }
 
 export const LongContent: Story = {
   args: {
-    author: {
-      institution: "Te Whare Wānanga o Waitaha | University of Canterbury",
-      name: "Associate Professor Christopher Featherstonehaugh",
-    },
+    authors: [
+      {
+        institution: "Te Whare Wānanga o Waitaha | University of Canterbury",
+        name: "Associate Professor Christopher Featherstonehaugh",
+      },
+    ],
     tags: [
       { label: "Assessment" },
       { label: "Multi-institution", variant: "salmon" },

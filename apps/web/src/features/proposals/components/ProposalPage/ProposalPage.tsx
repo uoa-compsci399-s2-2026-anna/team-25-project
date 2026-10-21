@@ -2,11 +2,13 @@ import { AnimatedSuspense, Heading } from "@repo/ui/components/ui"
 import { notFound } from "next/navigation"
 import { RichTextContent } from "@/components/RichTextContent"
 import { AuthorByline } from "@/features/proposals/components/AuthorByline/AuthorByline"
+import { ProposalEditProvider } from "@/features/proposals/components/ProposalEditor/ProposalEditProvider"
 import { ProposalMeta } from "@/features/proposals/components/ProposalMeta/ProposalMeta"
 import { ProposalStatusRow } from "@/features/proposals/components/ProposalStatusRow/ProposalStatusRow"
 import { StatusAuthorCardServer } from "@/features/proposals/components/StatusAuthorCard/StatusAuthorCardServer"
 import { TagsCard } from "@/features/proposals/components/TagsCard/TagsCard"
 import { getProposalByIdCached } from "@/features/proposals/proposals.queries"
+import { ProposalEdit } from "../ProposalEditor/proposalEditFields"
 
 // pulls the id off the front, e.g. "12-peer-review" or just "12"
 const parseProposalId = (idSlug: string) => {
@@ -31,17 +33,35 @@ export const ProposalPage = async ({ params }: { params: Promise<{ idSlug: strin
   const authors = proposal.author.filter((author) => typeof author === "object")
 
   return (
-    <>
+    <ProposalEditProvider proposalId={id}>
       <div className="flex flex-col gap-6">
         <ProposalStatusRow
           createdAt={proposal.createdAt}
           status={proposal.status}
           updatedAt={proposal.updatedAt}
         />
-        <Heading level="h1">{proposal.title}</Heading>
+        <ProposalEdit.Input
+          label="Title"
+          name="title"
+          value={proposal.title}
+          view={<Heading level="h1">{proposal.title}</Heading>}
+        />
         <AuthorByline authors={authors} />
-        <p className="text-muted-foreground">{proposal.summary}</p>
-        <RichTextContent data={proposal.body} />
+        <ProposalEdit.Input
+          label="Summary"
+          maxLength={500}
+          multiline
+          name="summary"
+          value={proposal.summary}
+          view={<p className="text-muted-foreground">{proposal.summary}</p>}
+        />
+        <ProposalEdit.RichText
+          className="[&_[contenteditable]]:min-h-72"
+          label="Body"
+          name="body"
+          value={proposal.body}
+          view={<RichTextContent data={proposal.body} />}
+        />
         <ProposalMeta
           ethics={proposal.ethics}
           outputTarget={proposal.outputTarget}
@@ -55,6 +75,6 @@ export const ProposalPage = async ({ params }: { params: Promise<{ idSlug: strin
         </AnimatedSuspense>
         <TagsCard tags={proposal.tags} />
       </div>
-    </>
+    </ProposalEditProvider>
   )
 }

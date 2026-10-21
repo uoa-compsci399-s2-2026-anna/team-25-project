@@ -49,7 +49,6 @@ export function CoursesYourEntriesPanel({ myCourses }: CoursesYourEntriesPanelPr
               You convene {myCourses.total} course{myCourses.total === 1 ? "" : "s"}.{" "}
               {upToDateMessage(myCourses)}
             </p>
-            <p className="text-muted-foreground">Manage your courses →</p>
           </>
         )}
       </CardContent>

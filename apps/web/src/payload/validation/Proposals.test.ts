@@ -66,6 +66,24 @@ describe("validateProposalEndYear", () => {
     expect(await validateProposalEndYear(value, yearOptions)).toBe(true)
   })
 
+  it("rejects a start year moved past the saved end year", async () => {
+    expect(
+      await validateProposalEndYear(undefined, {
+        ...yearOptions,
+        siblingData: { startYear: 2030, endYear: 2027 },
+      }),
+    ).toBe("End year cannot be before the start year.")
+  })
+
+  it("accepts a start year moved up to the saved end year", async () => {
+    expect(
+      await validateProposalEndYear(undefined, {
+        ...yearOptions,
+        siblingData: { startYear: 2027, endYear: 2027 },
+      }),
+    ).toBe(true)
+  })
+
   it.each([{}, { startYear: null }, { startYear: "2027" }])(
     "skips comparison without a numeric start year: %j",
     async (siblingData) => {

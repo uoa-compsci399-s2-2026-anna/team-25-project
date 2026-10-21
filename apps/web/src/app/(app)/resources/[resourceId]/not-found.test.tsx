@@ -10,7 +10,7 @@ describe("resource not-found page", () => {
 
   it("links back to the resources list", () => {
     render(<NotFound />)
-    expect(screen.getByRole("button", { name: "Browse resources" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Browse resources" })).toHaveAttribute(
       "href",
       Routes.RESOURCES.ROOT,
     )

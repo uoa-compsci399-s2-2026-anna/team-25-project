@@ -46,6 +46,13 @@ runs:
         name: coverage-ui
         path: packages/ui/coverage
 
+    - name: Download Shared Coverage
+      uses: actions/download-artifact@v8
+      continue-on-error: true
+      with:
+        name: coverage-shared
+        path: packages/shared/coverage
+
     - name: Merge Coverage Files
       shell: bash
       run: pnpm test:coverage:merge

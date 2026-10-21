@@ -4,7 +4,9 @@ import {
   ProposalTimeframeStartPeriodLabels,
 } from "@repo/shared/enums/proposals"
 import type { Proposal } from "@repo/shared/payload-types"
+import { toSelectOptions } from "@repo/shared/utils/select-options"
 import { cn } from "@repo/ui/lib/utils"
+import { ProposalEdit } from "../ProposalEditor/proposalEditFields"
 
 export const formatTimeframe = (timeframe: Proposal["timeframe"]) => {
   const start = `${ProposalTimeframeStartPeriodLabels[timeframe.startPeriod]} ${timeframe.startYear}`
@@ -27,9 +29,51 @@ export const ProposalMeta = ({
   ethics: Proposal["ethics"]
 }) => {
   const items = [
-    { label: "Timeframe", value: formatTimeframe(timeframe) },
-    { label: "Output target", value: outputTarget || "—" },
-    { label: "Ethics", value: ProposalEthicsStatusLabels[ethics] },
+    {
+      label: "Timeframe",
+      // Both start fields show together, as the schema needs both. The end isn't sent, so
+      // Payload keeps the saved end and checks the new start against it.
+      value: (
+        <div className="flex gap-2">
+          <ProposalEdit.Select
+            label="Start period"
+            name="timeframe.startPeriod"
+            options={toSelectOptions(ProposalTimeframeStartPeriodLabels)}
+            value={timeframe.startPeriod}
+            view={formatTimeframe(timeframe)}
+          />
+          <ProposalEdit.NumberInput
+            className="w-24"
+            label="Start year"
+            name="timeframe.startYear"
+            value={timeframe.startYear}
+          />
+        </div>
+      ),
+    },
+    {
+      label: "Output target",
+      value: (
+        <ProposalEdit.Input
+          label="Output target"
+          name="outputTarget"
+          value={outputTarget}
+          view={outputTarget || "—"}
+        />
+      ),
+    },
+    {
+      label: "Ethics",
+      value: (
+        <ProposalEdit.Select
+          label="Ethics"
+          name="ethics"
+          options={toSelectOptions(ProposalEthicsStatusLabels)}
+          value={ethics}
+          view={ProposalEthicsStatusLabels[ethics]}
+        />
+      ),
+    },
   ]
 
   return (
@@ -42,7 +86,7 @@ export const ProposalMeta = ({
           <span className="text-muted-foreground text-xs uppercase tracking-wide">
             {item.label}
           </span>
-          <span className="font-bold text-sm">{item.value}</span>
+          <div className="font-bold text-sm">{item.value}</div>
         </div>
       ))}
     </div>
