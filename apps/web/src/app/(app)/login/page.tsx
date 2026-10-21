@@ -5,7 +5,7 @@ import { LoginForm } from "@/features/auth/components/LoginForm/LoginForm"
 
 export const metadata: Metadata = {
   title: "Log in",
-  description: "Log in to see proposals, course data and member contact details.",
+  description: "Log in to see proposals, course data, resources and members' email addresses.",
 }
 
 export default function Page() {
