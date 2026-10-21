@@ -1,7 +1,8 @@
 import { PaginationNav } from "@repo/ui/components/composite"
+import { SearchX, Users } from "lucide-react"
 import type { Route } from "next"
-import Link from "next/link"
 import type { SearchParams } from "nuqs/server"
+import { EmptyState } from "@/components/EmptyState"
 import { StringHrefLink } from "@/components/StringHrefLink"
 import { Routes } from "@/lib/routes"
 import { countMembers, getMembers, MEMBERS_PAGE_SIZE } from "../../members.queries"
@@ -11,6 +12,9 @@ import {
   toMemberFilters,
 } from "../../members.search-params"
 import { MemberCard, MemberCardSkeleton } from "./MemberCard"
+
+// Rows split by dividers on phones.
+const gridClassName = "grid w-full gap-6 max-sm:gap-0 max-sm:divide-y sm:grid-cols-2 lg:grid-cols-4"
 
 // Stable keys for the placeholder cards, which have no data of their own.
 const skeletonCardIds = Array.from({ length: MEMBERS_PAGE_SIZE }, (_, i) => `member-skeleton-${i}`)
@@ -27,33 +31,43 @@ export const MembersList = async ({ searchParams }: { searchParams: Promise<Sear
   const getPageHref = (page: number) =>
     serializeMemberSearchParams(Routes.MEMBERS.ROOT, { ...params, page }) as Route
 
+  // The serializer leaves out defaults, so any query string means a filter is set.
+  const hasFilters = getPageHref(1) !== Routes.MEMBERS.ROOT
+
   if (members.length === 0) {
     // find() reports no totals past the end of a relationship-filtered query, so both
     // the empty state and the page to recover to come from a count instead.
     const matches = await countMembers(filters)
 
+    if (matches > 0) {
+      return (
+        <EmptyState
+          action={{
+            href: getPageHref(Math.ceil(matches / MEMBERS_PAGE_SIZE)),
+            label: "Go to the last page",
+          }}
+          description="This page is past the end of the results."
+          icon={<SearchX />}
+          title="No more results"
+          variant="list"
+        />
+      )
+    }
+
     return (
-      <div className="flex flex-col items-center gap-2 p-10 text-center text-muted-foreground md:p-12">
-        {matches > 0 ? (
-          <>
-            <p>This page is past the end of the results.</p>
-            <Link
-              className="underline underline-offset-2"
-              href={getPageHref(Math.ceil(matches / MEMBERS_PAGE_SIZE))}
-            >
-              Go to the last page
-            </Link>
-          </>
-        ) : (
-          <p>No members match these filters.</p>
-        )}
-      </div>
+      <EmptyState
+        action={hasFilters ? { href: Routes.MEMBERS.ROOT, label: "Clear filters" } : undefined}
+        description="No members match these filters."
+        icon={<Users />}
+        title="No members found"
+        variant="list"
+      />
     )
   }
 
   return (
     <div className="flex w-full flex-col gap-8 p-10 md:p-12">
-      <div className="grid w-full gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className={gridClassName}>
         {members.map((member) => {
           const institution =
             typeof member.institution === "number" ? undefined : member.institution
@@ -88,7 +102,7 @@ export const MembersList = async ({ searchParams }: { searchParams: Promise<Sear
 // A full page of cards, so the footer stays out of view until the real list lands.
 export const MembersListSkeleton = () => (
   <div className="flex w-full flex-col gap-8 p-10 md:p-12">
-    <div className="grid w-full gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div className={gridClassName}>
       {skeletonCardIds.map((id) => (
         <MemberCardSkeleton key={id} />
       ))}

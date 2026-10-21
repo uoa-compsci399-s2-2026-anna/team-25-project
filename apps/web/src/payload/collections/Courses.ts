@@ -1,7 +1,7 @@
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
-import { isAdmin, isSignedIn } from "../access"
-import { courseRead, courseWrite } from "../access/Courses/Courses"
+import { isSignedIn } from "../access"
+import { courseDelete, courseRead, courseWrite } from "../access/Courses/Courses"
 import { guardCourseWrite } from "../hooks"
 import {
   assertCourseDeletable,
@@ -19,7 +19,7 @@ export const Courses: CollectionConfig = {
     create: isSignedIn,
     read: courseRead,
     update: courseWrite,
-    delete: isAdmin,
+    delete: courseDelete,
   },
   indexes: [{ fields: ["institution", "code"], unique: true }],
   hooks: {

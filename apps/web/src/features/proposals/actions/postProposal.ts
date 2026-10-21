@@ -9,37 +9,7 @@ import type { ActionResult } from "@/features/auth/actions/types"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
-
-type ZodIssue = { message: string; path: PropertyKey[] }
-
-const fieldErrorsFromIssues = (issues: readonly ZodIssue[]): Record<string, string> => {
-  const fieldErrors: Record<string, string> = {}
-  for (const issue of issues) {
-    const field = issue.path.join(".")
-    // Only the first message per field is shown, matching one message per input.
-    if (field && !fieldErrors[field]) {
-      fieldErrors[field] = issue.message
-    }
-  }
-  return fieldErrors
-}
-
-// A path-less or empty errors list produces {} - fall back to a form-level
-// message rather than silently returning nothing to show.
-const resultFromValidationError = (
-  error: ValidationError,
-  fallbackFormError: string,
-): ActionResult => {
-  const fieldErrors: Record<string, string> = {}
-  for (const { path, message } of error.data?.errors ?? []) {
-    if (path && !fieldErrors[path]) {
-      fieldErrors[path] = message
-    }
-  }
-  return Object.keys(fieldErrors).length > 0
-    ? { fieldErrors, ok: false }
-    : { formError: fallbackFormError, ok: false }
-}
+import { fieldErrorsFromIssues, resultFromValidationError } from "./validationErrors"
 
 export const postProposal = async (input: unknown): Promise<ActionResult> => {
   const parsed = postProposalFormSchema.safeParse(input)

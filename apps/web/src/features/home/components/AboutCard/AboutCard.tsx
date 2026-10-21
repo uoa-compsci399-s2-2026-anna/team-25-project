@@ -11,7 +11,7 @@ export const AboutCard = ({
   title: string
 }) => {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl bg-brand-blush/60 p-6">
+    <div className="flex flex-col gap-3 rounded-lg bg-brand-blush/60 p-4 sm:p-6">
       <span className="font-bold text-primary text-xl">{number}</span>
       <Heading level="h3">{title}</Heading>
       <p className="text-muted-foreground text-sm">{description}</p>

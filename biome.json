@@ -100,6 +100,33 @@
   },
   "overrides": [
     {
+      "includes": ["apps/web/src/features/**", "!**/*.test.tsx"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@/components/Editor/EditCheckboxList": "Use the feature's typed controls from createEditFields, e.g. ProposalEdit.Input.",
+                  "@/components/Editor/EditInput": "Use the feature's typed controls from createEditFields, e.g. ProposalEdit.Input.",
+                  "@/components/Editor/EditNumberInput": "Use the feature's typed controls from createEditFields, e.g. ProposalEdit.Input.",
+                  "@/components/Editor/EditRichText": "Use the feature's typed controls from createEditFields, e.g. ProposalEdit.Input.",
+                  "@/components/Editor/EditSelect": "Use the feature's typed controls from createEditFields, e.g. ProposalEdit.Input.",
+                  "@/components/Editor/EditTabs": "Use the feature's typed controls from createEditFields, e.g. ProposalEdit.Input.",
+                  "@/components/Editor/EditTagList": "Use the feature's typed controls from createEditFields, e.g. ProposalEdit.Input.",
+                  "@/components/Editor/EditContext": {
+                    "importNames": ["EditProvider"],
+                    "message": "Use the feature's typed Provider from createEditFields, e.g. ProposalEdit.Provider."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
       "includes": ["**/*.stories.tsx"],
       "linter": {
         "rules": {

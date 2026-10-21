@@ -1,7 +1,7 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
 import { isValidElement, type ReactElement, type ReactNode } from "react"
 import { describe, expect, it, vi } from "vitest"
-import { MemberBio } from "./MemberDetailBio"
+import { MemberBio, MemberBioSkeleton } from "./MemberDetailBio"
 import { MemberContacts, MemberContactsSkeleton } from "./MemberDetailContacts"
 import { MemberDetailLeftColumn } from "./MemberDetailLeftColumn"
 import { MemberProposals, MemberProposalsSkeleton } from "./MemberDetailProposals"
@@ -38,7 +38,7 @@ describe("MemberDetailLeftColumn", () => {
     const column = MemberDetailLeftColumn({ params }) as ReactElement<Props>
 
     expect(boundaries(column)).toEqual([
-      [MemberBio, undefined],
+      [MemberBio, MemberBioSkeleton],
       [MemberProposals, MemberProposalsSkeleton],
       [MemberResources, MemberResourcesSkeleton],
       [MemberPublications, MemberPublicationsSkeleton],

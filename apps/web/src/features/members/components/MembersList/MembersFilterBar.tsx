@@ -65,6 +65,7 @@ export const MembersFilterBar = ({ institutions, researchInterests }: MembersFil
           value: params.interest,
         } satisfies FilterBarFilter<string>,
       ]}
+      groupControls
       // The input updates at once; only the URL waits. Clearing it skips the wait.
       onSearchChange={(q) => update({ q }, { limitUrlUpdates: q ? debounce(300) : undefined })}
       onSortChange={(sort) => update({ sort })}

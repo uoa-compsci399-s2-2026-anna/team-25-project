@@ -11,7 +11,7 @@ import { richTextHasText, richTextSchema } from "./shared"
 
 const timeframeSchema = z
   .object({
-    startYear: z.number().int().min(2000).max(2100),
+    startYear: z.number({ error: "Start year is required" }).int().min(2000).max(2100),
     startPeriod: z.enum(ProposalTimeframeStartPeriod),
     endYear: z.number().int().min(2000).max(2100).optional(),
     endPeriod: z.enum(ProposalTimeframeEndPeriod).optional(),
@@ -40,8 +40,6 @@ export const createProposalSchema = z.object({
   status: z.enum(ProposalStatus).default(ProposalStatus.ACTIVE),
 }) satisfies z.ZodType<Omit<Proposal, "id" | "createdAt" | "updatedAt">>
 
-export type CreateProposalInput = z.infer<typeof createProposalSchema>
-
 export const postProposalFormSchema = createProposalSchema
   .omit({ author: true, status: true })
   .extend({
@@ -49,4 +47,9 @@ export const postProposalFormSchema = createProposalSchema
     outputTarget: z.string(),
   })
 
-export type PostProposalFormInput = z.infer<typeof postProposalFormSchema>
+// Editing in place: any field may be left out to keep it as is. author isn't listed, so zod
+// strips it - an edit can't change who wrote a proposal. status has no default here, unlike
+// on create, or every edit that left it out would reopen a closed proposal.
+export const updateProposalSchema = postProposalFormSchema
+  .extend({ status: z.enum(ProposalStatus) })
+  .partial()

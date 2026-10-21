@@ -1,6 +1,5 @@
-import { Button, Eyebrow, Heading } from "@repo/ui/components/ui"
-import Link from "next/link"
-import { Routes } from "@/lib/routes"
+import { AnimatedSuspense, Eyebrow, Heading } from "@repo/ui/components/ui"
+import { JoinButtons, JoinButtonsSkeleton } from "./JoinButtons"
 
 const criteria = [
   "Academics and teaching staff involved in computing capstone courses",
@@ -22,7 +21,7 @@ export const WhoCanJoinSection = () => {
   // The last section on the page, so its own bottom padding is what keeps the
   // footer off it. The footer belongs to the layout, not here.
   return (
-    <section className="px-8 pt-12 pb-20 md:px-16 md:pb-24">
+    <section className="px-8 pt-4 pb-6 sm:pt-12 sm:pb-20 md:px-16 md:pb-24">
       <div className="grid gap-8 md:grid-cols-2">
         <div className="flex flex-col gap-6">
           <Heading level="h2">Who can join</Heading>
@@ -38,26 +37,12 @@ export const WhoCanJoinSection = () => {
             ))}
           </ul>
 
-          <div className="flex flex-wrap items-center gap-4 pl-8">
-            <Button
-              nativeButton={false}
-              render={<Link href={Routes.REGISTER.ROOT} />}
-              variant="button-mauve"
-            >
-              Register with your uni email
-            </Button>
-            <Button
-              borderColor="charcoal"
-              nativeButton={false}
-              render={<Link href={Routes.LOGIN} />}
-              variant="button-transparent"
-            >
-              Log in
-            </Button>
-          </div>
+          <AnimatedSuspense fallback={<JoinButtonsSkeleton />}>
+            <JoinButtons />
+          </AnimatedSuspense>
         </div>
 
-        <div className="flex flex-col gap-6 rounded-2xl bg-brand-blush/60 p-8">
+        <div className="flex flex-col gap-6 rounded-lg bg-brand-blush/60 p-5 sm:p-8">
           <Eyebrow id={stepsLabelId}>How joining works</Eyebrow>
           <ol aria-labelledby={stepsLabelId} className="flex flex-col gap-4">
             {steps.map((step, index) => (

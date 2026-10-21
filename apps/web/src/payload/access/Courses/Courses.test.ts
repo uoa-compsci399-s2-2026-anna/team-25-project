@@ -2,7 +2,7 @@ import type { Course } from "@repo/shared/payload-types"
 import type { PayloadRequest } from "payload"
 import { describe, expect, it } from "vitest"
 import { Slugs } from "@/lib/payload/slugs"
-import { canEditCourse, courseRead, courseWrite } from "./Courses"
+import { canEditCourse, courseDelete, courseRead, courseWrite } from "./Courses"
 
 const request = (user: unknown) => ({ user }) as PayloadRequest
 
@@ -58,5 +58,18 @@ describe("course collection access", () => {
     expect(courseWrite({ req: memberReq(42) })).toEqual({
       or: [{ owner: { equals: 42 } }, { editors: { contains: 42 } }],
     })
+  })
+  it("lets an admin delete any course", () => {
+    expect(courseDelete({ req: adminReq })).toBe(true)
+  })
+
+  it("lets a member delete only never-published courses they own", () => {
+    expect(courseDelete({ req: memberReq(42) })).toEqual({
+      and: [{ owner: { equals: 42 } }, { hasPublishedVersion: { not_equals: true } }],
+    })
+  })
+
+  it("lets an anonymous request delete nothing", () => {
+    expect(courseDelete({ req: request(null) })).toBe(false)
   })
 })

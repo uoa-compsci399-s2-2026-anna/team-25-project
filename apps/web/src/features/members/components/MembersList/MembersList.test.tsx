@@ -35,7 +35,16 @@ describe("MembersList empty states", () => {
     render(await renderAt("4", { q: "zzzz" }))
 
     expect(screen.getByText("No members match these filters.")).toBeInTheDocument()
-    expect(screen.queryByRole("link")).not.toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Clear filters" })).toHaveAttribute("href", "/members")
+  })
+
+  it("has no clear link when no filter is set", async () => {
+    emptyPage()
+    vi.mocked(countMembers).mockResolvedValue(0)
+
+    render(await MembersList({ searchParams: Promise.resolve({}) }))
+
+    expect(screen.queryByRole("link", { name: "Clear filters" })).not.toBeInTheDocument()
   })
 
   it("offers the last page when the page overshoots results that do exist", async () => {

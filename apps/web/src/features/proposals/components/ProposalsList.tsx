@@ -1,9 +1,15 @@
 import { ProposalTagLabels } from "@repo/shared/enums/proposals"
 import { PaginationNav, ProposalCard, ProposalCardSkeleton } from "@repo/ui/components/composite"
+import { Button } from "@repo/ui/components/ui"
+import { Lightbulb, SearchX } from "lucide-react"
 import type { Route } from "next"
 import Link from "next/link"
 import type { SearchParams } from "nuqs/server"
+import { withEditHash } from "@/components/Editor/editOnLoad"
+import { EmptyState } from "@/components/EmptyState"
 import { StringHrefLink } from "@/components/StringHrefLink"
+import { getCurrentUser } from "@/lib/payload/getCurrentUser"
+import { Slugs } from "@/lib/payload/slugs"
 import { Routes } from "@/lib/routes"
 import { loadProposalsPage } from "../proposals.queries"
 import {
@@ -18,33 +24,39 @@ const skeletonCardIds = Array.from({ length: PAGE_SIZE }, (_, i) => `proposal-sk
 
 export const ProposalsList = async ({ searchParams }: { searchParams: Promise<SearchParams> }) => {
   const params = await loadProposalSearchParams(searchParams)
-  const {
-    docs: proposals,
-    totalDocs,
-    totalPages,
-  } = await loadProposalsPage(toProposalFilters(params), {
-    limit: PAGE_SIZE,
-    page: params.page,
-  })
+  const [{ docs: proposals, totalDocs, totalPages }, { collection, user }] = await Promise.all([
+    loadProposalsPage(toProposalFilters(params), { limit: PAGE_SIZE, page: params.page }),
+    getCurrentUser(),
+  ])
 
   // Keeps the current filters, so moving between pages only changes the page.
   const getPageHref = (page: number) =>
     serializeProposalSearchParams(Routes.PROPOSALS.ROOT, { ...params, page }) as Route
 
+  // The serializer leaves out defaults, so any query string means a filter is set.
+  const hasFilters = getPageHref(1) !== Routes.PROPOSALS.ROOT
+
   if (proposals.length === 0) {
+    if (totalDocs > 0) {
+      return (
+        <EmptyState
+          action={{ href: getPageHref(totalPages), label: "Go to the last page" }}
+          description="This page is past the end of the results."
+          icon={<SearchX />}
+          title="No more results"
+          variant="list"
+        />
+      )
+    }
+
     return (
-      <div className="flex flex-col items-center gap-2 p-10 text-center text-muted-foreground md:p-12">
-        {totalDocs > 0 ? (
-          <>
-            <p>This page is past the end of the results.</p>
-            <Link className="underline underline-offset-2" href={getPageHref(totalPages)}>
-              Go to the last page
-            </Link>
-          </>
-        ) : (
-          <p>No proposals match these filters.</p>
-        )}
-      </div>
+      <EmptyState
+        action={hasFilters ? { href: Routes.PROPOSALS.ROOT, label: "Clear filters" } : undefined}
+        description="No proposals match these filters."
+        icon={<Lightbulb />}
+        title="No proposals found"
+        variant="list"
+      />
     )
   }
 
@@ -68,11 +80,32 @@ export const ProposalsList = async ({ searchParams }: { searchParams: Promise<Se
               },
             ]
           })
+          const href = Routes.PROPOSALS.PROPOSAL(proposal.id, proposal.proposalSlug)
+          // Same rule as StatusAuthorCardServer: admins, and the proposal's authors.
+          const canEdit =
+            collection === Slugs.Collections.ADMIN ||
+            (user !== null &&
+              proposal.author.some((a) => (typeof a === "number" ? a : a.id) === user.id))
 
           return (
             <ProposalCard
+              action={
+                canEdit && (
+                  <Button
+                    aria-label={`Edit ${proposal.title}`}
+                    borderColor="charcoal"
+                    className="shrink-0"
+                    nativeButton={false}
+                    render={<Link href={withEditHash(href)} />}
+                    size="sm"
+                    variant="button-transparent"
+                  >
+                    Edit
+                  </Button>
+                )
+              }
               authors={authors.length > 0 ? authors : [{ name: "Unknown author" }]}
-              href={Routes.PROPOSALS.PROPOSAL(proposal.id, proposal.proposalSlug)}
+              href={href}
               key={proposal.id}
               linkComponent={StringHrefLink}
               postedAt={proposal.createdAt}

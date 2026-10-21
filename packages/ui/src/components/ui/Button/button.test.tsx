@@ -49,6 +49,20 @@ describe("Button", () => {
     expect(button).toHaveClass("h-13 gap-1.5 px-3.5 text-base")
   })
 
+  it("styles the destructive variants in the destructive colour", () => {
+    render(
+      <>
+        <Button variant="button-destructive">Confirm delete</Button>
+        <Button variant="button-destructive-outline">Delete draft</Button>
+      </>,
+    )
+    expect(screen.getByRole("button", { name: "Confirm delete" })).toHaveClass("bg-destructive")
+    expect(screen.getByRole("button", { name: "Delete draft" })).toHaveClass(
+      "border-destructive",
+      "text-destructive",
+    )
+  })
+
   it("merges a custom className with variant classes", () => {
     render(<Button className="custom-class">Click me</Button>)
     expect(screen.getByRole("button", { name: "Click me" })).toHaveClass("custom-class")

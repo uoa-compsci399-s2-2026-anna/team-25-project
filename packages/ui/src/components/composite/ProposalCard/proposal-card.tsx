@@ -44,6 +44,8 @@ type ProposalCardLinkProps = {
 }
 
 type ProposalCardProps = Omit<React.ComponentProps<"div">, "title"> & {
+  /** At the end of the footer, beside the author - e.g. an Edit link. */
+  action?: React.ReactNode
   title: string
   href?: string
   linkComponent?: React.ElementType<ProposalCardLinkProps>
@@ -83,6 +85,7 @@ const initials = (name: string) =>
     .toUpperCase() || "?"
 
 function ProposalCard({
+  action,
   authors,
   className,
   href,
@@ -202,6 +205,7 @@ function ProposalCard({
               </BylineFade>
             )}
           </div>
+          {action}
         </div>
       </CardFooter>
     </Card>
