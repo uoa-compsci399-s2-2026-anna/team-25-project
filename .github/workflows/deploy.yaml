@@ -87,6 +87,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Deploy
+        timeout-minutes: 30
         env:
           ECS_SERVICE_ARN: ${{ vars.ECS_SERVICE_ARN }}
         run: scripts/deploy.sh
