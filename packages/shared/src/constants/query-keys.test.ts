@@ -26,6 +26,7 @@ describe("QueryKeys", () => {
         ID: expect.any(Function),
       },
       PRIVACY_POLICY: "privacy-policy",
+      COMMUNITY_GUIDELINES: "community-guidelines",
     })
     expect(QueryKeys.PROPOSALS.ID(7)).toBe("proposals:7")
     expect(QueryKeys.COURSES.ID(7)).toBe("courses:7")
