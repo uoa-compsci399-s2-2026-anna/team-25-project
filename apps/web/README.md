@@ -46,6 +46,7 @@ Copy `.env.example` to `.env` and fill in:
 | --- | --- |
 | `DATABASE_URL` | Postgres connection string |
 | `PAYLOAD_SECRET` | Secret used by Payload to sign/encrypt data |
+| `NEXT_PUBLIC_URL` | Public origin for metadata, the sitemap and robots.txt. Required for a production build; defaults to `http://localhost:3000` otherwise |
 | `S3_BUCKET` | S3 bucket for Payload media; leave empty to use local storage |
 | `S3_REGION` | AWS region for the S3 bucket; leave empty to use local storage |
 | `AWS_PROFILE` | Optional local AWS profile, such as an AWS SSO profile |

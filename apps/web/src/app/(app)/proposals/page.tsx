@@ -1,4 +1,5 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
+import type { Metadata } from "next"
 import type { SearchParams } from "nuqs/server"
 import { PageContainer } from "@/features/layout/components"
 import {
@@ -7,6 +8,12 @@ import {
 } from "@/features/proposals/components/ProposalsFilterServer"
 import { ProposalsHeader } from "@/features/proposals/components/ProposalsHeader"
 import { ProposalsList, ProposalsListSkeleton } from "@/features/proposals/components/ProposalsList"
+
+export const metadata: Metadata = {
+  title: "Research proposals",
+  description:
+    "Research ideas from members who look for co-investigators, data access or a second institution.",
+}
 
 export default function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (

@@ -1,4 +1,5 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
+import type { Metadata } from "next"
 import type { SearchParams } from "nuqs/server"
 import { PageContainer } from "@/features/layout/components"
 import {
@@ -10,6 +11,11 @@ import {
   PublicationsList,
   PublicationsListSkeleton,
 } from "@/features/publications/components/PublicationsList"
+
+export const metadata: Metadata = {
+  title: "Publications",
+  description: "Papers, theses and reports on computing capstones by members and their co-authors.",
+}
 
 export default function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (

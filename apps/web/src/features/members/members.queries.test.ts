@@ -16,6 +16,8 @@ import {
   getMemberPublicationsCached,
   getMemberResources,
   getMemberResourcesCached,
+  getMemberSitemapEntries,
+  getMemberSitemapEntriesCached,
   getMembers,
   getResearchInterestOptions,
 } from "./members.queries"
@@ -277,6 +279,27 @@ describe("getMemberDetails", () => {
     find.mockResolvedValue({ docs: [{ id: 7 }] })
     await expect(getMemberDetailsCached(7)).resolves.toEqual({ id: 7 })
     expect(cacheTag).toHaveBeenCalledWith("member:7")
+  })
+})
+
+describe("getMemberSitemapEntries", () => {
+  it("reads every member's id and update time", async () => {
+    await getMemberSitemapEntries()
+
+    expect(find).toHaveBeenCalledWith({
+      collection: "members",
+      depth: 0,
+      pagination: false,
+      select: { updatedAt: true },
+    })
+  })
+
+  it("is cached under the members tag, so a new or deleted member updates the sitemap", async () => {
+    find.mockResolvedValue({ docs: [{ id: 7, updatedAt: "2026-10-01T00:00:00.000Z" }] })
+    await expect(getMemberSitemapEntriesCached()).resolves.toEqual([
+      { id: 7, updatedAt: "2026-10-01T00:00:00.000Z" },
+    ])
+    expect(cacheTag).toHaveBeenCalledWith("members")
   })
 })
 

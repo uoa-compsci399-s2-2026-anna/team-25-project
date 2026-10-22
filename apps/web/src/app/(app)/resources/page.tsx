@@ -1,4 +1,5 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
+import type { Metadata } from "next"
 import type { SearchParams } from "nuqs/server"
 import { PageContainer, PageHeader } from "@/features/layout/components"
 import { AddResourceTrigger } from "@/features/resources/components/AddResourceTrigger"
@@ -7,6 +8,11 @@ import {
   ResourcesFilterServerSkeleton,
 } from "@/features/resources/components/ResourcesFilterServer"
 import { ResourcesList, ResourcesListSkeleton } from "@/features/resources/components/ResourcesList"
+
+export const metadata: Metadata = {
+  title: "Resources",
+  description: "Rubrics, templates and other material that members share for capstone courses.",
+}
 
 export default function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (

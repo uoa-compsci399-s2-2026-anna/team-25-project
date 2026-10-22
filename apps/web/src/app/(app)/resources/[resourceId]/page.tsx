@@ -1,8 +1,19 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
+import type { Metadata } from "next"
 import { BackLink, PageContainer } from "@/features/layout/components"
 import { ResourcePage, ResourcePageSkeleton } from "@/features/resources/components/ResourcePage"
-import type { ResourceRouteParams } from "@/features/resources/resources.params"
+import { parseResourceId, type ResourceRouteParams } from "@/features/resources/resources.params"
+import { getResourceByIdCached } from "@/features/resources/resources.queries"
 import { Routes } from "@/lib/routes"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: ResourceRouteParams
+}): Promise<Metadata> {
+  const resource = await getResourceByIdCached(await parseResourceId(params))
+  return resource ? { title: resource.title } : {}
+}
 
 export default function Page({ params }: { params: ResourceRouteParams }) {
   return (
