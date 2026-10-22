@@ -7,7 +7,12 @@ import Link from "next/link"
 import { RichTextContent } from "@/components/RichTextContent"
 import { Routes } from "@/lib/routes"
 import { periodRange } from "../../courses.format"
-import { type CourseRouteParams, parseCourseId } from "../../courses.params"
+import {
+  type CourseRouteParams,
+  type CourseRouteSearchParams,
+  parseCourseId,
+  parseOfferingId,
+} from "../../courses.params"
 import { getPublishedOfferingsCached } from "../../courses.queries"
 import {
   CourseOfferingDetail,
@@ -52,10 +57,19 @@ const TeamMember = ({ member }: { member: SnapshotMember }) => {
   )
 }
 
-export const CourseOffering = async ({ params }: { params: CourseRouteParams }) => {
+export const CourseOffering = async ({
+  params,
+  searchParams,
+}: {
+  params: CourseRouteParams
+  searchParams: CourseRouteSearchParams
+}) => {
   const courseId = await parseCourseId(params)
+  const offeringId = await parseOfferingId(searchParams)
 
-  const [offering, ...earlier] = await getPublishedOfferingsCached(courseId)
+  // Newest first, so an unknown or missing `?offering=` falls back to the latest.
+  const offerings = await getPublishedOfferingsCached(courseId)
+  const offering = offerings.find((candidate) => candidate.id === offeringId) ?? offerings[0]
 
   // The header 404s a course with nothing published, so this is only reachable
   // mid-publication. Render nothing rather than taking down the header beside it.
@@ -136,16 +150,25 @@ export const CourseOffering = async ({ params }: { params: CourseRouteParams }) 
           </CourseOfferingSidebarCard>
         )}
 
-        {earlier.length > 0 && (
-          <CourseOfferingSidebarCard title="Earlier offerings">
-            {earlier.map((past) => (
-              <div className="flex flex-col" key={past.id}>
-                <p className="font-medium text-sm">{past.name ?? past.period}</p>
-                <p className="text-muted-foreground text-xs">
-                  {past.name ? `${past.period} - ` : ""}
-                  {periodRange(past)}
+        {offerings.length > 1 && (
+          <CourseOfferingSidebarCard title={`Offerings - ${offerings.length}`}>
+            {offerings.map((item, index) => (
+              <Link
+                aria-current={item.id === offering.id ? "page" : undefined}
+                className="-mx-2 flex flex-col rounded-md px-2 py-1 hover:bg-muted aria-[current=page]:bg-muted"
+                href={
+                  index === 0
+                    ? Routes.COURSES.COURSE(String(courseId))
+                    : Routes.COURSES.OFFERING(courseId, item.id)
+                }
+                key={item.id}
+              >
+                <p className="font-medium text-sm">
+                  {item.period}
+                  {index === 0 && <span className="text-muted-foreground"> - latest</span>}
                 </p>
-              </div>
+                <p className="text-muted-foreground text-xs">{periodRange(item)}</p>
+              </Link>
             ))}
           </CourseOfferingSidebarCard>
         )}

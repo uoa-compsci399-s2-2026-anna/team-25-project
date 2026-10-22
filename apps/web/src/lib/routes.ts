@@ -12,6 +12,8 @@ export const Routes = {
   COURSES: {
     ROOT: route("/courses"),
     COURSE: (courseId: string) => route(`/courses/${courseId}`),
+    OFFERING: (courseId: number, offeringId: number) =>
+      route(`/courses/${courseId}?offering=${offeringId}`),
   },
   MEMBERS: {
     ROOT: route("/members"),

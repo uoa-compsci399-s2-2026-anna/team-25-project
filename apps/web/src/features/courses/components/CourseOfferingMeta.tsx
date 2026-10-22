@@ -1,12 +1,23 @@
 import { Badge, Skeleton } from "@repo/ui/components/ui"
 import { formatDate } from "../courses.format"
-import { type CourseRouteParams, parseCourseId } from "../courses.params"
+import {
+  type CourseRouteParams,
+  type CourseRouteSearchParams,
+  parseCourseId,
+  parseOfferingId,
+} from "../courses.params"
 import { getSelectedOffering } from "../courses.queries"
 
-export const CourseOfferingMeta = async ({ params }: { params: CourseRouteParams }) => {
+export const CourseOfferingMeta = async ({
+  params,
+  searchParams,
+}: {
+  params: CourseRouteParams
+  searchParams: CourseRouteSearchParams
+}) => {
   const courseId = await parseCourseId(params)
 
-  const offering = await getSelectedOffering(courseId)
+  const offering = await getSelectedOffering(courseId, await parseOfferingId(searchParams))
   // The header 404s a course with nothing published, so this is only reachable
   // mid-publication. Render nothing rather than taking down the page.
   if (!offering) return null
