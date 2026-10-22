@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { registerProfileSchema } from "./register"
+import { registerProfileSchema, verificationCodeSchema } from "./register"
 
 const profile = (researchInterests: string) => ({ bio: "", links: [], researchInterests })
 
@@ -38,5 +38,15 @@ describe("registerProfileSchema researchInterests", () => {
     expect(result.error?.issues).toEqual([
       expect.objectContaining({ message, path: ["researchInterests"] }),
     ])
+  })
+})
+
+describe("verificationCodeSchema", () => {
+  it("accepts six digits, ignoring surrounding spaces from a paste", () => {
+    expect(verificationCodeSchema.parse(" 042913 ")).toBe("042913")
+  })
+
+  it.each([["12345"], ["1234567"], ["12345a"], ["12 345"], [""]])("rejects %o", (code) => {
+    expect(verificationCodeSchema.safeParse(code).success).toBe(false)
   })
 })

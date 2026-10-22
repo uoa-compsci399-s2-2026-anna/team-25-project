@@ -27,6 +27,21 @@ export const ALLOWED_AVATAR_MIME_TYPES = ["image/jpeg", "image/png", "image/webp
 // so the client checks this too to give a clear message.
 export const MAX_AVATAR_BYTES = 4 * 1024 * 1024
 
+export const VERIFICATION_CODE_LENGTH = 6
+export const VERIFICATION_CODE_TTL_MINUTES = 15
+export const VERIFICATION_CODE_MAX_ATTEMPTS = 5
+export const VERIFICATION_CODE_RESEND_SECONDS = 60
+export const VERIFICATION_CODE_MAX_SENDS = 5
+export const VERIFICATION_CODE_SEND_WINDOW_MINUTES = 60
+
+export const verificationCodeSchema = z
+  .string()
+  .trim()
+  .regex(
+    new RegExp(`^\\d{${VERIFICATION_CODE_LENGTH}}$`),
+    `Enter the ${VERIFICATION_CODE_LENGTH}-digit code from the email`,
+  )
+
 export const registerDetailsSchema = z.object({
   title: z.enum(MemberTitle).nullable(),
   firstName: z.string().trim().min(1, "First name is required"),
