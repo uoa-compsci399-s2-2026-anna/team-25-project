@@ -13,8 +13,8 @@ const courses: Array<CourseTableRow> = [
     title: "Capstone Project",
     lecturer: "A. Tui",
     university: "University of Auckland",
-    latestOffering: "Semester 2 2026",
-    latestStartDate: "2026-07-20",
+    currentOffering: "Semester 2 2026",
+    currentStartDate: "2026-07-20",
     offerings: 1,
     status: "published",
   },
@@ -24,8 +24,8 @@ const courses: Array<CourseTableRow> = [
     title: "Research Project",
     lecturer: "M. Rahman",
     university: "University of Auckland",
-    latestOffering: "Semester 1 2027",
-    latestStartDate: "2027-03-02",
+    currentOffering: "Semester 1 2027",
+    currentStartDate: "2027-03-02",
     offerings: 1,
     status: "draft",
   },
@@ -35,8 +35,8 @@ const courses: Array<CourseTableRow> = [
     title: "Team Project",
     lecturer: "K. Whitfield",
     university: "Victoria University",
-    latestOffering: "Trimester 1 2025",
-    latestStartDate: "2025-03-02",
+    currentOffering: "Trimester 1 2025",
+    currentStartDate: "2025-03-02",
     offerings: 1,
     status: "published",
   },
@@ -98,7 +98,7 @@ describe("CoursesToolbar", () => {
     render(<Harness />)
 
     await user.click(screen.getByRole("combobox", { name: "Sort" }))
-    await user.click(await screen.findByRole("option", { name: "Latest offering: Oldest first" }))
+    await user.click(await screen.findByRole("option", { name: "Current offering: Oldest first" }))
 
     const offerings = bodyRows().map((row) => within(row).getAllByRole("cell")[2].textContent)
     expect(offerings).toEqual(["Trimester 1 2025", "Semester 2 2026", "Semester 1 2027"])
@@ -108,10 +108,10 @@ describe("CoursesToolbar", () => {
     const user = userEvent.setup()
     render(<Harness />)
 
-    await user.click(screen.getByRole("button", { name: "Sort by Latest offering" }))
+    await user.click(screen.getByRole("button", { name: "Sort by Current offering" }))
 
     expect(screen.getByRole("combobox", { name: "Sort" })).toHaveTextContent(
-      "Latest offering: Newest first",
+      "Current offering: Newest first",
     )
   })
 })

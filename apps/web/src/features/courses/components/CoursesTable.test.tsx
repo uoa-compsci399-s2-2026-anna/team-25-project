@@ -12,8 +12,8 @@ const courses: Array<CourseTableRow> = [
     title: "Capstone Project",
     lecturer: "A. Tui",
     university: "University of Auckland",
-    latestOffering: "Semester 2 2026",
-    latestStartDate: "2026-07-20",
+    currentOffering: "Semester 2 2026",
+    currentStartDate: "2026-07-20",
     offerings: 1,
     status: "published",
   },
@@ -23,8 +23,8 @@ const courses: Array<CourseTableRow> = [
     title: "Research Project",
     lecturer: "M. Rahman",
     university: "University of Auckland",
-    latestOffering: "Semester 1 2027",
-    latestStartDate: "2027-03-02",
+    currentOffering: "Semester 1 2027",
+    currentStartDate: "2027-03-02",
     offerings: 1,
     status: "draft",
   },
@@ -34,8 +34,8 @@ const courses: Array<CourseTableRow> = [
     title: "Team Project",
     lecturer: "K. Whitfield",
     university: "Victoria University",
-    latestOffering: "Trimester 1 2025",
-    latestStartDate: "2025-03-02",
+    currentOffering: "Trimester 1 2025",
+    currentStartDate: "2025-03-02",
     offerings: 1,
     status: "published",
   },
@@ -117,14 +117,14 @@ describe("CoursesTable", () => {
     render(<Harness isLoading />)
     expect(screen.getByRole("columnheader", { name: "Course" })).toBeInTheDocument()
     expect(screen.getByRole("columnheader", { name: "University" })).toBeInTheDocument()
-    expect(screen.getByRole("columnheader", { name: "Latest offering" })).toBeInTheDocument()
+    expect(screen.getByRole("columnheader", { name: "Current offering" })).toBeInTheDocument()
     expect(screen.getByRole("columnheader", { name: "Offerings" })).toBeInTheDocument()
     expect(screen.getByRole("columnheader", { name: "Status" })).toBeInTheDocument()
   })
 
   it("sorts the latest offering column by start date, not by its label", () => {
     render(<Harness />)
-    const header = screen.getByRole("button", { name: "Sort by Latest offering" })
+    const header = screen.getByRole("button", { name: "Sort by Current offering" })
     const offerings = () => bodyRows().map((row) => within(row).getAllByRole("cell")[2].textContent)
     fireEvent.click(header)
     expect(offerings()).toEqual(["Semester 1 2027", "Semester 2 2026", "Trimester 1 2025"])

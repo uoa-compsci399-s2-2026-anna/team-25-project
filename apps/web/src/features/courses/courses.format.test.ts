@@ -6,6 +6,7 @@ import {
   deriveStatus,
   deriveTitle,
   deriveUniversity,
+  findCurrentOffering,
   summarizeCourses,
   summarizeMyCourses,
   toCourseTableRow,
@@ -113,8 +114,8 @@ describe("toCourseTableRow", () => {
       title: "Capstone: Computer Science",
       lecturer: "A. Patel",
       university: "University of Auckland",
-      latestOffering: "Semester 2 2026",
-      latestStartDate: "2026-07-20",
+      currentOffering: "Semester 2 2026",
+      currentStartDate: "2026-07-20",
       offerings: 1,
       status: "published",
     })
@@ -127,8 +128,8 @@ describe("toCourseTableRow", () => {
       title: "No offering yet",
       lecturer: "O. Fallback",
       university: "University of Auckland",
-      latestOffering: "—",
-      latestStartDate: "",
+      currentOffering: "—",
+      currentStartDate: "",
       offerings: 0,
       status: "draft",
     })
@@ -141,8 +142,8 @@ const row = (overrides: Partial<CourseTableRow> = {}): CourseTableRow => ({
   title: "Capstone Project",
   lecturer: "A. Tui",
   university: "University of Auckland",
-  latestOffering: "Semester 2 2026",
-  latestStartDate: "2026-07-20",
+  currentOffering: "Semester 2 2026",
+  currentStartDate: "2026-07-20",
   offerings: 1,
   status: "published",
   ...overrides,
@@ -151,9 +152,9 @@ const row = (overrides: Partial<CourseTableRow> = {}): CourseTableRow => ({
 describe("summarizeCourses", () => {
   it("counts the directory and how many offerings run the full year", () => {
     const rows = [
-      row({ latestOffering: "Semester 2 2026" }),
-      row({ latestOffering: "Full Year 2026" }),
-      row({ latestOffering: "Trimester 1 2026" }),
+      row({ currentOffering: "Semester 2 2026" }),
+      row({ currentOffering: "Full Year 2026" }),
+      row({ currentOffering: "Trimester 1 2026" }),
     ]
     const summary = summarizeCourses(rows)
     expect(summary.totalCourses).toBe(3)
@@ -173,7 +174,7 @@ describe("summarizeCourses", () => {
 describe("summarizeMyCourses", () => {
   it("counts every id in the owned-course set, published or not", () => {
     const myCourseIds = new Set(["1", "2", "3"])
-    const rows = [row({ id: "1", latestStartDate: "2026-07-20", status: "published" })]
+    const rows = [row({ id: "1", currentStartDate: "2026-07-20", status: "published" })]
 
     expect(summarizeMyCourses(myCourseIds, rows, 2026).total).toBe(3)
   })
@@ -181,8 +182,8 @@ describe("summarizeMyCourses", () => {
   it("counts a course as up to date only when its row is published for the given year", () => {
     const myCourseIds = new Set(["1", "2", "3"])
     const rows = [
-      row({ id: "1", latestStartDate: "2026-07-20", status: "published" }),
-      row({ id: "2", latestStartDate: "2025-07-21", status: "published" }),
+      row({ id: "1", currentStartDate: "2026-07-20", status: "published" }),
+      row({ id: "2", currentStartDate: "2025-07-21", status: "published" }),
       // id "3" has no row at all - an unpublished course, so it can't be up to date.
     ]
 
@@ -196,8 +197,8 @@ describe("summarizeMyCourses", () => {
   it("ignores rows that aren't in the owned-course set", () => {
     const myCourseIds = new Set(["2"])
     const rows = [
-      row({ id: "1", latestStartDate: "2026-07-20", status: "published" }),
-      row({ id: "2", latestStartDate: "2026-07-20", status: "published" }),
+      row({ id: "1", currentStartDate: "2026-07-20", status: "published" }),
+      row({ id: "2", currentStartDate: "2026-07-20", status: "published" }),
     ]
 
     expect(summarizeMyCourses(myCourseIds, rows, 2026)).toEqual({
@@ -210,5 +211,48 @@ describe("summarizeMyCourses", () => {
   it("defaults to the current calendar year", () => {
     const summary = summarizeMyCourses(new Set(["1"]), [row({ id: "1" })])
     expect(summary.year).toBe(new Date().getFullYear())
+  })
+})
+
+describe("findCurrentOffering", () => {
+  const offering = (id: number, startDate: string, endDate: string) => ({ id, startDate, endDate })
+  // Newest first, as the queries return them.
+  const offerings = [
+    offering(3, "2027-03-01", "2027-06-25"),
+    offering(2, "2026-07-20", "2026-11-06"),
+    offering(1, "2026-03-02", "2026-06-26"),
+  ]
+
+  it("picks the offering running today, and the one starting after it", () => {
+    const { current, next, primary } = findCurrentOffering(offerings, "2026-08-01")
+    expect(current?.id).toBe(2)
+    expect(next?.id).toBe(3)
+    expect(primary?.id).toBe(2)
+  })
+
+  it("counts the first and last days as running", () => {
+    expect(findCurrentOffering(offerings, "2026-07-20").current?.id).toBe(2)
+    expect(findCurrentOffering(offerings, "2026-11-06").current?.id).toBe(2)
+  })
+
+  it("shows the next offering between offerings", () => {
+    const { current, primary } = findCurrentOffering(offerings, "2026-12-01")
+    expect(current).toBeUndefined()
+    expect(primary?.id).toBe(3)
+  })
+
+  it("falls back to the most recent offering once none are left", () => {
+    const { current, next, primary } = findCurrentOffering(offerings, "2028-01-01")
+    expect(current).toBeUndefined()
+    expect(next).toBeUndefined()
+    expect(primary?.id).toBe(3)
+  })
+
+  it("prefers the most recently started of two overlapping offerings", () => {
+    const overlapping = [
+      offering(5, "2026-07-20", "2026-11-06"),
+      offering(4, "2026-03-02", "2026-11-06"),
+    ]
+    expect(findCurrentOffering(overlapping, "2026-08-01").current?.id).toBe(5)
   })
 })

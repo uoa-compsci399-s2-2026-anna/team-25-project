@@ -5,7 +5,7 @@ const CSV_COLUMNS: { key: keyof CourseTableRow; header: string }[] = [
   { key: "title", header: "Title" },
   { key: "lecturer", header: "Lecturer" },
   { key: "university", header: "University" },
-  { key: "latestOffering", header: "Latest offering" },
+  { key: "currentOffering", header: "Current offering" },
   { key: "offerings", header: "Offerings" },
   { key: "status", header: "Status" },
 ]

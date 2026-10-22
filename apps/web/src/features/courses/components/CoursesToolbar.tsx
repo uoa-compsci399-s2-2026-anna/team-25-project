@@ -6,20 +6,20 @@ import type { CoursesTableInstance, CourseTableRow } from "./CoursesTable"
 
 type CourseStatusFilter = "all" | CourseTableRow["status"]
 
-type SortKey = "course-asc" | "latest-desc" | "latest-asc"
+type SortKey = "course-asc" | "current-desc" | "current-asc"
 
 const sortOptions: { value: SortKey; label: string }[] = [
   { value: "course-asc", label: "Course (A–Z)" },
-  { value: "latest-desc", label: "Latest offering: Newest first" },
-  { value: "latest-asc", label: "Latest offering: Oldest first" },
+  { value: "current-desc", label: "Current offering: Newest first" },
+  { value: "current-asc", label: "Current offering: Oldest first" },
 ]
 
 // `SortableHeader` already lets you click a column to sort it - this
 // dropdown just offers a few common presets through that same `toggleSorting` API.
 const sortConfig: Record<SortKey, { columnId: string; desc: boolean }> = {
   "course-asc": { columnId: "course", desc: false },
-  "latest-desc": { columnId: "latestOffering", desc: true },
-  "latest-asc": { columnId: "latestOffering", desc: false },
+  "current-desc": { columnId: "currentOffering", desc: true },
+  "current-asc": { columnId: "currentOffering", desc: false },
 }
 
 const uniqueSorted = (values: Array<string>) => Array.from(new Set(values)).sort()

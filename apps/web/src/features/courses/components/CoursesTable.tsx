@@ -38,8 +38,9 @@ export interface CourseTableRow {
    * team - a table cell needs one line. */
   lecturer: string
   university: string
-  latestOffering: string
-  latestStartDate: string
+  /** The period of the offering the course is shown as - see `findCurrentOffering`. */
+  currentOffering: string
+  currentStartDate: string
   offerings: number
   status: "draft" | "published"
 }
@@ -102,10 +103,10 @@ export const courseColumns = helper.columns([
     filterFn: "arrHas",
     cell: ({ getValue }) => <TextCell tone="muted">{getValue()}</TextCell>,
   }),
-  helper.accessor("latestOffering", {
-    header: ({ column }) => <SortableHeader column={column}>Latest offering</SortableHeader>,
+  helper.accessor("currentOffering", {
+    header: ({ column }) => <SortableHeader column={column}>Current offering</SortableHeader>,
     // Periods are free text, so they sort by when they start rather than how they're named.
-    sortFn: (a, b) => a.original.latestStartDate.localeCompare(b.original.latestStartDate),
+    sortFn: (a, b) => a.original.currentStartDate.localeCompare(b.original.currentStartDate),
     sortDescFirst: true,
     cell: ({ getValue }) => <TextCell tone="muted">{getValue()}</TextCell>,
   }),
@@ -130,7 +131,7 @@ export const courseColumns = helper.columns([
 const courseColumnLabels = [
   "Course",
   "University",
-  "Latest offering",
+  "Current offering",
   "Offerings",
   "Status",
 ] as const

@@ -24,8 +24,8 @@ const rows: Array<CourseTableRow> = Array.from({ length: 15 }, (_, index) => ({
   title: "Capstone Project",
   lecturer: "A. Tui",
   university: "University of Auckland",
-  latestOffering: "Semester 2 2026",
-  latestStartDate: "2026-07-20",
+  currentOffering: "Semester 2 2026",
+  currentStartDate: "2026-07-20",
   offerings: 1,
   status: "published",
 }))
@@ -70,8 +70,8 @@ describe("CoursesListClient drafts", () => {
     title: "Draft capstone",
     lecturer: "A. Tui",
     university: "University of Otago",
-    latestOffering: "Semester 2 2026",
-    latestStartDate: "2026-07-20",
+    currentOffering: "Semester 2 2026",
+    currentStartDate: "2026-07-20",
     offerings: 1,
     status: "draft",
   }

@@ -8,6 +8,8 @@ import { Slugs } from "@/lib/payload/slugs"
 import type { CourseTableRow } from "./components/CoursesTable"
 import {
   type CoursesSummaryStats,
+  findCurrentOffering,
+  getToday,
   type MyCoursesSummary,
   type MyDraftCourses,
   summarizeCourses,
@@ -23,14 +25,12 @@ const NEWEST_FIRST = ["-startDate", "-id"]
 const courseIdOf = (version: CourseVersion): number =>
   typeof version.course === "number" ? version.course : version.course.id
 
-// Docs arrive sorted newest first, so the first one seen for a course is its newest.
+// Keeps each course's offerings in the order they arrive: newest first.
 const offeringsByCourseId = (versions: CourseVersion[]) => {
-  const offerings = new Map<number, { latest: CourseVersion; count: number }>()
+  const offerings = new Map<number, CourseVersion[]>()
   for (const version of versions) {
     const courseId = courseIdOf(version)
-    const seen = offerings.get(courseId)
-    if (seen) seen.count++
-    else offerings.set(courseId, { latest: version, count: 1 })
+    offerings.set(courseId, [...(offerings.get(courseId) ?? []), version])
   }
   return offerings
 }
@@ -47,7 +47,7 @@ export interface CoursesTableData {
  * back to their published-only rule for everyone, admins included, which is
  * what keeps the result viewer-independent.
  */
-export const getCoursesTableData = async (): Promise<CoursesTableData> => {
+export const getCoursesTableData = async (today = getToday()): Promise<CoursesTableData> => {
   const payload = await getPayloadClient()
 
   const [{ docs: courses }, { docs: versions }] = await Promise.all([
@@ -69,8 +69,9 @@ export const getCoursesTableData = async (): Promise<CoursesTableData> => {
 
   const offerings = offeringsByCourseId(versions)
   const rows = courses.map((course) => {
-    const offering = offerings.get(course.id)
-    return toCourseTableRow(course, offering?.latest, offering?.count ?? 0)
+    const courseOfferings = offerings.get(course.id) ?? []
+    const { primary } = findCurrentOffering(courseOfferings, today)
+    return toCourseTableRow(course, primary, courseOfferings.length)
   })
 
   return { rows, summary: summarizeCourses(rows) }
@@ -133,17 +134,21 @@ export const getMyDraftCourses = async (): Promise<MyDraftCourses> => {
   const viewer = { id: user.id, role: user.position ?? "" }
   const drafts: MyDraftCourses = { editable: {}, rows: [] }
   for (const course of courses) {
-    const offering = offerings.get(course.id)
-    if (!offering) continue
-    drafts.rows.push(toCourseTableRow(course, offering.latest, offering.count))
-    drafts.editable[String(course.id)] = toEditableDraftCourse(course, offering.latest, viewer)
+    const courseOfferings = offerings.get(course.id)
+    if (!courseOfferings) continue
+    const { primary } = findCurrentOffering(courseOfferings, getToday())
+    drafts.rows.push(toCourseTableRow(course, primary, courseOfferings.length))
+    // The dialog reopens the newest draft, whichever offering the row shows.
+    drafts.editable[String(course.id)] = toEditableDraftCourse(course, courseOfferings[0], viewer)
   }
   return drafts
 }
 
+// "hours" rather than "max": which offering is current changes with the date, not
+// only when an offering is saved, so the cached rows can't outlive the day.
 export const getCoursesTableDataCached = async () => {
   "use cache"
-  cacheLife("max")
+  cacheLife("hours")
   cacheTag(QueryKeys.COURSES.ROOT)
   return getCoursesTableData()
 }

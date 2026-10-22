@@ -11,8 +11,8 @@ const courses: Array<CourseTableRow> = [
     title: "Capstone Project",
     lecturer: "A. Tui",
     university: "University of Auckland",
-    latestOffering: "Semester 2 2026",
-    latestStartDate: "2026-07-20",
+    currentOffering: "Semester 2 2026",
+    currentStartDate: "2026-07-20",
     offerings: 1,
     status: "published",
   },
@@ -22,8 +22,8 @@ const courses: Array<CourseTableRow> = [
     title: "Research Project",
     lecturer: "M. Rahman",
     university: "University of Auckland",
-    latestOffering: "Semester 1 2027",
-    latestStartDate: "2027-03-02",
+    currentOffering: "Semester 1 2027",
+    currentStartDate: "2027-03-02",
     offerings: 1,
     status: "draft",
   },
@@ -67,7 +67,7 @@ describe("CoursesExportButton", () => {
     })
     const [[csv]] = blobSpy.mock.calls[0]
     expect(csv.split("\r\n")).toEqual([
-      "Code,Title,Lecturer,University,Latest offering,Offerings,Status",
+      "Code,Title,Lecturer,University,Current offering,Offerings,Status",
       "COMP 693,Capstone Project,A. Tui,University of Auckland,Semester 2 2026,1,published",
       "SOFTENG 700,Research Project,M. Rahman,University of Auckland,Semester 1 2027,1,draft",
     ])

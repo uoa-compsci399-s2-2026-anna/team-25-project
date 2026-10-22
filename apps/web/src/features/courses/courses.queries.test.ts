@@ -84,29 +84,36 @@ describe("getCoursesTableData", () => {
     })
   })
 
-  it("pairs each course with its most recently started offering, and summarizes the directory", async () => {
+  it("pairs each course with its current offering, and summarizes the directory", async () => {
     const auckland = course({ id: 1, code: "COMPSCI 399" })
     const otago = course({
       id: 2,
       code: "COSC 345",
       institution: { id: 2, name: "University of Otago" },
     })
-    const older = version({ id: 1, course: 1, period: "Semester 1 2025", startDate: "2025-02-01" })
-    const newer = version({ id: 2, course: 1, period: "Full Year 2026", startDate: "2026-07-20" })
+    const past = version({ id: 1, course: 1, period: "Semester 1 2025", startDate: "2025-02-01" })
+    const current = version({ id: 2, course: 1, period: "Full Year 2026", startDate: "2026-03-02" })
+    const next = version({
+      id: 3,
+      course: 1,
+      period: "Full Year 2027",
+      startDate: "2027-03-01",
+      endDate: "2027-11-05",
+    })
 
     find
       .mockResolvedValueOnce({ docs: [auckland, otago] })
       // Already sorted newest first, as the real query would return them.
-      .mockResolvedValueOnce({ docs: [newer, older] })
+      .mockResolvedValueOnce({ docs: [next, current, past] })
 
-    const { rows, summary } = await getCoursesTableData()
+    const { rows, summary } = await getCoursesTableData("2026-08-01")
 
     expect(rows).toEqual([
       expect.objectContaining({
         id: "1",
         code: "COMPSCI 399",
-        latestOffering: "Full Year 2026",
-        offerings: 2,
+        currentOffering: "Full Year 2026",
+        offerings: 3,
       }),
       expect.objectContaining({
         id: "2",
@@ -132,8 +139,8 @@ describe("getMyCoursesSummary", () => {
       title: "Capstone",
       lecturer: "A. Patel",
       university: "UoA",
-      latestOffering: `Semester 2 ${currentYear}`,
-      latestStartDate: `${currentYear}-07-20`,
+      currentOffering: `Semester 2 ${currentYear}`,
+      currentStartDate: `${currentYear}-07-20`,
       offerings: 1,
       status: "published" as const,
     },
@@ -276,7 +283,7 @@ describe("getMyDraftCourses", () => {
         code: "COSC 345",
         title: "Newer draft",
         status: "draft",
-        latestOffering: "Semester 2 2026",
+        currentOffering: "Semester 2 2026",
         offerings: 2,
       }),
     ])
