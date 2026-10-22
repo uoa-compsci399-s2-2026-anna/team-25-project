@@ -93,13 +93,10 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
           return
         }
 
-        // A code for this same address went out recently - carry on with it rather
-        // than making the member wait to be sent another. Compared the way the
-        // server compares addresses, so a change of case is still the same one.
-        if (
-          "retryAfterSeconds" in result &&
-          codeSent?.email.trim().toLowerCase() === value.email.trim().toLowerCase()
-        ) {
+        // A code for this address went out recently - carry on with it rather than
+        // making the member wait to be sent another. Not limited to codes sent from
+        // this page, since a refresh forgets those but the code still works.
+        if ("retryAfterSeconds" in result) {
           setCodeSent({
             email: value.email,
             message: result.formError,

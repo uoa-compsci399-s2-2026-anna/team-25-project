@@ -188,24 +188,6 @@ describe("RegisterDetailsForm", () => {
     expect(await screen.findByRole("button", { name: "Resend code in 50s" })).toBeDisabled()
   })
 
-  it("treats a change of case as the same address", async () => {
-    renderForm()
-    await continueToCode()
-    fireEvent.click(screen.getByRole("button", { name: "Change your details" }))
-    fireEvent.change(screen.getByLabelText(/^University email/), {
-      target: { value: "A.Tui@Example.ac.nz" },
-    })
-
-    vi.mocked(sendVerificationCode).mockResolvedValue({
-      formError: "You can ask for a new code in 50 seconds.",
-      ok: false,
-      retryAfterSeconds: 50,
-    })
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }))
-
-    expect(await screen.findByLabelText("Verification code")).toBeInTheDocument()
-  })
-
   it("explains a long wait when the hourly limit is reached", async () => {
     renderForm()
     await continueToCode()
@@ -222,7 +204,7 @@ describe("RegisterDetailsForm", () => {
     expect(screen.getByRole("button", { name: "Resend code in 45:00" })).toBeDisabled()
   })
 
-  it("shows the wait on the details when the address is a different one", async () => {
+  it("goes to the code step for a code sent before the page was refreshed", async () => {
     vi.mocked(sendVerificationCode).mockResolvedValue({
       formError: "You can ask for a new code in 50 seconds.",
       ok: false,
@@ -232,7 +214,7 @@ describe("RegisterDetailsForm", () => {
     fillDetails()
     fireEvent.click(screen.getByRole("button", { name: "Continue" }))
 
-    expect(await screen.findByText("You can ask for a new code in 50 seconds.")).toBeInTheDocument()
-    expect(screen.queryByLabelText("Verification code")).not.toBeInTheDocument()
+    expect(await screen.findByLabelText("Verification code")).toBeInTheDocument()
+    expect(screen.getByText("You can ask for a new code in 50 seconds.")).toBeInTheDocument()
   })
 })
