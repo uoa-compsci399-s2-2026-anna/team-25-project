@@ -57,11 +57,11 @@ const sendCodeEmail = (payload: Payload, to: string, code: string) =>
     subject: `${code} is your CCCA verification code`,
     text: `Your CCCA verification code is ${code}.\n\nIt expires in ${VERIFICATION_CODE_TTL_MINUTES} minutes. If you didn't try to sign up, you can ignore this email.`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 480px; padding: 24px; color: #1a1a1a;">
+      <div style="font-family: Arial, sans-serif; max-width: 480px; padding: 24px;">
         <h2 style="margin: 0 0 16px;">Verify your email</h2>
         <p style="margin: 0 0 24px; line-height: 1.5;">Enter this code to finish signing up. It expires in ${VERIFICATION_CODE_TTL_MINUTES} minutes.</p>
         <p style="margin: 0 0 24px; font-size: 32px; font-weight: bold; letter-spacing: 0.3em;">${code}</p>
-        <p style="margin: 0; font-size: 13px; color: #666666; line-height: 1.5;">If you didn't try to sign up, you can ignore this email.</p>
+        <p style="margin: 0; font-size: 13px; line-height: 1.5;">If you didn't try to sign up, you can ignore this email.</p>
       </div>
     `,
   })
