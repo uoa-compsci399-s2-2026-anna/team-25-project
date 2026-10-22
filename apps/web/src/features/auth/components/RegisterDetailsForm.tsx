@@ -22,13 +22,14 @@ import { Check } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useQueryState } from "nuqs"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Routes } from "@/lib/routes"
-import { registerMember } from "../actions/register"
+import { registerMember, sendVerificationCode } from "../actions/register"
 import { isRecognisedEmail } from "../helpers/recognisedEmail"
 import { parseAsRedirect, REDIRECT_PARAM, withRedirect } from "../redirect"
 import { type InstitutionOption, InstitutionSelect } from "./InstitutionSelect"
 import { PasswordField } from "./PasswordField"
+import { VerifyCodeForm } from "./VerifyCodeForm"
 
 const titleOptions = toSelectOptions(MemberTitleLabels)
 
@@ -43,6 +44,30 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
   const [redirect] = useQueryState(REDIRECT_PARAM, parseAsRedirect)
   const [formError, setFormError] = useState<string | undefined>(undefined)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  // The details stay in this form while the code is entered, so going back to
+  // change them keeps everything already typed.
+  const [step, setStep] = useState<"details" | "code">("details")
+  const [codeSent, setCodeSent] = useState<{
+    email: string
+    message?: string
+    waitSeconds?: number
+  } | null>(null)
+
+  // Going back unmounts the focused button, which would drop focus to the top of
+  // the page. Put it on the field that needs fixing instead.
+  const focusOnReturn = useRef(false)
+  useEffect(() => {
+    if (step !== "details" || !focusOnReturn.current) return
+    focusOnReturn.current = false
+    document.getElementById(Object.keys(fieldErrors)[0] ?? "email")?.focus()
+  }, [step, fieldErrors])
+
+  const backToDetails = (errors: Record<string, string> = {}) => {
+    setFieldErrors(errors)
+    setFormError(undefined)
+    focusOnReturn.current = true
+    setStep("details")
+  }
 
   const form = useForm({
     defaultValues: {
@@ -60,21 +85,73 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
       setFormError(undefined)
 
       try {
-        const result = await registerMember(value)
+        const result = await sendVerificationCode(value)
 
         if (result.ok) {
-          router.push(withRedirect(Routes.REGISTER.PROFILE, redirect))
+          setCodeSent({ email: value.email })
+          setStep("code")
+          return
+        }
+
+        // A code for this address went out recently - carry on with it rather than
+        // making the member wait to be sent another. Not limited to codes sent from
+        // this page, since a refresh forgets those but the code still works.
+        if ("retryAfterSeconds" in result) {
+          setCodeSent({
+            email: value.email,
+            message: result.formError,
+            waitSeconds: result.retryAfterSeconds,
+          })
+          setStep("code")
           return
         }
 
         setFieldErrors(result.fieldErrors ?? {})
         setFormError(result.formError)
       } catch {
-        setFormError("Could not create your account. Try again.")
+        setFormError("We couldn't send your code. Try again.")
       }
     },
     validators: { onSubmit: registerDetailsSchema },
   })
+
+  const verify = async (code: string) => {
+    const result = await registerMember({ ...form.state.values, code })
+
+    if (result.ok) {
+      router.push(withRedirect(Routes.REGISTER.PROFILE, redirect))
+      return result
+    }
+
+    // Anything not about the code (e.g. the email was registered meanwhile)
+    // belongs against the details, so take the member back to them.
+    const { code: _code, ...detailErrors } = result.fieldErrors ?? {}
+    if (Object.keys(detailErrors).length > 0) backToDetails(detailErrors)
+    return result
+  }
+
+  const resend = async () => {
+    const result = await sendVerificationCode(form.state.values)
+    // A refusal about the details (e.g. the address was registered meanwhile)
+    // can't be fixed from the code form, so show it where it can be.
+    if (!result.ok && result.fieldErrors && Object.keys(result.fieldErrors).length > 0) {
+      backToDetails(result.fieldErrors)
+    }
+    return result
+  }
+
+  if (step === "code" && codeSent) {
+    return (
+      <VerifyCodeForm
+        email={codeSent.email}
+        initialFormError={codeSent.message}
+        initialWaitSeconds={codeSent.waitSeconds}
+        onBack={() => backToDetails()}
+        onResend={resend}
+        onVerify={verify}
+      />
+    )
+  }
 
   return (
     <form
@@ -319,7 +396,7 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
             type="submit"
             variant="button-mauve"
           >
-            {isSubmitting ? "Creating your account..." : "Register & continue"}
+            {isSubmitting ? "Sending your code..." : "Continue"}
           </Button>
         )}
       </form.Subscribe>

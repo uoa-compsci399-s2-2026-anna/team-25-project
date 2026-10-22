@@ -3,16 +3,25 @@
 import {
   ALLOWED_AVATAR_MIME_TYPES,
   type RegisterDetails,
+  type RegisterWithCode,
   registerDetailsSchema,
   registerProfileSchema,
+  registerWithCodeSchema,
 } from "@repo/shared/schemas/register"
 import { cookies } from "next/headers"
-import { ValidationError } from "payload"
+import { type Payload, ValidationError } from "payload"
 import { generatePayloadCookie } from "payload/shared"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
-import type { ActionResult } from "./types"
+import { isRecognisedEmail } from "../helpers/recognisedEmail"
+import {
+  type CheckCodeResult,
+  checkCode,
+  consumeCode,
+  issueCode,
+} from "../helpers/verificationCode"
+import type { ActionResult, SendCodeResult } from "./types"
 
 type ZodIssue = { message: string; path: PropertyKey[] }
 
@@ -57,9 +66,9 @@ const resultFromValidationError = (
 }
 
 /**
- * Signs the new member in straight after creating them. Email verification is
- * not set up yet, so there is no intermediate "check your inbox" state - the
- * account is usable immediately and the profile step runs authenticated.
+ * Signs the new member in straight after creating them. The email was proven
+ * with a code before the account existed, so the account is usable immediately
+ * and the profile step runs authenticated.
  */
 const signIn = async (email: string, password: string) => {
   const payload = await getPayloadClient()
@@ -93,20 +102,128 @@ const signIn = async (email: string, password: string) => {
   })
 }
 
-export const registerMember = async (input: RegisterDetails): Promise<ActionResult> => {
-  // Re-validated here rather than trusting the client's own pass.
+const parseInstitutionId = (institution: string) => {
+  const institutionId = Number(institution)
+  return Number.isInteger(institutionId) ? institutionId : null
+}
+
+/**
+ * The checks `payload.create` would fail on, run before a code is sent so nobody
+ * proves an address only to have the account refused. The messages match the
+ * ones Payload and `enforceInstitutionDomain` give, which still decide on create.
+ */
+const registrationBlockers = async (
+  payload: Payload,
+  email: string,
+  institutionId: number,
+): Promise<Record<string, string> | null> => {
+  const institution = await payload.findByID({
+    collection: Slugs.Collections.INSTITUTIONS,
+    id: institutionId,
+    depth: 0,
+    disableErrors: true,
+  })
+  if (!institution) return { institution: "Selected institution does not exist." }
+
+  const domains = institution.domains.map(({ domain }) => domain)
+  if (!isRecognisedEmail(email, domains)) {
+    return {
+      email: `Email domain does not match a registered domain for ${institution.name}.`,
+    }
+  }
+
+  const { totalDocs } = await payload.count({
+    collection: Slugs.Collections.MEMBERS,
+    where: { email: { equals: email.trim().toLowerCase() } },
+  })
+  if (totalDocs > 0) return { email: "A user with the given email is already registered." }
+
+  return null
+}
+
+const formatWait = (seconds: number) =>
+  seconds < 60
+    ? `${seconds} second${seconds === 1 ? "" : "s"}`
+    : `${Math.ceil(seconds / 60)} minute${Math.ceil(seconds / 60) === 1 ? "" : "s"}`
+
+/**
+ * Step one's first submit: checks the details, then emails a code to prove the
+ * address. No account exists until `registerMember` receives that code.
+ */
+export const sendVerificationCode = async (input: RegisterDetails): Promise<SendCodeResult> => {
   const parsed = registerDetailsSchema.safeParse(input)
   if (!parsed.success) {
     return { fieldErrors: fieldErrorsFromIssues(parsed.error.issues), ok: false }
   }
 
-  const { email, firstName, institution, lastName, password, position, title } = parsed.data
-  const institutionId = Number(institution)
-  if (!Number.isInteger(institutionId)) {
+  const institutionId = parseInstitutionId(parsed.data.institution)
+  if (institutionId === null) {
     return { fieldErrors: { institution: "Select your university or institution" }, ok: false }
   }
 
   const payload = await getPayloadClient()
+
+  // Without SES, Payload logs each email instead of sending it, and the subject
+  // carries the code. Fine locally; in production nobody would get a code and
+  // every code would sit in the server logs.
+  if (process.env.NODE_ENV === "production" && payload.email.name === "console") {
+    payload.logger.error("sendVerificationCode: no email adapter is configured")
+    return { formError: "We couldn't send your code. Try again later.", ok: false }
+  }
+
+  try {
+    const blockers = await registrationBlockers(payload, parsed.data.email, institutionId)
+    if (blockers) return { fieldErrors: blockers, ok: false }
+
+    const issued = await issueCode(parsed.data.email)
+    if (issued.ok) return { ok: true }
+    if (issued.error === "cooldown") {
+      return {
+        formError: `You can ask for a new code in ${formatWait(issued.retryAfterSeconds)}.`,
+        ok: false,
+        retryAfterSeconds: issued.retryAfterSeconds,
+      }
+    }
+    return { formError: "We couldn't send your code. Try again.", ok: false }
+  } catch (error) {
+    payload.logger.error({ err: error }, "sendVerificationCode failed")
+    return { formError: "We couldn't send your code. Try again.", ok: false }
+  }
+}
+
+const CODE_ERRORS: Record<Exclude<CheckCodeResult, "ok">, string> = {
+  expired: "This code has expired. Send a new one.",
+  invalid: "That code isn't right. Check the email and try again.",
+  locked: "Too many incorrect tries. Send a new code.",
+}
+
+/**
+ * Step one's final submit: creates the account once the emailed code checks
+ * out, then signs the member in for the profile step.
+ */
+export const registerMember = async (input: RegisterWithCode): Promise<ActionResult> => {
+  // Re-validated here rather than trusting the client's own pass. Everything is
+  // checked before the code, since every code check uses up one of its tries.
+  const parsed = registerWithCodeSchema.safeParse(input)
+  if (!parsed.success) {
+    return { fieldErrors: fieldErrorsFromIssues(parsed.error.issues), ok: false }
+  }
+
+  const { code, email, firstName, institution, lastName, password, position, title } = parsed.data
+  const institutionId = parseInstitutionId(institution)
+  if (institutionId === null) {
+    return { fieldErrors: { institution: "Select your university or institution" }, ok: false }
+  }
+
+  const payload = await getPayloadClient()
+
+  try {
+    const result = await checkCode(email, code)
+    if (result !== "ok") return { fieldErrors: { code: CODE_ERRORS[result] }, ok: false }
+  } catch (error) {
+    payload.logger.error({ err: error }, "checking a verification code failed")
+    return { formError: "We couldn't check your code. Try again.", ok: false }
+  }
 
   try {
     await payload.create({
@@ -120,6 +237,12 @@ export const registerMember = async (input: RegisterDetails): Promise<ActionResu
     }
     return { formError: "Could not create your account. Try again.", ok: false }
   }
+
+  // The account exists now, so a leftover code only means one stale row - it
+  // expires on its own and must not fail the sign-up.
+  await consumeCode(email).catch((error) =>
+    payload.logger.error({ err: error }, "consuming a verification code failed"),
+  )
 
   try {
     await signIn(email, password)

@@ -65,6 +65,11 @@ export const registerDetailsSchema = z.object({
 
 export type RegisterDetails = z.infer<typeof registerDetailsSchema>
 
+/** Step one's final submit: the details again, plus the code that proves the email. */
+export const registerWithCodeSchema = registerDetailsSchema.extend({ code: verificationCodeSchema })
+
+export type RegisterWithCode = z.infer<typeof registerWithCodeSchema>
+
 // Deduplicated because each interest is also its React key when listed.
 const splitResearchInterests = (value: string) => normaliseResearchInterests(value.split(","))
 
