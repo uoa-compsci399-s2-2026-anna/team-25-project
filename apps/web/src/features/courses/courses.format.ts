@@ -65,6 +65,29 @@ export const findCurrentOffering = <T extends DatedOffering>(offerings: T[], tod
   return { current, next, primary: current ?? next ?? started[0] ?? offerings[0] }
 }
 
+/** The offering `?offering=` asks for, or the course's primary one when it names none we have. */
+export const selectOffering = <T extends DatedOffering>(
+  offerings: T[],
+  offeringId: number | undefined,
+  today: string,
+) => {
+  const found = findCurrentOffering(offerings, today)
+  const offering = offerings.find((candidate) => candidate.id === offeringId) ?? found.primary
+  return { ...found, offering }
+}
+
+export type OfferingTiming = "past" | "current" | "next" | "future"
+
+export const offeringTiming = (
+  offering: Pick<CourseVersion, "id" | "startDate">,
+  { current, next }: { current?: Pick<CourseVersion, "id">; next?: Pick<CourseVersion, "id"> },
+  today: string,
+): OfferingTiming => {
+  if (offering.id === current?.id) return "current"
+  if (offering.id === next?.id) return "next"
+  return dayOf(offering.startDate) > today ? "future" : "past"
+}
+
 export const toCourseTableRow = (
   course: Course,
   version: CourseVersion | undefined,

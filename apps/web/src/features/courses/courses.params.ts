@@ -12,7 +12,7 @@ export const parseCourseId = async (params: CourseRouteParams) => {
   return id
 }
 
-// `offering` picks one of the course's offerings; without it the page shows the latest.
+// `offering` picks one of the course's offerings; without it the page shows the current one.
 const loadCourseSearchParams = createLoader({ offering: parseAsPositiveInteger })
 
 export const parseOfferingId = async (searchParams: CourseRouteSearchParams) =>

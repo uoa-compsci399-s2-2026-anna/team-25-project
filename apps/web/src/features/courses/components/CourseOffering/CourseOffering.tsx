@@ -2,11 +2,11 @@ import { CourseDeliveryFormatLabels } from "@repo/shared/enums/courses"
 import type { CourseVersion } from "@repo/shared/payload-types"
 import { richTextHasText } from "@repo/shared/schemas/shared"
 import { initialsFromName } from "@repo/shared/utils/initials"
-import { Avatar, AvatarFallback, Heading, Separator, Skeleton } from "@repo/ui/components/ui"
+import { Avatar, AvatarFallback, Badge, Heading, Separator, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
 import { RichTextContent } from "@/components/RichTextContent"
 import { Routes } from "@/lib/routes"
-import { periodRange } from "../../courses.format"
+import { getToday, periodRange, selectOffering } from "../../courses.format"
 import {
   type CourseRouteParams,
   type CourseRouteSearchParams,
@@ -66,10 +66,9 @@ export const CourseOffering = async ({
 }) => {
   const courseId = await parseCourseId(params)
   const offeringId = await parseOfferingId(searchParams)
-
-  // Newest first, so an unknown or missing `?offering=` falls back to the latest.
   const offerings = await getPublishedOfferingsCached(courseId)
-  const offering = offerings.find((candidate) => candidate.id === offeringId) ?? offerings[0]
+  // Read after the search params, so the date is the request's and not frozen into a prerender.
+  const { current, next, offering, primary } = selectOffering(offerings, offeringId, getToday())
 
   // The header 404s a course with nothing published, so this is only reachable
   // mid-publication. Render nothing rather than taking down the header beside it.
@@ -125,6 +124,14 @@ export const CourseOffering = async ({
       </div>
 
       <aside className="mt-2 flex flex-col gap-4 lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:mt-0">
+        {teachingTeam.length > 0 && (
+          <CourseOfferingSidebarCard title={`Teaching team - ${teachingTeam.length}`}>
+            {teachingTeam.map((member) => (
+              <TeamMember key={member.id ?? member.name} member={member} />
+            ))}
+          </CourseOfferingSidebarCard>
+        )}
+
         <CourseOfferingSidebarCard title="Offering">
           <CourseOfferingDetail label="Period" value={offering.period} />
           {offering.programme && (
@@ -142,32 +149,25 @@ export const CourseOffering = async ({
           )}
         </CourseOfferingSidebarCard>
 
-        {teachingTeam.length > 0 && (
-          <CourseOfferingSidebarCard title={`Teaching team - ${teachingTeam.length}`}>
-            {teachingTeam.map((member) => (
-              <TeamMember key={member.id ?? member.name} member={member} />
-            ))}
-          </CourseOfferingSidebarCard>
-        )}
-
         {offerings.length > 1 && (
           <CourseOfferingSidebarCard title={`Offerings - ${offerings.length}`}>
-            {offerings.map((item, index) => (
+            {offerings.map((item) => (
               <Link
                 aria-current={item.id === offering.id ? "page" : undefined}
-                className="-mx-2 flex flex-col rounded-md px-2 py-1 hover:bg-muted aria-[current=page]:bg-muted"
+                className="-mx-2 flex items-center justify-between gap-2 self-stretch rounded-md px-2 py-1 hover:bg-muted aria-[current=page]:bg-muted"
                 href={
-                  index === 0
+                  item.id === primary?.id
                     ? Routes.COURSES.COURSE(String(courseId))
                     : Routes.COURSES.OFFERING(courseId, item.id)
                 }
                 key={item.id}
               >
-                <p className="font-medium text-sm">
-                  {item.period}
-                  {index === 0 && <span className="text-muted-foreground"> - latest</span>}
-                </p>
-                <p className="text-muted-foreground text-xs">{periodRange(item)}</p>
+                <div className="flex flex-col">
+                  <p className="font-medium text-sm">{item.period}</p>
+                  <p className="text-muted-foreground text-xs">{periodRange(item)}</p>
+                </div>
+                {item.id === current?.id && <Badge variant="active">Current</Badge>}
+                {item.id === next?.id && <Badge variant="blue">Next</Badge>}
               </Link>
             ))}
           </CourseOfferingSidebarCard>

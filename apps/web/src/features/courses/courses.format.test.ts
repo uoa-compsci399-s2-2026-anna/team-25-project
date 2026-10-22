@@ -7,6 +7,7 @@ import {
   deriveTitle,
   deriveUniversity,
   findCurrentOffering,
+  offeringTiming,
   summarizeCourses,
   summarizeMyCourses,
   toCourseTableRow,
@@ -254,5 +255,19 @@ describe("findCurrentOffering", () => {
       offering(4, "2026-03-02", "2026-11-06"),
     ]
     expect(findCurrentOffering(overlapping, "2026-08-01").current?.id).toBe(5)
+  })
+})
+
+describe("offeringTiming", () => {
+  const found = { current: { id: 2 }, next: { id: 3 } }
+
+  it("labels the current and next offerings", () => {
+    expect(offeringTiming({ id: 2, startDate: "2026-07-20" }, found, "2026-08-01")).toBe("current")
+    expect(offeringTiming({ id: 3, startDate: "2027-03-01" }, found, "2026-08-01")).toBe("next")
+  })
+
+  it("labels the rest as past or future by their start date", () => {
+    expect(offeringTiming({ id: 1, startDate: "2026-03-02" }, found, "2026-08-01")).toBe("past")
+    expect(offeringTiming({ id: 4, startDate: "2027-07-19" }, found, "2026-08-01")).toBe("future")
   })
 })
