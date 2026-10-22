@@ -35,38 +35,21 @@ export const deriveTitle = (version: CourseVersion | undefined): string =>
 export const deriveStatus = (version: CourseVersion | undefined): CourseTableRow["status"] =>
   version?._status === "published" ? "published" : "draft"
 
-// `period` is formatted as "<year> <term>", like "2026 Semester 2" or
-// "2027 Full Year". If there's no offering yet there's no period to read, so
-// `year` falls back to `0` - `CourseTableRow.year` has to be a plain number
-// since that's how `CoursesTable` (#104) defined it.
-export const splitPeriod = (
-  period: string | undefined | null,
-): { year: number; semester: string } => {
-  if (!period) return { year: 0, semester: "—" }
-  const [yearToken, ...rest] = period.trim().split(/\s+/)
-  const year = Number(yearToken)
-  return {
-    year: Number.isFinite(year) ? year : 0,
-    semester: rest.join(" ") || "—",
-  }
-}
-
 export const toCourseTableRow = (
   course: Course,
   version: CourseVersion | undefined,
-): CourseTableRow => {
-  const { year, semester } = splitPeriod(version?.period)
-  return {
-    id: String(course.id),
-    code: course.code,
-    title: deriveTitle(version),
-    lecturer: deriveLecturer(version, course),
-    university: deriveUniversity(course),
-    semester,
-    year,
-    status: deriveStatus(version),
-  }
-}
+  offerings: number,
+): CourseTableRow => ({
+  id: String(course.id),
+  code: course.code,
+  title: deriveTitle(version),
+  lecturer: deriveLecturer(version, course),
+  university: deriveUniversity(course),
+  latestOffering: version?.period?.trim() || "—",
+  latestStartDate: version?.startDate ?? "",
+  offerings,
+  status: deriveStatus(version),
+})
 
 /** A never-published course the viewer can reopen in the add-course dialog. */
 export interface EditableDraftCourse {
@@ -130,7 +113,8 @@ export interface CoursesSummaryStats {
   medianTeamSize: number
 }
 
-const isYearLong = (row: CourseTableRow): boolean => row.semester.toLowerCase().includes("year")
+const isYearLong = (row: CourseTableRow): boolean =>
+  row.latestOffering.toLowerCase().includes("year")
 
 export const summarizeCourses = (rows: CourseTableRow[]): CoursesSummaryStats => ({
   totalCourses: rows.length,
@@ -157,7 +141,10 @@ export const summarizeMyCourses = (
 ): MyCoursesSummary => ({
   total: myCourseIds.size,
   upToDate: rows.filter(
-    (row) => myCourseIds.has(row.id) && row.status === "published" && row.year === year,
+    (row) =>
+      myCourseIds.has(row.id) &&
+      row.status === "published" &&
+      row.latestStartDate.startsWith(String(year)),
   ).length,
   year,
 })

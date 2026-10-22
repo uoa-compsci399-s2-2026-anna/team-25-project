@@ -12,8 +12,9 @@ const courses: Array<CourseTableRow> = [
     title: "Capstone Project",
     lecturer: "A. Tui",
     university: "University of Auckland",
-    semester: "Semester 2",
-    year: 2026,
+    latestOffering: "Semester 2 2026",
+    latestStartDate: "2026-07-20",
+    offerings: 1,
     status: "published",
   },
   {
@@ -22,8 +23,9 @@ const courses: Array<CourseTableRow> = [
     title: "Research Project",
     lecturer: "M. Rahman",
     university: "University of Auckland",
-    semester: "Semester 1",
-    year: 2027,
+    latestOffering: "Semester 1 2027",
+    latestStartDate: "2027-03-02",
+    offerings: 1,
     status: "draft",
   },
   {
@@ -32,8 +34,9 @@ const courses: Array<CourseTableRow> = [
     title: "Team Project",
     lecturer: "K. Whitfield",
     university: "Victoria University",
-    semester: "Trimester 1",
-    year: 2025,
+    latestOffering: "Trimester 1 2025",
+    latestStartDate: "2025-03-02",
+    offerings: 1,
     status: "published",
   },
 ]
@@ -67,9 +70,6 @@ function Harness({
       </button>
       <button onClick={() => table.getColumn("course")?.setFilterValue("softeng")} type="button">
         Search softeng
-      </button>
-      <button onClick={() => table.getColumn("year")?.setFilterValue(["2026"])} type="button">
-        Filter year 2026
       </button>
       <CoursesTable
         canOpenDraft={canOpenDraft}
@@ -117,24 +117,19 @@ describe("CoursesTable", () => {
     render(<Harness isLoading />)
     expect(screen.getByRole("columnheader", { name: "Course" })).toBeInTheDocument()
     expect(screen.getByRole("columnheader", { name: "University" })).toBeInTheDocument()
-    expect(screen.getByRole("columnheader", { name: "Semester" })).toBeInTheDocument()
-    expect(screen.getByRole("columnheader", { name: "Year" })).toBeInTheDocument()
+    expect(screen.getByRole("columnheader", { name: "Latest offering" })).toBeInTheDocument()
+    expect(screen.getByRole("columnheader", { name: "Offerings" })).toBeInTheDocument()
     expect(screen.getByRole("columnheader", { name: "Status" })).toBeInTheDocument()
   })
 
-  it("sorts when the year header is clicked", () => {
+  it("sorts the latest offering column by start date, not by its label", () => {
     render(<Harness />)
-    const header = screen.getByRole("button", { name: "Sort by Year" })
+    const header = screen.getByRole("button", { name: "Sort by Latest offering" })
+    const offerings = () => bodyRows().map((row) => within(row).getAllByRole("cell")[2].textContent)
     fireEvent.click(header)
-    const yearsAfterFirstClick = bodyRows().map(
-      (row) => within(row).getAllByRole("cell")[3].textContent,
-    )
-    expect(yearsAfterFirstClick).toEqual(["2027", "2026", "2025"])
+    expect(offerings()).toEqual(["Semester 1 2027", "Semester 2 2026", "Trimester 1 2025"])
     fireEvent.click(header)
-    const yearsAfterSecondClick = bodyRows().map(
-      (row) => within(row).getAllByRole("cell")[3].textContent,
-    )
-    expect(yearsAfterSecondClick).toEqual(["2025", "2026", "2027"])
+    expect(offerings()).toEqual(["Trimester 1 2025", "Semester 2 2026", "Semester 1 2027"])
   })
 
   it("narrows rows when a categorical filter is applied externally", () => {
@@ -163,7 +158,7 @@ describe("CoursesTable", () => {
 
   it("navigates to the course page when a non-link cell in the row is clicked", () => {
     render(<Harness />)
-    fireEvent.click(screen.getByText("Semester 2"))
+    fireEvent.click(screen.getByText("Semester 2 2026"))
     expect(push).toHaveBeenCalledWith("/courses/1")
   })
 
@@ -180,12 +175,6 @@ describe("CoursesTable", () => {
     expect(push).not.toHaveBeenCalled()
   })
 
-  it("narrows rows when the year filter is applied with string values", () => {
-    render(<Harness />)
-    fireEvent.click(screen.getByRole("button", { name: "Filter year 2026" }))
-    expect(bodyRows()).toHaveLength(1)
-    expect(screen.getByText("COMP 693 Capstone Project")).toBeInTheDocument()
-  })
   describe("opening drafts", () => {
     const draftRow = courses[1]
 
@@ -207,7 +196,7 @@ describe("CoursesTable", () => {
       const onOpenDraft = vi.fn()
       render(<Harness canOpenDraft={() => true} onOpenDraft={onOpenDraft} />)
 
-      fireEvent.click(screen.getByText("Semester 1"))
+      fireEvent.click(screen.getByText("Semester 1 2027"))
 
       expect(onOpenDraft).toHaveBeenCalledWith(draftRow)
       expect(push).not.toHaveBeenCalled()
@@ -221,7 +210,7 @@ describe("CoursesTable", () => {
         "href",
         "/courses/1",
       )
-      fireEvent.click(screen.getByText("Semester 2"))
+      fireEvent.click(screen.getByText("Semester 2 2026"))
       expect(push).toHaveBeenCalledWith("/courses/1")
       expect(onOpenDraft).not.toHaveBeenCalled()
     })

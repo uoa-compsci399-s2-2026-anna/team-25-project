@@ -24,13 +24,15 @@ const courseIdOf = (version: CourseVersion): number =>
   typeof version.course === "number" ? version.course : version.course.id
 
 // Docs arrive sorted newest first, so the first one seen for a course is its newest.
-const latestVersionByCourseId = (versions: CourseVersion[]) => {
-  const latest = new Map<number, CourseVersion>()
+const offeringsByCourseId = (versions: CourseVersion[]) => {
+  const offerings = new Map<number, { latest: CourseVersion; count: number }>()
   for (const version of versions) {
     const courseId = courseIdOf(version)
-    if (!latest.has(courseId)) latest.set(courseId, version)
+    const seen = offerings.get(courseId)
+    if (seen) seen.count++
+    else offerings.set(courseId, { latest: version, count: 1 })
   }
-  return latest
+  return offerings
 }
 
 export interface CoursesTableData {
@@ -65,8 +67,11 @@ export const getCoursesTableData = async (): Promise<CoursesTableData> => {
     }),
   ])
 
-  const latestVersions = latestVersionByCourseId(versions)
-  const rows = courses.map((course) => toCourseTableRow(course, latestVersions.get(course.id)))
+  const offerings = offeringsByCourseId(versions)
+  const rows = courses.map((course) => {
+    const offering = offerings.get(course.id)
+    return toCourseTableRow(course, offering?.latest, offering?.count ?? 0)
+  })
 
   return { rows, summary: summarizeCourses(rows) }
 }
@@ -124,14 +129,14 @@ export const getMyDraftCourses = async (): Promise<MyDraftCourses> => {
   // with no offering shouldn't exist - but if one did, it would have nothing to
   // reopen and no course page to link to, so it's left out rather than listed
   // as a dead end.
-  const latestVersions = latestVersionByCourseId(versions)
+  const offerings = offeringsByCourseId(versions)
   const viewer = { id: user.id, role: user.position ?? "" }
   const drafts: MyDraftCourses = { editable: {}, rows: [] }
   for (const course of courses) {
-    const version = latestVersions.get(course.id)
-    if (!version) continue
-    drafts.rows.push(toCourseTableRow(course, version))
-    drafts.editable[String(course.id)] = toEditableDraftCourse(course, version, viewer)
+    const offering = offerings.get(course.id)
+    if (!offering) continue
+    drafts.rows.push(toCourseTableRow(course, offering.latest, offering.count))
+    drafts.editable[String(course.id)] = toEditableDraftCourse(course, offering.latest, viewer)
   }
   return drafts
 }

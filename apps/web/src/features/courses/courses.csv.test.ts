@@ -8,8 +8,9 @@ const row = (overrides: Partial<CourseTableRow> = {}): CourseTableRow => ({
   title: "Capstone Project",
   lecturer: "A. Tui",
   university: "University of Auckland",
-  semester: "Semester 2",
-  year: 2026,
+  latestOffering: "Semester 2 2026",
+  latestStartDate: "2026-07-20",
+  offerings: 1,
   status: "published",
   ...overrides,
 })
@@ -19,14 +20,14 @@ describe("coursesToCsv", () => {
     const csv = coursesToCsv([row(), row({ id: "2", code: "SOFTENG 700", status: "draft" })])
 
     expect(csv.split("\r\n")).toEqual([
-      "Code,Title,Lecturer,University,Semester,Year,Status",
-      "COMP 693,Capstone Project,A. Tui,University of Auckland,Semester 2,2026,published",
-      "SOFTENG 700,Capstone Project,A. Tui,University of Auckland,Semester 2,2026,draft",
+      "Code,Title,Lecturer,University,Latest offering,Offerings,Status",
+      "COMP 693,Capstone Project,A. Tui,University of Auckland,Semester 2 2026,1,published",
+      "SOFTENG 700,Capstone Project,A. Tui,University of Auckland,Semester 2 2026,1,draft",
     ])
   })
 
   it("writes just the header when there are no rows", () => {
-    expect(coursesToCsv([])).toBe("Code,Title,Lecturer,University,Semester,Year,Status")
+    expect(coursesToCsv([])).toBe("Code,Title,Lecturer,University,Latest offering,Offerings,Status")
   })
 
   it("quotes a field containing a comma", () => {

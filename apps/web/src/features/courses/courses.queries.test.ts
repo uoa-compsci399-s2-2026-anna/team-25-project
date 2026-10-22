@@ -44,7 +44,7 @@ const course = (overrides: Record<string, unknown>): Course =>
 const version = (overrides: Partial<CourseVersion>): CourseVersion =>
   ({
     id: 1,
-    period: "2026 Semester 2",
+    period: "Semester 2 2026",
     startDate: "2026-07-20",
     endDate: "2026-11-06",
     name: "Capstone: Computer Science",
@@ -91,8 +91,8 @@ describe("getCoursesTableData", () => {
       code: "COSC 345",
       institution: { id: 2, name: "University of Otago" },
     })
-    const older = version({ id: 1, course: 1, period: "2025 Semester 1", startDate: "2025-02-01" })
-    const newer = version({ id: 2, course: 1, period: "2026 Full Year", startDate: "2026-07-20" })
+    const older = version({ id: 1, course: 1, period: "Semester 1 2025", startDate: "2025-02-01" })
+    const newer = version({ id: 2, course: 1, period: "Full Year 2026", startDate: "2026-07-20" })
 
     find
       .mockResolvedValueOnce({ docs: [auckland, otago] })
@@ -102,8 +102,18 @@ describe("getCoursesTableData", () => {
     const { rows, summary } = await getCoursesTableData()
 
     expect(rows).toEqual([
-      expect.objectContaining({ id: "1", code: "COMPSCI 399", year: 2026, semester: "Full Year" }),
-      expect.objectContaining({ id: "2", code: "COSC 345", title: "No offering yet" }),
+      expect.objectContaining({
+        id: "1",
+        code: "COMPSCI 399",
+        latestOffering: "Full Year 2026",
+        offerings: 2,
+      }),
+      expect.objectContaining({
+        id: "2",
+        code: "COSC 345",
+        title: "No offering yet",
+        offerings: 0,
+      }),
     ])
     expect(summary.totalCourses).toBe(2)
     expect(summary.yearLongCourses).toBe(1)
@@ -122,8 +132,9 @@ describe("getMyCoursesSummary", () => {
       title: "Capstone",
       lecturer: "A. Patel",
       university: "UoA",
-      semester: "Semester 2",
-      year: currentYear,
+      latestOffering: `Semester 2 ${currentYear}`,
+      latestStartDate: `${currentYear}-07-20`,
+      offerings: 1,
       status: "published" as const,
     },
   ]
@@ -250,7 +261,7 @@ describe("getMyDraftCourses", () => {
       id: 2,
       course: 4,
       name: "Newer draft",
-      period: "2026 Semester 2",
+      period: "Semester 2 2026",
       _status: "draft",
     })
     const older = version({ id: 1, course: 4, name: "Older draft", _status: "draft" })
@@ -265,7 +276,8 @@ describe("getMyDraftCourses", () => {
         code: "COSC 345",
         title: "Newer draft",
         status: "draft",
-        year: 2026,
+        latestOffering: "Semester 2 2026",
+        offerings: 2,
       }),
     ])
   })
@@ -279,7 +291,7 @@ describe("getMyDraftCourses", () => {
       id: 9,
       course: 4,
       name: "Capstone",
-      period: "2026 Semester 2",
+      period: "Semester 2 2026",
       startDate: "2026-07-20T00:00:00.000Z",
       endDate: "2026-11-06T00:00:00.000Z",
       programme: null,
@@ -304,7 +316,7 @@ describe("getMyDraftCourses", () => {
           endDate: "2026-11-06",
           learningOutcomes: null,
           name: "Capstone",
-          period: "2026 Semester 2",
+          period: "Semester 2 2026",
           programme: "",
           projectType: "",
           role: "Senior Lecturer",

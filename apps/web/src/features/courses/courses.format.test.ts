@@ -6,7 +6,6 @@ import {
   deriveStatus,
   deriveTitle,
   deriveUniversity,
-  splitPeriod,
   summarizeCourses,
   summarizeMyCourses,
   toCourseTableRow,
@@ -33,7 +32,7 @@ const version = (overrides: Partial<CourseVersion> = {}): CourseVersion =>
   ({
     id: 100,
     course: 10,
-    period: "2026 Semester 2",
+    period: "Semester 2 2026",
     startDate: "2026-07-20",
     endDate: "2026-11-06",
     name: "Capstone: Computer Science",
@@ -41,25 +40,6 @@ const version = (overrides: Partial<CourseVersion> = {}): CourseVersion =>
     _status: "published",
     ...overrides,
   }) as CourseVersion
-
-describe("splitPeriod", () => {
-  it("splits the year from the rest of the period", () => {
-    expect(splitPeriod("2026 Semester 2")).toEqual({ year: 2026, semester: "Semester 2" })
-  })
-
-  it("keeps multi-word terms together", () => {
-    expect(splitPeriod("2027 Full Year")).toEqual({ year: 2027, semester: "Full Year" })
-  })
-
-  it("falls back for a missing period", () => {
-    expect(splitPeriod(undefined)).toEqual({ year: 0, semester: "—" })
-    expect(splitPeriod(null)).toEqual({ year: 0, semester: "—" })
-  })
-
-  it("falls back when the leading token isn't a year", () => {
-    expect(splitPeriod("TBD")).toEqual({ year: 0, semester: "—" })
-  })
-})
 
 describe("deriveTitle", () => {
   it("uses the offering's name", () => {
@@ -127,27 +107,29 @@ describe("deriveLecturer", () => {
 
 describe("toCourseTableRow", () => {
   it("composes a full row from a course and its latest offering", () => {
-    expect(toCourseTableRow(course(), version())).toEqual({
+    expect(toCourseTableRow(course(), version(), 1)).toEqual({
       id: "10",
       code: "COMPSCI 399",
       title: "Capstone: Computer Science",
       lecturer: "A. Patel",
       university: "University of Auckland",
-      semester: "Semester 2",
-      year: 2026,
+      latestOffering: "Semester 2 2026",
+      latestStartDate: "2026-07-20",
+      offerings: 1,
       status: "published",
     })
   })
 
   it("composes a placeholder row for a course with no offering yet", () => {
-    expect(toCourseTableRow(course(), undefined)).toEqual({
+    expect(toCourseTableRow(course(), undefined, 0)).toEqual({
       id: "10",
       code: "COMPSCI 399",
       title: "No offering yet",
       lecturer: "O. Fallback",
       university: "University of Auckland",
-      semester: "—",
-      year: 0,
+      latestOffering: "—",
+      latestStartDate: "",
+      offerings: 0,
       status: "draft",
     })
   })
@@ -159,8 +141,9 @@ const row = (overrides: Partial<CourseTableRow> = {}): CourseTableRow => ({
   title: "Capstone Project",
   lecturer: "A. Tui",
   university: "University of Auckland",
-  semester: "Semester 2",
-  year: 2026,
+  latestOffering: "Semester 2 2026",
+  latestStartDate: "2026-07-20",
+  offerings: 1,
   status: "published",
   ...overrides,
 })
@@ -168,9 +151,9 @@ const row = (overrides: Partial<CourseTableRow> = {}): CourseTableRow => ({
 describe("summarizeCourses", () => {
   it("counts the directory and how many offerings run the full year", () => {
     const rows = [
-      row({ semester: "Semester 2" }),
-      row({ semester: "Full Year" }),
-      row({ semester: "Trimester 1" }),
+      row({ latestOffering: "Semester 2 2026" }),
+      row({ latestOffering: "Full Year 2026" }),
+      row({ latestOffering: "Trimester 1 2026" }),
     ]
     const summary = summarizeCourses(rows)
     expect(summary.totalCourses).toBe(3)
@@ -190,7 +173,7 @@ describe("summarizeCourses", () => {
 describe("summarizeMyCourses", () => {
   it("counts every id in the owned-course set, published or not", () => {
     const myCourseIds = new Set(["1", "2", "3"])
-    const rows = [row({ id: "1", year: 2026, status: "published" })]
+    const rows = [row({ id: "1", latestStartDate: "2026-07-20", status: "published" })]
 
     expect(summarizeMyCourses(myCourseIds, rows, 2026).total).toBe(3)
   })
@@ -198,8 +181,8 @@ describe("summarizeMyCourses", () => {
   it("counts a course as up to date only when its row is published for the given year", () => {
     const myCourseIds = new Set(["1", "2", "3"])
     const rows = [
-      row({ id: "1", year: 2026, status: "published" }),
-      row({ id: "2", year: 2025, status: "published" }),
+      row({ id: "1", latestStartDate: "2026-07-20", status: "published" }),
+      row({ id: "2", latestStartDate: "2025-07-21", status: "published" }),
       // id "3" has no row at all - an unpublished course, so it can't be up to date.
     ]
 
@@ -213,8 +196,8 @@ describe("summarizeMyCourses", () => {
   it("ignores rows that aren't in the owned-course set", () => {
     const myCourseIds = new Set(["2"])
     const rows = [
-      row({ id: "1", year: 2026, status: "published" }),
-      row({ id: "2", year: 2026, status: "published" }),
+      row({ id: "1", latestStartDate: "2026-07-20", status: "published" }),
+      row({ id: "2", latestStartDate: "2026-07-20", status: "published" }),
     ]
 
     expect(summarizeMyCourses(myCourseIds, rows, 2026)).toEqual({
