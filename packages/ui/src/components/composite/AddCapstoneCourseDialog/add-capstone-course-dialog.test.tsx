@@ -199,6 +199,24 @@ describe("AddCapstoneCourseDialog", () => {
 
     expect(screen.getByLabelText(/End date/)).toHaveAttribute("min", "2026-07-20")
   })
+  it("drops the course code, role and draft button when adding an offering", () => {
+    render(
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        kind="offering"
+        onPublish={vi.fn()}
+        onValueChange={vi.fn()}
+        open
+        values={emptyValues}
+      />,
+    )
+
+    expect(screen.getByRole("dialog", { name: "Add an offering" })).toBeInTheDocument()
+    expect(screen.queryByLabelText(/Course code/)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/Your role/)).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Save draft" })).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument()
+  })
   describe("deleting a draft", () => {
     const renderDraft = (overrides: Partial<AddCapstoneCourseDialogProps> = {}) =>
       render(
