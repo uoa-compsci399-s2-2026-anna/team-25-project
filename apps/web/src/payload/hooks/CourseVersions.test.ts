@@ -173,7 +173,7 @@ describe("publication content detection", () => {
   })
 })
 
-describe("correction change summaries", () => {
+describe("corrections", () => {
   const previous = { ...complete, period: "S1" } as unknown as CourseVersion
 
   it("accepts a correction without a summary", () => {

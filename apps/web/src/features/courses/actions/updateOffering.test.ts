@@ -74,7 +74,7 @@ describe("updateOffering", () => {
     expect(payload.update).not.toHaveBeenCalled()
   })
 
-  it("republishes the offering as the member, without touching its teaching team", async () => {
+  it("republishes the offering as the member, clearing the last note but not the teaching team", async () => {
     const payload = mockPayload()
 
     const result = await updateOffering(input)
@@ -83,7 +83,11 @@ describe("updateOffering", () => {
     expect(payload.update).toHaveBeenCalledWith(
       expect.objectContaining({
         collection: "courseVersions",
-        data: expect.objectContaining({ _status: "published", period: "Semester 2 2026" }),
+        data: expect.objectContaining({
+          _status: "published",
+          changeSummary: null,
+          period: "Semester 2 2026",
+        }),
         draft: false,
         id: 10,
         overrideAccess: false,
