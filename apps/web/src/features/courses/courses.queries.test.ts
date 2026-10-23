@@ -6,6 +6,7 @@ import {
   getCoursesTableData,
   getMyCoursesSummary,
   getMyDraftCourses,
+  getMyDraftOfferings,
   getPublishedCourse,
   getPublishedOfferings,
 } from "./courses.queries"
@@ -388,5 +389,46 @@ describe("getPublishedOfferings", () => {
     find.mockResolvedValue({ docs })
 
     await expect(getPublishedOfferings(7)).resolves.toEqual(docs)
+  })
+})
+
+describe("getMyDraftOfferings", () => {
+  const member = { id: 1 } as Member
+
+  it("returns nothing, and queries nothing, for an admin", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "admin", user: { id: 1 } as Admin })
+
+    expect(await getMyDraftOfferings(7)).toEqual([])
+    expect(find).not.toHaveBeenCalled()
+  })
+
+  it("reads each offering's newest save as the member", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: member })
+
+    await getMyDraftOfferings(7)
+
+    expect(find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: "courseVersions",
+        where: { course: { equals: 7 } },
+        draft: true,
+        overrideAccess: false,
+        user: member,
+      }),
+    )
+  })
+
+  it("keeps only offerings that have never been published", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: member })
+    find.mockResolvedValue({
+      docs: [
+        { id: 3, _status: "draft" },
+        { id: 2, _status: "published", publishedAt: "2026-07-01T00:00:00.000Z" },
+        // A pending edit over a published offering, which only the admin can make.
+        { id: 1, _status: "draft", publishedAt: "2026-03-01T00:00:00.000Z" },
+      ],
+    })
+
+    expect((await getMyDraftOfferings(7)).map((offering) => offering.id)).toEqual([3])
   })
 })
