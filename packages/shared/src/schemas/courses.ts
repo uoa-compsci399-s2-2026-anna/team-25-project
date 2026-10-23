@@ -66,9 +66,10 @@ const draftOfferingFields = {
 /**
  * Publish: mirrors `validatePublication` in the CourseVersions collection
  * hooks, which requires every one of these plus a teaching team with at
- * least one member and role. This dialog has no member picker, so it
- * publishes with the signed-in creator as the sole teaching-team member -
- * `role` is that member's role in the offering.
+ * least one member and role. The dialog has no member picker, so a new course
+ * publishes with the signed-in creator as the sole teaching-team member, and
+ * `role` is their role in it. A new offering keeps the team it was copied from
+ * instead, so the offering schemas drop `role`.
  */
 const publishOfferingFields = {
   // Optional even to publish - not every offering has more to say.
