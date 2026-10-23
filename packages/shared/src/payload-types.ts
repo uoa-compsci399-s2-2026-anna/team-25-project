@@ -362,7 +362,7 @@ export interface CourseVersion {
   startDate: string;
   endDate: string;
   /**
-   * Required when publishing changes to a published offering.
+   * Optional note on what a correction changed.
    */
   changeSummary?: string | null;
   publishedAt?: string | null;

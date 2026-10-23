@@ -174,30 +174,12 @@ describe("publication content detection", () => {
 })
 
 describe("correction change summaries", () => {
-  const previous = {
-    ...complete,
-    period: "S1",
-    changeSummary: "Fixed assessment weighting",
-  } as unknown as CourseVersion
+  const previous = { ...complete, period: "S1" } as unknown as CourseVersion
 
-  const correction = { ...previous, period: "S2" }
-
-  it("rejects a summary carried over from the previous correction", () => {
-    expect(() => validatePublication(correction, previous)).toThrow(
-      "change summary describing this change",
-    )
-  })
-
-  it("accepts a summary written for this correction", () => {
+  it("accepts a correction without a summary", () => {
     expect(() =>
-      validatePublication({ ...correction, changeSummary: "Moved to S2" }, previous),
+      validatePublication({ ...previous, period: "S2", changeSummary: null }, previous),
     ).not.toThrow()
-  })
-
-  it("still rejects a missing summary", () => {
-    expect(() => validatePublication({ ...correction, changeSummary: null }, previous)).toThrow(
-      "A correction requires a change summary.",
-    )
   })
 })
 
@@ -627,8 +609,8 @@ describe("prepareVersion publication", () => {
     } as unknown as CourseVersion
     const { req } = request({ current: published })
 
-    await expect(prepare(req, { name: "Renamed" }, "update", published)).rejects.toThrow(
-      "A correction requires a change summary.",
+    await expect(prepare(req, {}, "update", published)).rejects.toThrow(
+      "The correction has no content changes.",
     )
   })
 

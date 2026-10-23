@@ -99,17 +99,10 @@ export function validatePublication(version: Partial<CourseVersion>, previous?: 
     fail("Publication requires a teaching team with a member and role in each row.")
   }
 
-  if (previous) {
-    // changeSummary persists, so an unchanged one is the previous correction's reason
-    // carried forward by mergeWithSaved or round-tripped by the admin panel, not this
-    // correction's. Requiring a new one keeps the history describing what it records.
-    const summary = version.changeSummary?.trim()
-    if (!summary) fail("A correction requires a change summary.")
-    if (summary === previous.changeSummary?.trim())
-      fail("A correction requires a change summary describing this change.")
-    if (isDeepStrictEqual(content(version), content(previous)))
-      fail("The correction has no content changes.")
-  }
+  // A correction needs no summary: most are small text fixes, and Payload keeps every
+  // published state anyway. It only has to change something.
+  if (previous && isDeepStrictEqual(content(version), content(previous)))
+    fail("The correction has no content changes.")
 }
 
 // findByID without `draft` reads the collection table, which holds the current

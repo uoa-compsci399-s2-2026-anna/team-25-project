@@ -54,7 +54,7 @@ export const CourseVersions: CollectionConfig = {
     {
       name: "changeSummary",
       type: "textarea",
-      admin: { description: "Required when publishing changes to a published offering." },
+      admin: { description: "Optional note on what a correction changed." },
     },
     { name: "publishedAt", type: "date", admin: { readOnly: true } },
     {
