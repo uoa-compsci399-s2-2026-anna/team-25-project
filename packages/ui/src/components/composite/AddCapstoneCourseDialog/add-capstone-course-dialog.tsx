@@ -55,6 +55,32 @@ const requiredFields: Partial<Record<keyof AddCapstoneCourseDialogValues, true>>
   assessments: true,
 }
 
+// The asterisk is described in words rather than shown inline, so each description
+// still reads as a sentence with the decorative marks stripped out.
+const kindText = {
+  course: {
+    title: "Add a capstone course",
+    description:
+      "Course code and name are all a draft needs - fields marked with an asterisk are required to publish.",
+    submit: "Publish",
+    submitting: "Publishing...",
+  },
+  offering: {
+    title: "Add an offering",
+    description:
+      "Filled in from the current offering - change what differs. Fields marked with an asterisk are required to publish.",
+    submit: "Publish",
+    submitting: "Publishing...",
+  },
+  correction: {
+    title: "Edit offering",
+    description:
+      "Changes go live as soon as you save. Fields marked with an asterisk are required.",
+    submit: "Save changes",
+    submitting: "Saving...",
+  },
+} as const
+
 const RequiredAsterisk = () => (
   <span aria-hidden="true" className="text-destructive">
     *
@@ -77,12 +103,12 @@ export type AddCapstoneCourseDialogProps = {
    */
   trigger?: React.ReactElement
   /**
-   * "offering" adds an offering to a course that already exists, so it drops the
-   * course code, and "Your role" since the offering keeps the teaching team it was
-   * copied from. Defaults to "course".
+   * "offering" adds an offering to a course that already exists, and "correction"
+   * edits a published one. Both drop the course code, and "Your role" since the
+   * offering keeps its teaching team. Defaults to "course".
    */
-  kind?: "course" | "offering"
-  /** Defaults to "Add a capstone course", or "Add an offering" for an offering. */
+  kind?: keyof typeof kindText
+  /** Defaults to the kind's own title, e.g. "Add a capstone course". */
   title?: string
   open?: boolean
   onOpenChange?: (open: boolean) => void
@@ -112,7 +138,7 @@ export type AddCapstoneCourseDialogProps = {
 export function AddCapstoneCourseDialog({
   trigger,
   kind = "course",
-  title = kind === "offering" ? "Add an offering" : "Add a capstone course",
+  title = kindText[kind].title,
   open,
   onOpenChange,
   values,
@@ -206,13 +232,7 @@ export function AddCapstoneCourseDialog({
           <div className="flex items-start justify-between gap-4">
             <div className="flex flex-col gap-1">
               <DialogTitle className="font-bold text-2xl">{title}</DialogTitle>
-              {/* The asterisk is described in words rather than shown inline, so this
-                  still reads as a sentence with the decorative marks stripped out. */}
-              <DialogDescription>
-                {kind === "offering"
-                  ? "Filled in from the current offering - change what differs. Fields marked with an asterisk are required to publish."
-                  : "Course code and name are all a draft needs - fields marked with an asterisk are required to publish."}
-              </DialogDescription>
+              <DialogDescription>{kindText[kind].description}</DialogDescription>
             </div>
             <DialogClose render={<Button size="sm" variant="button-transparent" />}>
               Cancel
@@ -354,7 +374,7 @@ export function AddCapstoneCourseDialog({
                     type="button"
                     variant="button-mauve"
                   >
-                    {submitting === "publish" ? "Publishing..." : "Publish"}
+                    {submitting === "publish" ? kindText[kind].submitting : kindText[kind].submit}
                   </Button>
                 </div>
               </>

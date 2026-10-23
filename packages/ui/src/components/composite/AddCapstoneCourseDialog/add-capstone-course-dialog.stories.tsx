@@ -126,6 +126,34 @@ export const AddingOffering: Story = {
   },
 }
 
+// Correcting a published offering, which goes live on save.
+export const EditingOffering: Story = {
+  render: () => {
+    const [values, setValues] = React.useState({
+      ...emptyValues,
+      endDate: "2026-11-06",
+      name: "Capstone Project",
+      period: "Semester 2 2026",
+      startDate: "2026-07-20",
+    })
+
+    return (
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        kind="correction"
+        onPublish={() => undefined}
+        onValueChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
+        trigger={
+          <Button size="sm" type="button" variant="button-transparent">
+            Edit offering
+          </Button>
+        }
+        values={values}
+      />
+    )
+  },
+}
+
 export const WithErrors: Story = {
   render: () => {
     const [values, setValues] = React.useState(emptyValues)
