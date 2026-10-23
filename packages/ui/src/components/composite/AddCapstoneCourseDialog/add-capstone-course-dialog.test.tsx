@@ -199,7 +199,7 @@ describe("AddCapstoneCourseDialog", () => {
 
     expect(screen.getByLabelText(/End date/)).toHaveAttribute("min", "2026-07-20")
   })
-  it("drops the course code, role and draft button when adding an offering", () => {
+  it("drops the course code and role when adding an offering", () => {
     render(
       <AddCapstoneCourseDialog
         deliveryFormatOptions={deliveryFormatOptions}
@@ -214,7 +214,6 @@ describe("AddCapstoneCourseDialog", () => {
     expect(screen.getByRole("dialog", { name: "Add an offering" })).toBeInTheDocument()
     expect(screen.queryByLabelText(/Course code/)).not.toBeInTheDocument()
     expect(screen.queryByLabelText(/Your role/)).not.toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: "Save draft" })).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument()
   })
   it("titles a correction and saves it rather than publishing", () => {
@@ -232,6 +231,26 @@ describe("AddCapstoneCourseDialog", () => {
     expect(screen.getByRole("dialog", { name: "Edit offering" })).toBeInTheDocument()
     expect(screen.queryByLabelText(/Course code/)).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Save changes" })).toBeInTheDocument()
+  })
+  it("titles a draft offering, without the course code or role", () => {
+    render(
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        kind="draft"
+        onDelete={vi.fn()}
+        onPublish={vi.fn()}
+        onSaveDraft={vi.fn()}
+        onValueChange={vi.fn()}
+        open
+        values={emptyValues}
+      />,
+    )
+
+    expect(screen.getByRole("dialog", { name: "Edit draft offering" })).toBeInTheDocument()
+    expect(screen.queryByLabelText(/Course code/)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/Your role/)).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Save draft" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Delete draft" })).toBeInTheDocument()
   })
   describe("deleting a draft", () => {
     const renderDraft = (overrides: Partial<AddCapstoneCourseDialogProps> = {}) =>

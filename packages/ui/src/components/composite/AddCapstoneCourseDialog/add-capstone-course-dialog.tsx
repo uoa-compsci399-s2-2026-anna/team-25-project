@@ -72,6 +72,13 @@ const kindText = {
     submit: "Publish",
     submitting: "Publishing...",
   },
+  draft: {
+    title: "Edit draft offering",
+    description:
+      "Only the course's owner and editors can see a draft. Fields marked with an asterisk are required to publish.",
+    submit: "Publish",
+    submitting: "Publishing...",
+  },
   correction: {
     title: "Edit offering",
     description:
@@ -103,9 +110,10 @@ export type AddCapstoneCourseDialogProps = {
    */
   trigger?: React.ReactElement
   /**
-   * "offering" adds an offering to a course that already exists, and "correction"
-   * edits a published one. Both drop the course code, and "Your role" since the
-   * offering keeps its teaching team. Defaults to "course".
+   * "offering" adds an offering to a course that already exists, "draft" reopens a
+   * saved draft of one, and "correction" edits a published one. All three drop the
+   * course code, and "Your role" since the offering keeps its teaching team.
+   * Defaults to "course".
    */
   kind?: keyof typeof kindText
   /** Defaults to the kind's own title, e.g. "Add a capstone course". */

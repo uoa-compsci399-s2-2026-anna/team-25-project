@@ -114,10 +114,39 @@ export const AddingOffering: Story = {
         deliveryFormatOptions={deliveryFormatOptions}
         kind="offering"
         onPublish={() => undefined}
+        onSaveDraft={() => undefined}
         onValueChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
         trigger={
           <Button size="sm" type="button" variant="button-mauve">
             + Add offering
+          </Button>
+        }
+        values={values}
+      />
+    )
+  },
+}
+
+// Reopening a draft offering from the course page's sidebar.
+export const EditingDraftOffering: Story = {
+  render: () => {
+    const [values, setValues] = React.useState({
+      ...emptyValues,
+      name: "Capstone Project",
+      programme: "Bachelor of Science",
+    })
+
+    return (
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        kind="draft"
+        onDelete={() => undefined}
+        onPublish={() => undefined}
+        onSaveDraft={() => undefined}
+        onValueChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
+        trigger={
+          <Button size="sm" type="button" variant="button-transparent">
+            Open draft offering
           </Button>
         }
         values={values}
