@@ -2,11 +2,21 @@ import { Heading, Skeleton } from "@repo/ui/components/ui"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { getInstitutionNameCached } from "@/features/institutions/institutions.queries"
-import { type CourseRouteParams, parseCourseId } from "../courses.params"
+import {
+  type CourseRouteParams,
+  type CourseRouteSearchParams,
+  parseCourseId,
+} from "../courses.params"
 import { getPublishedCourseCached } from "../courses.queries"
-import { AddOfferingTrigger } from "./AddOfferingTrigger"
+import { OfferingActions } from "./OfferingActions"
 
-export const CourseHeader = async ({ params }: { params: CourseRouteParams }) => {
+export const CourseHeader = async ({
+  params,
+  searchParams,
+}: {
+  params: CourseRouteParams
+  searchParams: CourseRouteSearchParams
+}) => {
   const courseId = await parseCourseId(params)
 
   const course = await getPublishedCourseCached(courseId)
@@ -23,7 +33,7 @@ export const CourseHeader = async ({ params }: { params: CourseRouteParams }) =>
         {institution && <p className="text-muted-foreground">{institution.name}</p>}
       </div>
       <Suspense fallback={null}>
-        <AddOfferingTrigger courseId={courseId} />
+        <OfferingActions courseId={courseId} searchParams={searchParams} />
       </Suspense>
     </header>
   )
