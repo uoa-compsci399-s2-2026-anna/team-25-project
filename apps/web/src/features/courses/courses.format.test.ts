@@ -8,6 +8,7 @@ import {
   deriveUniversity,
   findCurrentOffering,
   offeringTiming,
+  selectOffering,
   summarizeCourses,
   summarizeMyCourses,
   toCourseTableRow,
@@ -255,6 +256,28 @@ describe("findCurrentOffering", () => {
       offering(4, "2026-03-02", "2026-11-06"),
     ]
     expect(findCurrentOffering(overlapping, "2026-08-01").current?.id).toBe(5)
+  })
+})
+
+describe("selectOffering", () => {
+  const offerings = [
+    { id: 2, startDate: "2026-07-20", endDate: "2026-11-06" },
+    { id: 1, startDate: "2026-03-02", endDate: "2026-06-26" },
+  ]
+
+  it("shows the requested offering", () => {
+    const { offering, primary } = selectOffering(offerings, 1, "2026-08-01")
+    expect(offering?.id).toBe(1)
+    expect(primary?.id).toBe(2)
+  })
+
+  it("shows the current offering without a request", () => {
+    expect(selectOffering(offerings, undefined, "2026-08-01").offering?.id).toBe(2)
+  })
+
+  // The page only passes the course's own offerings, so another course's ID misses here.
+  it("falls back to the current offering for an ID that isn't one of the course's", () => {
+    expect(selectOffering(offerings, 99, "2026-08-01").offering?.id).toBe(2)
   })
 })
 
