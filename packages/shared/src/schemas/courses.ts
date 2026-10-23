@@ -119,13 +119,21 @@ export const addCourseFormSchema = z
 export type AddCourseFormInput = z.infer<typeof addCourseFormSchema>
 
 /**
- * Publishing a new offering of an existing course. The course already has its
- * code, and the offering keeps the teaching team it was copied from, so neither
- * the code nor "Your role" is asked for.
+ * A new offering of an existing course, saved as a draft or published. The course
+ * already has its code, and the offering keeps the teaching team it was copied
+ * from, so neither the code nor "Your role" is asked for.
  */
 export const addOfferingFormSchema = z
-  .object(publishOfferingFields)
-  .omit({ role: true })
+  .discriminatedUnion("intent", [
+    z.object({ intent: z.literal("draft"), ...draftOfferingFields }).omit({ role: true }),
+    z.object({ intent: z.literal("publish"), ...publishOfferingFields }).omit({ role: true }),
+  ])
   .refine(datesInOrder, datesInOrderError)
 
 export type AddOfferingFormInput = z.infer<typeof addOfferingFormSchema>
+
+/** Correcting a published offering, which is held to the same rules as publishing one. */
+export const correctOfferingFormSchema = z
+  .object(publishOfferingFields)
+  .omit({ role: true })
+  .refine(datesInOrder, datesInOrderError)

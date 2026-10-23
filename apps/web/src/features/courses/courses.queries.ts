@@ -233,3 +233,31 @@ export const getPublishedOfferingsCached = async (courseId: number) => {
 
   return getPublishedOfferings(courseId)
 }
+
+/**
+ * The course's draft offerings, newest first, for the signed-in member's own view
+ * of its page. Payload's access rules only let the course's owner and editors read a
+ * draft, so everyone else gets none. Per-viewer like `getMyDraftCourses`, so keep it
+ * uncached.
+ *
+ * Read with `draft: true`, which returns each offering's newest save. Anything ever
+ * published is left out: a pending edit over a published offering can only come
+ * from the Payload admin, and the page has no way to show or finish one.
+ */
+export const getMyDraftOfferings = async (courseId: number): Promise<CourseVersion[]> => {
+  const { collection, user } = await getCurrentUser()
+  if (collection !== Slugs.Collections.MEMBERS) return []
+
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: Slugs.Collections.COURSE_VERSIONS,
+    where: { course: { equals: courseId } },
+    depth: 0,
+    draft: true,
+    overrideAccess: false,
+    pagination: false,
+    sort: NEWEST_FIRST,
+    user,
+  })
+  return docs.filter((version) => version._status === "draft" && !version.publishedAt)
+}

@@ -1,7 +1,7 @@
 "use server"
 
 import { QueryKeys } from "@repo/shared/constants/query-keys"
-import { addOfferingFormSchema } from "@repo/shared/schemas/courses"
+import { correctOfferingFormSchema } from "@repo/shared/schemas/courses"
 import { updateTag } from "next/cache"
 import type { RequiredDataFromCollectionSlug } from "payload"
 import { z } from "zod"
@@ -37,7 +37,7 @@ export const updateOffering = async (input: unknown): Promise<ActionResult> => {
   if (!ids.success) return { formError: FALLBACK_ERROR, ok: false }
 
   // A correction is held to the same rules as publishing a new offering.
-  const parsed = addOfferingFormSchema.safeParse(input)
+  const parsed = correctOfferingFormSchema.safeParse(input)
   if (!parsed.success) {
     return { fieldErrors: fieldErrorsFromIssues(parsed.error.issues), ok: false }
   }

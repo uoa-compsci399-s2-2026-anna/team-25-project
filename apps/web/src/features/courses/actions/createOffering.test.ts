@@ -32,6 +32,7 @@ const input = {
   courseId: 1,
   deliveryFormat: "hybrid" as const,
   endDate: "2027-06-25",
+  intent: "publish" as const,
   learningOutcomes: richText("Design and ship a production system."),
   name: "Capstone Project",
   period: "Semester 1 2027",
@@ -109,6 +110,35 @@ describe("createOffering", () => {
       }),
     )
     expect(updateTag).toHaveBeenCalledWith(QueryKeys.COURSES.ID(1))
+  })
+
+  it("saves a draft with only a name, keeping the source's teaching team for later", async () => {
+    const payload = mockPayload()
+
+    const result = await createOffering({
+      courseId: 1,
+      endDate: "",
+      intent: "draft",
+      name: "Capstone Project",
+      period: "",
+      sourceId: 10,
+      startDate: "",
+    })
+
+    expect(result).toEqual({ ok: true })
+    expect(payload.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          course: 1,
+          period: undefined,
+          teachingTeam: [{ member: 7, role: "Course Coordinator" }],
+        }),
+        draft: true,
+        overrideAccess: false,
+        user: member.user,
+      }),
+    )
+    expect(payload.create.mock.calls[0][0].data).not.toHaveProperty("_status")
   })
 
   it("leaves out teaching-team rows whose member has been deleted", async () => {
