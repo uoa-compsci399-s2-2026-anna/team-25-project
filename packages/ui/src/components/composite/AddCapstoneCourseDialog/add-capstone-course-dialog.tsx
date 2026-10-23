@@ -227,7 +227,12 @@ export function AddCapstoneCourseDialog({
                 placeholder: "e.g. Semester 2 2026",
               })}
               {textField("startDate", "Start date", { type: "date" })}
-              {textField("endDate", "End date", { type: "date" })}
+              {/* Greys out days before the start in the picker. Typing one is still
+                  possible, so the form schema's own date-order check stays the rule. */}
+              {textField("endDate", "End date", {
+                min: values.startDate || undefined,
+                type: "date",
+              })}
             </FieldGroup>
 
             <FieldGroup className="grid gap-4 md:grid-cols-2">

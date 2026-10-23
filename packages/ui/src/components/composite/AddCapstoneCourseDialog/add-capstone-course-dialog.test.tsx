@@ -194,6 +194,11 @@ describe("AddCapstoneCourseDialog", () => {
     expect(screen.getByRole("dialog", { name: "Edit draft course" })).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "+ Add your course" })).not.toBeInTheDocument()
   })
+  it("stops the end date picker before the start date", () => {
+    renderDialog({ values: { ...emptyValues, startDate: "2026-07-20" } })
+
+    expect(screen.getByLabelText(/End date/)).toHaveAttribute("min", "2026-07-20")
+  })
   describe("deleting a draft", () => {
     const renderDraft = (overrides: Partial<AddCapstoneCourseDialogProps> = {}) =>
       render(
