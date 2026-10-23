@@ -89,7 +89,7 @@ export const requireMember = async (messages: {
  * typed in and then cleared still holds an empty paragraph.
  */
 export const toVersionData = <Blank extends null | undefined>(
-  input: AddCourseFormInput,
+  input: Omit<AddCourseFormInput, "code" | "intent" | "role">,
   blank: Blank,
 ) => {
   const text = (value: string | undefined) => (value ? value : blank)

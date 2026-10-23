@@ -85,6 +85,21 @@ const publishOfferingFields = {
   startDate: z.string().min(1, "Start date is required").pipe(offeringDate),
 }
 
+const datesInOrder = (value: { startDate?: string; endDate?: string }) => {
+  const start = Date.parse(value.startDate ?? "")
+  const end = Date.parse(value.endDate ?? "")
+  // Only a question once both dates are real. NaN compares false against
+  // everything, so without this an unparseable date was reported as being
+  // out of order rather than unparseable.
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return true
+  return start <= end
+}
+
+const datesInOrderError = {
+  error: "The end date cannot precede the start date.",
+  path: ["endDate"],
+}
+
 export const addCourseFormSchema = z
   .discriminatedUnion("intent", [
     z.object({
@@ -98,20 +113,18 @@ export const addCourseFormSchema = z
       ...publishOfferingFields,
     }),
   ])
-  .refine(
-    (value) => {
-      const start = Date.parse(value.startDate ?? "")
-      const end = Date.parse(value.endDate ?? "")
-      // Only a question once both dates are real. NaN compares false against
-      // everything, so without this an unparseable date was reported as being
-      // out of order rather than unparseable.
-      if (!Number.isFinite(start) || !Number.isFinite(end)) return true
-      return start <= end
-    },
-    {
-      error: "The end date cannot precede the start date.",
-      path: ["endDate"],
-    },
-  )
+  .refine(datesInOrder, datesInOrderError)
 
 export type AddCourseFormInput = z.infer<typeof addCourseFormSchema>
+
+/**
+ * Publishing a new offering of an existing course. The course already has its
+ * code, and the offering keeps the teaching team it was copied from, so neither
+ * the code nor "Your role" is asked for.
+ */
+export const addOfferingFormSchema = z
+  .object(publishOfferingFields)
+  .omit({ role: true })
+  .refine(datesInOrder, datesInOrderError)
+
+export type AddOfferingFormInput = z.infer<typeof addOfferingFormSchema>

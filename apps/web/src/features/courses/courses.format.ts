@@ -8,6 +8,13 @@ const asPopulated = <T>(value: number | T | null | undefined): T | undefined =>
 export const ownerIdOf = (course: Pick<Course, "owner">): number | undefined =>
   typeof course.owner === "number" ? course.owner : course.owner?.id
 
+/** Mirrors the course write access rule: the owner and the course's editors. */
+export const isCourseEditor = (course: Pick<Course, "owner" | "editors">, memberId: number) =>
+  ownerIdOf(course) === memberId ||
+  (course.editors ?? []).some(
+    (editor) => (typeof editor === "number" ? editor : editor.id) === memberId,
+  )
+
 const formatLecturerName = (member: Member) => `${member.firstName.charAt(0)}. ${member.lastName}`
 
 // Picks the coordinator if there is one, otherwise the first teaching-team
@@ -127,6 +134,20 @@ const toDateInput = (value: string | null | undefined) => (value ? value.slice(0
 
 type DialogRichText = AddCapstoneCourseDialogValues["learningOutcomes"]
 
+// The offering's own fields, as the dialog holds them.
+const offeringValues = (version: CourseVersion) => ({
+  additionalInfo: (version.additionalInfo ?? null) as DialogRichText,
+  assessments: (version.assessments ?? null) as DialogRichText,
+  deliveryFormat: version.deliveryFormat ?? "",
+  endDate: toDateInput(version.endDate),
+  learningOutcomes: (version.learningOutcomes ?? null) as DialogRichText,
+  name: version.name ?? "",
+  period: version.period ?? "",
+  programme: version.programme ?? "",
+  projectType: version.projectType ?? "",
+  startDate: toDateInput(version.startDate),
+})
+
 /**
  * Pre-fills the dialog from a draft. Drafts never store "Your role" - it only
  * becomes a teaching-team row on publish - so the viewer's `role` is their profile
@@ -140,20 +161,21 @@ export const toEditableDraftCourse = (
   canDelete: ownerIdOf(course) === viewer.id,
   courseId: course.id,
   versionId: version.id,
-  values: {
-    additionalInfo: (version.additionalInfo ?? null) as DialogRichText,
-    assessments: (version.assessments ?? null) as DialogRichText,
-    code: course.code,
-    deliveryFormat: version.deliveryFormat ?? "",
-    endDate: toDateInput(version.endDate),
-    learningOutcomes: (version.learningOutcomes ?? null) as DialogRichText,
-    name: version.name ?? "",
-    period: version.period ?? "",
-    programme: version.programme ?? "",
-    projectType: version.projectType ?? "",
-    role: viewer.role,
-    startDate: toDateInput(version.startDate),
-  },
+  values: { ...offeringValues(version), code: course.code, role: viewer.role },
+})
+
+/**
+ * Pre-fills a new offering from an existing one. Its period and dates are what
+ * differ from one offering to the next, so they start blank. The offering dialog
+ * shows neither the code nor a role.
+ */
+export const toNewOfferingValues = (version: CourseVersion): AddCapstoneCourseDialogValues => ({
+  ...offeringValues(version),
+  code: "",
+  endDate: "",
+  period: "",
+  role: "",
+  startDate: "",
 })
 
 export interface CoursesSummaryStats {
