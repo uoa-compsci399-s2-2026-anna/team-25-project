@@ -28,7 +28,7 @@ export async function DraftOfferings({ courseId }: { courseId: number }) {
           offeringId={draft.id}
           trigger={
             <button
-              className="-mx-2 flex items-center justify-between gap-2 self-stretch rounded-md px-2 py-1 text-left hover:bg-muted"
+              className="-mx-2 flex cursor-pointer items-center justify-between gap-2 self-stretch rounded-md px-2 py-1 text-left hover:bg-muted"
               type="button"
             >
               <div className="flex flex-col">
