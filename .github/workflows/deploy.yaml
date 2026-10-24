@@ -91,6 +91,7 @@ jobs:
         timeout-minutes: 30
         env:
           ECS_SERVICE_ARN: ${{ vars.ECS_SERVICE_ARN }}
+          NEXT_PUBLIC_URL: ${{ vars.NEXT_PUBLIC_URL }}
         run: scripts/deploy.sh
 
       # deploy.sh closes its rule in a trap. This catches a run that was killed before the trap ran.
