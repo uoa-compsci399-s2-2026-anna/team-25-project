@@ -54,6 +54,11 @@ export const resultFromWriteError = (
   // period) throw a plain APIError rather than a ValidationError, so there
   // is no field path to attach - its message is already fit to show as-is.
   if (error instanceof APIError) {
+    // Payload's NotFound, e.g. a draft deleted in another tab. Its own message is
+    // just "Not Found".
+    if (error.status === 404) {
+      return { formError: "This course or offering no longer exists. Reload the page.", ok: false }
+    }
     return { formError: error.message, ok: false }
   }
   return undefined

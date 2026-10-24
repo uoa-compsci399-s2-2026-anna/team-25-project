@@ -88,4 +88,20 @@ describe("deleteDraftOffering", () => {
 
     expect(result).toEqual({ formError: "You cannot edit this course.", ok: false })
   })
+
+  // Payload's NotFound is an APIError with a 404 status, e.g. for a draft deleted in another tab.
+  it("says a draft deleted since no longer exists", async () => {
+    mockPayload({
+      findByID: vi
+        .fn()
+        .mockRejectedValue(Object.assign(new APIError("Not Found"), { status: 404 })),
+    })
+
+    const result = await deleteDraftOffering(input)
+
+    expect(result).toEqual({
+      formError: "This course or offering no longer exists. Reload the page.",
+      ok: false,
+    })
+  })
 })
