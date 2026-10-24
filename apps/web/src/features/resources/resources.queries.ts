@@ -51,12 +51,20 @@ export const getResources = async (filters: ResourceFilters, pagination: Paginat
     ...pagination,
     // Depth 2 reaches the owner's avatar.
     depth: 2,
-    // The Local API overrides access, so ask only for what the card draws.
+    // The Local API overrides access, so ask only for what the card draws. Attachments are only counted.
     populate: {
       [Slugs.Collections.COURSES]: { code: true },
       [Slugs.Collections.MEMBERS]: { avatar: true, firstName: true, lastName: true },
+      [Slugs.Collections.RESOURCE_ATTACHMENTS]: { filename: true },
     },
-    select: { course: true, createdAt: true, description: true, owner: true, title: true },
+    select: {
+      attachments: true,
+      course: true,
+      createdAt: true,
+      description: true,
+      owner: true,
+      title: true,
+    },
     sort: resourceSortFields[filters.sort ?? "newest"],
     where: resourceFiltersToWhere(filters),
   })
@@ -134,11 +142,12 @@ export const getCourseResources = async (courseId: number, limit: number) => {
     // Depth 2 reaches each owner's avatar.
     depth: 2,
     limit,
-    // The course is the page's own, so the cards leave it out.
+    // The course is the page's own, so the cards leave it out. Attachments are only counted.
     populate: {
       [Slugs.Collections.MEMBERS]: { avatar: true, firstName: true, lastName: true },
+      [Slugs.Collections.RESOURCE_ATTACHMENTS]: { filename: true },
     },
-    select: { createdAt: true, description: true, owner: true, title: true },
+    select: { attachments: true, createdAt: true, description: true, owner: true, title: true },
     sort: ["-createdAt", "-id"],
     where: { course: { equals: courseId } },
   })

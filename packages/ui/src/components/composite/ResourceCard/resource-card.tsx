@@ -13,6 +13,7 @@ import {
   Skeleton,
 } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
+import { Paperclip } from "lucide-react"
 import type * as React from "react"
 
 type ResourceCardOwner = {
@@ -39,6 +40,8 @@ type ResourceCardProps = Omit<React.ComponentProps<"div">, "title"> & {
   course?: string
   /** A `Date`, or any string `Date` can parse (an ISO timestamp from Payload). */
   sharedAt: Date | string
+  /** How many files the resource has to download. Nothing shows for none. */
+  attachments?: number
   size?: "default" | "sm"
 }
 
@@ -50,6 +53,7 @@ const sharedFormatter = new Intl.DateTimeFormat("en-NZ", {
 })
 
 function ResourceCard({
+  attachments = 0,
   className,
   course,
   href,
@@ -112,13 +116,24 @@ function ResourceCard({
 
       <CardFooter className="flex-col items-stretch gap-3 border-t-0 bg-transparent pt-0">
         <Separator />
-        {owner.href ? (
-          <LinkComponent className="group/owner flex min-w-0 items-center gap-2" href={owner.href}>
-            {byline}
-          </LinkComponent>
-        ) : (
-          <div className="flex min-w-0 items-center gap-2">{byline}</div>
-        )}
+        <div className="flex items-center justify-between gap-4">
+          {owner.href ? (
+            <LinkComponent
+              className="group/owner flex min-w-0 items-center gap-2"
+              href={owner.href}
+            >
+              {byline}
+            </LinkComponent>
+          ) : (
+            <div className="flex min-w-0 items-center gap-2">{byline}</div>
+          )}
+          {attachments > 0 && (
+            <p className="flex shrink-0 items-center gap-1.5 text-muted-foreground text-xs">
+              <Paperclip aria-hidden className="size-3.5" />
+              {attachments === 1 ? "1 attachment" : `${attachments} attachments`}
+            </p>
+          )}
+        </div>
       </CardFooter>
     </Card>
   )
