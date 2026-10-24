@@ -9,7 +9,7 @@ import {
 } from "../courses.format"
 import { type CourseRouteSearchParams, parseOfferingId } from "../courses.params"
 import { getPublishedCourseCached, getPublishedOfferingsCached } from "../courses.queries"
-import { AddOfferingDialog, EditOfferingDialog } from "./AddOfferingDialog"
+import { AddOfferingDialog, EditOfferingDialog } from "./OfferingDialogs"
 
 /**
  * "Add offering" and "Edit offering" for the course's owner and editors. A new
