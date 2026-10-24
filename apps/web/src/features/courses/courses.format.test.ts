@@ -7,6 +7,8 @@ import {
   deriveTitle,
   deriveUniversity,
   findCurrentOffering,
+  offeringTiming,
+  selectOffering,
   summarizeCourses,
   summarizeMyCourses,
   toCourseTableRow,
@@ -254,5 +256,75 @@ describe("findCurrentOffering", () => {
       offering(4, "2026-03-02", "2026-11-06"),
     ]
     expect(findCurrentOffering(overlapping, "2026-08-01").current?.id).toBe(5)
+  })
+})
+
+describe("selectOffering", () => {
+  const offerings = [
+    { id: 2, startDate: "2026-07-20", endDate: "2026-11-06" },
+    { id: 1, startDate: "2026-03-02", endDate: "2026-06-26" },
+  ]
+
+  it("shows the requested offering", () => {
+    const { offering, primary } = selectOffering(offerings, 1, "2026-08-01")
+    expect(offering?.id).toBe(1)
+    expect(primary?.id).toBe(2)
+  })
+
+  it("shows the current offering without a request", () => {
+    expect(selectOffering(offerings, undefined, "2026-08-01").offering?.id).toBe(2)
+  })
+
+  // The page only passes the course's own offerings, so another course's ID misses here.
+  it("falls back to the current offering for an ID that isn't one of the course's", () => {
+    expect(selectOffering(offerings, 99, "2026-08-01").offering?.id).toBe(2)
+  })
+})
+
+describe("offeringTiming", () => {
+  const found = { current: { id: 2 }, next: { id: 3 } }
+
+  it("labels the current and next offerings", () => {
+    expect(
+      offeringTiming(
+        { id: 2, startDate: "2026-07-20", endDate: "2026-11-06" },
+        found,
+        "2026-08-01",
+      ),
+    ).toBe("current")
+    expect(
+      offeringTiming(
+        { id: 3, startDate: "2027-03-01", endDate: "2027-06-18" },
+        found,
+        "2026-08-01",
+      ),
+    ).toBe("next")
+  })
+
+  it("labels the rest as past once ended, or future before they start", () => {
+    expect(
+      offeringTiming(
+        { id: 1, startDate: "2026-03-02", endDate: "2026-06-19" },
+        found,
+        "2026-08-01",
+      ),
+    ).toBe("past")
+    expect(
+      offeringTiming(
+        { id: 4, startDate: "2027-07-19", endDate: "2027-11-05" },
+        found,
+        "2026-08-01",
+      ),
+    ).toBe("future")
+  })
+
+  it("labels an offering still running under a newer, overlapping one as running", () => {
+    expect(
+      offeringTiming(
+        { id: 1, startDate: "2026-02-23", endDate: "2026-11-06" },
+        found,
+        "2026-08-01",
+      ),
+    ).toBe("running")
   })
 })

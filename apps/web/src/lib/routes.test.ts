@@ -6,6 +6,10 @@ describe("Routes", () => {
     expect(Routes.COURSES.COURSE("123")).toBe("/courses/123")
   })
 
+  it("builds a course route to one of its offerings", () => {
+    expect(Routes.COURSES.COURSE(123, 45)).toBe("/courses/123?offering=45")
+  })
+
   it("builds a member route from an id", () => {
     expect(Routes.MEMBERS.MEMBER("456")).toBe("/members/456")
   })

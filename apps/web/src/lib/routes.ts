@@ -11,7 +11,9 @@ export const Routes = {
   ADMIN: route("/admin"),
   COURSES: {
     ROOT: route("/courses"),
-    COURSE: (courseId: string) => route(`/courses/${courseId}`),
+    // Without `offeringId`, the course page shows the course's current offering.
+    COURSE: (courseId: number | string, offeringId?: number) =>
+      route(offeringId ? `/courses/${courseId}?offering=${offeringId}` : `/courses/${courseId}`),
   },
   MEMBERS: {
     ROOT: route("/members"),
