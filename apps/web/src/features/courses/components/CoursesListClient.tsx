@@ -104,7 +104,7 @@ export function CoursesListClientSkeleton() {
     <div className={listClassName}>
       <FilterBarSkeleton
         className={coursesFilterBarClassName}
-        filterCount={3}
+        filterCount={1}
         groupControls
         statusCount={3}
       />
