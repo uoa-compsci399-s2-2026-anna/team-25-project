@@ -25,9 +25,10 @@ const offeringIdsSchema = z.object({
 const FALLBACK_ERROR = "Could not add this offering. Try again."
 
 /**
- * Publishes a new offering of an existing course, copied from `sourceId` (the
- * offering the dialog was filled in from). The dialog has no member picker, so the
- * new offering keeps the source's teaching team.
+ * Adds a new offering of an existing course, copied from `sourceId` (the offering
+ * the dialog was filled in from), either published or saved as a draft. The dialog
+ * has no member picker, so the new offering keeps the source's teaching team - a
+ * draft holds it too, ready for when it's published.
  *
  * The write runs as the member, so the course hooks still decide whether they may
  * edit this course, and still check the offering is complete enough to publish.
@@ -61,19 +62,34 @@ export const createOffering = async (input: unknown): Promise<ActionResult> => {
     })
     if (relationID(source.course) !== courseId) return { formError: FALLBACK_ERROR, ok: false }
 
-    await payload.create({
-      collection: Slugs.Collections.COURSE_VERSIONS,
-      data: {
-        ...toVersionData(parsed.data, undefined),
-        course: courseId,
-        // Sent explicitly for prepareVersion to treat this as a publish - see createCourse.
-        _status: "published",
-        teachingTeam: liveTeachingTeam(source.teachingTeam),
-      } as RequiredDataFromCollectionSlug<"courseVersions">,
-      draft: false,
-      overrideAccess: false,
-      user,
-    })
+    const offeringData = {
+      ...toVersionData(parsed.data, undefined),
+      course: courseId,
+      teachingTeam: liveTeachingTeam(source.teachingTeam),
+    }
+
+    // Separate calls so `draft` stays a literal - see createCourse.
+    if (parsed.data.intent === "publish") {
+      await payload.create({
+        collection: Slugs.Collections.COURSE_VERSIONS,
+        data: {
+          ...offeringData,
+          // Sent explicitly for prepareVersion to treat this as a publish - see createCourse.
+          _status: "published",
+        } as RequiredDataFromCollectionSlug<"courseVersions">,
+        draft: false,
+        overrideAccess: false,
+        user,
+      })
+    } else {
+      await payload.create({
+        collection: Slugs.Collections.COURSE_VERSIONS,
+        data: offeringData,
+        draft: true,
+        overrideAccess: false,
+        user,
+      })
+    }
   } catch (error) {
     const result = resultFromWriteError(error, FALLBACK_ERROR)
     if (result) return result

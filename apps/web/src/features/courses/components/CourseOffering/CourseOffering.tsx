@@ -4,6 +4,7 @@ import { richTextHasText } from "@repo/shared/schemas/shared"
 import { initialsFromName } from "@repo/shared/utils/initials"
 import { Avatar, AvatarFallback, Badge, Heading, Separator, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
+import { Suspense } from "react"
 import { RichTextContent } from "@/components/RichTextContent"
 import { Routes } from "@/lib/routes"
 import { getToday, periodRange, selectOffering } from "../../courses.format"
@@ -14,6 +15,7 @@ import {
   parseOfferingId,
 } from "../../courses.params"
 import { getPublishedOfferingsCached } from "../../courses.queries"
+import { DraftOfferings } from "../DraftOfferings"
 import {
   CourseOfferingDetail,
   CourseOfferingSection,
@@ -171,6 +173,10 @@ export const CourseOffering = async ({
             ))}
           </CourseOfferingSidebarCard>
         )}
+
+        <Suspense fallback={null}>
+          <DraftOfferings courseId={courseId} />
+        </Suspense>
       </aside>
     </>
   )

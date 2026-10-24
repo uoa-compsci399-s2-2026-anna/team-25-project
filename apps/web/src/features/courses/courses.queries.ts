@@ -233,3 +233,25 @@ export const getPublishedOfferingsCached = async (courseId: number) => {
 
   return getPublishedOfferings(courseId)
 }
+
+/**
+ * The course's never-published draft offerings, newest first. Payload only lets the
+ * course's owner and editors read drafts, so this is per-viewer and uncached.
+ */
+export const getMyDraftOfferings = async (courseId: number): Promise<CourseVersion[]> => {
+  const { collection, user } = await getCurrentUser()
+  if (collection !== Slugs.Collections.MEMBERS) return []
+
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: Slugs.Collections.COURSE_VERSIONS,
+    where: { course: { equals: courseId } },
+    depth: 0,
+    draft: true,
+    overrideAccess: false,
+    pagination: false,
+    sort: NEWEST_FIRST,
+    user,
+  })
+  return docs.filter((version) => version._status === "draft" && !version.publishedAt)
+}
