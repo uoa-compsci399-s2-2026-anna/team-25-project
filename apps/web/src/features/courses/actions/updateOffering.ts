@@ -11,6 +11,7 @@ import { Slugs } from "@/lib/payload/slugs"
 import { relationID } from "@/payload/access/Courses/helpers"
 import {
   fieldErrorsFromIssues,
+  liveTeachingTeam,
   requireMember,
   resultFromWriteError,
   toVersionData,
@@ -25,7 +26,8 @@ const FALLBACK_ERROR = "Could not save this offering. Try again."
 
 /**
  * Corrects a published offering. The change goes live at once, and the offering
- * keeps its teaching team since the dialog doesn't send one.
+ * keeps its teaching team - the dialog has no member picker, so the team is sent
+ * as stored, less any member deleted since.
  *
  * The write runs as the member, so the course hooks still decide whether they may
  * edit this course, and refuse a correction that changes nothing.
@@ -52,17 +54,30 @@ export const updateOffering = async (input: unknown): Promise<ActionResult> => {
   const payload = await getPayloadClient()
 
   try {
+    // `draft: true` reads the newest version, so a draft saved over the published
+    // offering (e.g. in the admin) shows up here rather than being published unseen.
     const offering = await payload.findByID({
       collection: Slugs.Collections.COURSE_VERSIONS,
       id: offeringId,
       depth: 0,
+      draft: true,
       overrideAccess: false,
       user,
     })
-    // Only published offerings have an Edit button, and saving here publishes, so a
-    // draft reaching this point would go live by accident.
-    if (relationID(offering.course) !== courseId || offering._status !== "published") {
-      return { formError: FALLBACK_ERROR, ok: false }
+    if (relationID(offering.course) !== courseId) return { formError: FALLBACK_ERROR, ok: false }
+    if (offering._status !== "published") {
+      return {
+        formError: "This offering has unpublished draft changes, so it can't be edited here.",
+        ok: false,
+      }
+    }
+
+    const teachingTeam = liveTeachingTeam(offering.teachingTeam)
+    if (!teachingTeam.length) {
+      return {
+        formError: "This offering has no teaching team left. Ask an admin to add one.",
+        ok: false,
+      }
     }
 
     await payload.update({
@@ -71,6 +86,7 @@ export const updateOffering = async (input: unknown): Promise<ActionResult> => {
       data: {
         // `null`, not `undefined`, for a blank field: see `toVersionData`.
         ...toVersionData(parsed.data, null),
+        teachingTeam,
         // Sent explicitly for prepareVersion to treat this as a publish - see createCourse.
         _status: "published",
       } as RequiredDataFromCollectionSlug<"courseVersions">,
