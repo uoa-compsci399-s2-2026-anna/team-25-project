@@ -22,7 +22,7 @@ import { Check } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useQueryState } from "nuqs"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Routes } from "@/lib/routes"
 import { registerMember, sendVerificationCode } from "../actions/register"
 import { isRecognisedEmail } from "../helpers/recognisedEmail"
@@ -115,10 +115,26 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
     validators: { onSubmit: registerDetailsSchema },
   })
 
+  // Next keeps this page alive (hidden) after navigating away, so without this a
+  // later visit - even after logging out - lands back on the spent code step with
+  // the previous details and password still filled in. Only after a successful
+  // sign-up, so wandering off mid-flow still keeps what was typed.
+  const registered = useRef(false)
+  useLayoutEffect(() => {
+    return () => {
+      if (!registered.current) return
+      registered.current = false
+      form.reset()
+      setCodeSent(null)
+      setStep("details")
+    }
+  }, [form])
+
   const verify = async (code: string) => {
     const result = await registerMember({ ...form.state.values, code })
 
     if (result.ok) {
+      registered.current = true
       router.push(withRedirect(Routes.REGISTER.PROFILE, redirect))
       return result
     }
