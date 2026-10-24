@@ -1,4 +1,4 @@
-import { Badge } from "@repo/ui/components/ui"
+import { Badge, Button } from "@repo/ui/components/ui"
 import { EyeOff } from "lucide-react"
 import { periodRange, toOfferingValues } from "../courses.format"
 import { getMyDraftOfferings } from "../courses.queries"
@@ -27,16 +27,16 @@ export async function DraftOfferings({ courseId }: { courseId: number }) {
           key={draft.id}
           offeringId={draft.id}
           trigger={
-            <button
-              className="-mx-2 flex cursor-pointer items-center justify-between gap-2 self-stretch rounded-md px-2 py-1 text-left hover:bg-muted"
-              type="button"
+            <Button
+              className="-mx-2 h-auto justify-between gap-2 self-stretch rounded-md px-2 py-1 text-left hover:bg-muted"
+              variant="button-transparent"
             >
               <div className="flex flex-col">
                 <p className="font-medium text-sm">{draft.period || "No period yet"}</p>
                 <p className="text-muted-foreground text-xs">{periodRange(draft)}</p>
               </div>
               <Badge variant="secondary">Draft</Badge>
-            </button>
+            </Button>
           }
         />
       ))}
