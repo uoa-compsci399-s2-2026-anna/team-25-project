@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 # Migrates the prod database, builds and pushes the web image, then rolls the
 # ECS Express Mode service to it. Run from a clean tree with AWS credentials, and
-# set ECS_SERVICE_ARN and DB_SECURITY_GROUP (the RDS security group).
+# set ECS_SERVICE_ARN, DB_SECURITY_GROUP (the RDS security group) and
+# NEXT_PUBLIC_URL (the public origin).
 # SKIP_ROLLOUT=1 stops after the push.
 set -euo pipefail
 
 export AWS_REGION="${AWS_REGION:-ap-southeast-2}"
 : "${ECS_SERVICE_ARN:?Set ECS_SERVICE_ARN}"
 : "${DB_SECURITY_GROUP:?Set DB_SECURITY_GROUP}"
+: "${NEXT_PUBLIC_URL:?Set NEXT_PUBLIC_URL}"
 # The tag starts with the creation time, so a later run can tell when a rule is stale.
 RULE_TAG="cmo-deploy-$(date +%s)-${GITHUB_RUN_ID:-local}"
 
@@ -85,6 +87,7 @@ docker buildx build --builder cmo-deploy -f apps/web/Dockerfile \
   --platform linux/amd64 --provenance=false \
   --secret id=DATABASE_URL,env=DATABASE_URL --secret id=PAYLOAD_SECRET,env=PAYLOAD_SECRET \
   --build-arg NODE_VERSION="$(cat .nvmrc)" --build-arg BUILD_SECRETS_HASH="$BUILD_SECRETS_HASH" \
+  --build-arg NEXT_PUBLIC_URL="$NEXT_PUBLIC_URL" \
   --cache-from "type=registry,ref=$IMAGE:buildcache" \
   --cache-to "type=registry,ref=$IMAGE:buildcache,mode=max,image-manifest=true,oci-mediatypes=true" \
   -t "$IMAGE:$SHA" --push .

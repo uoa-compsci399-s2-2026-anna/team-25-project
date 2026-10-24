@@ -42,6 +42,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # BuildKit leaves secret values out of the cache key, so a hash of them is
 # passed in to make a changed secret rebuild rather than reuse a stale layer.
 ARG BUILD_SECRETS_HASH
+# Next inlines NEXT_PUBLIC_* at build time, so the public origin must be set here.
+ARG NEXT_PUBLIC_URL
+ENV NEXT_PUBLIC_URL=$NEXT_PUBLIC_URL
 
 # Prerendering queries Payload, so the build needs a migrated database.
 # An empty secret or hash fails here, before next build runs with it.
