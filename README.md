@@ -72,7 +72,7 @@ This starts the app and Storybook together through Turborepo.
 Once running with the default ports:
 
 - **App**: [http://localhost:3000](http://localhost:3000)
-- **Payload admin**: [http://localhost:3000/payload/admin](http://localhost:3000/payload/admin)
+- **Payload admin**: [http://localhost:3000/admin](http://localhost:3000/admin)
 
 ## Structure
 
