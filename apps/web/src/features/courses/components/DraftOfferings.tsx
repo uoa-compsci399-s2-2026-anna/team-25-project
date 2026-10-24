@@ -35,7 +35,8 @@ export async function DraftOfferings({ courseId }: { courseId: number }) {
                 <p className="font-medium text-sm">{draft.period || "No period yet"}</p>
                 <p className="text-muted-foreground text-xs">{periodRange(draft)}</p>
               </div>
-              <Badge variant="secondary">Draft</Badge>
+              {/* Outline, as a filled badge in the blush of the row's hover would vanish into it. */}
+              <Badge variant="outline">Draft</Badge>
             </Button>
           }
         />
