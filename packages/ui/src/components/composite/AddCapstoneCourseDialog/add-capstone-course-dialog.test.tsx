@@ -217,6 +217,22 @@ describe("AddCapstoneCourseDialog", () => {
     expect(screen.queryByRole("button", { name: "Save draft" })).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument()
   })
+  it("titles a correction and saves it rather than publishing", () => {
+    render(
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        kind="correction"
+        onPublish={vi.fn()}
+        onValueChange={vi.fn()}
+        open
+        values={emptyValues}
+      />,
+    )
+
+    expect(screen.getByRole("dialog", { name: "Edit offering" })).toBeInTheDocument()
+    expect(screen.queryByLabelText(/Course code/)).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeInTheDocument()
+  })
   describe("deleting a draft", () => {
     const renderDraft = (overrides: Partial<AddCapstoneCourseDialogProps> = {}) =>
       render(

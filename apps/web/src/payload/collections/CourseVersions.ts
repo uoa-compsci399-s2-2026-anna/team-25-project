@@ -51,11 +51,6 @@ export const CourseVersions: CollectionConfig = {
     { name: "period", type: "text", required: true },
     { name: "startDate", type: "date", required: true, index: true },
     { name: "endDate", type: "date", required: true },
-    {
-      name: "changeSummary",
-      type: "textarea",
-      admin: { description: "Required when publishing changes to a published offering." },
-    },
     { name: "publishedAt", type: "date", admin: { readOnly: true } },
     {
       name: "publishedBy",

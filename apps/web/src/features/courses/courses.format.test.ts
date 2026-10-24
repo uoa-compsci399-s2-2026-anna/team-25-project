@@ -14,6 +14,7 @@ import {
   summarizeMyCourses,
   toCourseTableRow,
   toNewOfferingValues,
+  toOfferingValues,
 } from "./courses.format"
 
 const member = (overrides: Partial<Member> = {}): Member =>
@@ -351,6 +352,16 @@ describe("toNewOfferingValues", () => {
       period: "",
       startDate: "",
       endDate: "",
+    })
+  })
+})
+
+describe("toOfferingValues", () => {
+  it("keeps the offering's period and dates, as days for the date inputs", () => {
+    expect(toOfferingValues(version({ startDate: "2026-07-20T00:00:00.000Z" }))).toMatchObject({
+      period: "Semester 2 2026",
+      startDate: "2026-07-20",
+      endDate: "2026-11-06",
     })
   })
 })

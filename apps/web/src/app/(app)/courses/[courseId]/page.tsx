@@ -46,7 +46,7 @@ export default function Page({
           <CourseOfferingMeta params={params} searchParams={searchParams} />
         </AnimatedSuspense>
         <AnimatedSuspense fallback={<CourseHeaderSkeleton />}>
-          <CourseHeader params={params} />
+          <CourseHeader params={params} searchParams={searchParams} />
         </AnimatedSuspense>
         <AnimatedSuspense fallback={<CourseOfferingSkeleton />}>
           <CourseOffering params={params} searchParams={searchParams} />

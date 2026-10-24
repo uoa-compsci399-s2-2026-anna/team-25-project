@@ -1,10 +1,11 @@
-import type { Member } from "@repo/shared/payload-types"
+import type { CourseVersion, Member } from "@repo/shared/payload-types"
 import type { AddCourseFormInput } from "@repo/shared/schemas/courses"
 import { richTextHasText } from "@repo/shared/schemas/shared"
 import { APIError, ValidationError } from "payload"
 import type { ActionResult } from "@/features/auth/actions/types"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
+import { relationID } from "@/payload/access/Courses/helpers"
 
 // Shared by the course dialog's actions (createCourse, updateDraftCourse). Kept
 // out of those "use server" files, which may only export async actions.
@@ -109,3 +110,13 @@ export const toVersionData = <Blank extends null | undefined>(
     startDate: text(input.startDate),
   }
 }
+
+/**
+ * An offering's teaching team without the rows whose member was deleted. Those rows
+ * would block publishing, and the offering dialogs can't remove them.
+ */
+export const liveTeachingTeam = (rows: CourseVersion["teachingTeam"]) =>
+  (rows ?? []).flatMap(({ member, role }) => {
+    const memberId = relationID(member)
+    return memberId ? [{ member: memberId, role }] : []
+  })

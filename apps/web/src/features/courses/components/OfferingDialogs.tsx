@@ -8,6 +8,7 @@ import {
 import { Button, toast } from "@repo/ui/components/ui"
 import { useState } from "react"
 import { createOffering } from "../actions/createOffering"
+import { updateOffering } from "../actions/updateOffering"
 import { useCourseForm } from "./useCourseForm"
 
 const deliveryFormatOptions = Object.values(CourseDeliveryFormat).map((value) => ({
@@ -52,6 +53,59 @@ export function AddOfferingDialog({ courseId, sourceId, initialValues }: AddOffe
       trigger={
         <Button className="font-bold" size="sm" type="button" variant="button-mauve">
           + Add offering
+        </Button>
+      }
+    />
+  )
+}
+
+export interface EditOfferingDialogProps {
+  courseId: number
+  offeringId: number
+  initialValues: AddCapstoneCourseDialogValues
+}
+
+/** Corrects a published offering in place. Saving puts the change live at once. */
+export function EditOfferingDialog({
+  courseId,
+  offeringId,
+  initialValues,
+}: EditOfferingDialogProps) {
+  const [open, setOpen] = useState(false)
+  const form = useCourseForm({
+    failureMessage: "Could not save this offering. Try again.",
+    initialValues,
+    onSaved: (values) => {
+      toast.add({ description: `${values.period} was updated.`, title: "Offering updated" })
+      setOpen(false)
+    },
+    save: (values) => updateOffering({ ...values, courseId, offeringId }),
+  })
+
+  // Reopening starts again from the offering as it's saved, dropping unsaved edits.
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen)
+    if (nextOpen) form.reset(initialValues)
+  }
+
+  return (
+    <AddCapstoneCourseDialog
+      {...form.dialogProps}
+      deliveryFormatOptions={deliveryFormatOptions}
+      kind="correction"
+      onOpenChange={handleOpenChange}
+      // A published offering has no draft to save.
+      onSaveDraft={undefined}
+      open={open}
+      trigger={
+        <Button
+          borderColor="charcoal"
+          className="font-bold"
+          size="sm"
+          type="button"
+          variant="button-transparent"
+        >
+          Edit offering
         </Button>
       }
     />

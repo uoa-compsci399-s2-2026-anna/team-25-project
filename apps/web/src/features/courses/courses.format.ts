@@ -164,17 +164,22 @@ export const toEditableDraftCourse = (
   values: { ...offeringValues(version), code: course.code, role: viewer.role },
 })
 
+/** Pre-fills the dialog for correcting a published offering. */
+export const toOfferingValues = (version: CourseVersion): AddCapstoneCourseDialogValues => ({
+  ...offeringValues(version),
+  code: "",
+  role: "",
+})
+
 /**
  * Pre-fills a new offering from an existing one. Its period and dates are what
  * differ from one offering to the next, so they start blank. The offering dialog
  * shows neither the code nor a role.
  */
 export const toNewOfferingValues = (version: CourseVersion): AddCapstoneCourseDialogValues => ({
-  ...offeringValues(version),
-  code: "",
+  ...toOfferingValues(version),
   endDate: "",
   period: "",
-  role: "",
   startDate: "",
 })
 

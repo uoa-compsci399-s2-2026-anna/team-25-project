@@ -11,6 +11,7 @@ import { Slugs } from "@/lib/payload/slugs"
 import { relationID } from "@/payload/access/Courses/helpers"
 import {
   fieldErrorsFromIssues,
+  liveTeachingTeam,
   requireMember,
   resultFromWriteError,
   toVersionData,
@@ -67,11 +68,7 @@ export const createOffering = async (input: unknown): Promise<ActionResult> => {
         course: courseId,
         // Sent explicitly for prepareVersion to treat this as a publish - see createCourse.
         _status: "published",
-        // A row whose member has since been deleted has nobody left to copy.
-        teachingTeam: (source.teachingTeam ?? []).flatMap(({ member, role }) => {
-          const memberId = relationID(member)
-          return memberId ? [{ member: memberId, role }] : []
-        }),
+        teachingTeam: liveTeachingTeam(source.teachingTeam),
       } as RequiredDataFromCollectionSlug<"courseVersions">,
       draft: false,
       overrideAccess: false,
