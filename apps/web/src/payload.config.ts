@@ -39,7 +39,7 @@ const dirname = path.dirname(filename)
 
 export default buildConfig({
   admin: {
-    user: Admin.slug, // members cannot reach /payload/admin
+    user: Admin.slug, // members cannot reach /admin
     theme: "light",
     components: {
       graphics: {
@@ -78,7 +78,7 @@ export default buildConfig({
     disable: true,
   },
   routes: {
-    admin: "/payload/admin",
+    admin: "/admin",
     api: "/payload/api",
   },
   secret: process.env.PAYLOAD_SECRET || "",

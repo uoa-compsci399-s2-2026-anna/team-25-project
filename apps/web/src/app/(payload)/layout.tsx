@@ -6,7 +6,7 @@ import type { ServerFunctionClient } from "payload"
 import type React from "react"
 import { fontMono, satoshi } from "@/lib/fonts"
 
-import { importMap } from "./payload/admin/importMap.js"
+import { importMap } from "./admin/importMap.js"
 import "./custom.scss"
 
 type Args = {
