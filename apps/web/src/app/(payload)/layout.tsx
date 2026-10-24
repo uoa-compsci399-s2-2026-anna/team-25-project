@@ -26,9 +26,6 @@ const serverFunction: ServerFunctionClient = async (args) => {
 
 const Layout = ({ children }: Args) => (
   <RootLayout config={config} importMap={importMap} serverFunction={serverFunction}>
-    {/* RootLayout owns <html>, so the font class names can't go there - point Payload's
-        font variables at them instead. The rich text editor reads --font-serif, but the
-        app renders rich text in Satoshi. */}
     <style>
       {`:root { --font-body: ${satoshi.style.fontFamily}; --font-serif: var(--font-body); --font-mono: ${fontMono.style.fontFamily}; }`}
     </style>
