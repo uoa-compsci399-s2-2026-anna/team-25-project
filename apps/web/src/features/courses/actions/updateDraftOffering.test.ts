@@ -42,7 +42,12 @@ const input = {
   startDate: "2026-07-20",
 }
 
-const offering = { _status: "draft", course: 1, id: 10 }
+const offering = {
+  _status: "draft",
+  course: 1,
+  id: 10,
+  teachingTeam: [{ member: 7, role: "Course coordinator" }],
+}
 
 const member = { collection: "members" as const, user: { id: 7 } }
 
@@ -98,7 +103,7 @@ describe("updateDraftOffering", () => {
     expect(payload.update.mock.calls[0][0].data).not.toHaveProperty("_status")
   })
 
-  it("publishes the draft as the member, without touching its teaching team", async () => {
+  it("publishes the draft as the member, keeping its teaching team", async () => {
     const payload = mockPayload()
 
     const result = await updateDraftOffering(input)
@@ -106,13 +111,47 @@ describe("updateDraftOffering", () => {
     expect(result).toEqual({ ok: true })
     expect(payload.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ _status: "published", period: "Semester 2 2026" }),
+        data: expect.objectContaining({
+          _status: "published",
+          period: "Semester 2 2026",
+          teachingTeam: offering.teachingTeam,
+        }),
         draft: false,
         id: 10,
       }),
     )
-    expect(payload.update.mock.calls[0][0].data).not.toHaveProperty("teachingTeam")
     expect(updateTag).toHaveBeenCalledWith(QueryKeys.COURSES.ID(1))
+  })
+
+  it("leaves out a teaching-team row whose member has been deleted when publishing", async () => {
+    const payload = mockPayload({
+      findByID: vi.fn().mockResolvedValue({
+        ...offering,
+        teachingTeam: [...offering.teachingTeam, { member: null, role: "Tutor" }],
+      }),
+    })
+
+    const result = await updateDraftOffering(input)
+
+    expect(result).toEqual({ ok: true })
+    expect(payload.update.mock.calls[0][0].data.teachingTeam).toEqual(offering.teachingTeam)
+  })
+
+  it("refuses to publish a draft with no teaching team left", async () => {
+    const payload = mockPayload({
+      findByID: vi.fn().mockResolvedValue({
+        ...offering,
+        teachingTeam: [{ member: null, role: "Course coordinator" }],
+      }),
+    })
+
+    const result = await updateDraftOffering(input)
+
+    expect(result).toEqual({
+      formError: "This offering has no teaching team left. Ask an admin to add one.",
+      ok: false,
+    })
+    expect(payload.update).not.toHaveBeenCalled()
   })
 
   it("refuses an offering from another course", async () => {

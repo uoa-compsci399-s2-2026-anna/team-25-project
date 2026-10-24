@@ -12,6 +12,7 @@ import { Slugs } from "@/lib/payload/slugs"
 import { relationID } from "@/payload/access/Courses/helpers"
 import {
   fieldErrorsFromIssues,
+  liveTeachingTeam,
   requireMember,
   resultFromWriteError,
   toVersionData,
@@ -26,7 +27,8 @@ const FALLBACK_ERROR = "Could not save this draft. Try again."
 
 /**
  * Saves the dialog over a draft offering, or publishes it. The draft already holds
- * the teaching team it was copied with, so publishing keeps that.
+ * the teaching team it was copied with, so publishing keeps that, less any member
+ * deleted since.
  *
  * The write runs as the member, so the course hooks still decide whether they may
  * edit this course, and still check the offering is complete enough to publish.
@@ -73,11 +75,20 @@ export const updateDraftOffering = async (input: unknown): Promise<ActionResult>
 
     // Separate calls so `draft` stays a literal - see createCourse.
     if (parsed.data.intent === "publish") {
+      const teachingTeam = liveTeachingTeam(offering.teachingTeam)
+      if (!teachingTeam.length) {
+        return {
+          formError: "This offering has no teaching team left. Ask an admin to add one.",
+          ok: false,
+        }
+      }
+
       await payload.update({
         collection: Slugs.Collections.COURSE_VERSIONS,
         id: offeringId,
         data: {
           ...versionData,
+          teachingTeam,
           // Sent explicitly for prepareVersion to treat this as a publish - see createCourse.
           _status: "published",
         } as RequiredDataFromCollectionSlug<"courseVersions">,
