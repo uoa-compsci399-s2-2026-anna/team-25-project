@@ -53,6 +53,19 @@ describe("ResourceCard", () => {
     )
   })
 
+  it.each([
+    [1, "1 attachment"],
+    [3, "3 attachments"],
+  ])("counts %i attachment(s) in the footer", (attachments, label) => {
+    render(<ResourceCard {...props} attachments={attachments} />)
+    expect(screen.getByText(label)).toBeInTheDocument()
+  })
+
+  it("leaves the count out without attachments", () => {
+    render(<ResourceCard {...props} attachments={0} />)
+    expect(screen.queryByText(/attachment/)).not.toBeInTheDocument()
+  })
+
   it("links the title to the resource's detail page", () => {
     render(<ResourceCard {...props} href="/resources/1" />)
     expect(screen.getByRole("link", { name: props.title })).toHaveAttribute("href", "/resources/1")

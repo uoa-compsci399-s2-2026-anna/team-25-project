@@ -5,6 +5,7 @@ const meta: Meta<typeof ResourceCard> = {
   title: "composite/ResourceCard",
   component: ResourceCard,
   args: {
+    attachments: 2,
     course: "SE 101",
     href: "#",
     owner: { avatarSrc: "https://github.com/shadcn.png", href: "#", name: "Dr Anna Tui" },
@@ -37,6 +38,7 @@ export const Primary: Story = {}
 /** Only the required fields: no course, summary, photo or links. */
 export const Minimal: Story = {
   args: {
+    attachments: undefined,
     course: undefined,
     href: undefined,
     owner: { name: "Dr Anna Tui" },
