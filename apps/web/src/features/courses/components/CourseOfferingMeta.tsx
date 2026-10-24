@@ -24,6 +24,7 @@ const courseHref = Routes.COURSES.COURSE
 const viewingMessages: Record<OfferingTiming, (startDate: string | null) => string> = {
   past: () => "You're viewing a past offering.",
   current: () => "You're viewing the current offering.",
+  running: () => "You're viewing an offering that's still running.",
   next: (startDate) => `You're viewing the next offering, starting ${startDate}.`,
   future: (startDate) => `You're viewing a future offering, starting ${startDate}.`,
 }

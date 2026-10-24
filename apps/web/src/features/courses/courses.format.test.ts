@@ -285,12 +285,46 @@ describe("offeringTiming", () => {
   const found = { current: { id: 2 }, next: { id: 3 } }
 
   it("labels the current and next offerings", () => {
-    expect(offeringTiming({ id: 2, startDate: "2026-07-20" }, found, "2026-08-01")).toBe("current")
-    expect(offeringTiming({ id: 3, startDate: "2027-03-01" }, found, "2026-08-01")).toBe("next")
+    expect(
+      offeringTiming(
+        { id: 2, startDate: "2026-07-20", endDate: "2026-11-06" },
+        found,
+        "2026-08-01",
+      ),
+    ).toBe("current")
+    expect(
+      offeringTiming(
+        { id: 3, startDate: "2027-03-01", endDate: "2027-06-18" },
+        found,
+        "2026-08-01",
+      ),
+    ).toBe("next")
   })
 
-  it("labels the rest as past or future by their start date", () => {
-    expect(offeringTiming({ id: 1, startDate: "2026-03-02" }, found, "2026-08-01")).toBe("past")
-    expect(offeringTiming({ id: 4, startDate: "2027-07-19" }, found, "2026-08-01")).toBe("future")
+  it("labels the rest as past once ended, or future before they start", () => {
+    expect(
+      offeringTiming(
+        { id: 1, startDate: "2026-03-02", endDate: "2026-06-19" },
+        found,
+        "2026-08-01",
+      ),
+    ).toBe("past")
+    expect(
+      offeringTiming(
+        { id: 4, startDate: "2027-07-19", endDate: "2027-11-05" },
+        found,
+        "2026-08-01",
+      ),
+    ).toBe("future")
+  })
+
+  it("labels an offering still running under a newer, overlapping one as running", () => {
+    expect(
+      offeringTiming(
+        { id: 1, startDate: "2026-02-23", endDate: "2026-11-06" },
+        found,
+        "2026-08-01",
+      ),
+    ).toBe("running")
   })
 })

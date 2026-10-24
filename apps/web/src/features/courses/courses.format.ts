@@ -76,16 +76,18 @@ export const selectOffering = <T extends DatedOffering>(
   return { ...found, offering }
 }
 
-export type OfferingTiming = "past" | "current" | "next" | "future"
+export type OfferingTiming = "past" | "current" | "running" | "next" | "future"
 
+/** `running` is an offering still underway that isn't current, as a newer one overlaps it. */
 export const offeringTiming = (
-  offering: Pick<CourseVersion, "id" | "startDate">,
+  offering: Pick<CourseVersion, "id" | "startDate" | "endDate">,
   { current, next }: { current?: Pick<CourseVersion, "id">; next?: Pick<CourseVersion, "id"> },
   today: string,
 ): OfferingTiming => {
   if (offering.id === current?.id) return "current"
   if (offering.id === next?.id) return "next"
-  return dayOf(offering.startDate) > today ? "future" : "past"
+  if (dayOf(offering.startDate) > today) return "future"
+  return dayOf(offering.endDate) < today ? "past" : "running"
 }
 
 export const toCourseTableRow = (
