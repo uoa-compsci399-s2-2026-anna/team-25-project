@@ -39,9 +39,11 @@ const renderEditor = async (course: Course | undefined = linked) => {
 const openCourses = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(screen.getByRole("button", { name: "Edit" }))
   await user.click(screen.getByRole("combobox", { name: "Course" }))
+  await screen.findByRole("listbox")
 }
 
-const optionNames = () => screen.getAllByRole("option").map((option) => option.textContent)
+const optionNames = async () =>
+  (await screen.findAllByRole("option")).map((option) => option.textContent)
 
 describe("ResourceCourseEdit", () => {
   beforeEach(() => {
@@ -70,13 +72,13 @@ describe("ResourceCourseEdit", () => {
     await renderEditor()
 
     await openCourses(user)
-    expect(optionNames()).toEqual([
+    expect(await optionNames()).toEqual([
       "No course",
       "SE 101 - University of Auckland",
       "SE 202 - University of Auckland",
     ])
 
-    await user.click(screen.getByRole("option", { name: "SE 202 - University of Auckland" }))
+    await user.click(await screen.findByRole("option", { name: "SE 202 - University of Auckland" }))
     await user.click(screen.getByRole("button", { name: "Done" }))
 
     expect(updateResource).toHaveBeenCalledWith(3, { course: 5 })
@@ -87,7 +89,7 @@ describe("ResourceCourseEdit", () => {
     await renderEditor()
 
     await openCourses(user)
-    await user.click(screen.getByRole("option", { name: "No course" }))
+    await user.click(await screen.findByRole("option", { name: "No course" }))
     await user.click(screen.getByRole("button", { name: "Done" }))
 
     expect(updateResource).toHaveBeenCalledWith(3, { course: null })
@@ -112,7 +114,7 @@ describe("ResourceCourseEdit", () => {
     await renderEditor()
 
     await openCourses(user)
-    expect(optionNames()).toEqual(["No course", "SE 101 - University of Auckland"])
+    expect(await optionNames()).toEqual(["No course", "SE 101 - University of Auckland"])
     expect(getEditableCourseOptions).not.toHaveBeenCalled()
   })
 })
