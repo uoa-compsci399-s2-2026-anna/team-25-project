@@ -81,6 +81,10 @@ $success-shade: (
 
   &--style-primary {
     --hover-bg: color-mix(in oklab, var(--brand-charcoal) 80%, transparent);
+
+    &.btn--disabled {
+      --hover-bg: var(--bg-color);
+    }
   }
 }
 
