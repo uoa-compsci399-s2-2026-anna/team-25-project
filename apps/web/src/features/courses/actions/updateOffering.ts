@@ -71,9 +71,6 @@ export const updateOffering = async (input: unknown): Promise<ActionResult> => {
       data: {
         // `null`, not `undefined`, for a blank field: see `toVersionData`.
         ...toVersionData(parsed.data, null),
-        // Payload keeps a field that isn't sent, so without this a correction would be
-        // published with the previous one's note (e.g. one written in the admin).
-        changeSummary: null,
         // Sent explicitly for prepareVersion to treat this as a publish - see createCourse.
         _status: "published",
       } as RequiredDataFromCollectionSlug<"courseVersions">,

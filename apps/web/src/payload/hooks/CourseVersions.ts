@@ -99,8 +99,7 @@ export function validatePublication(version: Partial<CourseVersion>, previous?: 
     fail("Publication requires a teaching team with a member and role in each row.")
   }
 
-  // A correction needs no summary: most are small text fixes, and Payload keeps every
-  // published state anyway. It only has to change something.
+  // Payload keeps every published state, so a correction only has to change something.
   if (previous && isDeepStrictEqual(content(version), content(previous)))
     fail("The correction has no content changes.")
 }

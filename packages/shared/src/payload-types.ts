@@ -361,10 +361,6 @@ export interface CourseVersion {
   period: string;
   startDate: string;
   endDate: string;
-  /**
-   * Optional note on what a correction changed.
-   */
-  changeSummary?: string | null;
   publishedAt?: string | null;
   publishedBy?:
     | ({
@@ -851,7 +847,6 @@ export interface CourseVersionsSelect<T extends boolean = true> {
   period?: T;
   startDate?: T;
   endDate?: T;
-  changeSummary?: T;
   publishedAt?: T;
   publishedBy?: T;
   name?: T;

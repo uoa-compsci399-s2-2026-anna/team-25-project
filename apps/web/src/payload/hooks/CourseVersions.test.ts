@@ -76,24 +76,15 @@ describe("publication validation", () => {
           ...previous,
           startDate: "2026-01-01",
           teachingTeam: [{ member: 1, role: "Lecturer", id: "new" }],
-          changeSummary: "No change",
         },
         previous,
       ),
     ).toThrow("no content changes")
 
-    expect(() =>
-      validatePublication(
-        { ...previous, period: "Corrected", changeSummary: "Fix period" },
-        previous,
-      ),
-    ).not.toThrow()
+    expect(() => validatePublication({ ...previous, period: "Corrected" }, previous)).not.toThrow()
 
     expect(() =>
-      validatePublication(
-        { ...previous, additionalInfo: richText, changeSummary: "Add a note" },
-        previous,
-      ),
+      validatePublication({ ...previous, additionalInfo: richText }, previous),
     ).not.toThrow()
   })
 })
@@ -170,16 +161,6 @@ describe("publication content detection", () => {
 
   it("still rejects whitespace-only text", () => {
     expect(() => validatePublication({ ...complete, name: "   " })).toThrow("name is required")
-  })
-})
-
-describe("corrections", () => {
-  const previous = { ...complete, period: "S1" } as unknown as CourseVersion
-
-  it("accepts a correction without a summary", () => {
-    expect(() =>
-      validatePublication({ ...previous, period: "S2", changeSummary: null }, previous),
-    ).not.toThrow()
   })
 })
 
@@ -488,12 +469,7 @@ describe("prepareVersion drafts", () => {
       const { req } = request({ current: publishedRow })
 
       // Republishing is what rewrites the metadata, so its presence is the proof.
-      const result = await prepare(
-        req,
-        { name: "Corrected", changeSummary: "Fix the name" },
-        "update",
-        pendingDraft,
-      )
+      const result = await prepare(req, { name: "Corrected" }, "update", pendingDraft)
 
       expect(Date.parse(result.publishedAt as string)).not.toBeNaN()
       expect(result.displaySnapshot).toBeDefined()
@@ -623,12 +599,7 @@ describe("prepareVersion publication", () => {
     } as unknown as CourseVersion
     const { req } = request({ current: published, hasPublishedVersion: true })
 
-    const result = await prepare(
-      req,
-      { name: "Renamed", changeSummary: "Corrected the title" },
-      "update",
-      published,
-    )
+    const result = await prepare(req, { name: "Renamed" }, "update", published)
     expect(result.publishedAt).toBeDefined()
   })
 
