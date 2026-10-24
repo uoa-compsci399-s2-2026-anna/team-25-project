@@ -1,12 +1,22 @@
-import { Badge, Card, CardContent, CardHeader, Heading, Skeleton } from "@repo/ui/components/ui"
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  Heading,
+  Skeleton,
+} from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import { FolderOpen } from "lucide-react"
 import Link from "next/link"
+import { withEditHash } from "@/components/Editor/editOnLoad"
 import { EmptyState } from "@/components/EmptyState"
 import { withRedirect } from "@/features/auth/redirect"
 import { formatDate } from "@/features/courses/courses.format"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Routes } from "@/lib/routes"
+import { isOwnProfile } from "../../members.ownership"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberResourcesCached } from "../../members.queries"
 import { mobileSection } from "./mobileSection"
@@ -28,7 +38,10 @@ export const MemberResources = async ({ params }: { params: MembersRouteParams }
     <section className={cn("flex flex-col gap-4 max-md:order-5", mobileSection)}>
       <Heading level="h2">Resources</Heading>
       {user ? (
-        <ResourceList resources={await getMemberResourcesCached(memberId)} />
+        <ResourceList
+          canEdit={await isOwnProfile(memberId)}
+          resources={await getMemberResourcesCached(memberId)}
+        />
       ) : (
         <p className="text-muted-foreground text-sm">
           <Link
@@ -44,7 +57,14 @@ export const MemberResources = async ({ params }: { params: MembersRouteParams }
   )
 }
 
-const ResourceList = ({ resources }: { resources: MemberResource[] }) => {
+const ResourceList = ({
+  canEdit,
+  resources,
+}: {
+  /** On the member's own profile: an Edit link per resource that opens its editor. */
+  canEdit: boolean
+  resources: MemberResource[]
+}) => {
   if (resources.length === 0) {
     return <EmptyState icon={<FolderOpen />} title="No resources shared yet" variant="section" />
   }
@@ -55,24 +75,41 @@ const ResourceList = ({ resources }: { resources: MemberResource[] }) => {
         const shared = formatDate(resource.createdAt)
         const course = typeof resource.course === "object" ? resource.course : undefined
         const attachments = resource.attachments?.length ?? 0
+        const href = resourceHref(String(resource.id))
 
         return (
-          <Link className="group" href={resourceHref(String(resource.id))} key={resource.id}>
-            <Card className="transition-colors group-hover:ring-foreground/25">
-              <CardHeader className="flex items-center justify-between gap-3">
-                <Badge variant="blue">{course?.code ?? "Resource"}</Badge>
-                {shared && <span className="text-muted-foreground text-xs">Shared {shared}</span>}
-              </CardHeader>
-              <CardContent className="flex flex-col gap-1">
-                <span className="font-medium group-hover:underline">{resource.title}</span>
-                {attachments > 0 && (
-                  <span className="text-muted-foreground text-xs">
-                    {attachments === 1 ? "1 attachment" : `${attachments} attachments`}
-                  </span>
-                )}
-              </CardContent>
-            </Card>
-          </Link>
+          // The Edit link sits beside the card's link, not inside it - links can't nest.
+          <div className="relative" key={resource.id}>
+            <Link className="group" href={href}>
+              <Card className="transition-colors group-hover:ring-foreground/25">
+                <CardHeader className="flex items-center justify-between gap-3">
+                  <Badge variant="blue">{course?.code ?? "Resource"}</Badge>
+                  {shared && <span className="text-muted-foreground text-xs">Shared {shared}</span>}
+                </CardHeader>
+                <CardContent className={cn("flex flex-col gap-1", canEdit && "pr-20")}>
+                  <span className="font-medium group-hover:underline">{resource.title}</span>
+                  {attachments > 0 && (
+                    <span className="text-muted-foreground text-xs">
+                      {attachments === 1 ? "1 attachment" : `${attachments} attachments`}
+                    </span>
+                  )}
+                </CardContent>
+              </Card>
+            </Link>
+            {canEdit && (
+              <Button
+                aria-label={`Edit ${resource.title}`}
+                borderColor="charcoal"
+                className="absolute right-4 bottom-4"
+                nativeButton={false}
+                render={<Link href={withEditHash(href)} />}
+                size="sm"
+                variant="button-transparent"
+              >
+                Edit
+              </Button>
+            )}
+          </div>
         )
       })}
     </div>

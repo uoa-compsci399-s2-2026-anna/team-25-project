@@ -19,7 +19,8 @@ export const CourseOfferingSection = ({
 export const CourseOfferingDetail = ({ label, value }: { label: string; value: ReactNode }) => (
   <div className="flex flex-col gap-1">
     <p className={labelClassName}>{label}</p>
-    <p className="text-sm">{value}</p>
+    {/* A div, not a p, so a value can hold an edit control. */}
+    <div className="text-sm">{value}</div>
   </div>
 )
 

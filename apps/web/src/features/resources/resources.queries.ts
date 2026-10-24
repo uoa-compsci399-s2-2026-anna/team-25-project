@@ -155,7 +155,8 @@ export const getCourseResourcesCached = async (courseId: number, limit: number) 
 
 export type ResourceCourseOption = { value: Course["id"]; label: string }
 
-const toCourseOption = ({
+/** A course as a picker option. Codes repeat across universities, so it names its university. */
+export const toCourseOption = ({
   code,
   id,
   institution,

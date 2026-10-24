@@ -5,38 +5,10 @@ import { addResourceFormSchema, resourceAttachmentsError } from "@repo/shared/sc
 import { updateTag } from "next/cache"
 import { ValidationError } from "payload"
 import type { ActionResult } from "@/features/auth/actions/types"
+import { fieldErrorsFromIssues, resultFromValidationError } from "@/lib/actions/validationErrors"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
-
-type ZodIssue = { message: string; path: PropertyKey[] }
-
-const fieldErrorsFromIssues = (issues: readonly ZodIssue[]): Record<string, string> => {
-  const fieldErrors: Record<string, string> = {}
-  for (const issue of issues) {
-    const field = issue.path.join(".")
-    // Only the first message per field is shown, matching one message per input.
-    if (field && !fieldErrors[field]) {
-      fieldErrors[field] = issue.message
-    }
-  }
-  return fieldErrors
-}
-
-const resultFromValidationError = (
-  error: ValidationError,
-  fallbackFormError: string,
-): ActionResult => {
-  const fieldErrors: Record<string, string> = {}
-  for (const { path, message } of error.data?.errors ?? []) {
-    if (path && !fieldErrors[path]) {
-      fieldErrors[path] = message
-    }
-  }
-  return Object.keys(fieldErrors).length > 0
-    ? { fieldErrors, ok: false }
-    : { formError: fallbackFormError, ok: false }
-}
 
 // The rich-text description can't travel as a plain FormData value, so the form sends it as
 // JSON. Anything unreadable becomes undefined and fails the schema as a missing description.

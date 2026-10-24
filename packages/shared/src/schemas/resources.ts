@@ -20,6 +20,9 @@ export const addResourceFormSchema = z.object({
   course: z.number().int().positive().nullable(),
 })
 
+// Editing in place: any field may be left out to keep it as is.
+export const updateResourceSchema = addResourceFormSchema.partial()
+
 type AttachmentLike = { name: string; size: number; type: string }
 
 /**
