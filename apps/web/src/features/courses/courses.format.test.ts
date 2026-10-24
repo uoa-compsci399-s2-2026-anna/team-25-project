@@ -7,11 +7,13 @@ import {
   deriveTitle,
   deriveUniversity,
   findCurrentOffering,
+  isCourseEditor,
   offeringTiming,
   selectOffering,
   summarizeCourses,
   summarizeMyCourses,
   toCourseTableRow,
+  toNewOfferingValues,
 } from "./courses.format"
 
 const member = (overrides: Partial<Member> = {}): Member =>
@@ -326,5 +328,29 @@ describe("offeringTiming", () => {
         "2026-08-01",
       ),
     ).toBe("running")
+  })
+})
+
+describe("isCourseEditor", () => {
+  it("lets the owner and the course's editors edit, and no one else", () => {
+    const shared = course({ owner: 1, editors: [2, member({ id: 3 })] })
+    expect(isCourseEditor(shared, 1)).toBe(true)
+    expect(isCourseEditor(shared, 2)).toBe(true)
+    expect(isCourseEditor(shared, 3)).toBe(true)
+    expect(isCourseEditor(shared, 4)).toBe(false)
+  })
+})
+
+describe("toNewOfferingValues", () => {
+  it("copies the offering's content but leaves its period and dates blank", () => {
+    const values = toNewOfferingValues(version({ programme: "BSc", projectType: "Industry" }))
+    expect(values).toMatchObject({
+      name: "Capstone: Computer Science",
+      programme: "BSc",
+      projectType: "Industry",
+      period: "",
+      startDate: "",
+      endDate: "",
+    })
   })
 })

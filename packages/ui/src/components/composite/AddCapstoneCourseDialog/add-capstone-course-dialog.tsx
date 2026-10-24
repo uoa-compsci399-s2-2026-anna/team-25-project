@@ -76,7 +76,13 @@ export type AddCapstoneCourseDialogProps = {
    * saved draft from a table row.
    */
   trigger?: React.ReactElement
-  /** Defaults to "Add a capstone course". */
+  /**
+   * "offering" adds an offering to a course that already exists, so it drops the
+   * course code, and "Your role" since the offering keeps the teaching team it was
+   * copied from. Defaults to "course".
+   */
+  kind?: "course" | "offering"
+  /** Defaults to "Add a capstone course", or "Add an offering" for an offering. */
   title?: string
   open?: boolean
   onOpenChange?: (open: boolean) => void
@@ -91,7 +97,8 @@ export type AddCapstoneCourseDialogProps = {
   deliveryFormatOptions: AddCapstoneCourseDialogOption[]
   /** Which action is in flight, so only that button shows a loading label. */
   submitting?: "draft" | "publish" | "delete"
-  onSaveDraft: () => void
+  /** Shows a "Save draft" button beside "Publish". */
+  onSaveDraft?: () => void
   onPublish: () => void
   /** Shows a "Delete draft" button, which asks to confirm before calling this. */
   onDelete?: () => void
@@ -104,7 +111,8 @@ export type AddCapstoneCourseDialogProps = {
  */
 export function AddCapstoneCourseDialog({
   trigger,
-  title = "Add a capstone course",
+  kind = "course",
+  title = kind === "offering" ? "Add an offering" : "Add a capstone course",
   open,
   onOpenChange,
   values,
@@ -201,8 +209,9 @@ export function AddCapstoneCourseDialog({
               {/* The asterisk is described in words rather than shown inline, so this
                   still reads as a sentence with the decorative marks stripped out. */}
               <DialogDescription>
-                Course code and name are all a draft needs - fields marked with an asterisk are
-                required to publish.
+                {kind === "offering"
+                  ? "Filled in from the current offering - change what differs. Fields marked with an asterisk are required to publish."
+                  : "Course code and name are all a draft needs - fields marked with an asterisk are required to publish."}
               </DialogDescription>
             </div>
             <DialogClose render={<Button size="sm" variant="button-transparent" />}>
@@ -218,7 +227,7 @@ export function AddCapstoneCourseDialog({
           <div className="flex flex-col gap-8 pt-6">
             <FieldGroup className="grid gap-4 md:grid-cols-2">
               {textField("name", "Course name", undefined, "md:col-span-2")}
-              {textField("code", "Course code", { placeholder: "e.g. CS399" })}
+              {kind === "course" && textField("code", "Course code", { placeholder: "e.g. CS399" })}
               {textField("programme", "Course program")}
             </FieldGroup>
 
@@ -227,7 +236,12 @@ export function AddCapstoneCourseDialog({
                 placeholder: "e.g. Semester 2 2026",
               })}
               {textField("startDate", "Start date", { type: "date" })}
-              {textField("endDate", "End date", { type: "date" })}
+              {/* Greys out days before the start in the picker. Typing one is still
+                  possible, so the form schema's own date-order check stays the rule. */}
+              {textField("endDate", "End date", {
+                min: values.startDate || undefined,
+                type: "date",
+              })}
             </FieldGroup>
 
             <FieldGroup className="grid gap-4 md:grid-cols-2">
@@ -271,9 +285,11 @@ export function AddCapstoneCourseDialog({
               {richTextField("additionalInfo", "Additional information")}
             </FieldGroup>
 
-            <FieldGroup className="grid gap-4 md:grid-cols-2">
-              {textField("role", "Your role", { placeholder: "e.g. Course Coordinator" })}
-            </FieldGroup>
+            {kind === "course" && (
+              <FieldGroup className="grid gap-4 md:grid-cols-2">
+                {textField("role", "Your role", { placeholder: "e.g. Course Coordinator" })}
+              </FieldGroup>
+            )}
           </div>
 
           {formError && (
@@ -321,15 +337,17 @@ export function AddCapstoneCourseDialog({
                   </Button>
                 )}
                 <div className="flex flex-col-reverse gap-2 sm:flex-row">
-                  <Button
-                    borderColor="charcoal"
-                    disabled={Boolean(submitting)}
-                    onClick={onSaveDraft}
-                    type="button"
-                    variant="button-transparent"
-                  >
-                    {submitting === "draft" ? "Saving..." : "Save draft"}
-                  </Button>
+                  {onSaveDraft && (
+                    <Button
+                      borderColor="charcoal"
+                      disabled={Boolean(submitting)}
+                      onClick={onSaveDraft}
+                      type="button"
+                      variant="button-transparent"
+                    >
+                      {submitting === "draft" ? "Saving..." : "Save draft"}
+                    </Button>
+                  )}
                   <Button
                     disabled={Boolean(submitting)}
                     onClick={onPublish}

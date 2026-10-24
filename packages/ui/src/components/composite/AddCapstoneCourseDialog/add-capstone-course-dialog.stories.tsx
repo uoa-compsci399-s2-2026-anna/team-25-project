@@ -100,6 +100,32 @@ export const EditingDraft: Story = {
   },
 }
 
+// Adding an offering to an existing course, pre-filled from its current one.
+export const AddingOffering: Story = {
+  render: () => {
+    const [values, setValues] = React.useState({
+      ...emptyValues,
+      name: "Capstone Project",
+      programme: "Bachelor of Science",
+    })
+
+    return (
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        kind="offering"
+        onPublish={() => undefined}
+        onValueChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
+        trigger={
+          <Button size="sm" type="button" variant="button-mauve">
+            + Add offering
+          </Button>
+        }
+        values={values}
+      />
+    )
+  },
+}
+
 export const WithErrors: Story = {
   render: () => {
     const [values, setValues] = React.useState(emptyValues)
