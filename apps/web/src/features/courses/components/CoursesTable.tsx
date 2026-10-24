@@ -20,7 +20,7 @@ import {
   type UseDataTableOptions,
   useDataTable,
 } from "@repo/ui/components/ui"
-import { constructFilterFn, createColumnHelper, filterFn_arrHas } from "@tanstack/react-table"
+import { createColumnHelper } from "@tanstack/react-table"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createContext, useContext } from "react"
@@ -29,11 +29,6 @@ import { Routes } from "@/lib/routes"
 /**
  * `duration`, `students`, `teamSize`, and `industry` were dropped: none have
  * a backing field in `Course`/`CourseVersion` (see PR description).
- *
- * `semester`/`year` are derived by splitting `CourseVersion.period` (e.g.
- * "2026 Semester 2") - no other part of the app does this split, so whoever
- * wires the real Course/CourseVersion join (#106) will need to derive them
- * from `period` the same way.
  */
 export interface CourseTableRow {
   id: string
@@ -43,18 +38,12 @@ export interface CourseTableRow {
    * team - a table cell needs one line. */
   lecturer: string
   university: string
-  semester: string
-  year: number
+  /** The period of the offering the course is shown as - see `findCurrentOffering`. */
+  currentOffering: string
+  currentStartDate: string
+  offerings: number
   status: "draft" | "published"
 }
-
-// `arrHas` compares with `===`, so a numeric column needs both sides coerced
-// to the same type to match string filter values (e.g. from a URL/filter UI).
-const arrHasNumeric = constructFilterFn({
-  ...filterFn_arrHas,
-  resolveDataValue: (value: unknown) => String(value),
-  resolveFilterValue: (value: unknown) => (Array.isArray(value) ? value.map(String) : value),
-})
 
 const statusLabels = {
   draft: "Draft",
@@ -114,14 +103,15 @@ export const courseColumns = helper.columns([
     filterFn: "arrHas",
     cell: ({ getValue }) => <TextCell tone="muted">{getValue()}</TextCell>,
   }),
-  helper.accessor("semester", {
-    header: ({ column }) => <SortableHeader column={column}>Semester</SortableHeader>,
-    filterFn: "arrHas",
+  helper.accessor("currentOffering", {
+    header: ({ column }) => <SortableHeader column={column}>Current offering</SortableHeader>,
+    // Periods are free text, so they sort by when they start rather than how they're named.
+    sortFn: (a, b) => a.original.currentStartDate.localeCompare(b.original.currentStartDate),
+    sortDescFirst: true,
     cell: ({ getValue }) => <TextCell tone="muted">{getValue()}</TextCell>,
   }),
-  helper.accessor("year", {
-    header: ({ column }) => <SortableHeader column={column}>Year</SortableHeader>,
-    filterFn: arrHasNumeric,
+  helper.accessor("offerings", {
+    header: ({ column }) => <SortableHeader column={column}>Offerings</SortableHeader>,
     cell: ({ getValue }) => <TextCell tone="muted">{getValue()}</TextCell>,
   }),
   helper.accessor("status", {
@@ -138,7 +128,13 @@ export const courseColumns = helper.columns([
 // plain array rather than keyed by column id: TanStack only resolves `id`
 // from `accessorKey` on runtime `Column` instances, not on the static
 // `ColumnDef`s in `courseColumns` itself.
-const courseColumnLabels = ["Course", "University", "Semester", "Year", "Status"] as const
+const courseColumnLabels = [
+  "Course",
+  "University",
+  "Current offering",
+  "Offerings",
+  "Status",
+] as const
 
 type UseCoursesTableOptions = Omit<UseDataTableOptions<CourseTableRow>, "columns">
 

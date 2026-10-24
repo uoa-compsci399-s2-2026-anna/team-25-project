@@ -224,9 +224,7 @@ export function AddCapstoneCourseDialog({
 
             <FieldGroup className="grid gap-4 md:grid-cols-3">
               {textField("period", "Teaching period", {
-                // "<year> <term>" - the table's splitPeriod parses the first
-                // token as the year, so this order isn't just cosmetic.
-                placeholder: "e.g. 2026 Semester 2",
+                placeholder: "e.g. Semester 2 2026",
               })}
               {textField("startDate", "Start date", { type: "date" })}
               {textField("endDate", "End date", { type: "date" })}
