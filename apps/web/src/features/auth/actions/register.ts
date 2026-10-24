@@ -8,6 +8,7 @@ import {
   registerProfileSchema,
   registerWithCodeSchema,
 } from "@repo/shared/schemas/register"
+import { refresh } from "next/cache"
 import { cookies } from "next/headers"
 import { type Payload, ValidationError } from "payload"
 import { generatePayloadCookie } from "payload/shared"
@@ -335,6 +336,8 @@ export const completeProfile = async (formData: FormData): Promise<ActionResult>
     payload.logger.error({ err: error }, "completeProfile failed")
     return { formError: "Could not save your profile. Try again.", ok: false }
   }
+
+  refresh()
 
   return { ok: true }
 }

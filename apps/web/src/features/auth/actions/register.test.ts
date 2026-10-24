@@ -1,3 +1,4 @@
+import { refresh } from "next/cache"
 import { cookies } from "next/headers"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
@@ -30,6 +31,7 @@ vi.mock("payload/shared", () => ({
     value: "signed-token",
   }),
 }))
+vi.mock("next/cache", () => ({ refresh: vi.fn() }))
 vi.mock("next/headers", () => ({ cookies: vi.fn() }))
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
@@ -323,6 +325,7 @@ describe("completeProfile", () => {
         overrideAccess: false,
       }),
     )
+    expect(refresh).toHaveBeenCalled()
   })
 
   it("treats a profile with no interests or links as empty lists", async () => {

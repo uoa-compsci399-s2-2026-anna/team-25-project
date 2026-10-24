@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { useRouter } from "next/navigation"
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing"
+import { Activity } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { registerMember, sendVerificationCode } from "../actions/register"
 import { RegisterDetailsForm } from "./RegisterDetailsForm"
@@ -114,6 +115,41 @@ describe("RegisterDetailsForm", () => {
       expect(push).toHaveBeenCalledWith("/register/profile?redirect=%2Fproposals"),
     )
     expect(registerMember).toHaveBeenCalledWith({ ...details, code: "482913" })
+  })
+
+  // Next hides a page with Activity on navigation rather than unmounting it.
+  it("starts fresh when shown again after signing up", async () => {
+    const form = (mode: "hidden" | "visible") => (
+      <Activity mode={mode}>
+        <RegisterDetailsForm institutions={institutions} />
+      </Activity>
+    )
+    const { rerender } = render(form("visible"), { wrapper: withNuqsTestingAdapter() })
+    await continueToCode()
+    verify()
+    await waitFor(() => expect(push).toHaveBeenCalled())
+
+    rerender(form("hidden"))
+    rerender(form("visible"))
+
+    expect(screen.queryByLabelText("Verification code")).not.toBeInTheDocument()
+    expect(screen.getByLabelText(/^University email/)).toHaveValue("")
+    expect(screen.getByLabelText(/^Password/)).toHaveValue("")
+  })
+
+  it("keeps the code step when shown again before signing up", async () => {
+    const form = (mode: "hidden" | "visible") => (
+      <Activity mode={mode}>
+        <RegisterDetailsForm institutions={institutions} />
+      </Activity>
+    )
+    const { rerender } = render(form("visible"), { wrapper: withNuqsTestingAdapter() })
+    await continueToCode()
+
+    rerender(form("hidden"))
+    rerender(form("visible"))
+
+    expect(screen.getByLabelText("Verification code")).toBeInTheDocument()
   })
 
   it("returns to the details, still filled in, when they were the problem", async () => {
