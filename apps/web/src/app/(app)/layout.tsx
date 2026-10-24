@@ -1,10 +1,9 @@
 import type { Metadata } from "next"
-import { Geist_Mono } from "next/font/google"
-import localFont from "next/font/local"
 import "@repo/ui/globals.css"
 import { cn } from "@repo/ui/lib/utils"
 import { Providers } from "@/components/Providers"
 import { Footer, Navbar } from "@/features/layout/components"
+import { fontMono, satoshi } from "@/lib/fonts"
 import { siteUrl } from "@/lib/siteUrl"
 
 export const metadata: Metadata = {
@@ -12,19 +11,6 @@ export const metadata: Metadata = {
   title: { default: "Computing Capstone Community Australasia", template: "%s | CCCA" },
   description: "A community for computing capstone educators in Australasia.",
 }
-
-const satoshi = localFont({
-  src: [
-    { path: "./fonts/Satoshi-Variable.ttf", weight: "300 900", style: "normal" },
-    { path: "./fonts/Satoshi-VariableItalic.ttf", weight: "300 900", style: "italic" },
-  ],
-  variable: "--font-sans",
-})
-
-const fontMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
 
 export default function RootLayout({
   children,

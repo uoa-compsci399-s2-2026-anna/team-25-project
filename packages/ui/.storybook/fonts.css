@@ -1,5 +1,5 @@
 /*
- * Storybook runs on plain Vite, so the `next/font` setup in apps/web `(app)/layout.tsx`
+ * Storybook runs on plain Vite, so the `next/font` setup in apps/web `src/lib/fonts.ts`
  * never runs here. This file mirrors it: load the same fonts and define the
  * `--font-sans` / `--font-mono` variables that globals.css relies on.
  */
@@ -7,7 +7,7 @@
 
 @font-face {
   font-family: "Satoshi";
-  src: url("../../../apps/web/src/app/(app)/fonts/Satoshi-Variable.ttf") format("truetype");
+  src: url("../../../apps/web/src/lib/fonts/Satoshi-Variable.ttf") format("truetype");
   font-weight: 300 900;
   font-style: normal;
   font-display: swap;
@@ -15,7 +15,7 @@
 
 @font-face {
   font-family: "Satoshi";
-  src: url("../../../apps/web/src/app/(app)/fonts/Satoshi-VariableItalic.ttf") format("truetype");
+  src: url("../../../apps/web/src/lib/fonts/Satoshi-VariableItalic.ttf") format("truetype");
   font-weight: 300 900;
   font-style: italic;
   font-display: swap;
