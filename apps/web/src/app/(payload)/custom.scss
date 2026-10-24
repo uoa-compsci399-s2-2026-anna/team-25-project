@@ -71,3 +71,103 @@ $success-shade: (
 
   --accessibility-outline: 2px solid var(--brand-teal);
 }
+
+// UI elements below mirror @repo/ui components. Unlayered rules beat every Payload rule
+// regardless of specificity, so split buttons need their joined corners restored by hand.
+
+// Button: pill shape, charcoal primary
+.btn {
+  border-radius: 9999px;
+
+  &--style-primary {
+    --hover-bg: color-mix(in oklab, var(--brand-charcoal) 80%, transparent);
+
+    &.btn--disabled {
+      --hover-bg: var(--bg-color);
+    }
+  }
+}
+
+.btn--withPopup {
+  .btn {
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  .popup-button {
+    border-radius: 9999px;
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+  }
+}
+
+// Heading
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+
+// Card
+.card {
+  border-color: color-mix(in oklab, var(--brand-charcoal) 10%, transparent);
+  border-radius: var(--style-radius-l);
+
+  &--has-onclick:hover {
+    border-color: color-mix(in oklab, var(--brand-charcoal) 25%, transparent);
+  }
+}
+
+// Navbar: blush background, kept opaque because the nav overlays content on mobile
+.nav {
+  background: color-mix(in oklab, var(--brand-blush) 60%, white);
+  border-color: var(--brand-border);
+}
+
+// Eyebrow
+.nav-group__label {
+  color: var(--brand-rose);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.nav__link-indicator {
+  background: var(--brand-rose);
+}
+
+// Branding (AdminLogo, AdminIcon). Tailwind is not loaded here, so size the SVGs directly.
+.admin-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  &__cap {
+    width: 64px;
+    height: auto;
+  }
+
+  &__wordmark {
+    color: black;
+    font-size: 36px;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+  }
+}
+
+// The breadcrumb's home link is an 18px box, too small for the cap's detail
+.step-nav__home {
+  width: 24px;
+  height: 24px;
+}
+
+.admin-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

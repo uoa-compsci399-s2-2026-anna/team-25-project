@@ -41,6 +41,20 @@ export default buildConfig({
   admin: {
     user: Admin.slug, // members cannot reach /payload/admin
     theme: "light",
+    components: {
+      graphics: {
+        Logo: "/payload/components/AdminLogo#AdminLogo",
+        Icon: "/payload/components/AdminIcon#AdminIcon",
+      },
+    },
+    meta: {
+      titleSuffix: " | CCCA Admin",
+      // Payload sets its own icons, which override app/icon.svg and app/apple-icon.png.
+      icons: [
+        { rel: "icon", url: "/icon.svg", sizes: "any", type: "image/svg+xml" },
+        { rel: "apple-touch-icon", url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+      ],
+    },
     importMap: {
       baseDir: path.resolve(dirname),
     },
