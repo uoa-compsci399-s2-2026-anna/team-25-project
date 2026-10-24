@@ -155,11 +155,10 @@ export const CourseOffering = async ({
               <Link
                 aria-current={item.id === offering.id ? "page" : undefined}
                 className="-mx-2 flex items-center justify-between gap-2 self-stretch rounded-md px-2 py-1 hover:bg-muted aria-[current=page]:bg-muted"
-                href={
-                  item.id === primary?.id
-                    ? Routes.COURSES.COURSE(String(courseId))
-                    : Routes.COURSES.OFFERING(courseId, item.id)
-                }
+                href={Routes.COURSES.COURSE(
+                  courseId,
+                  item.id === primary?.id ? undefined : item.id,
+                )}
                 key={item.id}
               >
                 <div className="flex flex-col">

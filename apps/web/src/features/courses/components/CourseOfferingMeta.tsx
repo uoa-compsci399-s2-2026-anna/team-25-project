@@ -59,10 +59,7 @@ export const CourseOfferingMeta = async ({
               formatDate(offering.startDate),
             )}
           </span>
-          <Link
-            className="font-medium underline underline-offset-4"
-            href={courseHref(String(courseId))}
-          >
+          <Link className="font-medium underline underline-offset-4" href={courseHref(courseId)}>
             View {primary.period}
           </Link>
         </p>
