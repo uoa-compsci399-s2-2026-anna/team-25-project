@@ -58,8 +58,7 @@ export const createOffering = async (input: unknown): Promise<ActionResult> => {
       overrideAccess: false,
       user,
     })
-    const sourceCourseId = typeof source.course === "number" ? source.course : source.course.id
-    if (sourceCourseId !== courseId) return { formError: FALLBACK_ERROR, ok: false }
+    if (relationID(source.course) !== courseId) return { formError: FALLBACK_ERROR, ok: false }
 
     await payload.create({
       collection: Slugs.Collections.COURSE_VERSIONS,
