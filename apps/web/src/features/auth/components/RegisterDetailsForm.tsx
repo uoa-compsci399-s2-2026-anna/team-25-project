@@ -115,10 +115,8 @@ export const RegisterDetailsForm = ({ institutions }: { institutions: Institutio
     validators: { onSubmit: registerDetailsSchema },
   })
 
-  // Next keeps this page alive (hidden) after navigating away, so without this a
-  // later visit - even after logging out - lands back on the spent code step with
-  // the previous details and password still filled in. Only after a successful
-  // sign-up, so wandering off mid-flow still keeps what was typed.
+  // Next keeps hidden pages alive, so clear a finished sign-up rather than show
+  // its spent code step on the next visit. Leaving mid-flow keeps what was typed.
   const registered = useRef(false)
   useLayoutEffect(() => {
     return () => {
