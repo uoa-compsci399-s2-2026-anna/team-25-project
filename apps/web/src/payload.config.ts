@@ -41,6 +41,15 @@ export default buildConfig({
   admin: {
     user: Admin.slug, // members cannot reach /payload/admin
     theme: "light",
+    components: {
+      graphics: {
+        Logo: "/payload/components/AdminLogo#AdminLogo",
+        Icon: "/payload/components/AdminIcon#AdminIcon",
+      },
+    },
+    meta: {
+      titleSuffix: " | CCCA Admin",
+    },
     importMap: {
       baseDir: path.resolve(dirname),
     },
