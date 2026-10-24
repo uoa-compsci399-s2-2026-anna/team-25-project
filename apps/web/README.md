@@ -21,8 +21,8 @@ product UI and Payload CMS (admin panel and REST API). Part of the
 
 | Group | Serves | Layout |
 | --- | --- | --- |
-| `src/app/(app)/` | Product UI (`/`) and the app's own route handlers (`/api/health`) | Satoshi + Geist Mono fonts, `@repo/ui` global styles |
-| `src/app/(payload)/` | Payload admin at `/payload/admin`, Payload REST API at `/payload/api` | Payload's `RootLayout` |
+| `src/app/(app)/` | Product UI (`/`) and the app's own route handlers (`/api/health`) | Satoshi + Geist Mono fonts (`src/lib/fonts.ts`), `@repo/ui` global styles |
+| `src/app/(payload)/` | Payload admin at `/payload/admin`, Payload REST API at `/payload/api` | Payload's `RootLayout`, with the same fonts and brand colours |
 
 Payload's own collections, globals, and migrations live outside the route group,
 under `src/payload/`.

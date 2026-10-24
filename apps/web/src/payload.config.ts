@@ -40,6 +40,7 @@ const dirname = path.dirname(filename)
 export default buildConfig({
   admin: {
     user: Admin.slug, // members cannot reach /payload/admin
+    theme: "light",
     importMap: {
       baseDir: path.resolve(dirname),
     },
