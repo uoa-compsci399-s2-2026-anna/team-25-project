@@ -40,6 +40,8 @@ const dirname = path.dirname(filename)
 export default buildConfig({
   admin: {
     user: Admin.slug, // members cannot reach /payload/admin
+    // The app has no dark palette, so the theme toggle is removed
+    theme: "light",
     importMap: {
       baseDir: path.resolve(dirname),
     },

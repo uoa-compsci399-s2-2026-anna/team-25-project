@@ -1,0 +1,14 @@
+/* Brand colours as plain custom properties so non-Tailwind surfaces (the Payload admin) can share them */
+:root {
+  --brand-charcoal: #474954;
+  --brand-slate: #4b5468;
+  --brand-rose: #b26b7d;
+  --brand-teal: #48a9a6;
+  --brand-blush: #f0eae6;
+  --brand-peach: #f7e9e6;
+  --brand-plum: #6e4450;
+  --brand-salmon: #f9cfc3;
+  --brand-border: #e6deda;
+  --brand-cream: #faf7f4;
+  --brand-mauve: #c08497;
+}

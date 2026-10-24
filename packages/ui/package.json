@@ -58,6 +58,7 @@
   },
   "exports": {
     "./globals.css": "./src/styles/globals.css",
+    "./brand.css": "./src/styles/brand.css",
     "./postcss.config": "./postcss.config.mjs",
     "./components/composite": "./src/components/composite/index.ts",
     "./components/composite/*": "./src/components/composite/*",
