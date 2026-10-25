@@ -17,7 +17,8 @@ export interface ItemActionsMenuProps {
    */
   itemLabel: string
   onEdit: () => void
-  onDelete: () => void
+  /** Omitted to hide Delete entirely - e.g. an editor who may edit a draft but not delete it. */
+  onDelete?: () => void
   /** Defaults to a generic confirmation. */
   deleteConfirmMessage?: string
 }
@@ -69,7 +70,7 @@ export function ItemActionsMenu({
                 onClick={() => {
                   setOpen(false)
                   setConfirming(false)
-                  onDelete()
+                  onDelete?.()
                 }}
                 size="sm"
                 type="button"
@@ -82,13 +83,15 @@ export function ItemActionsMenu({
         ) : (
           <>
             <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
-            <DropdownMenuItem
-              closeOnClick={false}
-              onClick={() => setConfirming(true)}
-              variant="destructive"
-            >
-              Delete
-            </DropdownMenuItem>
+            {onDelete && (
+              <DropdownMenuItem
+                closeOnClick={false}
+                onClick={() => setConfirming(true)}
+                variant="destructive"
+              >
+                Delete
+              </DropdownMenuItem>
+            )}
           </>
         )}
       </DropdownMenuContent>

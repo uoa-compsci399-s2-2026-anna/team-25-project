@@ -33,6 +33,13 @@ describe("ItemActionsMenu", () => {
     expect(screen.getByRole("menuitem", { name: "Delete" })).toBeInTheDocument()
   })
 
+  it("omits Delete when onDelete isn't given - e.g. an editor who can't delete", () => {
+    render(<ItemActionsMenu itemLabel="CS399" onEdit={vi.fn()} />)
+    openMenu()
+    expect(screen.getByRole("menuitem", { name: "Edit" })).toBeInTheDocument()
+    expect(screen.queryByRole("menuitem", { name: "Delete" })).not.toBeInTheDocument()
+  })
+
   it("calls onEdit and closes when Edit is clicked", async () => {
     const onEdit = vi.fn()
     renderMenu({ onEdit })
