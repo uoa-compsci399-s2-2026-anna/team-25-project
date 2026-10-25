@@ -120,6 +120,8 @@ export interface EditDraftOfferingDialogProps {
   courseId: number
   offeringId: number
   initialValues: AddCapstoneCourseDialogValues
+  /** Only the course's owner and editors may delete a draft, not its teaching staff. */
+  canDelete: boolean
   /** The draft's row in the sidebar, which opens the dialog. */
   trigger: ReactElement
 }
@@ -129,6 +131,7 @@ export function EditDraftOfferingDialog({
   courseId,
   offeringId,
   initialValues,
+  canDelete,
   trigger,
 }: EditDraftOfferingDialogProps) {
   const [open, setOpen] = useState(false)
@@ -143,14 +146,16 @@ export function EditDraftOfferingDialog({
       )
       setOpen(false)
     },
-    remove: {
-      action: () => deleteDraftOffering({ courseId, offeringId }),
-      failureMessage: "Could not delete this draft. Try again.",
-      onRemoved: () => {
-        toast.add({ description: "The draft offering was deleted.", title: "Draft deleted" })
-        setOpen(false)
-      },
-    },
+    remove: canDelete
+      ? {
+          action: () => deleteDraftOffering({ courseId, offeringId }),
+          failureMessage: "Could not delete this draft. Try again.",
+          onRemoved: () => {
+            toast.add({ description: "The draft offering was deleted.", title: "Draft deleted" })
+            setOpen(false)
+          },
+        }
+      : undefined,
     save: (values, intent) => updateDraftOffering({ ...values, courseId, intent, offeringId }),
   })
 

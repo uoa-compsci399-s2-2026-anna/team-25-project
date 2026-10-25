@@ -2,7 +2,12 @@ import { CourseDeliveryFormat } from "@repo/shared/enums/courses"
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { isSignedIn } from "../access"
-import { versionHistoryRead, versionRead, versionWrite } from "../access/Courses/CourseVersions"
+import {
+  versionDelete,
+  versionHistoryRead,
+  versionRead,
+  versionUpdate,
+} from "../access/Courses/CourseVersions"
 import { guardCourseWrite } from "../hooks"
 import {
   assertVersionDeletable,
@@ -30,8 +35,8 @@ export const CourseVersions: CollectionConfig = {
     create: isSignedIn,
     read: versionRead,
     readVersions: versionHistoryRead,
-    update: versionWrite,
-    delete: versionWrite,
+    update: versionUpdate,
+    delete: versionDelete,
   },
   hooks: {
     beforeOperation: [guardCourseWrite],

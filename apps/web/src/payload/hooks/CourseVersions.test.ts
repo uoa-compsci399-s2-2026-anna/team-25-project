@@ -622,6 +622,128 @@ describe("prepareVersion publication", () => {
   })
 })
 
+describe("prepareVersion teaching staff", () => {
+  const staff = { id: 7, collection: Slugs.Collections.MEMBERS }
+  const team = [
+    { member: 1, role: "Lecturer" },
+    { member: 7, role: "Tutor" },
+  ]
+  const draftRow = { id: 3, course: 5, _status: "draft", ...period, teachingTeam: team }
+  const publishedRow = { ...draftRow, ...complete, _status: "published", teachingTeam: team }
+
+  it("lets a member of the teaching team save a draft of their offering", async () => {
+    const { req } = request({
+      user: staff,
+      current: draftRow,
+      write: { draft: true, sentMetadataKeys: new Set() },
+    })
+
+    await expect(
+      prepare(req, { name: "Staff edit" }, "update", draftRow as unknown as CourseVersion),
+    ).resolves.toMatchObject({ name: "Staff edit" })
+  })
+
+  it("lets a member of the teaching team publish their offering", async () => {
+    const { req } = request({ user: staff, current: publishedRow, hasPublishedVersion: true })
+
+    const result = await prepare(
+      req,
+      { name: "Corrected by staff" },
+      "update",
+      publishedRow as unknown as CourseVersion,
+    )
+    expect(result.publishedBy).toEqual({ relationTo: Slugs.Collections.MEMBERS, value: 7 })
+  })
+
+  it("refuses a member of the teaching team who changes it", async () => {
+    const { req } = request({ user: staff, current: draftRow })
+
+    await expect(
+      prepare(
+        req,
+        { teachingTeam: [...team, { member: 9, role: "Tutor" }] },
+        "update",
+        draftRow as unknown as CourseVersion,
+      ),
+    ).rejects.toThrow("Only the course's owner or editors can change the teaching team.")
+  })
+
+  it("ignores row IDs and populated members when comparing the team", async () => {
+    const { req } = request({
+      user: staff,
+      current: draftRow,
+      write: { draft: true, sentMetadataKeys: new Set() },
+    })
+
+    await expect(
+      prepare(
+        req,
+        {
+          teachingTeam: team.map((row) => ({ ...row, member: { id: row.member }, id: "x" })),
+        } as unknown as Partial<CourseVersion>,
+        "update",
+        draftRow as unknown as CourseVersion,
+      ),
+    ).resolves.toBeDefined()
+  })
+
+  // liveTeachingTeam drops rows whose member was deleted on every save.
+  it("lets teaching staff save without the rows of deleted members", async () => {
+    const withDeleted = { ...draftRow, teachingTeam: [...team, { member: null, role: "Tutor" }] }
+    const { req } = request({
+      user: staff,
+      current: withDeleted,
+      write: { draft: true, sentMetadataKeys: new Set() },
+    })
+
+    await expect(
+      prepare(req, { teachingTeam: team }, "update", withDeleted as unknown as CourseVersion),
+    ).resolves.toBeDefined()
+  })
+
+  // Access follows the collection-table row, so a pending draft that adds a member
+  // grants nothing until it is published.
+  it("refuses a member that only a pending draft adds to the team", async () => {
+    const pending = { ...publishedRow, _status: "draft", teachingTeam: [...team, { member: 9 }] }
+    const { req } = request({
+      user: { id: 9, collection: Slugs.Collections.MEMBERS },
+      current: publishedRow,
+      write: { draft: true, sentMetadataKeys: new Set() },
+    })
+
+    await expect(
+      prepare(req, { name: "Sneaky" }, "update", pending as unknown as CourseVersion),
+    ).rejects.toThrow("You cannot edit this offering.")
+  })
+
+  it("refuses teaching staff of another offering", async () => {
+    const { req } = request({
+      user: { id: 9, collection: Slugs.Collections.MEMBERS },
+      current: draftRow,
+    })
+
+    await expect(
+      prepare(req, { name: "Not mine" }, "update", draftRow as unknown as CourseVersion),
+    ).rejects.toThrow("You cannot edit this offering.")
+  })
+
+  it("refuses teaching staff who try to create an offering", async () => {
+    const { req } = request({ user: staff })
+
+    await expect(prepare(req, publishable)).rejects.toThrow("You cannot edit this course.")
+  })
+
+  it("refuses teaching staff who try to delete an offering", async () => {
+    const { req } = request({ user: staff, current: draftRow })
+
+    await expect(
+      assertVersionDeletable({ id: 3, req } as unknown as Parameters<
+        typeof assertVersionDeletable
+      >[0]),
+    ).rejects.toThrow("You cannot edit this course.")
+  })
+})
+
 describe("assertVersionDeletable", () => {
   const remove = (req: PayloadRequest) =>
     assertVersionDeletable({ id: 3, req } as unknown as Parameters<

@@ -1,10 +1,11 @@
 import { AsyncLocalStorage } from "node:async_hooks"
-import type { Course } from "@repo/shared/payload-types"
+import type { Course, CourseVersion } from "@repo/shared/payload-types"
 import { APIError, type PayloadRequest } from "payload"
 import { lockDocument } from "@/lib/payload/lock"
 import { Slugs } from "@/lib/payload/slugs"
 import { canEditCourse } from "../access/Courses/Courses"
 import { relationID } from "../access/Courses/helpers"
+import { member } from "../access/helpers"
 
 // This guard is private to the server and to the nested operation's async scope.
 // Concurrent work on the same request cannot inherit permission to change metadata.
@@ -48,4 +49,13 @@ export const lockCourse = (req: PayloadRequest, id: number | undefined) =>
 
 export function requireEditor(req: PayloadRequest, course: Course) {
   if (!canEditCourse(req, course)) fail("You cannot edit this course.", 403)
+}
+
+// `current` must be the collection-table row, so only a published (or never-published)
+// teaching team grants access, never one a pending draft proposes.
+export function requireOfferingEditor(req: PayloadRequest, course: Course, current: CourseVersion) {
+  const staff =
+    member(req) &&
+    (current.teachingTeam ?? []).some((row) => relationID(row.member) === req.user?.id)
+  if (!canEditCourse(req, course) && !staff) fail("You cannot edit this offering.", 403)
 }

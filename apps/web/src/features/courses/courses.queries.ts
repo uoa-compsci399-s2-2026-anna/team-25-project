@@ -232,7 +232,7 @@ export const getPublishedOfferingsCached = async (courseId: number) => {
 
 /**
  * The course's never-published draft offerings, newest first. Payload only lets the
- * course's owner and editors read drafts, so this is per-viewer and uncached.
+ * course's owner, editors and teaching staff read drafts, so this is per-viewer and uncached.
  */
 export const getMyDraftOfferings = async (courseId: number): Promise<CourseVersion[]> => {
   const { collection, user } = await getCurrentUser()

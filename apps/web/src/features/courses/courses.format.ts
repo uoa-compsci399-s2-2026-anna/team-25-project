@@ -15,6 +15,16 @@ export const isCourseEditor = (course: Pick<Course, "owner" | "editors">, member
     (editor) => (typeof editor === "number" ? editor : editor.id) === memberId,
   )
 
+const idOf = (value: number | { id: number } | null | undefined) =>
+  typeof value === "number" ? value : value?.id
+
+/**
+ * Mirrors the offering write access rule for teaching staff. Pass the collection-table
+ * row (the publication, or a never-published draft), which is what grants access.
+ */
+export const isTeachingStaff = (version: Pick<CourseVersion, "teachingTeam">, memberId: number) =>
+  (version.teachingTeam ?? []).some((row) => idOf(row.member) === memberId)
+
 const formatLecturerName = (member: Member) => `${member.firstName.charAt(0)}. ${member.lastName}`
 
 // Picks the coordinator if there is one, otherwise the first teaching-team

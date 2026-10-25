@@ -1,27 +1,36 @@
 import { Badge, Button } from "@repo/ui/components/ui"
 import { EyeOff } from "lucide-react"
-import { periodRange, toOfferingValues } from "../courses.format"
-import { getMyDraftOfferings } from "../courses.queries"
+import { getCurrentUser } from "@/lib/payload/getCurrentUser"
+import { Slugs } from "@/lib/payload/slugs"
+import { isCourseEditor, periodRange, toOfferingValues } from "../courses.format"
+import { getMyDraftOfferings, getPublishedCourseCached } from "../courses.queries"
 import { CourseOfferingSidebarCard } from "./CourseOffering/CourseOfferingPrimitives"
 import { EditDraftOfferingDialog } from "./OfferingDialogs"
 
 /**
- * The course's draft offerings, for its owner and editors - nobody else gets any.
- * Each one reopens in the offering dialog. Per-viewer, so the course page renders
- * this in its own Suspense boundary, apart from the cached published offerings.
+ * The course's draft offerings, for its owner, editors and each draft's teaching
+ * team - nobody else gets any. Each one reopens in the offering dialog. Per-viewer,
+ * so the course page renders this in its own Suspense boundary, apart from the
+ * cached published offerings.
  */
 export async function DraftOfferings({ courseId }: { courseId: number }) {
   const drafts = await getMyDraftOfferings(courseId)
   if (drafts.length === 0) return null
 
+  const { collection, user } = await getCurrentUser()
+  const course = await getPublishedCourseCached(courseId)
+  const editor =
+    collection === Slugs.Collections.MEMBERS && course !== null && isCourseEditor(course, user.id)
+
   return (
     <CourseOfferingSidebarCard title={`Drafts - ${drafts.length}`}>
       <p className="flex items-center gap-1.5 text-muted-foreground text-xs">
         <EyeOff aria-hidden="true" className="size-3.5 shrink-0" />
-        Only the course's owner and editors can see these.
+        Only the course's owner, editors and teaching team can see these.
       </p>
       {drafts.map((draft) => (
         <EditDraftOfferingDialog
+          canDelete={editor}
           courseId={courseId}
           initialValues={toOfferingValues(draft)}
           key={draft.id}

@@ -75,7 +75,7 @@ const kindText = {
   draft: {
     title: "Edit draft offering",
     description:
-      "Only the course's owner and editors can see a draft. Fields marked with an asterisk are required to publish.",
+      "Only the course's owner, editors and teaching team can see a draft. Fields marked with an asterisk are required to publish.",
     submit: "Publish",
     submitting: "Publishing...",
   },
