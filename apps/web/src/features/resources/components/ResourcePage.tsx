@@ -109,11 +109,18 @@ export const ResourcePage = async ({ params }: { params: ResourceRouteParams }) 
           view={<RichTextContent data={resource.description} />}
         />
         <CourseOfferingSection title={`Attachments - ${attachments.length}`}>
-          {attachments.length > 0 ? (
-            <AttachmentList attachments={attachments} />
-          ) : (
-            <p className="text-muted-foreground text-sm">No files have been attached.</p>
-          )}
+          <ResourceEdit.Attachments
+            existing={attachments}
+            label="Attachments"
+            name="attachments"
+            view={
+              attachments.length > 0 ? (
+                <AttachmentList attachments={attachments} />
+              ) : (
+                <p className="text-muted-foreground text-sm">No files have been attached.</p>
+              )
+            }
+          />
         </CourseOfferingSection>
       </div>
 

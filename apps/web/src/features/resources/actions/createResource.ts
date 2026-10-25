@@ -9,6 +9,7 @@ import { fieldErrorsFromIssues, resultFromValidationError } from "@/lib/actions/
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
+import { uploadAttachments } from "./uploadAttachments"
 
 // The rich-text description can't travel as a plain FormData value, so the form sends it as
 // JSON. Anything unreadable becomes undefined and fails the schema as a missing description.
@@ -68,39 +69,16 @@ export const createResource = async (formData: FormData): Promise<ActionResult> 
   const req = transactionID ? { transactionID } : undefined
 
   try {
-    const attachmentIds: number[] = []
-    for (const file of attachments) {
-      try {
-        const attachment = await payload.create({
-          collection: Slugs.Collections.RESOURCE_ATTACHMENTS,
-          data: {},
-          file: {
-            data: Buffer.from(await file.arrayBuffer()),
-            mimetype: file.type,
-            name: file.name,
-            size: file.size,
-          },
-          overrideAccess: false,
-          req,
-          user,
-        })
-        attachmentIds.push(attachment.id)
-      } catch (error) {
-        // Payload checks each file's contents (e.g. a PDF that isn't really one), and its
-        // message names no file, so the field error says which one it was.
-        if (error instanceof ValidationError) {
-          const message = error.data?.errors?.[0]?.message ?? "This file could not be uploaded."
-          if (transactionID) await payload.db.rollbackTransaction(transactionID)
-          return { fieldErrors: { attachments: `${file.name}: ${message}` }, ok: false }
-        }
-        throw error
-      }
+    const uploaded = await uploadAttachments(payload, attachments, { req, user })
+    if ("fieldError" in uploaded) {
+      if (transactionID) await payload.db.rollbackTransaction(transactionID)
+      return { fieldErrors: { attachments: uploaded.fieldError }, ok: false }
     }
 
     await payload.create({
       collection: Slugs.Collections.RESOURCES,
       data: {
-        attachments: attachmentIds,
+        attachments: uploaded.ids,
         course: parsed.data.course,
         description: parsed.data.description,
         // Required by the type; defaultResourceOwner sets it to the signed-in member anyway.
