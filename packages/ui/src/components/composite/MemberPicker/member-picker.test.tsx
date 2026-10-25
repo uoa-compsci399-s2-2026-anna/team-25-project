@@ -78,12 +78,28 @@ describe("MemberPicker", () => {
     expect(screen.queryByRole("option", { name: /Ada Lovelace/ })).not.toBeInTheDocument()
   })
 
-  it("says when the search fails", async () => {
+  it("says why the search could not run", async () => {
     const user = userEvent.setup()
-    renderPicker({ onSearch: vi.fn<MemberSearch>().mockResolvedValue(null) })
+    renderPicker({
+      onSearch: vi
+        .fn<MemberSearch>()
+        .mockResolvedValue({ error: "Sign in again to search members." }),
+    })
+
+    await user.type(input(), "ad")
+    expect(await screen.findByText("Sign in again to search members.")).toBeInTheDocument()
+  })
+
+  it("logs a failed search and says it failed", async () => {
+    const user = userEvent.setup()
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
+    const failure = new Error("network")
+    renderPicker({ onSearch: vi.fn<MemberSearch>().mockRejectedValue(failure) })
 
     await user.type(input(), "ad")
     expect(await screen.findByText("Could not search members. Try again.")).toBeInTheDocument()
+    expect(consoleError).toHaveBeenCalledWith("Could not search members", failure)
+    consoleError.mockRestore()
   })
 
   it("passes on the chosen member and clears the text", async () => {

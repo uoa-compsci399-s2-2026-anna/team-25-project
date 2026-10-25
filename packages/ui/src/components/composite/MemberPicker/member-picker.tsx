@@ -12,7 +12,7 @@ import {
   ComboboxList,
 } from "../../ui/Combobox/combobox"
 
-/** A member as the picker shows them, with details that tell same-name members apart. */
+/** A member as the picker shows them. */
 export type MemberOption = {
   readonly id: number
   readonly firstName: string
@@ -22,11 +22,12 @@ export type MemberOption = {
   readonly avatarUrl?: string
 }
 
-/** Resolves to the members that fit the text, or null when the search failed. */
-export type MemberSearch = (query: string) => Promise<MemberOption[] | null>
+/** Resolves to the members that fit the text, or the reason the search could not run. */
+export type MemberSearch = (query: string) => Promise<MemberOption[] | { error: string }>
 
 const SEARCH_DEBOUNCE_MS = 250
 const MIN_QUERY_LENGTH = 2
+const SEARCH_FAILED = "Could not search members. Try again."
 
 export const memberName = (member: MemberOption) => `${member.firstName} ${member.lastName}`
 
@@ -77,12 +78,13 @@ export function MemberPicker({
   // Each reply keeps its query, so the list never shows members for older text.
   const [found, setFound] = React.useState<{
     query: string
-    members: MemberOption[] | null
+    result: Awaited<ReturnType<MemberSearch>>
   } | null>(null)
   const typed = text.trim()
   const searchable = typed.length >= MIN_QUERY_LENGTH
   const reply = searchable && found?.query === typed ? found : undefined
-  const results = (reply?.members ?? []).filter((member) => !exclude.includes(member.id))
+  const members = Array.isArray(reply?.result) ? reply.result : []
+  const results = members.filter((member) => !exclude.includes(member.id))
 
   React.useEffect(() => {
     if (typed.length < MIN_QUERY_LENGTH) return undefined
@@ -90,11 +92,12 @@ export function MemberPicker({
     let current = true
     const timer = setTimeout(() => {
       onSearch(typed)
-        .then((members) => {
-          if (current) setFound({ query: typed, members })
+        .then((result) => {
+          if (current) setFound({ query: typed, result })
         })
-        .catch(() => {
-          if (current) setFound({ query: typed, members: null })
+        .catch((error: unknown) => {
+          console.error("Could not search members", error)
+          if (current) setFound({ query: typed, result: { error: SEARCH_FAILED } })
         })
     }, SEARCH_DEBOUNCE_MS)
     return () => {
@@ -105,9 +108,9 @@ export function MemberPicker({
 
   const emptyMessage = !reply
     ? "Searching…"
-    : reply.members
+    : Array.isArray(reply.result)
       ? "No members match."
-      : "Could not search members. Try again."
+      : reply.result.error
 
   return (
     <Combobox<MemberOption>

@@ -6,7 +6,13 @@ import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { updateCourseEditors } from "./updateCourseEditors"
 
 const { APIError, ValidationError } = vi.hoisted(() => {
-  class ValidationError extends Error {}
+  class ValidationError extends Error {
+    data: { errors: { message: string; path: string }[] }
+    constructor(errors: { message: string; path: string }[] = []) {
+      super("Validation failed")
+      this.data = { errors }
+    }
+  }
   class APIError extends Error {
     constructor(
       message: string,
@@ -77,13 +83,14 @@ describe("updateCourseEditors", () => {
     expect(payload.update).not.toHaveBeenCalled()
   })
 
-  it("saves the editors as the member, leaving out the owner", async () => {
+  // The course hooks drop the owner and repeated members from the list.
+  it("saves the editors as the member", async () => {
     const payload = mockPayload()
 
-    expect(await updateCourseEditors({ courseId: 4, editorIds: [8, 7, 9] })).toEqual({ ok: true })
+    expect(await updateCourseEditors({ courseId: 4, editorIds: [8, 9] })).toEqual({ ok: true })
     expect(payload.update).toHaveBeenCalledWith({
       collection: "courses",
-      data: { editors: [8, 9] },
+      data: { editors: [8, 9, 7] },
       id: 4,
       overrideAccess: false,
       user: member.user,
@@ -99,9 +106,29 @@ describe("updateCourseEditors", () => {
       ok: true,
     })
     expect(payload.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { editors: [9, 7], owner: 8 } }),
+      expect.objectContaining({ data: { editors: [8, 9, 7], owner: 8 } }),
     )
   })
+
+  // resultFromWriteError is shared with the offering actions, which send the team.
+  it.each(["editors", "teachingTeam.1.member"])(
+    "says when a chosen member at %s no longer exists",
+    async (path) => {
+      mockPayload({
+        update: vi
+          .fn()
+          .mockRejectedValue(
+            new ValidationError([{ message: "This field has an invalid selection", path }]),
+          ),
+      })
+
+      expect(await updateCourseEditors({ courseId: 4, editorIds: [8] })).toEqual({
+        fieldErrors: {},
+        formError: "A chosen member no longer exists. Remove them and try again.",
+        ok: false,
+      })
+    },
+  )
 
   // An editor who is not the owner reaches the action, and the course hooks refuse them.
   it("shows the hooks' refusal as the form error", async () => {

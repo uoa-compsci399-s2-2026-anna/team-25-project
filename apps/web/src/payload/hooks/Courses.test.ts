@@ -246,6 +246,24 @@ describe("prepareCourse updates", () => {
     })
   })
 
+  it("drops the owner and repeated members from the editor list", async () => {
+    vi.mocked(lockDocument).mockResolvedValue(saved())
+    const { req } = request(owner)
+
+    await expect(
+      prepare(req, { editors: [7, 42, 9, 7] }, "update", saved()),
+    ).resolves.toMatchObject({ editors: [7, 9] })
+  })
+
+  it("drops the new owner from the editor list after a transfer", async () => {
+    vi.mocked(lockDocument).mockResolvedValue(saved())
+    const { req } = request(owner)
+
+    await expect(
+      prepare(req, { owner: 7, editors: [7, 42] }, "update", saved()),
+    ).resolves.toMatchObject({ owner: 7, editors: [42] })
+  })
+
   // Populated relationships and IDs describe the same list.
   it("does not read a populated editor list as a change", async () => {
     vi.mocked(lockDocument).mockResolvedValue(saved())

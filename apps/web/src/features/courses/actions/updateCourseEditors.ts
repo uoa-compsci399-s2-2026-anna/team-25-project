@@ -42,10 +42,11 @@ export const updateCourseEditors = async (input: unknown): Promise<ActionResult>
     await payload.update({
       collection: Slugs.Collections.COURSES,
       id: courseId,
-      // The owner is always an editor, so listing them again would only duplicate it.
+      // The current owner stays an editor after a transfer. The course hooks drop the
+      // new owner from the list.
       data: {
         ...(ownerId !== user.id && { owner: ownerId }),
-        editors: [...new Set([...editorIds, user.id])].filter((id) => id !== ownerId),
+        editors: [...editorIds, user.id],
       },
       overrideAccess: false,
       user,
