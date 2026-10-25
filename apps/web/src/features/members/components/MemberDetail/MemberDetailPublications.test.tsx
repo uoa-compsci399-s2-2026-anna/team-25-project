@@ -4,6 +4,11 @@ import { getMemberPublicationsCached } from "../../members.queries"
 import { MemberPublications, MemberPublicationsSkeleton } from "./MemberDetailPublications"
 
 vi.mock("../../members.queries", () => ({ getMemberPublicationsCached: vi.fn() }))
+// Async, and has its own test suite - a plain render can't await a component nested
+// this deep, only the one passed straight to it.
+vi.mock("@/features/publications/components/PublicationCardActionsServer", () => ({
+  PublicationCardActionsServer: () => null,
+}))
 
 const renderPublications = async () =>
   render(await MemberPublications({ params: Promise.resolve({ memberId: "7" }) }))

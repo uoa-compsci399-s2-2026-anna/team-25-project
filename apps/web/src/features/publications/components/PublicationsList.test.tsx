@@ -6,6 +6,9 @@ import { loadPublicationsPage } from "../publications.queries"
 import { PublicationsList, PublicationsListSkeleton } from "./PublicationsList"
 
 vi.mock("../publications.queries", () => ({ loadPublicationsPage: vi.fn() }))
+// Async, and has its own test suite - a plain render can't await a component nested
+// this deep, only the one passed straight to it.
+vi.mock("./PublicationCardActionsServer", () => ({ PublicationCardActionsServer: () => null }))
 
 const publication = (overrides: Partial<Publication> = {}): Publication =>
   ({
