@@ -1,7 +1,6 @@
 import { ProposalStatus, ProposalStatusLabels } from "@repo/shared/enums/proposals"
 import {
   Badge,
-  Button,
   Card,
   CardContent,
   CardHeader,
@@ -19,6 +18,7 @@ import { withEditHash } from "@/components/Editor/editOnLoad"
 import { EmptyState } from "@/components/EmptyState"
 import { withRedirect } from "@/features/auth/redirect"
 import { formatDate } from "@/features/courses/courses.format"
+import { ProposalCardActions } from "@/features/proposals/components/ProposalCardActions"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Routes } from "@/lib/routes"
 import { isOwnProfile } from "../../members.ownership"
@@ -122,24 +122,20 @@ const ProposalList = ({
                   )}
                 </CardHeader>
                 <CardContent
-                  className={cn("font-medium group-hover:underline", canEdit && "pr-20")}
+                  className={cn("font-medium group-hover:underline", canEdit && "pr-10")}
                 >
                   {proposal.title}
                 </CardContent>
               </Card>
             </Link>
             {canEdit && (
-              <Button
-                aria-label={`Edit ${proposal.title}`}
-                borderColor="charcoal"
-                className="absolute right-4 bottom-4"
-                nativeButton={false}
-                render={<Link href={withEditHash(href)} />}
-                size="sm"
-                variant="button-transparent"
-              >
-                Edit
-              </Button>
+              <div className="absolute right-4 bottom-4">
+                <ProposalCardActions
+                  editHref={withEditHash(href)}
+                  proposalId={proposal.id}
+                  title={proposal.title}
+                />
+              </div>
             )}
           </div>
         )

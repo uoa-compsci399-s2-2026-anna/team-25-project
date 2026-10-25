@@ -1,9 +1,7 @@
 import { ProposalTagLabels } from "@repo/shared/enums/proposals"
 import { PaginationNav, ProposalCard, ProposalCardSkeleton } from "@repo/ui/components/composite"
-import { Button } from "@repo/ui/components/ui"
 import { Lightbulb, SearchX } from "lucide-react"
 import type { Route } from "next"
-import Link from "next/link"
 import type { SearchParams } from "nuqs/server"
 import { withEditHash } from "@/components/Editor/editOnLoad"
 import { EmptyState } from "@/components/EmptyState"
@@ -17,6 +15,7 @@ import {
   serializeProposalSearchParams,
   toProposalFilters,
 } from "../proposals.search-params"
+import { ProposalCardActions } from "./ProposalCardActions"
 
 const PAGE_SIZE = 10
 // Stable keys for the placeholder cards, which have no data of their own.
@@ -81,8 +80,9 @@ export const ProposalsList = async ({ searchParams }: { searchParams: Promise<Se
             ]
           })
           const href = Routes.PROPOSALS.PROPOSAL(proposal.id, proposal.proposalSlug)
-          // Same rule as StatusAuthorCardServer: admins, and the proposal's authors.
-          const canEdit =
+          // Same rule as StatusAuthorCardServer, and as Payload's isAdminOrAuthors:
+          // admins, and the proposal's authors - who can edit and delete alike.
+          const canManage =
             collection === Slugs.Collections.ADMIN ||
             (user !== null &&
               proposal.author.some((a) => (typeof a === "number" ? a : a.id) === user.id))
@@ -90,18 +90,12 @@ export const ProposalsList = async ({ searchParams }: { searchParams: Promise<Se
           return (
             <ProposalCard
               action={
-                canEdit && (
-                  <Button
-                    aria-label={`Edit ${proposal.title}`}
-                    borderColor="charcoal"
-                    className="shrink-0"
-                    nativeButton={false}
-                    render={<Link href={withEditHash(href)} />}
-                    size="sm"
-                    variant="button-transparent"
-                  >
-                    Edit
-                  </Button>
+                canManage && (
+                  <ProposalCardActions
+                    editHref={withEditHash(href)}
+                    proposalId={proposal.id}
+                    title={proposal.title}
+                  />
                 )
               }
               authors={authors.length > 0 ? authors : [{ name: "Unknown author" }]}

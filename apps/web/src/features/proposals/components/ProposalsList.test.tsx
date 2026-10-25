@@ -2,14 +2,16 @@ import { ProposalStatus, ProposalTag } from "@repo/shared/enums/proposals"
 import type { Proposal } from "@repo/shared/payload-types"
 import { cleanup, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { loadProposalsPage } from "../proposals.queries"
 import { ProposalsList, ProposalsListSkeleton } from "./ProposalsList"
 
 vi.mock("../proposals.queries", () => ({ loadProposalsPage: vi.fn() }))
-// Signed out, so no Edit links.
+// Signed out by default, so no actions dropdown; individual tests override this.
 vi.mock("@/lib/payload/getCurrentUser", () => ({
   getCurrentUser: vi.fn().mockResolvedValue({ collection: null, user: null }),
 }))
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
 
 const proposal = (overrides: Partial<Proposal> = {}): Proposal =>
   ({
@@ -213,6 +215,59 @@ describe("ProposalsList", () => {
     expect(screen.getByRole("link", { name: "Ben Lee" })).toHaveAttribute("href", "/members/2")
     expect(screen.getByText("University of Auckland, Victoria University")).toBeInTheDocument()
     expect(screen.queryByText("Unknown author")).not.toBeInTheDocument()
+  })
+
+  it("shows the Edit/Delete dropdown to one of the proposal's own authors", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      // biome-ignore lint/suspicious/noExplicitAny: only the fields the component reads
+      user: { id: 2 } as any,
+    })
+    vi.mocked(loadProposalsPage).mockResolvedValue({
+      docs: [proposal({ author: [1, 2] as unknown as Proposal["author"] })],
+      totalDocs: 1,
+      totalPages: 1,
+    } as unknown as ProposalsPage)
+
+    render(await ProposalsList({ searchParams: Promise.resolve({}) }))
+
+    expect(screen.getByRole("button", { name: "Actions for Peer assessment" })).toBeInTheDocument()
+  })
+
+  it("shows the dropdown to an admin regardless of authorship", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "admin",
+      // biome-ignore lint/suspicious/noExplicitAny: only the fields the component reads
+      user: { id: 999 } as any,
+    })
+    vi.mocked(loadProposalsPage).mockResolvedValue({
+      docs: [proposal({ author: [1] as unknown as Proposal["author"] })],
+      totalDocs: 1,
+      totalPages: 1,
+    } as unknown as ProposalsPage)
+
+    render(await ProposalsList({ searchParams: Promise.resolve({}) }))
+
+    expect(screen.getByRole("button", { name: "Actions for Peer assessment" })).toBeInTheDocument()
+  })
+
+  it("hides the dropdown from a signed-in member who isn't an author", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      // biome-ignore lint/suspicious/noExplicitAny: only the fields the component reads
+      user: { id: 3 } as any,
+    })
+    vi.mocked(loadProposalsPage).mockResolvedValue({
+      docs: [proposal({ author: [1, 2] as unknown as Proposal["author"] })],
+      totalDocs: 1,
+      totalPages: 1,
+    } as unknown as ProposalsPage)
+
+    render(await ProposalsList({ searchParams: Promise.resolve({}) }))
+
+    expect(
+      screen.queryByRole("button", { name: "Actions for Peer assessment" }),
+    ).not.toBeInTheDocument()
   })
 })
 

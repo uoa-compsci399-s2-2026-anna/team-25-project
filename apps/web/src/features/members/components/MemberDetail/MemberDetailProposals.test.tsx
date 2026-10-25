@@ -2,6 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
+import { isOwnProfile } from "../../members.ownership"
 import { getMemberProposalsCached } from "../../members.queries"
 import { MemberProposals, MemberProposalsSkeleton } from "./MemberDetailProposals"
 
@@ -12,8 +13,9 @@ type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>
 
 const signedIn = { collection: "members", user: { id: 1 } } as unknown as CurrentUser
 const guest = { collection: null, user: null } as unknown as CurrentUser
-// Someone else's profile, so no Edit links.
-vi.mock("../../members.ownership", () => ({ isOwnProfile: vi.fn().mockResolvedValue(false) }))
+// Someone else's profile by default, so no Edit links - individual tests override this.
+vi.mock("../../members.ownership", () => ({ isOwnProfile: vi.fn() }))
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }))
 
 const renderProposals = async () =>
   render(await MemberProposals({ params: Promise.resolve({ memberId: "7" }) }))
@@ -22,6 +24,7 @@ describe("MemberProposals", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(getCurrentUser).mockResolvedValue(signedIn)
+    vi.mocked(isOwnProfile).mockResolvedValue(false)
   })
 
   afterEach(() => {
@@ -93,6 +96,25 @@ describe("MemberProposals", () => {
     await user.click(screen.getByRole("tab", { name: "Closed - 1" }))
     expect(screen.getByText("Closed")).toBeInTheDocument()
     expect(screen.getByRole("link")).toHaveAttribute("href", "/proposals/3")
+  })
+
+  it("shows the Edit/Delete dropdown on the member's own profile", async () => {
+    vi.mocked(isOwnProfile).mockResolvedValue(true)
+    vi.mocked(getMemberProposalsCached).mockResolvedValue([
+      {
+        id: 3,
+        title: "Peer assessment in capstones",
+        proposalSlug: "peer-assessment-in-capstones",
+        summary: "A study of peer marking.",
+        status: "active",
+        createdAt: "2026-08-05T00:00:00.000Z",
+      },
+    ] as never)
+
+    await renderProposals()
+    expect(
+      screen.getByRole("button", { name: "Actions for Peer assessment in capstones" }),
+    ).toBeInTheDocument()
   })
 
   it("filters proposals by the selected status tab", async () => {

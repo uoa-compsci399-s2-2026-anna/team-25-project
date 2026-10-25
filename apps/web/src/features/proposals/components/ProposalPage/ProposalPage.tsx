@@ -5,6 +5,7 @@ import { AuthorByline } from "@/features/proposals/components/AuthorByline/Autho
 import { ProposalEditProvider } from "@/features/proposals/components/ProposalEditor/ProposalEditProvider"
 import { ProposalMeta } from "@/features/proposals/components/ProposalMeta/ProposalMeta"
 import { ProposalStatusRow } from "@/features/proposals/components/ProposalStatusRow/ProposalStatusRow"
+import { ProposalTitleActionsServer } from "@/features/proposals/components/ProposalTitleActions/ProposalTitleActionsServer"
 import { StatusAuthorCardServer } from "@/features/proposals/components/StatusAuthorCard/StatusAuthorCardServer"
 import { TagsCard } from "@/features/proposals/components/TagsCard/TagsCard"
 import { getProposalByIdCached } from "@/features/proposals/proposals.queries"
@@ -40,12 +41,21 @@ export const ProposalPage = async ({ params }: { params: Promise<{ idSlug: strin
           status={proposal.status}
           updatedAt={proposal.updatedAt}
         />
-        <ProposalEdit.Input
-          label="Title"
-          name="title"
-          value={proposal.title}
-          view={<Heading level="h1">{proposal.title}</Heading>}
-        />
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <ProposalEdit.Input
+              label="Title"
+              name="title"
+              value={proposal.title}
+              view={<Heading level="h1">{proposal.title}</Heading>}
+            />
+          </div>
+          {/* Outside the title's view, not inside it: unlike the view, this stays
+              mounted while editing too, so it can swap to Cancel/Done. */}
+          <AnimatedSuspense fallback={null}>
+            <ProposalTitleActionsServer id={id} />
+          </AnimatedSuspense>
+        </div>
         <AuthorByline authors={authors} />
         <ProposalEdit.Input
           label="Summary"

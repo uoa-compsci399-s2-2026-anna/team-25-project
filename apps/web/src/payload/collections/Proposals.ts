@@ -10,7 +10,7 @@ import {
 import { toSelectOptions } from "@repo/shared/utils/select-options"
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
-import { isAdmin, isSignedIn } from "../access"
+import { isSignedIn } from "../access"
 import { isAdminOrAuthors } from "../access/Proposals"
 import {
   defaultProposalAuthor,
@@ -31,7 +31,7 @@ export const Proposals: CollectionConfig = {
     read: isSignedIn,
     create: isSignedIn,
     update: isAdminOrAuthors,
-    delete: isAdmin,
+    delete: isAdminOrAuthors,
   },
   hooks: {
     afterChange: [revalidateProposals],
