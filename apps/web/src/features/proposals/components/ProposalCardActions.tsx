@@ -32,13 +32,18 @@ export function ProposalCardActions({ proposalId, title, editHref }: ProposalCar
       deleteConfirmMessage="This can't be undone."
       itemLabel={title}
       onDelete={async () => {
-        const result = await deleteProposal(proposalId)
-        if (!result.ok) {
-          toast.add({ description: result.formError ?? DELETE_FAILED, title: "Delete failed" })
-          return
+        try {
+          const result = await deleteProposal(proposalId)
+          if (!result.ok) {
+            toast.add({ description: result.formError ?? DELETE_FAILED, title: "Delete failed" })
+            return
+          }
+          toast.add({ description: `"${title}" was deleted.`, title: "Proposal deleted" })
+          router.refresh()
+        } catch (error) {
+          console.error("deleteProposal failed", error)
+          toast.add({ description: DELETE_FAILED, title: "Delete failed" })
         }
-        toast.add({ description: `"${title}" was deleted.`, title: "Proposal deleted" })
-        router.refresh()
       }}
       onEdit={() => router.push(editHref as Route)}
     />

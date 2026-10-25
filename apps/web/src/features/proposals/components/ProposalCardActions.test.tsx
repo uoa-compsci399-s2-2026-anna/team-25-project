@@ -83,4 +83,29 @@ describe("ProposalCardActions", () => {
     )
     expect(refresh).not.toHaveBeenCalled()
   })
+
+  it("shows the failure message and doesn't refresh when deleteProposal throws", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    vi.mocked(deleteProposal).mockRejectedValue(new Error("network down"))
+    render(
+      <ProposalCardActions
+        editHref="/proposals/1-peer-assessment#edit"
+        proposalId={1}
+        title="Peer assessment"
+      />,
+    )
+    openMenu()
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }))
+    fireEvent.click(await screen.findByRole("button", { name: "Confirm delete" }))
+
+    await waitFor(() =>
+      expect(toast.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          description: "Could not delete this proposal. Try again.",
+          title: "Delete failed",
+        }),
+      ),
+    )
+    expect(refresh).not.toHaveBeenCalled()
+  })
 })
