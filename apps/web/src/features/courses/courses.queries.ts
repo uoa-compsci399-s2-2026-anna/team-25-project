@@ -2,6 +2,7 @@ import { QueryKeys } from "@repo/shared/constants/query-keys"
 import type { Course, CourseVersion } from "@repo/shared/payload-types"
 import { cacheLife, cacheTag } from "next/cache"
 import type { Where } from "payload"
+import { getAuthorCandidates } from "@/features/publications/authorCandidates.queries"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
@@ -251,3 +252,18 @@ export const getMyDraftOfferings = async (courseId: number): Promise<CourseVersi
   })
   return docs.filter((version) => version._status === "draft" && !version.publishedAt)
 }
+
+/**
+ * The members on these offerings' teaching teams, read fresh rather than from the
+ * cached member list: the dialog saves the whole team, so a new member missing from
+ * the cache would be dropped from it.
+ */
+export const getTeamMembers = (versions: Pick<CourseVersion, "teachingTeam">[]) =>
+  getAuthorCandidates(
+    versions.flatMap((version) =>
+      (version.teachingTeam ?? []).flatMap(({ member }) => {
+        const id = typeof member === "number" ? member : member?.id
+        return id ? [id] : []
+      }),
+    ),
+  )

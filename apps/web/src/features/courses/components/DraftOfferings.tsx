@@ -2,8 +2,13 @@ import { Badge, Button } from "@repo/ui/components/ui"
 import { EyeOff } from "lucide-react"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
-import { isCourseEditor, periodRange, toOfferingValues } from "../courses.format"
-import { getMyDraftOfferings, getPublishedCourseCached } from "../courses.queries"
+import {
+  isCourseEditor,
+  periodRange,
+  toOfferingValues,
+  toTeachingTeamRows,
+} from "../courses.format"
+import { getMyDraftOfferings, getPublishedCourseCached, getTeamMembers } from "../courses.queries"
 import { CourseOfferingSidebarCard } from "./CourseOffering/CourseOfferingPrimitives"
 import { EditDraftOfferingDialog } from "./OfferingDialogs"
 
@@ -21,6 +26,7 @@ export async function DraftOfferings({ courseId }: { courseId: number }) {
   const course = await getPublishedCourseCached(courseId)
   const isEditor =
     collection === Slugs.Collections.MEMBERS && course !== null && isCourseEditor(course, user.id)
+  const members = await getTeamMembers(drafts)
 
   return (
     <CourseOfferingSidebarCard title={`Drafts - ${drafts.length}`}>
@@ -35,6 +41,7 @@ export async function DraftOfferings({ courseId }: { courseId: number }) {
           initialValues={toOfferingValues(draft)}
           key={draft.id}
           offeringId={draft.id}
+          team={{ editable: isEditor, rows: toTeachingTeamRows(draft, members) }}
           trigger={
             <Button
               className="-mx-2 h-auto justify-between gap-2 self-stretch rounded-md px-2 py-1 text-left hover:bg-muted"

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { CourseDeliveryFormat } from "../enums/courses"
-import { addCourseFormSchema, createCourseSchema } from "./courses"
+import { addCourseFormSchema, createCourseSchema, teachingTeamInputSchema } from "./courses"
 
 const richText = (text: string) => ({
   root: {
@@ -171,5 +171,34 @@ describe("addCourseFormSchema (publish)", () => {
       startDate: "2026-02-01",
     })
     expect(result.success).toBe(false)
+  })
+})
+
+describe("teachingTeamInputSchema", () => {
+  it("treats a missing team as no change", () => {
+    expect(teachingTeamInputSchema.parse({})).toEqual({})
+  })
+
+  it("trims each role", () => {
+    expect(
+      teachingTeamInputSchema.parse({ teachingTeam: [{ member: 3, role: "  Tutor " }] }),
+    ).toEqual({ teachingTeam: [{ member: 3, role: "Tutor" }] })
+  })
+
+  it("refuses a member listed twice", () => {
+    const result = teachingTeamInputSchema.safeParse({
+      teachingTeam: [
+        { member: 3, role: "Tutor" },
+        { member: 3, role: "Lecturer" },
+      ],
+    })
+    expect(result.success).toBe(false)
+    expect(result.error?.issues[0]?.message).toBe("Each member can be on the teaching team once.")
+  })
+
+  it("refuses a member that is not an ID", () => {
+    expect(
+      teachingTeamInputSchema.safeParse({ teachingTeam: [{ member: "3", role: "Tutor" }] }).success,
+    ).toBe(false)
   })
 })

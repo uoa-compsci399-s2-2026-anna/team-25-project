@@ -1,5 +1,9 @@
 import type { Course, CourseVersion, Member } from "@repo/shared/payload-types"
-import type { AddCapstoneCourseDialogValues } from "@repo/ui/components/composite"
+import type {
+  AddCapstoneCourseDialogValues,
+  MemberOption,
+  TeachingTeamRow,
+} from "@repo/ui/components/composite"
 import type { CourseTableRow } from "./components/CoursesTable"
 
 const asPopulated = <T>(value: number | T | null | undefined): T | undefined =>
@@ -27,6 +31,18 @@ const idOf = (value: number | { id: number } | null | undefined) =>
  */
 export const isTeachingStaff = (version: Pick<CourseVersion, "teachingTeam">, memberId: number) =>
   (version.teachingTeam ?? []).some((row) => idOf(row.member) === memberId)
+
+/** The offering's team as the dialog shows it, leaving out members since deleted. */
+export const toTeachingTeamRows = (
+  version: Pick<CourseVersion, "teachingTeam">,
+  members: readonly MemberOption[],
+): TeachingTeamRow[] => {
+  const byId = new Map(members.map((member) => [member.id, member]))
+  return (version.teachingTeam ?? []).flatMap((row) => {
+    const member = byId.get(idOf(row.member) ?? 0)
+    return member ? [{ member, role: row.role ?? "" }] : []
+  })
+}
 
 const formatLecturerName = (member: Member) => `${member.firstName.charAt(0)}. ${member.lastName}`
 

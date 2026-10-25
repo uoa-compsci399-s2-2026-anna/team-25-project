@@ -307,3 +307,70 @@ describe("AddCapstoneCourseDialog", () => {
     })
   })
 })
+
+describe("AddCapstoneCourseDialog teaching team", () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  const ada = { id: 1, firstName: "Ada", lastName: "Lovelace" }
+  const alan = { id: 2, firstName: "Alan", lastName: "Turing" }
+  const rows = [
+    { member: ada, role: "Lecturer" },
+    { member: alan, role: "Tutor" },
+  ]
+
+  const renderTeam = (teachingTeam: AddCapstoneCourseDialogProps["teachingTeam"]) =>
+    render(
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        kind="correction"
+        onPublish={vi.fn()}
+        onValueChange={vi.fn()}
+        open
+        teachingTeam={teachingTeam}
+        values={emptyValues}
+      />,
+    )
+
+  it("lets a course editor change a role and remove a member", () => {
+    const onChange = vi.fn()
+    renderTeam({ onChange, onSearch: vi.fn(), rows })
+
+    fireEvent.change(screen.getByLabelText("Role of Alan Turing"), {
+      target: { value: "Head tutor" },
+    })
+    expect(onChange).toHaveBeenLastCalledWith([rows[0], { member: alan, role: "Head tutor" }])
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove Ada Lovelace" }))
+    expect(onChange).toHaveBeenLastCalledWith([rows[1]])
+  })
+
+  it("shows the team read-only without onChange", () => {
+    renderTeam({ onSearch: vi.fn(), rows })
+
+    const team = screen.getByRole("list", { name: "Teaching team" })
+    expect(team).toHaveTextContent("Ada Lovelace")
+    expect(team).toHaveTextContent("Tutor")
+    expect(screen.queryByLabelText("Add a teaching team member")).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /^Remove/ })).not.toBeInTheDocument()
+    expect(
+      screen.getByText("Only the course's owner and editors can change the teaching team."),
+    ).toBeInTheDocument()
+  })
+
+  it("is not shown on a new course, which asks for the creator's role instead", () => {
+    render(
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        onPublish={vi.fn()}
+        onValueChange={vi.fn()}
+        open
+        teachingTeam={{ onSearch: vi.fn(), rows }}
+        values={emptyValues}
+      />,
+    )
+
+    expect(screen.queryByRole("list", { name: "Teaching team" })).not.toBeInTheDocument()
+  })
+})

@@ -12,6 +12,8 @@ import { relationID } from "@/payload/access/Courses/helpers"
 import {
   fieldErrorsFromIssues,
   liveTeachingTeam,
+  NO_TEACHING_TEAM_ERROR,
+  parseTeachingTeam,
   requireMember,
   resultFromWriteError,
   toVersionData,
@@ -25,9 +27,8 @@ const offeringIdsSchema = z.object({
 const FALLBACK_ERROR = "Could not save this offering. Try again."
 
 /**
- * Corrects a published offering. The change goes live at once, and the offering
- * keeps its teaching team - the dialog has no member picker, so the team is sent
- * as stored, less any member deleted since.
+ * Corrects a published offering. The change goes live at once. It takes the teaching
+ * team the dialog sends, or else keeps the stored one, less any member deleted since.
  *
  * The write runs as the member, so the course hooks still decide whether they may
  * edit this course, and refuse a correction that changes nothing.
@@ -41,6 +42,9 @@ export const updateOffering = async (input: unknown): Promise<ActionResult> => {
   if (!parsed.success) {
     return { fieldErrors: fieldErrorsFromIssues(parsed.error.issues), ok: false }
   }
+
+  const team = parseTeachingTeam(input)
+  if (team.error) return team.error
 
   const member = await requireMember({
     notMember:
@@ -72,13 +76,8 @@ export const updateOffering = async (input: unknown): Promise<ActionResult> => {
       }
     }
 
-    const teachingTeam = liveTeachingTeam(offering.teachingTeam)
-    if (!teachingTeam.length) {
-      return {
-        formError: "This offering has no teaching team left. Ask an admin to add one.",
-        ok: false,
-      }
-    }
+    const teachingTeam = team.teachingTeam ?? liveTeachingTeam(offering.teachingTeam)
+    if (!teachingTeam.length) return { formError: NO_TEACHING_TEAM_ERROR, ok: false }
 
     await payload.update({
       collection: Slugs.Collections.COURSE_VERSIONS,

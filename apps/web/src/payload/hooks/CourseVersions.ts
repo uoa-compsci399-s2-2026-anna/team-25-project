@@ -63,6 +63,10 @@ const contentKeys = [
 const teamOf = (version: Partial<CourseVersion> | undefined) =>
   version?.teachingTeam?.map((row) => ({ member: relationID(row.member), role: row.role?.trim() }))
 
+// Rows whose member was deleted grant nothing, and the offering actions drop them.
+const liveTeam = (version?: Partial<CourseVersion>) =>
+  (teamOf(version) ?? []).filter((row) => row.member)
+
 function content(version: Partial<CourseVersion>) {
   return contentKeys.map((key) => {
     if (key === "teachingTeam") return teamOf(version)
@@ -285,9 +289,6 @@ export const prepareVersion: CollectionBeforeValidateHook<CourseVersion> = async
   const next = mergeWithSaved(latest, data)
 
   // The teaching team decides who else may edit, so only the course's editors set it.
-  // Rows whose member was deleted grant nothing, and the offering actions drop them.
-  const liveTeam = (version?: Partial<CourseVersion>) =>
-    (teamOf(version) ?? []).filter((row) => row.member)
   if (!canEditCourse(req, course) && !isDeepStrictEqual(liveTeam(next), liveTeam(latest)))
     fail("Only the course's owner or editors can change the teaching team.", 403)
   const teamMembers = liveTeam(next).map((row) => row.member)
@@ -302,6 +303,26 @@ export const prepareVersion: CollectionBeforeValidateHook<CourseVersion> = async
   else for (const key of versionMetadataKeys) delete data[key]
 
   return data
+}
+
+// A draft save writes only to the versions table, so for an offering that was never
+// published, the collection row would keep the team it was created with. That row is
+// what grants teaching staff access, so it takes the newest draft's team as well.
+export const syncUnpublishedTeam: CollectionAfterChangeHook<CourseVersion> = async ({
+  doc,
+  operation,
+  req,
+}) => {
+  if (operation !== "update" || isPublished(doc)) return doc
+  const row = await readVersion(req, doc.id)
+  if (isPublished(row) || isDeepStrictEqual(liveTeam(doc), liveTeam(row))) return doc
+  await req.payload.db.updateOne({
+    collection: Slugs.Collections.COURSE_VERSIONS,
+    id: doc.id,
+    data: { teachingTeam: liveTeam(doc) },
+    req,
+  })
+  return doc
 }
 
 const revalidateVersionCourse = (doc: CourseVersion, req: PayloadRequest) => {

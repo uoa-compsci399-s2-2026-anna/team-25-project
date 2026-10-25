@@ -14,6 +14,7 @@ import {
   prepareVersion,
   revalidateCourseVersions,
   revalidateDeletedCourseVersion,
+  syncUnpublishedTeam,
 } from "../hooks/CourseVersions"
 
 /**
@@ -42,7 +43,7 @@ export const CourseVersions: CollectionConfig = {
     beforeOperation: [guardCourseWrite],
     beforeValidate: [prepareVersion],
     beforeDelete: [assertVersionDeletable],
-    afterChange: [revalidateCourseVersions],
+    afterChange: [syncUnpublishedTeam, revalidateCourseVersions],
     afterDelete: [revalidateDeletedCourseVersion],
   },
   fields: [

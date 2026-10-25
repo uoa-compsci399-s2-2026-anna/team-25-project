@@ -137,3 +137,19 @@ export const correctOfferingFormSchema = z
   .object(publishOfferingFields)
   .omit({ role: true })
   .refine(datesInOrder, datesInOrderError)
+
+/**
+ * The teaching team the offering dialog sends. Only the course's owner and editors
+ * see the team controls; a dialog without them sends no team, and the offering keeps
+ * the one it has. The hooks still check publication rules and who may change it.
+ */
+export const teachingTeamInputSchema = z.object({
+  teachingTeam: z
+    .array(z.object({ member: z.number().int().positive(), role: z.string().trim().max(200) }))
+    .max(50)
+    .refine(
+      (rows) => new Set(rows.map((row) => row.member)).size === rows.length,
+      "Each member can be on the teaching team once.",
+    )
+    .optional(),
+})

@@ -1,5 +1,5 @@
 import type { CourseVersion, Member } from "@repo/shared/payload-types"
-import type { AddCourseFormInput } from "@repo/shared/schemas/courses"
+import { type AddCourseFormInput, teachingTeamInputSchema } from "@repo/shared/schemas/courses"
 import { richTextHasText } from "@repo/shared/schemas/shared"
 import { APIError, ValidationError } from "payload"
 import type { ActionResult } from "@/features/auth/actions/types"
@@ -134,3 +134,16 @@ export const liveTeachingTeam = (rows: CourseVersion["teachingTeam"]) =>
     const memberId = relationID(member)
     return memberId ? [{ member: memberId, role }] : []
   })
+
+/**
+ * The teaching team the dialog sent, or undefined when it sent none - teaching staff
+ * who are not course editors get no team controls, so the offering keeps its own.
+ */
+export const parseTeachingTeam = (input: unknown) => {
+  const parsed = teachingTeamInputSchema.safeParse(input)
+  if (parsed.success) return { teachingTeam: parsed.data.teachingTeam }
+  const formError = parsed.error.issues[0]?.message ?? "Check the teaching team and try again."
+  return { error: { formError, ok: false } satisfies ActionResult }
+}
+
+export const NO_TEACHING_TEAM_ERROR = "Add at least one teaching team member to publish."

@@ -28,9 +28,10 @@ export const courseWriteAccess =
   ({ req }) =>
     admin(req) || (member(req) ? editableWhere(req, prefix) : false)
 
-// Teaching staff edit only the offerings that list them. The list is read from the
-// collection table, which holds the publication (or a never-published draft), so a
-// pending draft cannot grant access, and removing a member from the published team
+// Teaching staff reach only the offerings that list them. The list is read from the
+// collection table, which holds the publication, or for a never-published offering
+// the newest draft's team (see syncUnpublishedTeam). So a pending draft over a
+// publication cannot grant access, and removing a member from the published team
 // withdraws it from every revision at once.
 export async function staffOfferingIDs(req: PayloadRequest): Promise<number[]> {
   if (!member(req)) return []
