@@ -1,7 +1,6 @@
 import { ProposalStatusLabels } from "@repo/shared/enums/proposals"
 import { toSelectOptions } from "@repo/shared/utils/select-options"
 import { Card } from "@repo/ui/components/ui"
-import { EditButton } from "@/components/Editor/EditButton"
 import { EditSwitch } from "@/components/Editor/EditField"
 import { StartEditingOnLoad } from "@/components/Editor/StartEditingOnLoad"
 import { ProposalEdit } from "../ProposalEditor/proposalEditFields"
@@ -38,13 +37,8 @@ export const StatusAuthorCard = ({
         </p>
       </EditSwitch>
 
-      <EditButton
-        borderColor="charcoal"
-        className="max-w-none items-stretch"
-        label="Edit proposal"
-        variant="button-transparent"
-      />
-      {/* This card only renders for people who can edit, so #edit does nothing for anyone else. */}
+      {/* Editing itself is started from the title's dropdown, not this card -
+          #edit still opens it, since this card only renders for people who can edit. */}
       <StartEditingOnLoad />
 
       <span className="text-center text-muted-foreground text-xs">
