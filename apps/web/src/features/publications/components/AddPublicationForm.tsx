@@ -606,6 +606,7 @@ export const AddPublicationForm = (props: AddPublicationFormProps) => {
                                                 <div className="min-w-0 flex-1">
                                                   <AuthorPicker
                                                     id={field.name}
+                                                    includeSelf={mode === "edit"}
                                                     invalid={invalid}
                                                     label={`Author ${position} name`}
                                                     onBlur={field.handleBlur}

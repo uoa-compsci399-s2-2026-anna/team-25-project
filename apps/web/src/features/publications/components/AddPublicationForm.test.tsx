@@ -1,3 +1,4 @@
+import { PublicationType } from "@repo/shared/enums/publications"
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -428,6 +429,48 @@ describe("AddPublicationForm", () => {
   })
 
   describe("linking members", () => {
+    // Edit has no "self" row, so its search must be able to find the signed-in member.
+    it.each([
+      ["leaves the signed-in member out when adding", false],
+      ["includes the signed-in member when editing", true],
+    ] as const)("%s", async (_, editing) => {
+      const user = userEvent.setup()
+      if (editing) {
+        render(
+          <AddPublicationForm
+            initialValues={{
+              abstract: "",
+              authors: [{ id: "a1", kind: "external", name: "Cara Ngata" }],
+              citationKey: "",
+              doi: "10.1145/3313831.3376518",
+              issue: "",
+              month: "",
+              pages: "",
+              publisher: "",
+              tags: "",
+              title: "Teamwork in capstones",
+              type: PublicationType.ARTICLE,
+              url: "",
+              venue: "",
+              volume: "",
+              year: 2025,
+            }}
+            mode="edit"
+            onSave={vi.fn()}
+          />,
+        )
+      } else {
+        renderForm()
+        await openManualEntry(user)
+      }
+      await user.click(screen.getByRole("button", { name: "+ Add author" }))
+      await user.type(screen.getByLabelText("Author 2 name"), "Ben")
+
+      await waitFor(() =>
+        expect(searchAuthorCandidates).toHaveBeenCalledWith("Ben", { includeSelf: editing }),
+      )
+    })
+
     it("links a co-author chosen from the member search", async () => {
       vi.mocked(createPublication).mockResolvedValue({ ok: true })
       vi.mocked(searchAuthorCandidates).mockResolvedValue(found(benLee))
