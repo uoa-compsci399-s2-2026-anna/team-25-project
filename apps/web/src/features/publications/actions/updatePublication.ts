@@ -39,20 +39,21 @@ const resultFromValidationError = (
 
 const UPDATE_FAILED = "Could not save this publication. Try again."
 
-// Trim each optional field and store a blank one as unset, not "". The
-// collection's blankToNull hooks also guard the unique fields.
-const blankToUndefined = (value: string) => {
+// null, not undefined: Payload skips an undefined field on update, so a field
+// cleared in the form would otherwise keep its old value.
+const blankToNull = (value: string) => {
   const trimmed = value.trim()
-  return trimmed ? trimmed : undefined
+  return trimmed ? trimmed : null
 }
 
-const parseTags = (tags: string) => {
-  const parsed = tags
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter(Boolean)
-  return parsed.length > 0 ? [...new Set(parsed)] : undefined
-}
+const parseTags = (tags: string) => [
+  ...new Set(
+    tags
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter(Boolean),
+  ),
+]
 
 /**
  * Saves an edit to an existing publication. The id comes from the browser, so it
@@ -85,24 +86,24 @@ export const updatePublication = async (id: number, input: unknown): Promise<Act
       collection: Slugs.Collections.PUBLICATIONS,
       id,
       data: {
-        abstract: blankToUndefined(optional.abstract),
+        abstract: blankToNull(optional.abstract),
         authors: authors.map((author) =>
           author.kind === "member"
             ? { member: author.memberId, name: author.name }
             : { name: author.name },
         ),
-        citationKey: blankToUndefined(optional.citationKey),
-        doi: blankToUndefined(optional.doi),
-        issue: blankToUndefined(optional.issue),
-        month: month ? Number(month) : undefined,
-        pages: blankToUndefined(optional.pages),
-        publisher: blankToUndefined(optional.publisher),
+        citationKey: blankToNull(optional.citationKey),
+        doi: blankToNull(optional.doi),
+        issue: blankToNull(optional.issue),
+        month: month ? Number(month) : null,
+        pages: blankToNull(optional.pages),
+        publisher: blankToNull(optional.publisher),
         tags: parseTags(tags),
         title,
         type,
-        url: blankToUndefined(optional.url),
-        venue: blankToUndefined(optional.venue),
-        volume: blankToUndefined(optional.volume),
+        url: blankToNull(optional.url),
+        venue: blankToNull(optional.venue),
+        volume: blankToNull(optional.volume),
         year,
       },
       overrideAccess: false,

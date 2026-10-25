@@ -127,7 +127,7 @@ describe("updatePublication", () => {
     )
   })
 
-  it("sends linked and external authors, and drops blank fields", async () => {
+  it("sends linked and external authors, and clears blank fields with null", async () => {
     const payload = mockPayload()
 
     expect(await updatePublication(3, input)).toEqual({ ok: true })
@@ -135,16 +135,35 @@ describe("updatePublication", () => {
       collection: "publications",
       id: 3,
       data: {
+        abstract: null,
         authors: [{ member: 7, name: "Anna Smith" }, { name: "Ben Lee" }],
+        citationKey: null,
+        doi: "10.1145/3313831.3376518",
+        issue: null,
+        month: null,
+        pages: null,
+        publisher: null,
+        tags: [],
         title: "Teamwork in capstone courses",
         type: "article",
-        doi: "10.1145/3313831.3376518",
+        url: null,
+        venue: null,
+        volume: null,
         year: 2025,
       },
       overrideAccess: false,
       user: member.user,
     })
     expect(updateTag).toHaveBeenCalledWith(QueryKeys.PUBLICATIONS.ROOT)
+  })
+
+  // Payload skips an undefined field on update, so undefined would leave the old value in place.
+  it("sends null, not undefined, for a field the editor emptied", async () => {
+    const payload = mockPayload()
+
+    await updatePublication(3, { ...input, venue: "   ", url: "https://example.com/paper" })
+
+    expect(payload.update.mock.calls[0]?.[0].data).toMatchObject({ tags: [], venue: null })
   })
 
   it("converts month and splits tags", async () => {
