@@ -6,7 +6,7 @@ import { FooterLinkList } from "./FooterLinkList"
 const groups = {
   Explore: [siteLinks.home, siteLinks.members, siteLinks.courses, siteLinks.proposals],
   Community: [siteLinks.publications, siteLinks.resources],
-  Contact: [siteLinks.privacy],
+  Contact: [siteLinks.privacy, siteLinks.guidelines],
 }
 
 export const Footer = () => {

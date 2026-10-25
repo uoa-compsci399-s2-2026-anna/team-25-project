@@ -66,9 +66,10 @@ const draftOfferingFields = {
 /**
  * Publish: mirrors `validatePublication` in the CourseVersions collection
  * hooks, which requires every one of these plus a teaching team with at
- * least one member and role. This dialog has no member picker, so it
- * publishes with the signed-in creator as the sole teaching-team member -
- * `role` is that member's role in the offering.
+ * least one member and role. The dialog has no member picker, so a new course
+ * publishes with the signed-in creator as the sole teaching-team member, and
+ * `role` is their role in it. A new offering keeps the team it was copied from
+ * instead, so the offering schemas drop `role`.
  */
 const publishOfferingFields = {
   // Optional even to publish - not every offering has more to say.
@@ -85,6 +86,21 @@ const publishOfferingFields = {
   startDate: z.string().min(1, "Start date is required").pipe(offeringDate),
 }
 
+const datesInOrder = (value: { startDate?: string; endDate?: string }) => {
+  const start = Date.parse(value.startDate ?? "")
+  const end = Date.parse(value.endDate ?? "")
+  // Only a question once both dates are real. NaN compares false against
+  // everything, so without this an unparseable date was reported as being
+  // out of order rather than unparseable.
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return true
+  return start <= end
+}
+
+const datesInOrderError = {
+  error: "The end date cannot precede the start date.",
+  path: ["endDate"],
+}
+
 export const addCourseFormSchema = z
   .discriminatedUnion("intent", [
     z.object({
@@ -98,20 +114,26 @@ export const addCourseFormSchema = z
       ...publishOfferingFields,
     }),
   ])
-  .refine(
-    (value) => {
-      const start = Date.parse(value.startDate ?? "")
-      const end = Date.parse(value.endDate ?? "")
-      // Only a question once both dates are real. NaN compares false against
-      // everything, so without this an unparseable date was reported as being
-      // out of order rather than unparseable.
-      if (!Number.isFinite(start) || !Number.isFinite(end)) return true
-      return start <= end
-    },
-    {
-      error: "The end date cannot precede the start date.",
-      path: ["endDate"],
-    },
-  )
+  .refine(datesInOrder, datesInOrderError)
 
 export type AddCourseFormInput = z.infer<typeof addCourseFormSchema>
+
+/**
+ * A new offering of an existing course, saved as a draft or published. The course
+ * already has its code, and the offering keeps the teaching team it was copied
+ * from, so neither the code nor "Your role" is asked for.
+ */
+export const addOfferingFormSchema = z
+  .discriminatedUnion("intent", [
+    z.object({ intent: z.literal("draft"), ...draftOfferingFields }).omit({ role: true }),
+    z.object({ intent: z.literal("publish"), ...publishOfferingFields }).omit({ role: true }),
+  ])
+  .refine(datesInOrder, datesInOrderError)
+
+export type AddOfferingFormInput = z.infer<typeof addOfferingFormSchema>
+
+/** Correcting a published offering, which is held to the same rules as publishing one. */
+export const correctOfferingFormSchema = z
+  .object(publishOfferingFields)
+  .omit({ role: true })
+  .refine(datesInOrder, datesInOrderError)

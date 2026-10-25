@@ -1,0 +1,173 @@
+// Payload's styles sit in @layer payload-default, so these unlayered rules win.
+// Brand colours come from @repo/ui/brand.css, imported in layout.tsx.
+// Sizes are in px: Payload sets the root font size to 13px, so rem values come out small.
+
+// Payload's neutral ramp: 0 is the page, 50-100 subtle surfaces, 150 borders,
+// 400-500 muted text, 800 body text. Steps between border and text mix the two.
+$elevation-mix: (
+  200: 8%,
+  250: 15%,
+  300: 23%,
+  350: 31%,
+  400: 38%,
+  450: 46%,
+  500: 54%,
+  550: 62%,
+  600: 69%,
+  650: 77%,
+  700: 85%,
+  750: 92%,
+);
+
+// Success states use the teal ring colour: lighter steps mix toward white, darker toward black.
+$success-mix: (
+  50: 8%,
+  100: 15%,
+  150: 25%,
+  200: 35%,
+  250: 45%,
+  300: 55%,
+  350: 70%,
+  400: 85%,
+  450: 92%,
+);
+$success-shade: (
+  550: 90%,
+  600: 80%,
+  650: 72%,
+  700: 64%,
+  750: 56%,
+  800: 48%,
+  850: 40%,
+  900: 32%,
+  950: 24%,
+);
+
+:root {
+  --theme-elevation-0: white;
+  --theme-elevation-50: var(--brand-cream);
+  --theme-elevation-100: var(--brand-blush);
+  --theme-elevation-150: var(--brand-border);
+  @each $step, $amount in $elevation-mix {
+    --theme-elevation-#{$step}: color-mix(in oklab, var(--brand-charcoal) #{$amount}, var(--brand-border));
+  }
+  --theme-elevation-800: var(--brand-charcoal);
+  --theme-elevation-850: color-mix(in oklab, var(--brand-charcoal) 80%, black);
+  --theme-elevation-900: color-mix(in oklab, var(--brand-charcoal) 60%, black);
+  --theme-elevation-950: color-mix(in oklab, var(--brand-charcoal) 40%, black);
+  --theme-elevation-1000: color-mix(in oklab, var(--brand-charcoal) 20%, black);
+
+  @each $step, $amount in $success-mix {
+    --theme-success-#{$step}: color-mix(in oklab, var(--brand-teal) #{$amount}, white);
+  }
+  --theme-success-500: var(--brand-teal);
+  @each $step, $amount in $success-shade {
+    --theme-success-#{$step}: color-mix(in oklab, var(--brand-teal) #{$amount}, black);
+  }
+
+  --style-radius-s: 6px;
+  --style-radius-m: 8px;
+  --style-radius-l: 10px;
+
+  --accessibility-outline: 2px solid var(--brand-teal);
+}
+
+// UI elements below mirror @repo/ui components. Unlayered rules beat every Payload rule
+// regardless of specificity, so split buttons need their joined corners restored by hand.
+
+// Button: pill shape, charcoal primary
+.btn {
+  border-radius: 9999px;
+
+  &--style-primary {
+    --hover-bg: color-mix(in oklab, var(--brand-charcoal) 80%, transparent);
+
+    &.btn--disabled {
+      --hover-bg: var(--bg-color);
+    }
+  }
+}
+
+.btn--withPopup {
+  .btn {
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  .popup-button {
+    border-radius: 9999px;
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+  }
+}
+
+// Heading
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+
+// Card
+.card {
+  border-color: color-mix(in oklab, var(--brand-charcoal) 10%, transparent);
+  border-radius: var(--style-radius-l);
+
+  &--has-onclick:hover {
+    border-color: color-mix(in oklab, var(--brand-charcoal) 25%, transparent);
+  }
+}
+
+// Navbar: blush background, kept opaque because the nav overlays content on mobile
+.nav {
+  background: color-mix(in oklab, var(--brand-blush) 60%, white);
+  border-color: var(--brand-border);
+}
+
+// Eyebrow
+.nav-group__label {
+  color: var(--brand-rose);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.nav__link-indicator {
+  background: var(--brand-rose);
+}
+
+// Branding (AdminLogo, AdminIcon). Tailwind is not loaded here, so size the SVGs directly.
+.admin-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  &__cap {
+    width: 64px;
+    height: auto;
+  }
+
+  &__wordmark {
+    color: black;
+    font-size: 36px;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+  }
+}
+
+// The breadcrumb's home link is an 18px box, too small for the cap's detail
+.step-nav__home {
+  width: 24px;
+  height: 24px;
+}
+
+.admin-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

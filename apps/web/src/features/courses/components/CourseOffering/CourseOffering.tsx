@@ -2,13 +2,20 @@ import { CourseDeliveryFormatLabels } from "@repo/shared/enums/courses"
 import type { CourseVersion } from "@repo/shared/payload-types"
 import { richTextHasText } from "@repo/shared/schemas/shared"
 import { initialsFromName } from "@repo/shared/utils/initials"
-import { Avatar, AvatarFallback, Heading, Separator, Skeleton } from "@repo/ui/components/ui"
+import { Avatar, AvatarFallback, Badge, Heading, Separator, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
+import { Suspense } from "react"
 import { RichTextContent } from "@/components/RichTextContent"
 import { Routes } from "@/lib/routes"
-import { periodRange } from "../../courses.format"
-import { type CourseRouteParams, parseCourseId } from "../../courses.params"
+import { getToday, periodRange, selectOffering } from "../../courses.format"
+import {
+  type CourseRouteParams,
+  type CourseRouteSearchParams,
+  parseCourseId,
+  parseOfferingId,
+} from "../../courses.params"
 import { getPublishedOfferingsCached } from "../../courses.queries"
+import { DraftOfferings } from "../DraftOfferings"
 import {
   CourseOfferingDetail,
   CourseOfferingSection,
@@ -52,10 +59,18 @@ const TeamMember = ({ member }: { member: SnapshotMember }) => {
   )
 }
 
-export const CourseOffering = async ({ params }: { params: CourseRouteParams }) => {
+export const CourseOffering = async ({
+  params,
+  searchParams,
+}: {
+  params: CourseRouteParams
+  searchParams: CourseRouteSearchParams
+}) => {
   const courseId = await parseCourseId(params)
-
-  const [offering, ...earlier] = await getPublishedOfferingsCached(courseId)
+  const offeringId = await parseOfferingId(searchParams)
+  const offerings = await getPublishedOfferingsCached(courseId)
+  // Read after the search params, so the date is the request's and not frozen into a prerender.
+  const { current, next, offering, primary } = selectOffering(offerings, offeringId, getToday())
 
   // The header 404s a course with nothing published, so this is only reachable
   // mid-publication. Render nothing rather than taking down the header beside it.
@@ -111,6 +126,14 @@ export const CourseOffering = async ({ params }: { params: CourseRouteParams }) 
       </div>
 
       <aside className="mt-2 flex flex-col gap-4 lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:mt-0">
+        {teachingTeam.length > 0 && (
+          <CourseOfferingSidebarCard title={`Teaching team - ${teachingTeam.length}`}>
+            {teachingTeam.map((member) => (
+              <TeamMember key={member.id ?? member.name} member={member} />
+            ))}
+          </CourseOfferingSidebarCard>
+        )}
+
         <CourseOfferingSidebarCard title="Offering">
           <CourseOfferingDetail label="Period" value={offering.period} />
           {offering.programme && (
@@ -128,27 +151,32 @@ export const CourseOffering = async ({ params }: { params: CourseRouteParams }) 
           )}
         </CourseOfferingSidebarCard>
 
-        {teachingTeam.length > 0 && (
-          <CourseOfferingSidebarCard title={`Teaching team - ${teachingTeam.length}`}>
-            {teachingTeam.map((member) => (
-              <TeamMember key={member.id ?? member.name} member={member} />
+        {offerings.length > 1 && (
+          <CourseOfferingSidebarCard title={`Offerings - ${offerings.length}`}>
+            {offerings.map((item) => (
+              <Link
+                aria-current={item.id === offering.id ? "page" : undefined}
+                className="-mx-2 flex items-center justify-between gap-2 self-stretch rounded-md px-2 py-1 hover:bg-muted aria-[current=page]:bg-muted"
+                href={Routes.COURSES.COURSE(
+                  courseId,
+                  item.id === primary?.id ? undefined : item.id,
+                )}
+                key={item.id}
+              >
+                <div className="flex flex-col">
+                  <p className="font-medium text-sm">{item.period}</p>
+                  <p className="text-muted-foreground text-xs">{periodRange(item)}</p>
+                </div>
+                {item.id === current?.id && <Badge variant="active">Current</Badge>}
+                {item.id === next?.id && <Badge variant="blue">Next</Badge>}
+              </Link>
             ))}
           </CourseOfferingSidebarCard>
         )}
 
-        {earlier.length > 0 && (
-          <CourseOfferingSidebarCard title="Earlier offerings">
-            {earlier.map((past) => (
-              <div className="flex flex-col" key={past.id}>
-                <p className="font-medium text-sm">{past.name ?? past.period}</p>
-                <p className="text-muted-foreground text-xs">
-                  {past.name ? `${past.period} - ` : ""}
-                  {periodRange(past)}
-                </p>
-              </div>
-            ))}
-          </CourseOfferingSidebarCard>
-        )}
+        <Suspense fallback={null}>
+          <DraftOfferings courseId={courseId} />
+        </Suspense>
       </aside>
     </>
   )

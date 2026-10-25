@@ -48,7 +48,7 @@ describe("Footer", () => {
   it.each([
     ["Explore", ["Home", "Members", "Courses", "Proposals"]],
     ["Community", ["Publications", "Resources"]],
-    ["Contact", ["Privacy"]],
+    ["Contact", ["Privacy", "Guidelines"]],
   ])("passes the %s links to FooterLinkList under their heading", (category, names) => {
     render(<Footer />)
     const group = screen.getByRole("heading", { level: 6, name: category })

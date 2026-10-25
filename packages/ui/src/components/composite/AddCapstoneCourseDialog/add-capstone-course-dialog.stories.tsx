@@ -100,6 +100,89 @@ export const EditingDraft: Story = {
   },
 }
 
+// Adding an offering to an existing course, pre-filled from its current one.
+export const AddingOffering: Story = {
+  render: () => {
+    const [values, setValues] = React.useState({
+      ...emptyValues,
+      name: "Capstone Project",
+      programme: "Bachelor of Science",
+    })
+
+    return (
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        kind="offering"
+        onPublish={() => undefined}
+        onSaveDraft={() => undefined}
+        onValueChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
+        trigger={
+          <Button size="sm" type="button" variant="button-mauve">
+            + Add offering
+          </Button>
+        }
+        values={values}
+      />
+    )
+  },
+}
+
+// Reopening a draft offering from the course page's sidebar.
+export const EditingDraftOffering: Story = {
+  render: () => {
+    const [values, setValues] = React.useState({
+      ...emptyValues,
+      name: "Capstone Project",
+      programme: "Bachelor of Science",
+    })
+
+    return (
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        kind="draft"
+        onDelete={() => undefined}
+        onPublish={() => undefined}
+        onSaveDraft={() => undefined}
+        onValueChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
+        trigger={
+          <Button size="sm" type="button" variant="button-transparent">
+            Open draft offering
+          </Button>
+        }
+        values={values}
+      />
+    )
+  },
+}
+
+// Correcting a published offering, which goes live on save.
+export const EditingOffering: Story = {
+  render: () => {
+    const [values, setValues] = React.useState({
+      ...emptyValues,
+      endDate: "2026-11-06",
+      name: "Capstone Project",
+      period: "Semester 2 2026",
+      startDate: "2026-07-20",
+    })
+
+    return (
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        kind="correction"
+        onPublish={() => undefined}
+        onValueChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
+        trigger={
+          <Button size="sm" type="button" variant="button-transparent">
+            Edit offering
+          </Button>
+        }
+        values={values}
+      />
+    )
+  },
+}
+
 export const WithErrors: Story = {
   render: () => {
     const [values, setValues] = React.useState(emptyValues)

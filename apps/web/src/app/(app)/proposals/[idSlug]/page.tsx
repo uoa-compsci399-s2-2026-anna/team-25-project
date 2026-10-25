@@ -1,8 +1,23 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
+import type { Metadata } from "next"
 import { BackLink, PageContainer } from "@/features/layout/components"
 import { ProposalDetailSkeleton } from "@/features/proposals/components/ProposalDetailSkeleton/ProposalDetailSkeleton"
-import { ProposalPage } from "@/features/proposals/components/ProposalPage/ProposalPage"
+import {
+  ProposalPage,
+  parseProposalId,
+} from "@/features/proposals/components/ProposalPage/ProposalPage"
+import { getProposalByIdCached } from "@/features/proposals/proposals.queries"
 import { Routes } from "@/lib/routes"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ idSlug: string }>
+}): Promise<Metadata> {
+  const id = parseProposalId((await params).idSlug)
+  const proposal = id === null ? null : await getProposalByIdCached(id)
+  return proposal ? { title: proposal.title } : {}
+}
 
 export default function Page({ params }: { params: Promise<{ idSlug: string }> }) {
   return (

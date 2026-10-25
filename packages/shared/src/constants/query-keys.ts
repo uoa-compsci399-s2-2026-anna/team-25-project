@@ -21,4 +21,5 @@ export const QueryKeys = {
     ID: (id: number) => `resources:${id}`,
   } as const,
   PRIVACY_POLICY: "privacy-policy",
+  COMMUNITY_GUIDELINES: "community-guidelines",
 } as const

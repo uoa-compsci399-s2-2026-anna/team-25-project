@@ -11,8 +11,9 @@ const courses: Array<CourseTableRow> = [
     title: "Capstone Project",
     lecturer: "A. Tui",
     university: "University of Auckland",
-    semester: "Semester 2",
-    year: 2026,
+    currentOffering: "Semester 2 2026",
+    currentStartDate: "2026-07-20",
+    offerings: 1,
     status: "published",
   },
   {
@@ -21,8 +22,9 @@ const courses: Array<CourseTableRow> = [
     title: "Research Project",
     lecturer: "M. Rahman",
     university: "University of Auckland",
-    semester: "Semester 1",
-    year: 2027,
+    currentOffering: "Semester 1 2027",
+    currentStartDate: "2027-03-02",
+    offerings: 1,
     status: "draft",
   },
 ]
@@ -65,9 +67,9 @@ describe("CoursesExportButton", () => {
     })
     const [[csv]] = blobSpy.mock.calls[0]
     expect(csv.split("\r\n")).toEqual([
-      "Code,Title,Lecturer,University,Semester,Year,Status",
-      "COMP 693,Capstone Project,A. Tui,University of Auckland,Semester 2,2026,published",
-      "SOFTENG 700,Research Project,M. Rahman,University of Auckland,Semester 1,2027,draft",
+      "Code,Title,Lecturer,University,Current offering,Offerings,Status",
+      "COMP 693,Capstone Project,A. Tui,University of Auckland,Semester 2 2026,1,published",
+      "SOFTENG 700,Research Project,M. Rahman,University of Auckland,Semester 1 2027,1,draft",
     ])
 
     expect(createObjectURL).toHaveBeenCalledTimes(1)

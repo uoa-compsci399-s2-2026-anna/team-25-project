@@ -4,13 +4,11 @@ import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import {
   getCoursesTableData,
-  getLatestPublishedOffering,
   getMyCoursesSummary,
   getMyDraftCourses,
+  getMyDraftOfferings,
   getPublishedCourse,
-  getPublishedOffering,
   getPublishedOfferings,
-  getSelectedOffering,
 } from "./courses.queries"
 
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
@@ -44,7 +42,7 @@ const course = (overrides: Record<string, unknown>): Course =>
 const version = (overrides: Partial<CourseVersion>): CourseVersion =>
   ({
     id: 1,
-    period: "2026 Semester 2",
+    period: "Semester 2 2026",
     startDate: "2026-07-20",
     endDate: "2026-11-06",
     name: "Capstone: Computer Science",
@@ -84,26 +82,43 @@ describe("getCoursesTableData", () => {
     })
   })
 
-  it("pairs each course with its most recently started offering, and summarizes the directory", async () => {
+  it("pairs each course with its current offering, and summarizes the directory", async () => {
     const auckland = course({ id: 1, code: "COMPSCI 399" })
     const otago = course({
       id: 2,
       code: "COSC 345",
       institution: { id: 2, name: "University of Otago" },
     })
-    const older = version({ id: 1, course: 1, period: "2025 Semester 1", startDate: "2025-02-01" })
-    const newer = version({ id: 2, course: 1, period: "2026 Full Year", startDate: "2026-07-20" })
+    const past = version({ id: 1, course: 1, period: "Semester 1 2025", startDate: "2025-02-01" })
+    const current = version({ id: 2, course: 1, period: "Full Year 2026", startDate: "2026-03-02" })
+    const next = version({
+      id: 3,
+      course: 1,
+      period: "Full Year 2027",
+      startDate: "2027-03-01",
+      endDate: "2027-11-05",
+    })
 
     find
       .mockResolvedValueOnce({ docs: [auckland, otago] })
       // Already sorted newest first, as the real query would return them.
-      .mockResolvedValueOnce({ docs: [newer, older] })
+      .mockResolvedValueOnce({ docs: [next, current, past] })
 
-    const { rows, summary } = await getCoursesTableData()
+    const { rows, summary } = await getCoursesTableData("2026-08-01")
 
     expect(rows).toEqual([
-      expect.objectContaining({ id: "1", code: "COMPSCI 399", year: 2026, semester: "Full Year" }),
-      expect.objectContaining({ id: "2", code: "COSC 345", title: "No offering yet" }),
+      expect.objectContaining({
+        id: "1",
+        code: "COMPSCI 399",
+        currentOffering: "Full Year 2026",
+        offerings: 3,
+      }),
+      expect.objectContaining({
+        id: "2",
+        code: "COSC 345",
+        title: "No offering yet",
+        offerings: 0,
+      }),
     ])
     expect(summary.totalCourses).toBe(2)
     expect(summary.yearLongCourses).toBe(1)
@@ -122,8 +137,9 @@ describe("getMyCoursesSummary", () => {
       title: "Capstone",
       lecturer: "A. Patel",
       university: "UoA",
-      semester: "Semester 2",
-      year: currentYear,
+      currentOffering: `Semester 2 ${currentYear}`,
+      currentStartDate: `${currentYear}-07-20`,
+      offerings: 1,
       status: "published" as const,
     },
   ]
@@ -250,7 +266,7 @@ describe("getMyDraftCourses", () => {
       id: 2,
       course: 4,
       name: "Newer draft",
-      period: "2026 Semester 2",
+      period: "Semester 2 2026",
       _status: "draft",
     })
     const older = version({ id: 1, course: 4, name: "Older draft", _status: "draft" })
@@ -265,7 +281,8 @@ describe("getMyDraftCourses", () => {
         code: "COSC 345",
         title: "Newer draft",
         status: "draft",
-        year: 2026,
+        currentOffering: "Semester 2 2026",
+        offerings: 2,
       }),
     ])
   })
@@ -279,7 +296,7 @@ describe("getMyDraftCourses", () => {
       id: 9,
       course: 4,
       name: "Capstone",
-      period: "2026 Semester 2",
+      period: "Semester 2 2026",
       startDate: "2026-07-20T00:00:00.000Z",
       endDate: "2026-11-06T00:00:00.000Z",
       programme: null,
@@ -304,7 +321,7 @@ describe("getMyDraftCourses", () => {
           endDate: "2026-11-06",
           learningOutcomes: null,
           name: "Capstone",
-          period: "2026 Semester 2",
+          period: "Semester 2 2026",
           programme: "",
           projectType: "",
           role: "Senior Lecturer",
@@ -375,63 +392,43 @@ describe("getPublishedOfferings", () => {
   })
 })
 
-describe("getLatestPublishedOffering", () => {
-  it("takes the newest teaching period, not the most recently edited offering", async () => {
-    await getLatestPublishedOffering(7)
+describe("getMyDraftOfferings", () => {
+  const member = { id: 1 } as Member
 
-    expect(find).toHaveBeenCalledWith({
-      collection: "courseVersions",
-      where: publishedOfferings,
-      sort: NEWEST_FIRST,
-      depth: 0,
-      limit: 1,
-      pagination: false,
+  it("returns nothing, and queries nothing, for an admin", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "admin", user: { id: 1 } as Admin })
+
+    expect(await getMyDraftOfferings(7)).toEqual([])
+    expect(find).not.toHaveBeenCalled()
+  })
+
+  it("reads each offering's newest save as the member", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: member })
+
+    await getMyDraftOfferings(7)
+
+    expect(find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: "courseVersions",
+        where: { course: { equals: 7 } },
+        draft: true,
+        overrideAccess: false,
+        user: member,
+      }),
+    )
+  })
+
+  it("keeps only offerings that have never been published", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: member })
+    find.mockResolvedValue({
+      docs: [
+        { id: 3, _status: "draft" },
+        { id: 2, _status: "published", publishedAt: "2026-07-01T00:00:00.000Z" },
+        // A pending edit over a published offering, which only the admin can make.
+        { id: 1, _status: "draft", publishedAt: "2026-03-01T00:00:00.000Z" },
+      ],
     })
-  })
-})
 
-describe("getPublishedOffering", () => {
-  // The course ID comes from the URL, so an offering belonging to another course
-  // must miss rather than render under the course in the address bar.
-  it("scopes the offering to its course", async () => {
-    await getPublishedOffering(7, 42)
-
-    expect(find).toHaveBeenCalledWith({
-      collection: "courseVersions",
-      where: { and: [{ id: { equals: 42 } }, publishedOfferings] },
-      depth: 0,
-      limit: 1,
-      pagination: false,
-    })
-  })
-
-  it("returns null when the offering is not published under that course", async () => {
-    await expect(getPublishedOffering(7, 42)).resolves.toBeNull()
-  })
-})
-
-describe("getSelectedOffering", () => {
-  it("uses the latest offering when none is selected", async () => {
-    const latest = { id: 8 }
-    find.mockResolvedValue({ docs: [latest] })
-
-    await expect(getSelectedOffering(7)).resolves.toBe(latest)
-    expect(find).toHaveBeenCalledTimes(1)
-  })
-
-  it("returns a selected offering without querying for the latest", async () => {
-    const selected = { id: 42 }
-    find.mockResolvedValue({ docs: [selected] })
-
-    await expect(getSelectedOffering(7, 42)).resolves.toBe(selected)
-    expect(find).toHaveBeenCalledTimes(1)
-  })
-
-  it("falls back to the latest offering when the selected offering misses", async () => {
-    const latest = { id: 8 }
-    find.mockResolvedValueOnce({ docs: [] }).mockResolvedValueOnce({ docs: [latest] })
-
-    await expect(getSelectedOffering(7, 42)).resolves.toBe(latest)
-    expect(find).toHaveBeenCalledTimes(2)
+    expect((await getMyDraftOfferings(7)).map((offering) => offering.id)).toEqual([3])
   })
 })

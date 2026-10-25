@@ -8,6 +8,13 @@ const asPopulated = <T>(value: number | T | null | undefined): T | undefined =>
 export const ownerIdOf = (course: Pick<Course, "owner">): number | undefined =>
   typeof course.owner === "number" ? course.owner : course.owner?.id
 
+/** Mirrors the course write access rule: the owner and the course's editors. */
+export const isCourseEditor = (course: Pick<Course, "owner" | "editors">, memberId: number) =>
+  ownerIdOf(course) === memberId ||
+  (course.editors ?? []).some(
+    (editor) => (typeof editor === "number" ? editor : editor.id) === memberId,
+  )
+
 const formatLecturerName = (member: Member) => `${member.firstName.charAt(0)}. ${member.lastName}`
 
 // Picks the coordinator if there is one, otherwise the first teaching-team
@@ -35,38 +42,76 @@ export const deriveTitle = (version: CourseVersion | undefined): string =>
 export const deriveStatus = (version: CourseVersion | undefined): CourseTableRow["status"] =>
   version?._status === "published" ? "published" : "draft"
 
-// `period` is formatted as "<year> <term>", like "2026 Semester 2" or
-// "2027 Full Year". If there's no offering yet there's no period to read, so
-// `year` falls back to `0` - `CourseTableRow.year` has to be a plain number
-// since that's how `CoursesTable` (#104) defined it.
-export const splitPeriod = (
-  period: string | undefined | null,
-): { year: number; semester: string } => {
-  if (!period) return { year: 0, semester: "—" }
-  const [yearToken, ...rest] = period.trim().split(/\s+/)
-  const year = Number(yearToken)
-  return {
-    year: Number.isFinite(year) ? year : 0,
-    semester: rest.join(" ") || "—",
-  }
+// Dates are saved as midnight UTC on the day entered, so the first ten characters are that day.
+const dayOf = (value: string | null | undefined) => value?.slice(0, 10) ?? ""
+
+/**
+ * The whole app reads dates in one zone, whichever institution or reader they belong
+ * to. Elsewhere in Australia and New Zealand that's at most a few hours out, and only
+ * on an offering's first and last day.
+ */
+const APP_TIME_ZONE = "Pacific/Auckland"
+
+/** Today in the app's zone as "YYYY-MM-DD", to compare against an offering's days. */
+export const getToday = (now = new Date()) =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: APP_TIME_ZONE }).format(now)
+
+type DatedOffering = Pick<CourseVersion, "id" | "startDate" | "endDate">
+
+/**
+ * Finds the offering running today and the one starting next, from offerings sorted
+ * newest first - so where two overlap, the one that started most recently is current.
+ * `primary` is the one a course is shown as: the current one, or between offerings the
+ * next, or once none are left the most recent.
+ */
+export const findCurrentOffering = <T extends DatedOffering>(offerings: T[], today: string) => {
+  const started = offerings.filter((offering) => dayOf(offering.startDate) <= today)
+  const current = started.find((offering) => today <= dayOf(offering.endDate))
+  const upcoming = offerings.filter((offering) => dayOf(offering.startDate) > today)
+  const next = upcoming[upcoming.length - 1]
+  return { current, next, primary: current ?? next ?? started[0] ?? offerings[0] }
+}
+
+/** The offering `?offering=` asks for, or the course's primary one when it names none we have. */
+export const selectOffering = <T extends DatedOffering>(
+  offerings: T[],
+  offeringId: number | undefined,
+  today: string,
+) => {
+  const found = findCurrentOffering(offerings, today)
+  const offering = offerings.find((candidate) => candidate.id === offeringId) ?? found.primary
+  return { ...found, offering }
+}
+
+export type OfferingTiming = "past" | "current" | "running" | "next" | "future"
+
+/** `running` is an offering still underway that isn't current, as a newer one overlaps it. */
+export const offeringTiming = (
+  offering: Pick<CourseVersion, "id" | "startDate" | "endDate">,
+  { current, next }: { current?: Pick<CourseVersion, "id">; next?: Pick<CourseVersion, "id"> },
+  today: string,
+): OfferingTiming => {
+  if (offering.id === current?.id) return "current"
+  if (offering.id === next?.id) return "next"
+  if (dayOf(offering.startDate) > today) return "future"
+  return dayOf(offering.endDate) < today ? "past" : "running"
 }
 
 export const toCourseTableRow = (
   course: Course,
   version: CourseVersion | undefined,
-): CourseTableRow => {
-  const { year, semester } = splitPeriod(version?.period)
-  return {
-    id: String(course.id),
-    code: course.code,
-    title: deriveTitle(version),
-    lecturer: deriveLecturer(version, course),
-    university: deriveUniversity(course),
-    semester,
-    year,
-    status: deriveStatus(version),
-  }
-}
+  offerings: number,
+): CourseTableRow => ({
+  id: String(course.id),
+  code: course.code,
+  title: deriveTitle(version),
+  lecturer: deriveLecturer(version, course),
+  university: deriveUniversity(course),
+  currentOffering: version?.period?.trim() || "—",
+  currentStartDate: version?.startDate ?? "",
+  offerings,
+  status: deriveStatus(version),
+})
 
 /** A never-published course the viewer can reopen in the add-course dialog. */
 export interface EditableDraftCourse {
@@ -89,6 +134,20 @@ const toDateInput = (value: string | null | undefined) => (value ? value.slice(0
 
 type DialogRichText = AddCapstoneCourseDialogValues["learningOutcomes"]
 
+// The offering's own fields, as the dialog holds them.
+const offeringValues = (version: CourseVersion) => ({
+  additionalInfo: (version.additionalInfo ?? null) as DialogRichText,
+  assessments: (version.assessments ?? null) as DialogRichText,
+  deliveryFormat: version.deliveryFormat ?? "",
+  endDate: toDateInput(version.endDate),
+  learningOutcomes: (version.learningOutcomes ?? null) as DialogRichText,
+  name: version.name ?? "",
+  period: version.period ?? "",
+  programme: version.programme ?? "",
+  projectType: version.projectType ?? "",
+  startDate: toDateInput(version.startDate),
+})
+
 /**
  * Pre-fills the dialog from a draft. Drafts never store "Your role" - it only
  * becomes a teaching-team row on publish - so the viewer's `role` is their profile
@@ -102,20 +161,26 @@ export const toEditableDraftCourse = (
   canDelete: ownerIdOf(course) === viewer.id,
   courseId: course.id,
   versionId: version.id,
-  values: {
-    additionalInfo: (version.additionalInfo ?? null) as DialogRichText,
-    assessments: (version.assessments ?? null) as DialogRichText,
-    code: course.code,
-    deliveryFormat: version.deliveryFormat ?? "",
-    endDate: toDateInput(version.endDate),
-    learningOutcomes: (version.learningOutcomes ?? null) as DialogRichText,
-    name: version.name ?? "",
-    period: version.period ?? "",
-    programme: version.programme ?? "",
-    projectType: version.projectType ?? "",
-    role: viewer.role,
-    startDate: toDateInput(version.startDate),
-  },
+  values: { ...offeringValues(version), code: course.code, role: viewer.role },
+})
+
+/** Pre-fills the dialog for correcting a published offering. */
+export const toOfferingValues = (version: CourseVersion): AddCapstoneCourseDialogValues => ({
+  ...offeringValues(version),
+  code: "",
+  role: "",
+})
+
+/**
+ * Pre-fills a new offering from an existing one. Its period and dates are what
+ * differ from one offering to the next, so they start blank. The offering dialog
+ * shows neither the code nor a role.
+ */
+export const toNewOfferingValues = (version: CourseVersion): AddCapstoneCourseDialogValues => ({
+  ...toOfferingValues(version),
+  endDate: "",
+  period: "",
+  startDate: "",
 })
 
 export interface CoursesSummaryStats {
@@ -130,7 +195,8 @@ export interface CoursesSummaryStats {
   medianTeamSize: number
 }
 
-const isYearLong = (row: CourseTableRow): boolean => row.semester.toLowerCase().includes("year")
+const isYearLong = (row: CourseTableRow): boolean =>
+  row.currentOffering.toLowerCase().includes("year")
 
 export const summarizeCourses = (rows: CourseTableRow[]): CoursesSummaryStats => ({
   totalCourses: rows.length,
@@ -157,7 +223,10 @@ export const summarizeMyCourses = (
 ): MyCoursesSummary => ({
   total: myCourseIds.size,
   upToDate: rows.filter(
-    (row) => myCourseIds.has(row.id) && row.status === "published" && row.year === year,
+    (row) =>
+      myCourseIds.has(row.id) &&
+      row.status === "published" &&
+      row.currentStartDate.startsWith(String(year)),
   ).length,
   year,
 })
@@ -169,7 +238,7 @@ export const summarizeMyCourses = (
 const dateFormatter = new Intl.DateTimeFormat("en-NZ", {
   day: "numeric",
   month: "short",
-  timeZone: "Pacific/Auckland",
+  timeZone: APP_TIME_ZONE,
   year: "numeric",
 })
 

@@ -24,8 +24,9 @@ const rows: Array<CourseTableRow> = Array.from({ length: 15 }, (_, index) => ({
   title: "Capstone Project",
   lecturer: "A. Tui",
   university: "University of Auckland",
-  semester: "Semester 2",
-  year: 2026,
+  currentOffering: "Semester 2 2026",
+  currentStartDate: "2026-07-20",
+  offerings: 1,
   status: "published",
 }))
 
@@ -69,8 +70,9 @@ describe("CoursesListClient drafts", () => {
     title: "Draft capstone",
     lecturer: "A. Tui",
     university: "University of Otago",
-    semester: "Semester 2",
-    year: 2026,
+    currentOffering: "Semester 2 2026",
+    currentStartDate: "2026-07-20",
+    offerings: 1,
     status: "draft",
   }
 
@@ -257,11 +259,11 @@ describe("CoursesListClientSkeleton", () => {
     cleanup()
   })
 
-  it("renders a filter bar placeholder with the toolbar's three filters and status tabs", () => {
+  it("renders a filter bar placeholder with the toolbar's one filter and status tabs", () => {
     const { container } = render(<CoursesListClientSkeleton />)
 
     expect(container.querySelector('[data-slot="filter-bar-skeleton-status"]')).toBeInTheDocument()
-    expect(container.querySelectorAll('[data-slot="filter-bar-skeleton-filter"]')).toHaveLength(3)
+    expect(container.querySelectorAll('[data-slot="filter-bar-skeleton-filter"]')).toHaveLength(1)
   })
 
   it("lays the filter placeholders out like the real bar, so nothing jumps on load", () => {

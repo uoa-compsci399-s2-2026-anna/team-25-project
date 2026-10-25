@@ -78,6 +78,7 @@ export interface Config {
     publications: Publication;
     resources: Resource;
     resourceAttachments: ResourceAttachment;
+    emailVerificationCodes: EmailVerificationCode;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -95,6 +96,7 @@ export interface Config {
     publications: PublicationsSelect<false> | PublicationsSelect<true>;
     resources: ResourcesSelect<false> | ResourcesSelect<true>;
     resourceAttachments: ResourceAttachmentsSelect<false> | ResourceAttachmentsSelect<true>;
+    emailVerificationCodes: EmailVerificationCodesSelect<false> | EmailVerificationCodesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -106,9 +108,11 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     'privacy-policy': PrivacyPolicy;
+    'community-guidelines': CommunityGuideline;
   };
   globalsSelect: {
     'privacy-policy': PrivacyPolicySelect<false> | PrivacyPolicySelect<true>;
+    'community-guidelines': CommunityGuidelinesSelect<false> | CommunityGuidelinesSelect<true>;
   };
   locale: null;
   widgets: {
@@ -357,10 +361,6 @@ export interface CourseVersion {
   period: string;
   startDate: string;
   endDate: string;
-  /**
-   * Required when publishing changes to a published offering.
-   */
-  changeSummary?: string | null;
   publishedAt?: string | null;
   publishedBy?:
     | ({
@@ -557,6 +557,22 @@ export interface ResourceAttachment {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "emailVerificationCodes".
+ */
+export interface EmailVerificationCode {
+  id: number;
+  email: string;
+  codeHash: string;
+  sentAt: string;
+  expiresAt: string;
+  attempts: number;
+  sendsInWindow: number;
+  windowStartedAt: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -618,6 +634,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'resourceAttachments';
         value: number | ResourceAttachment;
+      } | null)
+    | ({
+        relationTo: 'emailVerificationCodes';
+        value: number | EmailVerificationCode;
       } | null);
   globalSlug?: string | null;
   user:
@@ -827,7 +847,6 @@ export interface CourseVersionsSelect<T extends boolean = true> {
   period?: T;
   startDate?: T;
   endDate?: T;
-  changeSummary?: T;
   publishedAt?: T;
   publishedBy?: T;
   name?: T;
@@ -924,6 +943,21 @@ export interface ResourceAttachmentsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "emailVerificationCodes_select".
+ */
+export interface EmailVerificationCodesSelect<T extends boolean = true> {
+  email?: T;
+  codeHash?: T;
+  sentAt?: T;
+  expiresAt?: T;
+  attempts?: T;
+  sendsInWindow?: T;
+  windowStartedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -988,9 +1022,43 @@ export interface PrivacyPolicy {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "community-guidelines".
+ */
+export interface CommunityGuideline {
+  id: number;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "privacy-policy_select".
  */
 export interface PrivacyPolicySelect<T extends boolean = true> {
+  content?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "community-guidelines_select".
+ */
+export interface CommunityGuidelinesSelect<T extends boolean = true> {
   content?: T;
   updatedAt?: T;
   createdAt?: T;

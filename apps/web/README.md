@@ -21,8 +21,8 @@ product UI and Payload CMS (admin panel and REST API). Part of the
 
 | Group | Serves | Layout |
 | --- | --- | --- |
-| `src/app/(app)/` | Product UI (`/`) and the app's own route handlers (`/api/health`) | Satoshi + Geist Mono fonts, `@repo/ui` global styles |
-| `src/app/(payload)/` | Payload admin at `/payload/admin`, Payload REST API at `/payload/api` | Payload's `RootLayout` |
+| `src/app/(app)/` | Product UI (`/`) and the app's own route handlers (`/api/health`) | Satoshi + Geist Mono fonts (`src/lib/fonts.ts`), `@repo/ui` global styles |
+| `src/app/(payload)/` | Payload admin at `/admin`, Payload REST API at `/payload/api` | Payload's `RootLayout`, with the same fonts and brand colours |
 
 Payload's own collections, globals, and migrations live outside the route group,
 under `src/payload/`.
@@ -46,11 +46,14 @@ Copy `.env.example` to `.env` and fill in:
 | --- | --- |
 | `DATABASE_URL` | Postgres connection string |
 | `PAYLOAD_SECRET` | Secret used by Payload to sign/encrypt data |
+| `NEXT_PUBLIC_URL` | Public origin for metadata, the sitemap and robots.txt. Required for a production build; defaults to `http://localhost:3000` otherwise |
 | `S3_BUCKET` | S3 bucket for Payload media; leave empty to use local storage |
 | `S3_REGION` | AWS region for the S3 bucket; leave empty to use local storage |
 | `AWS_PROFILE` | Optional local AWS profile, such as an AWS SSO profile |
 | `AWS_ACCESS_KEY_ID` | Optional local AWS credential; deployed environments can use an IAM role |
 | `AWS_SECRET_ACCESS_KEY` | Optional local AWS credential; deployed environments can use an IAM role |
+| `SES_REGION` | AWS region of the SES sending identity; leave empty to use `AWS_REGION` or the AWS profile's region |
+| `SES_FROM_ADDRESS` | Verified SES sender address; leave empty to log emails to the console instead of sending them |
 
 ## Development
 
@@ -84,7 +87,7 @@ pnpm dev
 ```
 
 - App: [http://localhost:3000](http://localhost:3000)
-- Payload admin: [http://localhost:3000/payload/admin](http://localhost:3000/payload/admin)
+- Payload admin: [http://localhost:3000/admin](http://localhost:3000/admin)
   — follow the on-screen instructions to create your first admin user.
 
 If you need a clean `.next` build cache, use `pnpm devsafe` instead of `pnpm dev`.

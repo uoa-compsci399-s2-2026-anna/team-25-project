@@ -17,8 +17,9 @@ const rows: Array<CourseTableRow> = [
     title: "Capstone Project",
     lecturer: "A. Tui",
     university: "University of Auckland",
-    semester: "Semester 2",
-    year: 2026,
+    currentOffering: "Semester 2 2026",
+    currentStartDate: "2026-07-20",
+    offerings: 1,
     status: "published",
   },
 ]

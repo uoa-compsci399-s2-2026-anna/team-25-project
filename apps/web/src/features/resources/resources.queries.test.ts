@@ -44,8 +44,16 @@ describe("getResources", () => {
       populate: {
         courses: { code: true },
         members: { avatar: true, firstName: true, lastName: true },
+        resourceAttachments: { filename: true },
       },
-      select: { course: true, createdAt: true, description: true, owner: true, title: true },
+      select: {
+        attachments: true,
+        course: true,
+        createdAt: true,
+        description: true,
+        owner: true,
+        title: true,
+      },
       sort: ["createdAt", "id"],
       where: {
         course: { equals: 4 },
@@ -172,8 +180,11 @@ describe("getCourseResources", () => {
       collection: "resources",
       depth: 2,
       limit: 5,
-      populate: { members: { avatar: true, firstName: true, lastName: true } },
-      select: { createdAt: true, description: true, owner: true, title: true },
+      populate: {
+        members: { avatar: true, firstName: true, lastName: true },
+        resourceAttachments: { filename: true },
+      },
+      select: { attachments: true, createdAt: true, description: true, owner: true, title: true },
       sort: ["-createdAt", "-id"],
       where: { course: { equals: 4 } },
     })

@@ -8,6 +8,8 @@ import { Slugs } from "@/lib/payload/slugs"
 import type { CourseTableRow } from "./components/CoursesTable"
 import {
   type CoursesSummaryStats,
+  findCurrentOffering,
+  getToday,
   type MyCoursesSummary,
   type MyDraftCourses,
   summarizeCourses,
@@ -23,14 +25,14 @@ const NEWEST_FIRST = ["-startDate", "-id"]
 const courseIdOf = (version: CourseVersion): number =>
   typeof version.course === "number" ? version.course : version.course.id
 
-// Docs arrive sorted newest first, so the first one seen for a course is its newest.
-const latestVersionByCourseId = (versions: CourseVersion[]) => {
-  const latest = new Map<number, CourseVersion>()
+// Keeps each course's offerings in the order they arrive: newest first.
+const offeringsByCourseId = (versions: CourseVersion[]) => {
+  const offerings = new Map<number, CourseVersion[]>()
   for (const version of versions) {
     const courseId = courseIdOf(version)
-    if (!latest.has(courseId)) latest.set(courseId, version)
+    offerings.set(courseId, [...(offerings.get(courseId) ?? []), version])
   }
-  return latest
+  return offerings
 }
 
 export interface CoursesTableData {
@@ -45,7 +47,7 @@ export interface CoursesTableData {
  * back to their published-only rule for everyone, admins included, which is
  * what keeps the result viewer-independent.
  */
-export const getCoursesTableData = async (): Promise<CoursesTableData> => {
+export const getCoursesTableData = async (today = getToday()): Promise<CoursesTableData> => {
   const payload = await getPayloadClient()
 
   const [{ docs: courses }, { docs: versions }] = await Promise.all([
@@ -65,8 +67,12 @@ export const getCoursesTableData = async (): Promise<CoursesTableData> => {
     }),
   ])
 
-  const latestVersions = latestVersionByCourseId(versions)
-  const rows = courses.map((course) => toCourseTableRow(course, latestVersions.get(course.id)))
+  const offerings = offeringsByCourseId(versions)
+  const rows = courses.map((course) => {
+    const courseOfferings = offerings.get(course.id) ?? []
+    const { primary } = findCurrentOffering(courseOfferings, today)
+    return toCourseTableRow(course, primary, courseOfferings.length)
+  })
 
   return { rows, summary: summarizeCourses(rows) }
 }
@@ -124,21 +130,25 @@ export const getMyDraftCourses = async (): Promise<MyDraftCourses> => {
   // with no offering shouldn't exist - but if one did, it would have nothing to
   // reopen and no course page to link to, so it's left out rather than listed
   // as a dead end.
-  const latestVersions = latestVersionByCourseId(versions)
+  const offerings = offeringsByCourseId(versions)
   const viewer = { id: user.id, role: user.position ?? "" }
   const drafts: MyDraftCourses = { editable: {}, rows: [] }
   for (const course of courses) {
-    const version = latestVersions.get(course.id)
-    if (!version) continue
-    drafts.rows.push(toCourseTableRow(course, version))
-    drafts.editable[String(course.id)] = toEditableDraftCourse(course, version, viewer)
+    const courseOfferings = offerings.get(course.id)
+    if (!courseOfferings) continue
+    const { primary } = findCurrentOffering(courseOfferings, getToday())
+    drafts.rows.push(toCourseTableRow(course, primary, courseOfferings.length))
+    // The dialog reopens the newest draft, whichever offering the row shows.
+    drafts.editable[String(course.id)] = toEditableDraftCourse(course, courseOfferings[0], viewer)
   }
   return drafts
 }
 
+// "hours" rather than "max": which offering is current changes with the date, not
+// only when an offering is saved, so the cached rows can't outlive the day.
 export const getCoursesTableDataCached = async () => {
   "use cache"
-  cacheLife("max")
+  cacheLife("hours")
   cacheTag(QueryKeys.COURSES.ROOT)
   return getCoursesTableData()
 }
@@ -224,62 +234,24 @@ export const getPublishedOfferingsCached = async (courseId: number) => {
   return getPublishedOfferings(courseId)
 }
 
-export const getLatestPublishedOffering = async (
-  courseId: number,
-): Promise<CourseVersion | null> => {
+/**
+ * The course's never-published draft offerings, newest first. Payload only lets the
+ * course's owner and editors read drafts, so this is per-viewer and uncached.
+ */
+export const getMyDraftOfferings = async (courseId: number): Promise<CourseVersion[]> => {
+  const { collection, user } = await getCurrentUser()
+  if (collection !== Slugs.Collections.MEMBERS) return []
+
   const payload = await getPayloadClient()
   const { docs } = await payload.find({
     collection: Slugs.Collections.COURSE_VERSIONS,
-    where: publishedOfferingsWhere(courseId),
+    where: { course: { equals: courseId } },
+    depth: 0,
+    draft: true,
+    overrideAccess: false,
+    pagination: false,
     sort: NEWEST_FIRST,
-    depth: 0,
-    limit: 1,
-    pagination: false,
+    user,
   })
-  return docs[0] ?? null
-}
-
-export const getLatestPublishedOfferingCached = async (courseId: number) => {
-  "use cache"
-  cacheTag(QueryKeys.COURSES.ID(courseId))
-  cacheLife("max")
-
-  return getLatestPublishedOffering(courseId)
-}
-
-/**
- * One offering by ID, scoped to its course.
- *
- * The course ID comes from the URL, so a request for an offering that belongs to
- * another course must miss rather than render under the wrong course.
- */
-export const getPublishedOffering = async (
-  courseId: number,
-  offeringId: number,
-): Promise<CourseVersion | null> => {
-  const payload = await getPayloadClient()
-  const { docs } = await payload.find({
-    collection: Slugs.Collections.COURSE_VERSIONS,
-    where: { and: [{ id: { equals: offeringId } }, publishedOfferingsWhere(courseId)] },
-    depth: 0,
-    limit: 1,
-    pagination: false,
-  })
-  return docs[0] ?? null
-}
-
-export const getPublishedOfferingCached = async (courseId: number, offeringId: number) => {
-  "use cache"
-  cacheTag(QueryKeys.COURSES.ID(courseId))
-  cacheLife("max")
-
-  return getPublishedOffering(courseId, offeringId)
-}
-
-/**
- * Gets a specific offering for a course, or the latest if none is specified.
- */
-export const getSelectedOffering = async (courseId: number, offeringId?: number) => {
-  const selected = offeringId ? await getPublishedOfferingCached(courseId, offeringId) : null
-  return selected ?? (await getLatestPublishedOfferingCached(courseId))
+  return docs.filter((version) => version._status === "draft" && !version.publishedAt)
 }

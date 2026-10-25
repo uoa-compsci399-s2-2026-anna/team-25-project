@@ -13,8 +13,9 @@ const courses: Array<CourseTableRow> = [
     title: "Capstone Project",
     lecturer: "A. Tui",
     university: "University of Auckland",
-    semester: "Semester 2",
-    year: 2026,
+    currentOffering: "Semester 2 2026",
+    currentStartDate: "2026-07-20",
+    offerings: 1,
     status: "published",
   },
   {
@@ -23,8 +24,9 @@ const courses: Array<CourseTableRow> = [
     title: "Research Project",
     lecturer: "M. Rahman",
     university: "University of Auckland",
-    semester: "Semester 1",
-    year: 2027,
+    currentOffering: "Semester 1 2027",
+    currentStartDate: "2027-03-02",
+    offerings: 1,
     status: "draft",
   },
   {
@@ -33,8 +35,9 @@ const courses: Array<CourseTableRow> = [
     title: "Team Project",
     lecturer: "K. Whitfield",
     university: "Victoria University",
-    semester: "Trimester 1",
-    year: 2025,
+    currentOffering: "Trimester 1 2025",
+    currentStartDate: "2025-03-02",
+    offerings: 1,
     status: "published",
   },
 ]
@@ -77,17 +80,6 @@ describe("CoursesToolbar", () => {
     expect(screen.getByText("ENGR 302 Team Project")).toBeInTheDocument()
   })
 
-  it("narrows rows by year", async () => {
-    const user = userEvent.setup()
-    render(<Harness />)
-
-    await user.click(screen.getByRole("combobox", { name: "Year" }))
-    await user.click(await screen.findByRole("option", { name: "2025" }))
-
-    expect(bodyRows()).toHaveLength(1)
-    expect(screen.getByText("ENGR 302 Team Project")).toBeInTheDocument()
-  })
-
   it("narrows rows by status tab, with counts for each tab", async () => {
     const user = userEvent.setup()
     render(<Harness />)
@@ -106,31 +98,20 @@ describe("CoursesToolbar", () => {
     render(<Harness />)
 
     await user.click(screen.getByRole("combobox", { name: "Sort" }))
-    await user.click(await screen.findByRole("option", { name: "Year: Oldest first" }))
+    await user.click(await screen.findByRole("option", { name: "Current offering: Oldest first" }))
 
-    const years = bodyRows().map((row) => within(row).getAllByRole("cell")[3].textContent)
-    expect(years).toEqual(["2025", "2026", "2027"])
+    const offerings = bodyRows().map((row) => within(row).getAllByRole("cell")[2].textContent)
+    expect(offerings).toEqual(["Trimester 1 2025", "Semester 2 2026", "Semester 1 2027"])
   })
 
   it("keeps the sort dropdown in sync when a column header is clicked instead", async () => {
     const user = userEvent.setup()
     render(<Harness />)
 
-    await user.click(screen.getByRole("button", { name: "Sort by Year" }))
+    await user.click(screen.getByRole("button", { name: "Sort by Current offering" }))
 
-    expect(screen.getByRole("combobox", { name: "Sort" })).toHaveTextContent("Year: Newest first")
-  })
-
-  it("excludes the no-offering-yet placeholder from the Year and Semester filter options", async () => {
-    const user = userEvent.setup()
-    const withPlaceholder = [...courses, { ...courses[0], id: "4", semester: "—", year: 0 }]
-    render(<Harness data={withPlaceholder} />)
-
-    await user.click(screen.getByRole("combobox", { name: "Year" }))
-    expect(screen.queryByRole("option", { name: "0" })).not.toBeInTheDocument()
-    await user.keyboard("{Escape}")
-
-    await user.click(screen.getByRole("combobox", { name: "Semester" }))
-    expect(screen.queryByRole("option", { name: "—" })).not.toBeInTheDocument()
+    expect(screen.getByRole("combobox", { name: "Sort" })).toHaveTextContent(
+      "Current offering: Newest first",
+    )
   })
 })

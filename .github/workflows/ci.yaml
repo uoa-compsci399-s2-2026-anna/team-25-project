@@ -264,7 +264,7 @@ jobs:
     # Throwaway Postgres for this job only, so the build needs no real credentials.
     services:
       postgres:
-        image: postgres:16
+        image: postgres:18
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -278,6 +278,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/ci
+      NEXT_PUBLIC_URL: http://localhost:3000
     steps:
       - name: Checkout
         uses: actions/checkout@v7

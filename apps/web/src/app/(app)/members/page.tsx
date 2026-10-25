@@ -1,4 +1,5 @@
 import { AnimatedSuspense, Skeleton } from "@repo/ui/components/ui"
+import type { Metadata } from "next"
 import type { SearchParams } from "nuqs/server"
 import { PageContainer, PageHeaderSkeleton } from "@/features/layout/components"
 import {
@@ -10,6 +11,11 @@ import {
   MembersList,
   MembersListSkeleton,
 } from "@/features/members/components/MembersList/MembersList"
+
+export const metadata: Metadata = {
+  title: "Members",
+  description: "Academics who teach or research computing capstones in Australia and New Zealand.",
+}
 
 export default function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (

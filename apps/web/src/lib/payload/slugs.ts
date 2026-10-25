@@ -10,9 +10,11 @@ export const Slugs = {
     PUBLICATIONS: "publications",
     RESOURCES: "resources",
     RESOURCE_ATTACHMENTS: "resourceAttachments",
+    EMAIL_VERIFICATION_CODES: "emailVerificationCodes",
   },
   Globals: {
     PRIVACY_POLICY: "privacy-policy",
+    COMMUNITY_GUIDELINES: "community-guidelines",
   },
 } as const
 

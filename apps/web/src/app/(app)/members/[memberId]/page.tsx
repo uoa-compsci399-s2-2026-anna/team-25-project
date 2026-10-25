@@ -1,5 +1,6 @@
 import { AnimatedSuspense, Separator } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
+import type { Metadata } from "next"
 import { BackLink, PageContainer } from "@/features/layout/components"
 import { MemberEditBar } from "@/features/members/components/MemberDetail/MemberDetailEditBar"
 import {
@@ -10,8 +11,18 @@ import { MemberDetailLeftColumn } from "@/features/members/components/MemberDeta
 import { MemberDetailRightColumn } from "@/features/members/components/MemberDetail/MemberDetailRightColumn"
 import { mobileSection } from "@/features/members/components/MemberDetail/mobileSection"
 import { MemberEditProvider } from "@/features/members/components/MemberEditor/MemberEditProvider"
-import type { MembersRouteParams } from "@/features/members/members.params"
+import { type MembersRouteParams, parseMemberId } from "@/features/members/members.params"
+import { getMemberDetailsCached } from "@/features/members/members.queries"
 import { Routes } from "@/lib/routes"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: MembersRouteParams
+}): Promise<Metadata> {
+  const member = await getMemberDetailsCached(await parseMemberId(params))
+  return member ? { title: `${member.firstName} ${member.lastName}` } : {}
+}
 
 export default function Page({ params }: { params: MembersRouteParams }) {
   return (

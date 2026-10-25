@@ -3,7 +3,10 @@ import type { Resource } from "@repo/shared/payload-types"
 import type { ResourceCardProps } from "@repo/ui/components/composite"
 import { Routes } from "@/lib/routes"
 
-type CardResource = Pick<Resource, "createdAt" | "description" | "id" | "owner" | "title"> &
+type CardResource = Pick<
+  Resource,
+  "attachments" | "createdAt" | "description" | "id" | "owner" | "title"
+> &
   Partial<Pick<Resource, "course">>
 
 /**
@@ -16,6 +19,7 @@ export const toResourceCardProps = (resource: CardResource) => {
   const course = typeof resource.course === "object" ? resource.course : undefined
 
   return {
+    attachments: resource.attachments?.length ?? 0,
     course: course?.code,
     href: Routes.RESOURCES.RESOURCE(String(resource.id)),
     owner: {

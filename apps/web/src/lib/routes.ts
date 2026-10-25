@@ -8,10 +8,12 @@ export const Routes = {
   HOME: route("/"),
   LOGIN: route("/login"),
   /** Payload's own admin UI, which only admins can reach (see payload.config.ts). */
-  ADMIN: route("/payload/admin"),
+  ADMIN: route("/admin"),
   COURSES: {
     ROOT: route("/courses"),
-    COURSE: (courseId: string) => route(`/courses/${courseId}`),
+    // Without `offeringId`, the course page shows the course's current offering.
+    COURSE: (courseId: number | string, offeringId?: number) =>
+      route(offeringId ? `/courses/${courseId}?offering=${offeringId}` : `/courses/${courseId}`),
   },
   MEMBERS: {
     ROOT: route("/members"),
@@ -23,7 +25,6 @@ export const Routes = {
     PROPOSAL: (proposalId: number, proposalSlug?: string | null) =>
       route(`/proposals/${proposalSlug ? `${proposalId}-${proposalSlug}` : String(proposalId)}`),
   },
-  ABOUT: route("/about"),
   NEWS: route("/news"),
   RESOURCES: {
     ROOT: route("/resources"),
@@ -31,6 +32,7 @@ export const Routes = {
   },
   PUBLICATIONS: route("/publications"),
   PRIVACY: route("/privacy"),
+  GUIDELINES: route("/guidelines"),
   REGISTER: {
     ROOT: route("/register"),
     PROFILE: route("/register/profile"),

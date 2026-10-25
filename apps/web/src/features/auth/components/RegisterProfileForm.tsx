@@ -23,20 +23,14 @@ import {
 } from "@repo/ui/components/ui"
 import { useForm } from "@tanstack/react-form"
 import { Plus, X } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useQueryState } from "nuqs"
 import { useState } from "react"
-import { Routes } from "@/lib/routes"
 import { completeProfile } from "../actions/register"
-import { parseAsRedirect, REDIRECT_PARAM } from "../redirect"
 
 // Avatars are kept to 4 MB, below next.config.ts's serverActions.bodySizeLimit, and
 // checked here so a large photo gets a clear message before it is sent.
 const MAX_AVATAR_BYTES = 4 * 1024 * 1024
 
 export const RegisterProfileForm = ({ initials }: { initials: string }) => {
-  const router = useRouter()
-  const [redirect] = useQueryState(REDIRECT_PARAM, parseAsRedirect)
   const [avatar, setAvatar] = useState<File | undefined>(undefined)
   const [formError, setFormError] = useState<string | undefined>(undefined)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -65,10 +59,8 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
       try {
         const result = await completeProfile(formData)
 
-        if (result.ok) {
-          router.push(redirect ?? Routes.HOME)
-          return
-        }
+        // completeProfile refreshes the page, which redirects once registration is complete.
+        if (result.ok) return
 
         setFieldErrors(result.fieldErrors ?? {})
         setFormError(result.formError)

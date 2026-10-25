@@ -1,23 +1,24 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "./brand.css";
 
 @source "../../../apps/**/*.{ts,tsx}";
 @source "../../../components/**/*.{ts,tsx}";
 @source "../**/*.{ts,tsx}";
 
-@theme {
-  --color-brand-charcoal: #474954;
-  --color-brand-slate: #4b5468;
-  --color-brand-rose: #b26b7d;
-  --color-brand-teal: #48a9a6;
-  --color-brand-blush: #f0eae6;
-  --color-brand-peach: #f7e9e6;
-  --color-brand-plum: #6e4450;
-  --color-brand-salmon: #f9cfc3;
-  --color-brand-border: #e6deda;
-  --color-brand-cream: #faf7f4;
-  --color-brand-mauve: #c08497;
+@theme inline {
+  --color-brand-charcoal: var(--brand-charcoal);
+  --color-brand-slate: var(--brand-slate);
+  --color-brand-rose: var(--brand-rose);
+  --color-brand-teal: var(--brand-teal);
+  --color-brand-blush: var(--brand-blush);
+  --color-brand-peach: var(--brand-peach);
+  --color-brand-plum: var(--brand-plum);
+  --color-brand-salmon: var(--brand-salmon);
+  --color-brand-border: var(--brand-border);
+  --color-brand-cream: var(--brand-cream);
+  --color-brand-mauve: var(--brand-mauve);
 }
 
 @theme inline {
@@ -66,36 +67,36 @@
 :root {
   --radius: 0.625rem;
   --background: white;
-  --foreground: var(--color-brand-charcoal);
+  --foreground: var(--brand-charcoal);
   --card: white;
-  --card-foreground: var(--color-brand-charcoal);
+  --card-foreground: var(--brand-charcoal);
   --popover: white;
-  --popover-foreground: var(--color-brand-charcoal);
-  --primary: var(--color-brand-rose);
+  --popover-foreground: var(--brand-charcoal);
+  --primary: var(--brand-rose);
   --primary-foreground: white;
-  --secondary: var(--color-brand-blush);
-  --secondary-foreground: var(--color-brand-charcoal);
-  --muted: var(--color-brand-blush);
-  --muted-foreground: var(--color-brand-slate);
-  --accent: var(--color-brand-peach);
-  --accent-foreground: var(--color-brand-plum);
+  --secondary: var(--brand-blush);
+  --secondary-foreground: var(--brand-charcoal);
+  --muted: var(--brand-blush);
+  --muted-foreground: var(--brand-slate);
+  --accent: var(--brand-peach);
+  --accent-foreground: var(--brand-plum);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: var(--color-brand-border);
-  --input: var(--color-brand-border);
-  --ring: var(--color-brand-teal);
-  --chart-1: var(--color-brand-rose);
-  --chart-2: var(--color-brand-plum);
-  --chart-3: var(--color-brand-slate);
-  --chart-4: var(--color-brand-peach);
-  --chart-5: var(--color-brand-blush);
+  --border: var(--brand-border);
+  --input: var(--brand-border);
+  --ring: var(--brand-teal);
+  --chart-1: var(--brand-rose);
+  --chart-2: var(--brand-plum);
+  --chart-3: var(--brand-slate);
+  --chart-4: var(--brand-peach);
+  --chart-5: var(--brand-blush);
   --sidebar: white;
-  --sidebar-foreground: var(--color-brand-charcoal);
-  --sidebar-primary: var(--color-brand-rose);
+  --sidebar-foreground: var(--brand-charcoal);
+  --sidebar-primary: var(--brand-rose);
   --sidebar-primary-foreground: white;
-  --sidebar-accent: var(--color-brand-blush);
-  --sidebar-accent-foreground: var(--color-brand-charcoal);
-  --sidebar-border: var(--color-brand-border);
-  --sidebar-ring: var(--color-brand-teal);
+  --sidebar-accent: var(--brand-blush);
+  --sidebar-accent-foreground: var(--brand-charcoal);
+  --sidebar-border: var(--brand-border);
+  --sidebar-ring: var(--brand-teal);
 }
 
 @layer base {

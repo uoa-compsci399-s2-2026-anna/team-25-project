@@ -1,10 +1,11 @@
-import type { Member } from "@repo/shared/payload-types"
+import type { CourseVersion, Member } from "@repo/shared/payload-types"
 import type { AddCourseFormInput } from "@repo/shared/schemas/courses"
 import { richTextHasText } from "@repo/shared/schemas/shared"
 import { APIError, ValidationError } from "payload"
 import type { ActionResult } from "@/features/auth/actions/types"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
+import { relationID } from "@/payload/access/Courses/helpers"
 
 // Shared by the course dialog's actions (createCourse, updateDraftCourse). Kept
 // out of those "use server" files, which may only export async actions.
@@ -53,6 +54,11 @@ export const resultFromWriteError = (
   // period) throw a plain APIError rather than a ValidationError, so there
   // is no field path to attach - its message is already fit to show as-is.
   if (error instanceof APIError) {
+    // Payload's NotFound, e.g. a draft deleted in another tab. Its own message is
+    // just "Not Found".
+    if (error.status === 404) {
+      return { formError: "This course or offering no longer exists. Reload the page.", ok: false }
+    }
     return { formError: error.message, ok: false }
   }
   return undefined
@@ -89,7 +95,7 @@ export const requireMember = async (messages: {
  * typed in and then cleared still holds an empty paragraph.
  */
 export const toVersionData = <Blank extends null | undefined>(
-  input: AddCourseFormInput,
+  input: Omit<AddCourseFormInput, "code" | "intent" | "role">,
   blank: Blank,
 ) => {
   const text = (value: string | undefined) => (value ? value : blank)
@@ -109,3 +115,13 @@ export const toVersionData = <Blank extends null | undefined>(
     startDate: text(input.startDate),
   }
 }
+
+/**
+ * An offering's teaching team without the rows whose member was deleted. Those rows
+ * would block publishing, and the offering dialogs can't remove them.
+ */
+export const liveTeachingTeam = (rows: CourseVersion["teachingTeam"]) =>
+  (rows ?? []).flatMap(({ member, role }) => {
+    const memberId = relationID(member)
+    return memberId ? [{ member: memberId, role }] : []
+  })
