@@ -399,6 +399,21 @@ describe("prepareVersion drafts", () => {
     })
   })
 
+  // The offering actions check this too, but a REST or admin write skips them.
+  it("refuses a team that lists a member twice", async () => {
+    const { req } = request({ write: { draft: true, sentMetadataKeys: new Set() } })
+
+    await expect(
+      prepare(req, {
+        course: 5,
+        teachingTeam: [
+          { member: 1, role: "Lecturer" },
+          { member: 1, role: "Tutor" },
+        ],
+      }),
+    ).rejects.toThrow("Each member can be on the teaching team once.")
+  })
+
   it("still refuses a plain (non-draft) create with no period or dates", async () => {
     const { req } = request()
 

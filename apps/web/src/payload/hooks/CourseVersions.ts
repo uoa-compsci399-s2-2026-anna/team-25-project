@@ -59,7 +59,7 @@ const contentKeys = [
   "teachingTeam",
 ] as const
 
-// Array row IDs and populated relationship objects are not team changes.
+// Array row IDs and populated relationship objects are not changes.
 const teamOf = (version: Partial<CourseVersion> | undefined) =>
   version?.teachingTeam?.map((row) => ({ member: relationID(row.member), role: row.role?.trim() }))
 
@@ -290,6 +290,9 @@ export const prepareVersion: CollectionBeforeValidateHook<CourseVersion> = async
     (teamOf(version) ?? []).filter((row) => row.member)
   if (!canEditCourse(req, course) && !isDeepStrictEqual(liveTeam(next), liveTeam(latest)))
     fail("Only the course's owner or editors can change the teaching team.", 403)
+  const teamMembers = liveTeam(next).map((row) => row.member)
+  if (new Set(teamMembers).size !== teamMembers.length)
+    fail("Each member can be on the teaching team once.")
   if (!savingDraft) validatePeriod(next)
 
   // Publication is the only writer of the metadata. Dropping the keys otherwise
