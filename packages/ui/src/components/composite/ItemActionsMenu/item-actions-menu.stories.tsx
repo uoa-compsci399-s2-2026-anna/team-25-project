@@ -18,7 +18,7 @@ export const Default: Story = {}
 
 export const CustomDeleteMessage: Story = {
   args: {
-    deleteConfirmMessage: "Delete this draft offering? This can't be undone.",
+    deleteConfirmMessage: "This draft offering and its sessions can't be recovered.",
     itemLabel: "Semester 2 2026",
   },
 }
