@@ -116,4 +116,29 @@ describe("PublicationCardActions", () => {
     )
     expect(refresh).not.toHaveBeenCalled()
   })
+
+  it("shows the failure message and doesn't refresh when deletePublication throws", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    vi.mocked(deletePublication).mockRejectedValue(new Error("network down"))
+    render(
+      <PublicationCardActions
+        initialValues={initialValues}
+        publicationId={3}
+        title="Peer assessment in capstones"
+      />,
+    )
+    openMenu()
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }))
+    fireEvent.click(await screen.findByRole("button", { name: "Confirm delete" }))
+
+    await waitFor(() =>
+      expect(toast.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          description: "Could not delete this publication. Try again.",
+          title: "Delete failed",
+        }),
+      ),
+    )
+    expect(refresh).not.toHaveBeenCalled()
+  })
 })

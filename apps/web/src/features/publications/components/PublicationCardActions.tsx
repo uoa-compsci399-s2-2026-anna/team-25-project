@@ -36,13 +36,18 @@ export function PublicationCardActions({
         deleteConfirmMessage="This can't be undone."
         itemLabel={title}
         onDelete={async () => {
-          const result = await deletePublication(publicationId)
-          if (!result.ok) {
-            toast.add({ description: result.formError ?? DELETE_FAILED, title: "Delete failed" })
-            return
+          try {
+            const result = await deletePublication(publicationId)
+            if (!result.ok) {
+              toast.add({ description: result.formError ?? DELETE_FAILED, title: "Delete failed" })
+              return
+            }
+            toast.add({ description: `"${title}" was deleted.`, title: "Publication deleted" })
+            router.refresh()
+          } catch (error) {
+            console.error("deletePublication failed", error)
+            toast.add({ description: DELETE_FAILED, title: "Delete failed" })
           }
-          toast.add({ description: `"${title}" was deleted.`, title: "Publication deleted" })
-          router.refresh()
         }}
         onEdit={() => {
           setEditKey((key) => key + 1)
