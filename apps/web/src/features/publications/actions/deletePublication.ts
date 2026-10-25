@@ -39,7 +39,12 @@ export const deletePublication = async (id: number): Promise<ActionResult> => {
     return { formError: DELETE_FAILED, ok: false }
   }
 
-  updateTag(QueryKeys.PUBLICATIONS.ROOT)
+  // The publication is deleted. A cache failure must not make the user delete it again.
+  try {
+    updateTag(QueryKeys.PUBLICATIONS.ROOT)
+  } catch (error) {
+    payload.logger.error({ err: error }, "deletePublication could not update the cache")
+  }
 
   return { ok: true }
 }

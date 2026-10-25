@@ -84,4 +84,14 @@ describe("deletePublication", () => {
     expect(result).toEqual({ ok: true })
     expect(updateTag).toHaveBeenCalledWith(QueryKeys.PUBLICATIONS.ROOT)
   })
+
+  it("still succeeds when the cache update fails after the delete", async () => {
+    const payload = mockPayload()
+    vi.mocked(updateTag).mockImplementationOnce(() => {
+      throw new Error("cache down")
+    })
+
+    expect(await deletePublication(3)).toEqual({ ok: true })
+    expect(payload.logger.error).toHaveBeenCalled()
+  })
 })
