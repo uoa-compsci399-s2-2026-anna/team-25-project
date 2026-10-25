@@ -45,7 +45,7 @@ function useTeachingTeam(team: OfferingTeam) {
 
 export interface AddOfferingDialogProps {
   courseId: number
-  /** The offering the dialog is filled in from, whose teaching team the new one keeps. */
+  /** The offering the dialog is filled in from, teaching team included. */
   sourceId: number
   initialValues: AddCapstoneCourseDialogValues
   team: OfferingTeam

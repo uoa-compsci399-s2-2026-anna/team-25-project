@@ -120,8 +120,8 @@ export type AddCourseFormInput = z.infer<typeof addCourseFormSchema>
 
 /**
  * A new offering of an existing course, saved as a draft or published. The course
- * already has its code, and the offering keeps the teaching team it was copied
- * from, so neither the code nor "Your role" is asked for.
+ * already has its code, and the dialog sends the teaching team instead of "Your
+ * role", so neither is asked for here.
  */
 export const addOfferingFormSchema = z
   .discriminatedUnion("intent", [

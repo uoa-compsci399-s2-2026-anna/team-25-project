@@ -127,7 +127,8 @@ export const toVersionData = <Blank extends null | undefined>(
 
 /**
  * An offering's teaching team without the rows whose member was deleted. Those rows
- * would block publishing, and the offering dialogs can't remove them.
+ * would block publishing. Used when the dialog sends no team, so teaching staff never
+ * see these rows.
  */
 export const liveTeachingTeam = (rows: CourseVersion["teachingTeam"]) =>
   (rows ?? []).flatMap(({ member, role }) => {
