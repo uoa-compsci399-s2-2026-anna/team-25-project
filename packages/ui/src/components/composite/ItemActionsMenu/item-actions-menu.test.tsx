@@ -106,6 +106,11 @@ describe("ItemActionsMenu", () => {
     })
   })
 
+  // No assertion here: jsdom has no real CSS transitions, so Base UI's popup
+  // unmounts the instant `open` goes false either way - there's no way to
+  // observe the close-animation frame this fix is actually about from a jsdom
+  // test. Covered by hand in Storybook/a real browser instead.
+
   it("drops a pending confirm when closed by escape, rather than reopening on it", async () => {
     renderMenu()
     openMenu()

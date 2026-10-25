@@ -38,11 +38,14 @@ export function ItemActionsMenu({
   const [open, setOpen] = React.useState(false)
   const [confirming, setConfirming] = React.useState(false)
 
-  // Closing any other way (outside click, Escape) also drops a pending confirm,
-  // so reopening never starts back on it.
+  // Reset on open, not on close: the popup keeps rendering its last content
+  // while it plays its close animation, so clearing `confirming` at the same
+  // time as closing would swap it back to Edit/Delete mid-fade-out, flashing
+  // the wrong content. Resetting on the next open is invisible either way,
+  // and still guarantees a reopen never starts back on a stale confirm.
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen)
-    if (!nextOpen) setConfirming(false)
+    if (nextOpen) setConfirming(false)
   }
 
   return (
@@ -68,8 +71,8 @@ export function ItemActionsMenu({
               </Button>
               <Button
                 onClick={() => {
+                  // Leaves `confirming` as-is - see handleOpenChange.
                   setOpen(false)
-                  setConfirming(false)
                   onDelete?.()
                 }}
                 size="sm"
