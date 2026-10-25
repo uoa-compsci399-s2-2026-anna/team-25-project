@@ -19,7 +19,7 @@ export async function DraftOfferings({ courseId }: { courseId: number }) {
 
   const { collection, user } = await getCurrentUser()
   const course = await getPublishedCourseCached(courseId)
-  const editor =
+  const isEditor =
     collection === Slugs.Collections.MEMBERS && course !== null && isCourseEditor(course, user.id)
 
   return (
@@ -30,7 +30,7 @@ export async function DraftOfferings({ courseId }: { courseId: number }) {
       </p>
       {drafts.map((draft) => (
         <EditDraftOfferingDialog
-          canDelete={editor}
+          canDelete={isEditor}
           courseId={courseId}
           initialValues={toOfferingValues(draft)}
           key={draft.id}

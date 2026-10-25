@@ -183,12 +183,41 @@ describe("prepareCourse updates", () => {
     })
   })
 
-  it("refuses an ownership transfer by anyone but an admin", async () => {
+  it("lets the owner transfer ownership to an editor", async () => {
+    vi.mocked(lockDocument).mockResolvedValue(saved())
+    const { req } = request(owner)
+
+    await expect(
+      prepare(req, { owner: 7, editors: [42] }, "update", saved()),
+    ).resolves.toMatchObject({ owner: 7, editors: [42] })
+  })
+
+  it("refuses the owner a transfer to someone who is not an editor", async () => {
     vi.mocked(lockDocument).mockResolvedValue(saved())
     const { req } = request(owner)
 
     await expect(prepare(req, { owner: 9 }, "update", saved())).rejects.toThrow(
-      "Only admins can transfer ownership.",
+      "Only the owner can transfer ownership",
+    )
+  })
+
+  // The check reads the stored editors, so naming the new owner as an editor in the
+  // same request does not make them eligible.
+  it("refuses a transfer to a member the same request adds as an editor", async () => {
+    vi.mocked(lockDocument).mockResolvedValue(saved())
+    const { req } = request(owner)
+
+    await expect(prepare(req, { owner: 9, editors: [42, 9] }, "update", saved())).rejects.toThrow(
+      "Only the owner can transfer ownership",
+    )
+  })
+
+  it("refuses an editor who tries to take ownership", async () => {
+    vi.mocked(lockDocument).mockResolvedValue(saved())
+    const { req } = request(editor)
+
+    await expect(prepare(req, { owner: 7 }, "update", saved())).rejects.toThrow(
+      "Only the owner can transfer ownership",
     )
   })
 

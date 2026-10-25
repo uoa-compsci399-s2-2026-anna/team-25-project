@@ -8,6 +8,7 @@ import {
   deriveUniversity,
   findCurrentOffering,
   isCourseEditor,
+  isCourseOwner,
   isTeachingStaff,
   type MyCoursesInput,
   offeringTiming,
@@ -422,7 +423,13 @@ describe("toOfferingValues", () => {
   })
 })
 
-describe("isTeachingStaff", () => {
+describe("course roles", () => {
+  it("tells the owner apart from an editor", () => {
+    const owned = course({ owner: 1, editors: [2] })
+    expect(isCourseOwner(owned, 1)).toBe(true)
+    expect(isCourseOwner(owned, 2)).toBe(false)
+  })
+
   it("finds teaching staff by plain or populated member", () => {
     const offering = version({
       teachingTeam: [

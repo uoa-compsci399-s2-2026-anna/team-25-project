@@ -6,11 +6,13 @@ import { Slugs } from "@/lib/payload/slugs"
 import type { AuthorCandidate } from "./publications.types"
 
 // The member list is small, and names are matched in code (accents, initials), so
-// load every member once rather than search the database for each name.
-export const getAuthorCandidates = async (): Promise<AuthorCandidate[]> => {
+// load every member once rather than search the database for each name. Pass `ids`
+// to read just those members, fresh, when the cached list may not have them yet.
+export const getAuthorCandidates = async (ids?: number[]): Promise<AuthorCandidate[]> => {
   const payload = await getPayloadClient()
   const { docs } = await payload.find({
     collection: Slugs.Collections.MEMBERS,
+    ...(ids && { where: { id: { in: ids } } }),
     depth: 1,
     pagination: false,
     // The Local API overrides access, so ask only for what the picker shows.

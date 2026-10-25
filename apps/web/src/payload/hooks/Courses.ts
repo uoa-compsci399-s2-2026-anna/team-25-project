@@ -30,8 +30,14 @@ async function assignMemberOwner(req: PayloadRequest, course: Partial<Course>) {
 
 function validateCourseChanges(req: PayloadRequest, next: Partial<Course>, current?: Course) {
   if (current && !admin(req)) {
-    if (relationID(next.owner) !== relationID(current.owner))
-      fail("Only admins can transfer ownership.", 403)
+    // The owner may hand the course to one of its editors; anything else is an admin's call.
+    const nextOwner = relationID(next.owner)
+    if (
+      nextOwner !== relationID(current.owner) &&
+      (relationID(current.owner) !== req.user?.id ||
+        !(current.editors ?? []).some((editor) => relationID(editor) === nextOwner))
+    )
+      fail("Only the owner can transfer ownership, and only to one of the course's editors.", 403)
     if (
       relationID(current.owner) !== req.user?.id &&
       !isDeepStrictEqual(
