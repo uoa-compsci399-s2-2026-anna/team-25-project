@@ -34,6 +34,8 @@ type PublicationCardProps = React.ComponentProps<"div"> & {
   memberHref?: (memberId: number) => string
   /** Renders the author profile links, which stay on the site. */
   linkComponent?: React.ElementType<PublicationCardLinkProps>
+  /** Beside the published date, e.g. an Edit/Delete dropdown. */
+  action?: React.ReactNode
   size?: "default" | "sm"
 }
 
@@ -61,6 +63,7 @@ const avatarSrc = ({ member }: PublicationAuthor) =>
 const NewTabHint = () => <span className="sr-only"> (opens in a new tab)</span>
 
 function PublicationCard({
+  action,
   className,
   linkComponent: LinkComponent = "a",
   memberHref,
@@ -82,6 +85,7 @@ function PublicationCard({
           <span className="text-muted-foreground text-xs">
             Published {formatPublished(year, month)}
           </span>
+          {action}
         </CardAction>
 
         <div className="col-span-full flex flex-col gap-1.5">
