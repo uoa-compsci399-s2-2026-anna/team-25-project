@@ -13,16 +13,15 @@ import {
   ShareMyDraftCourses,
 } from "./CoursesListClient"
 import { CoursesPageHeader, coursesPageHeading } from "./CoursesPageHeader"
-import { CoursesSummaryPanel, CoursesSummaryPanelSkeleton } from "./CoursesSummaryPanel"
 import type { CourseTableRow } from "./CoursesTable"
-import { CoursesYourEntriesPanel, CoursesYourEntriesPanelSkeleton } from "./CoursesYourEntriesPanel"
+import { YourCoursesPanel, YourCoursesPanelSkeleton } from "./YourCoursesPanel"
 
-// The header and summary are cached and look the same for every viewer, so
+// The header and table are cached and look the same for every viewer, so
 // they can be prerendered. The table starts as that same published-only list
-// and the viewer's own drafts stream into it, and "Your Entries" streams in
+// and the viewer's own drafts stream into it, and "Your courses" streams in
 // too - both depend on whoever's looking.
 export async function CoursesList() {
-  const { rows, summary } = await getCoursesTableDataCached()
+  const rows = await getCoursesTableDataCached()
 
   return (
     <>
@@ -38,28 +37,23 @@ export async function CoursesList() {
         }
         rows={rows}
       />
-      <div className="grid w-full gap-4 px-10 pt-6 pb-10 md:grid-cols-2 md:px-12">
-        <CoursesSummaryPanel summary={summary} />
-        <AnimatedSuspense fallback={<CoursesYourEntriesPanelSkeleton />}>
-          <YourEntries rows={rows} />
-        </AnimatedSuspense>
-      </div>
+      <AnimatedSuspense fallback={<YourCoursesPanelSkeleton />}>
+        <YourCourses rows={rows} />
+      </AnimatedSuspense>
     </>
   )
 }
 
 // Drafts are only visible to their owner, so they're read here, outside the
-// shared cache, rather than into `rows`. The header's export and the summary
-// keep using the published-only `rows`, so neither counts a draft.
+// shared cache, rather than into `rows`. The header's export keeps using the
+// published-only `rows`, so it never includes a draft.
 async function MyDraftCourses() {
   return <ShareMyDraftCourses drafts={await getMyDraftCourses()} />
 }
 
-async function YourEntries({ rows }: { rows: CourseTableRow[] }) {
-  // Published rows only, on purpose: the summary's total already counts every
-  // course the member owns, drafts included, and a draft can never be "up to date".
-  const myCourses = await getMyCoursesSummary(rows)
-  return <CoursesYourEntriesPanel myCourses={myCourses} />
+async function YourCourses({ rows }: { rows: CourseTableRow[] }) {
+  // Published rows only, on purpose: drafts already show in the table.
+  return <YourCoursesPanel myCourses={await getMyCoursesSummary(rows)} />
 }
 
 export function CoursesListSkeleton() {
@@ -77,10 +71,7 @@ export function CoursesListSkeleton() {
         {...coursesPageHeading}
       />
       <CoursesListClientSkeleton />
-      <div className="grid w-full gap-4 px-10 pt-6 pb-10 md:grid-cols-2 md:px-12">
-        <CoursesSummaryPanelSkeleton />
-        <CoursesYourEntriesPanelSkeleton />
-      </div>
+      <YourCoursesPanelSkeleton />
     </>
   )
 }

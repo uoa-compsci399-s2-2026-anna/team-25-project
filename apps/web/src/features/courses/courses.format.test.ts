@@ -8,9 +8,9 @@ import {
   deriveUniversity,
   findCurrentOffering,
   isCourseEditor,
+  type MyCoursesInput,
   offeringTiming,
   selectOffering,
-  summarizeCourses,
   summarizeMyCourses,
   toCourseTableRow,
   toNewOfferingValues,
@@ -154,68 +154,123 @@ const row = (overrides: Partial<CourseTableRow> = {}): CourseTableRow => ({
   ...overrides,
 })
 
-describe("summarizeCourses", () => {
-  it("counts the directory and how many offerings run the full year", () => {
-    const rows = [
-      row({ currentOffering: "Semester 2 2026" }),
-      row({ currentOffering: "Full Year 2026" }),
-      row({ currentOffering: "Trimester 1 2026" }),
-    ]
-    const summary = summarizeCourses(rows)
-    expect(summary.totalCourses).toBe(3)
-    expect(summary.yearLongCourses).toBe(1)
-  })
-
-  it("returns zero counts for an empty directory", () => {
-    expect(summarizeCourses([])).toEqual({
-      totalCourses: 0,
-      yearLongCourses: 0,
-      industryRequiredCourses: 0,
-      medianTeamSize: 4,
-    })
-  })
-})
-
 describe("summarizeMyCourses", () => {
-  it("counts every id in the owned-course set, published or not", () => {
-    const myCourseIds = new Set(["1", "2", "3"])
-    const rows = [row({ id: "1", currentStartDate: "2026-07-20", status: "published" })]
+  const input = (overrides: Partial<MyCoursesInput> = {}): MyCoursesInput => ({
+    memberId: 1,
+    courses: [],
+    rows: [],
+    taughtOfferings: [],
+    ownedOfferings: [],
+    ...overrides,
+  })
+  const offering = (course: number, period: string, startDate: string) => ({
+    course,
+    period,
+    startDate,
+  })
+  const codesOf = (summary: ReturnType<typeof summarizeMyCourses>) =>
+    summary.courses.map((course) => course.code)
 
-    expect(summarizeMyCourses(myCourseIds, rows, 2026).total).toBe(3)
+  it("lists published courses the viewer owns, edits or taught, with their relation", () => {
+    const summary = summarizeMyCourses(
+      input({
+        courses: [
+          { id: 1, owner: 1 },
+          { id: 2, owner: 9 },
+        ],
+        rows: [
+          row({ id: "1", code: "A 1" }),
+          row({ id: "2", code: "B 2" }),
+          row({ id: "3", code: "C 3" }),
+          row({ id: "4", code: "D 4" }),
+        ],
+        taughtOfferings: [{ id: 30, course: 3, period: "Semester 1 2026" }],
+      }),
+      2026,
+    )
+
+    expect(summary.courses).toEqual([
+      expect.objectContaining({ courseId: 1, isOwner: true, isEditor: false, taughtOfferings: [] }),
+      expect.objectContaining({ courseId: 2, isOwner: false, isEditor: true }),
+      expect.objectContaining({
+        courseId: 3,
+        isOwner: false,
+        isEditor: false,
+        taughtOfferings: [{ id: 30, period: "Semester 1 2026" }],
+      }),
+    ])
   })
 
-  it("counts a course as up to date only when its row is published for the given year", () => {
-    const myCourseIds = new Set(["1", "2", "3"])
-    const rows = [
-      row({ id: "1", currentStartDate: "2026-07-20", status: "published" }),
-      row({ id: "2", currentStartDate: "2025-07-21", status: "published" }),
-      // id "3" has no row at all - an unpublished course, so it can't be up to date.
-    ]
+  it("flags an owned course with no offering this year, but not an edited one", () => {
+    const summary = summarizeMyCourses(
+      input({
+        courses: [
+          { id: 1, owner: 1 },
+          { id: 2, owner: 9 },
+          { id: 3, owner: 1 },
+        ],
+        rows: [row({ id: "1" }), row({ id: "2" }), row({ id: "3" })],
+        ownedOfferings: [
+          offering(3, "Semester 2 2026", "2026-07-20"),
+          offering(1, "Semester 2 2025", "2025-07-21"),
+        ],
+      }),
+      2026,
+    )
 
-    expect(summarizeMyCourses(myCourseIds, rows, 2026)).toEqual({
-      total: 3,
-      upToDate: 1,
-      year: 2026,
-    })
+    expect(
+      summary.courses.map((course) => [course.courseId, course.needsOfferingThisYear]),
+    ).toEqual([
+      [1, true],
+      [3, false],
+      [2, false],
+    ])
   })
 
-  it("ignores rows that aren't in the owned-course set", () => {
-    const myCourseIds = new Set(["2"])
-    const rows = [
-      row({ id: "1", currentStartDate: "2026-07-20", status: "published" }),
-      row({ id: "2", currentStartDate: "2026-07-20", status: "published" }),
-    ]
+  it("checks every offering, not only the one the course is shown as", () => {
+    // The table shows the 2027 offering as next, but one ran earlier in 2026.
+    const summary = summarizeMyCourses(
+      input({
+        courses: [{ id: 1, owner: 1 }],
+        rows: [row({ id: "1", currentStartDate: "2027-03-01" })],
+        ownedOfferings: [
+          offering(1, "Semester 1 2027", "2027-03-01"),
+          offering(1, "Semester 1 2026", "2026-03-02"),
+        ],
+      }),
+      2026,
+    )
 
-    expect(summarizeMyCourses(myCourseIds, rows, 2026)).toEqual({
-      total: 1,
-      upToDate: 1,
-      year: 2026,
-    })
+    expect(summary.courses[0]?.needsOfferingThisYear).toBe(false)
   })
 
-  it("defaults to the current calendar year", () => {
-    const summary = summarizeMyCourses(new Set(["1"]), [row({ id: "1" })])
-    expect(summary.year).toBe(new Date().getFullYear())
+  it("orders needing an offering, then owned, edited and only taught, each by code", () => {
+    const summary = summarizeMyCourses(
+      input({
+        courses: [
+          { id: 1, owner: 9 },
+          { id: 2, owner: 1 },
+          { id: 3, owner: 1 },
+          { id: 4, owner: 1 },
+        ],
+        rows: [
+          row({ id: "1", code: "EDITED" }),
+          row({ id: "2", code: "OWNED B" }),
+          row({ id: "3", code: "OWNED A" }),
+          row({ id: "4", code: "STALE" }),
+          row({ id: "5", code: "TAUGHT" }),
+        ],
+        taughtOfferings: [{ id: 50, course: 5, period: "Semester 1 2024" }],
+        ownedOfferings: [
+          offering(2, "Semester 2 2026", "2026-07-20"),
+          offering(3, "Semester 2 2026", "2026-07-20"),
+          offering(4, "Semester 2 2025", "2025-07-21"),
+        ],
+      }),
+      2026,
+    )
+
+    expect(codesOf(summary)).toEqual(["STALE", "OWNED A", "OWNED B", "EDITED", "TAUGHT"])
   })
 })
 

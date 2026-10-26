@@ -183,53 +183,106 @@ export const toNewOfferingValues = (version: CourseVersion): AddCapstoneCourseDi
   startDate: "",
 })
 
-export interface CoursesSummaryStats {
-  totalCourses: number
-  yearLongCourses: number
-  /**
-   * Placeholder values for now - there's no field on `Course` or
-   * `CourseVersion` for either yet (the same gap #104 already called out
-   * when it dropped the industry/team-size columns).
-   */
-  industryRequiredCourses: number
-  medianTeamSize: number
+const courseIdOf = (version: Pick<CourseVersion, "course">): number =>
+  typeof version.course === "number" ? version.course : version.course.id
+
+/** Keeps each course's offerings in the order they arrive. */
+export const groupByCourseId = <T extends Pick<CourseVersion, "course">>(offerings: T[]) => {
+  const grouped = new Map<number, T[]>()
+  for (const offering of offerings) {
+    const courseId = courseIdOf(offering)
+    grouped.set(courseId, [...(grouped.get(courseId) ?? []), offering])
+  }
+  return grouped
 }
 
-const isYearLong = (row: CourseTableRow): boolean =>
-  row.currentOffering.toLowerCase().includes("year")
-
-export const summarizeCourses = (rows: CourseTableRow[]): CoursesSummaryStats => ({
-  totalCourses: rows.length,
-  yearLongCourses: rows.filter(isYearLong).length,
-  industryRequiredCourses: Math.round(rows.length * 0.4),
-  medianTeamSize: 4,
-})
+/** A published course the viewer owns, edits, or taught an offering of. */
+export interface MyCourse {
+  courseId: number
+  code: string
+  title: string
+  isOwner: boolean
+  isEditor: boolean
+  currentOffering: string
+  /** Owned, with no published offering starting in the summary's `year`. */
+  needsOfferingThisYear: boolean
+  /** The period of the newest owned offering that started before `year`, if any. */
+  lastOfferingBeforeYear: string | null
+  /** Published offerings with the viewer on the teaching team, newest first. */
+  taughtOfferings: { id: number; period: string }[]
+}
 
 export interface MyCoursesSummary {
-  total: number
-  upToDate: number
   year: number
+  /** Needing an offering first, then owned, edited and only taught, each by code. */
+  courses: MyCourse[]
 }
 
-/**
- * `myCourseIds` holds every course the viewer owns, published or not.
- * `rows` is the public, published-only list. An unpublished course can never
- * count as "up to date" anyway, so it's fine that it won't have a row here.
- */
+export interface MyCoursesInput {
+  memberId: number
+  /** Every course the viewer owns or edits, published or not. */
+  courses: Pick<Course, "id" | "owner">[]
+  /** The public, published-only rows. A course without one is left out. */
+  rows: CourseTableRow[]
+  /** Published offerings with the viewer on the teaching team, newest first. */
+  taughtOfferings: Pick<CourseVersion, "id" | "course" | "period">[]
+  /** Published offerings of the courses the viewer owns, newest first. */
+  ownedOfferings: Pick<CourseVersion, "course" | "period" | "startDate">[]
+}
+
+const courseRank = (course: MyCourse) => {
+  if (course.needsOfferingThisYear) return 0
+  if (course.isOwner) return 1
+  if (course.isEditor) return 2
+  return 3
+}
+
 export const summarizeMyCourses = (
-  myCourseIds: ReadonlySet<string>,
-  rows: CourseTableRow[],
+  { memberId, courses, rows, taughtOfferings, ownedOfferings }: MyCoursesInput,
   year: number = new Date().getFullYear(),
-): MyCoursesSummary => ({
-  total: myCourseIds.size,
-  upToDate: rows.filter(
-    (row) =>
-      myCourseIds.has(row.id) &&
-      row.status === "published" &&
-      row.currentStartDate.startsWith(String(year)),
-  ).length,
-  year,
-})
+): MyCoursesSummary => {
+  const ownedIds = new Set<number>()
+  const editedIds = new Set<number>()
+  for (const course of courses) {
+    if (ownerIdOf(course) === memberId) ownedIds.add(course.id)
+    else editedIds.add(course.id)
+  }
+  const taughtByCourseId = groupByCourseId(taughtOfferings)
+  const ownedByCourseId = groupByCourseId(ownedOfferings)
+  const startYearOf = (offering: Pick<CourseVersion, "startDate">) =>
+    Number(offering.startDate.slice(0, 4))
+
+  const myCourses = rows.flatMap((row): MyCourse[] => {
+    const courseId = Number(row.id)
+    const taught = taughtByCourseId.get(courseId) ?? []
+    const isOwner = ownedIds.has(courseId)
+    const isEditor = editedIds.has(courseId)
+    if (!isOwner && !isEditor && taught.length === 0) return []
+    const offerings = isOwner ? (ownedByCourseId.get(courseId) ?? []) : []
+    return [
+      {
+        courseId,
+        code: row.code,
+        title: row.title,
+        isOwner,
+        isEditor,
+        currentOffering: row.currentOffering,
+        needsOfferingThisYear:
+          isOwner && !offerings.some((offering) => startYearOf(offering) === year),
+        lastOfferingBeforeYear:
+          offerings.find((offering) => startYearOf(offering) < year)?.period ?? null,
+        taughtOfferings: taught.map(({ id, period }) => ({ id, period })),
+      },
+    ]
+  })
+
+  return {
+    year,
+    courses: myCourses.sort(
+      (a, b) => courseRank(a) - courseRank(b) || a.code.localeCompare(b.code),
+    ),
+  }
+}
 
 /**
  * Pinned so the server and browser agree; a reader's own zone could otherwise
