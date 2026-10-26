@@ -7,7 +7,12 @@ import {
 } from "@repo/shared/constants/resource-attachments"
 import { addResourceFormSchema, resourceAttachmentsError } from "@repo/shared/schemas/resources"
 import { validateField } from "@repo/shared/utils/validate-field"
-import { AttachmentPicker, RichTextEditor, type RichTextValue } from "@repo/ui/components/composite"
+import {
+  AttachmentPicker,
+  RichTextEditor,
+  type RichTextValue,
+  type SavedAttachment,
+} from "@repo/ui/components/composite"
 import {
   Button,
   DialogFooter,
@@ -27,6 +32,7 @@ import {
 } from "@repo/ui/components/ui"
 import { useForm } from "@tanstack/react-form"
 import { useId, useState } from "react"
+import type { ActionResult } from "@/features/auth/actions/types"
 import { createResource } from "../actions/createResource"
 import type { ResourceCourseOption } from "../resources.queries"
 
@@ -44,34 +50,67 @@ const RequiredAsterisk = () => (
   </span>
 )
 
+export type ResourceFormValues = {
+  title: string
+  course: number | null
+  description: RichTextValue
+}
+
+const CREATE_FAILED = "Could not share this resource. Try again."
+const UPDATE_FAILED = "Could not save this resource. Try again."
+
+const SUBMIT_LABELS = {
+  create: { busy: "Sharing...", idle: "Share resource" },
+  edit: { busy: "Saving...", idle: "Save changes" },
+}
+
 type AddResourceFormProps = {
   /** The courses the member can link to: the ones they own or edit. */
   courses: ResourceCourseOption[]
   onSuccess?: () => void
-}
+} & (
+  | { mode?: "create" }
+  | {
+      mode: "edit"
+      initialValues: ResourceFormValues
+      /** The files the resource already has. Removing one unlinks it on save. */
+      savedAttachments: SavedAttachment[]
+      /** Saves the form, sent the same FormData as create plus a `keepAttachments` id per kept file. */
+      onSave: (formData: FormData) => Promise<ActionResult>
+    }
+)
 
-export const AddResourceForm = ({ courses, onSuccess }: AddResourceFormProps) => {
+export const AddResourceForm = (props: AddResourceFormProps) => {
+  const { courses, onSuccess } = props
+  const editing = props.mode === "edit"
+  const submitLabel = SUBMIT_LABELS[editing ? "edit" : "create"]
   const attachmentsId = useId()
   const attachmentsLabelId = useId()
   const attachmentsHintId = useId()
   const attachmentsErrorId = useId()
   const [attachments, setAttachments] = useState<File[]>([])
+  const [saved, setSaved] = useState<SavedAttachment[]>(
+    props.mode === "edit" ? props.savedAttachments : [],
+  )
   const [formError, setFormError] = useState<string | undefined>(undefined)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const form = useForm({
-    defaultValues: {
-      title: "",
-      course: null as number | null,
-      description: emptyDescription,
-    },
+    defaultValues:
+      props.mode === "edit"
+        ? props.initialValues
+        : ({ title: "", course: null, description: emptyDescription } as ResourceFormValues),
     validators: { onSubmit: addResourceFormSchema },
     onSubmit: async ({ value, formApi }) => {
       setFieldErrors({})
       setFormError(undefined)
 
       // Checked here too so too-large or unsupported files get a message without being sent.
-      const attachmentsError = resourceAttachmentsError(attachments)
+      // Saved files were checked on upload, so they only count toward the limits.
+      const attachmentsError = resourceAttachmentsError(
+        attachments,
+        saved.map((file) => ({ size: file.size ?? 0 })),
+      )
       if (attachmentsError) {
         setFieldErrors({ attachments: attachmentsError })
         return
@@ -82,13 +121,18 @@ export const AddResourceForm = ({ courses, onSuccess }: AddResourceFormProps) =>
       formData.set("course", value.course === null ? "" : String(value.course))
       formData.set("description", JSON.stringify(value.description))
       for (const file of attachments) formData.append("attachments", file)
+      for (const file of saved) formData.append("keepAttachments", String(file.id))
 
       try {
-        const result = await createResource(formData)
+        const result =
+          props.mode === "edit" ? await props.onSave(formData) : await createResource(formData)
         if (result.ok) {
-          toast.add({ type: "success", title: "Resource shared" })
-          formApi.reset()
-          setAttachments([])
+          toast.add({ type: "success", title: editing ? "Resource updated" : "Resource shared" })
+          // Edit closes the dialog, which remounts the form fresh next time it opens.
+          if (!editing) {
+            formApi.reset()
+            setAttachments([])
+          }
           onSuccess?.()
           return
         }
@@ -96,7 +140,7 @@ export const AddResourceForm = ({ courses, onSuccess }: AddResourceFormProps) =>
         setFieldErrors(result.fieldErrors ?? {})
         setFormError(result.formError)
       } catch {
-        setFormError("Could not share this resource. Try again.")
+        setFormError(editing ? UPDATE_FAILED : CREATE_FAILED)
       }
     },
   })
@@ -192,6 +236,7 @@ export const AddResourceForm = ({ courses, onSuccess }: AddResourceFormProps) =>
                   aria-invalid={isInvalid}
                   aria-labelledby={`${field.name}-label`}
                   className="[&_[contenteditable]]:min-h-48"
+                  defaultValue={editing ? field.state.value : undefined}
                   id={field.name}
                   onBlur={field.handleBlur}
                   onChange={field.handleChange}
@@ -225,6 +270,11 @@ export const AddResourceForm = ({ courses, onSuccess }: AddResourceFormProps) =>
                   setAttachments(files)
                   setFieldErrors(({ attachments: _, ...rest }) => rest)
                 }}
+                onSavedChange={(files) => {
+                  setSaved(files)
+                  setFieldErrors(({ attachments: _, ...rest }) => rest)
+                }}
+                saved={saved}
               />
             )}
           </form.Subscribe>
@@ -244,7 +294,7 @@ export const AddResourceForm = ({ courses, onSuccess }: AddResourceFormProps) =>
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(isSubmitting) => (
             <Button disabled={isSubmitting} type="submit" variant="button-mauve">
-              {isSubmitting ? "Sharing..." : "Share resource"}
+              {isSubmitting ? submitLabel.busy : submitLabel.idle}
             </Button>
           )}
         </form.Subscribe>
