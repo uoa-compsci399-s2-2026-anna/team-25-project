@@ -8,7 +8,7 @@ import { ResourceEdit } from "./resourceEditFields"
 
 /**
  * The course picker, with the viewer's own courses as its options - so it reads the
- * signed-in user and belongs behind a Suspense boundary, like ResourceEditButton.
+ * signed-in user and belongs behind a Suspense boundary, like ResourceTitleActionsServer.
  */
 export const ResourceCourseEdit = async ({
   course,
