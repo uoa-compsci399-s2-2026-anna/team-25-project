@@ -12,7 +12,13 @@ import {
   validatePublication,
   validateVersionChanges,
 } from "./CourseVersions"
-import { internal, isInternal, VERSION_WRITE, type VersionMetadataKey } from "./helpers"
+import {
+  COURSE_DELETE,
+  internal,
+  isInternal,
+  VERSION_WRITE,
+  type VersionMetadataKey,
+} from "./helpers"
 
 vi.mock("@/lib/payload/lock", () => ({ lockDocument: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }))
@@ -643,6 +649,27 @@ describe("assertVersionDeletable", () => {
     ["one that has been published before", { publishedAt: "2026-01-01T00:00:00.000Z" }],
   ])("refuses %s", async (_label, state) => {
     const { req } = request({ current: { id: 3, course: 5, ...state } })
+
+    await expect(remove(req)).rejects.toThrow("Published offerings cannot be deleted.")
+  })
+
+  it("lets an admin delete a published offering while deleting its whole course", async () => {
+    const { req } = request({
+      user: administrator,
+      current: { id: 3, course: 5, _status: "published" },
+    })
+    req.context[COURSE_DELETE] = 5
+
+    await expect(remove(req)).resolves.toBeUndefined()
+  })
+
+  it.each([
+    ["an admin deleting just the offering", administrator, undefined],
+    ["an admin deleting another course", administrator, 6],
+    ["the course's editor, even with the flag set", editor, 5],
+  ])("still refuses a published offering for %s", async (_label, user, deleting) => {
+    const { req } = request({ user, current: { id: 3, course: 5, _status: "published" } })
+    if (deleting !== undefined) req.context[COURSE_DELETE] = deleting
 
     await expect(remove(req)).rejects.toThrow("Published offerings cannot be deleted.")
   })

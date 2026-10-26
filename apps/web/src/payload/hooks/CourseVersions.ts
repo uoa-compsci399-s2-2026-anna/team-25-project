@@ -12,6 +12,7 @@ import { relationID } from "../access/Courses/helpers"
 import { admin } from "../access/helpers"
 import { revalidateCourse } from "./Courses"
 import {
+  COURSE_DELETE,
   fail,
   internal,
   isInternal,
@@ -314,11 +315,16 @@ export const revalidateDeletedCourseVersion: CollectionAfterDeleteHook<CourseVer
 }
 
 export const assertVersionDeletable: CollectionBeforeDeleteHook = async ({ id, req }) => {
-  requireEditor(req, await lockCourse(req, relationID((await readVersion(req, id)).course)))
+  const course = await lockCourse(req, relationID((await readVersion(req, id)).course))
+  requireEditor(req, course)
 
   // Re-read under the lock: a concurrent publication may have changed the status.
   const version = await readVersion(req, id)
 
-  if (isPublished(version) || version.publishedAt)
-    fail("Published offerings cannot be deleted. Their history is permanent.", 409)
+  if (!isPublished(version) && !version.publishedAt) return
+
+  // The one exception: an admin deleting the whole course takes its history with it.
+  if (admin(req) && req.context[COURSE_DELETE] === course.id) return
+
+  fail("Published offerings cannot be deleted. Their history is permanent.", 409)
 }
