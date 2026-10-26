@@ -12,8 +12,9 @@ type Timeframe = {
  */
 
 /**
- * Keeps the timeframe pointing forwards. An edit can send the start without the end, so the
- * value is then undefined; siblingData holds the saved end merged with the edit.
+ * Keeps the timeframe pointing forwards. An admin or Local API update can send the start
+ * without the end, so the value is then undefined; siblingData holds the saved end merged
+ * with the update. The in-place editor always sends the end, as null when it is cleared.
  */
 export const validateProposalEndYear: NumberFieldSingleValidation = (value, options) => {
   const builtIn = number(value, options)

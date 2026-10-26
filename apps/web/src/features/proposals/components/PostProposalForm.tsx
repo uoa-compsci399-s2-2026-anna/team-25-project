@@ -3,6 +3,10 @@
 import {
   ProposalEthicsStatus,
   ProposalEthicsStatusLabels,
+  type ProposalTag,
+  ProposalTagLabels,
+  type ProposalTimeframeEndPeriod,
+  ProposalTimeframeEndPeriodLabels,
   ProposalTimeframeStartPeriod,
   ProposalTimeframeStartPeriodLabels,
 } from "@repo/shared/enums/proposals"
@@ -12,12 +16,16 @@ import { validateField } from "@repo/shared/utils/validate-field"
 import { RichTextEditor, type RichTextValue } from "@repo/ui/components/composite"
 import {
   Button,
+  Checkbox,
   DialogFooter,
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldLegend,
+  FieldSet,
   Input,
+  Label,
   Select,
   SelectContent,
   SelectItem,
@@ -28,10 +36,15 @@ import {
 } from "@repo/ui/components/ui"
 import { useForm } from "@tanstack/react-form"
 import { useState } from "react"
+import type { z } from "zod"
 import { postProposal } from "../actions/postProposal"
 
 const startPeriodOptions = toSelectOptions(ProposalTimeframeStartPeriodLabels)
+const endPeriodOptions = toSelectOptions(ProposalTimeframeEndPeriodLabels)
 const ethicsOptions = toSelectOptions(ProposalEthicsStatusLabels)
+const tagOptions = toSelectOptions(ProposalTagLabels)
+
+type PostProposalFormInput = z.input<typeof postProposalFormSchema>
 
 const formShape = postProposalFormSchema.shape
 const timeframeShape = formShape.timeframe.shape
@@ -62,9 +75,11 @@ export const PostProposalForm = ({ onSuccess }: PostProposalFormProps) => {
       outputTarget: "",
       timeframe: {
         startYear: new Date().getFullYear(),
-        startPeriod: ProposalTimeframeStartPeriod.SEM_1 as ProposalTimeframeStartPeriod,
-      },
+        startPeriod: ProposalTimeframeStartPeriod.SEM_1,
+        endPeriod: null,
+      } as PostProposalFormInput["timeframe"],
       ethics: ProposalEthicsStatus.UNKNOWN as ProposalEthicsStatus,
+      tags: [] as ProposalTag[],
       summary: "",
       body: emptyBody,
     },
@@ -204,6 +219,78 @@ export const PostProposalForm = ({ onSuccess }: PostProposalFormProps) => {
 
         <div className="grid gap-5 sm:grid-cols-2">
           <form.Field
+            name="timeframe.endPeriod"
+            validators={{ onChange: validateField(timeframeShape.endPeriod) }}
+          >
+            {(field) => {
+              const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+              return (
+                <Field data-invalid={isInvalid || undefined}>
+                  <FieldLabel htmlFor={field.name}>End period</FieldLabel>
+                  <Select
+                    name={field.name}
+                    onValueChange={(value) => field.handleChange(value)}
+                    value={field.state.value}
+                  >
+                    <SelectTrigger aria-invalid={isInvalid} className="w-full" id={field.name}>
+                      <SelectValue placeholder="None">
+                        {(value: ProposalTimeframeEndPeriod | null) =>
+                          value ? ProposalTimeframeEndPeriodLabels[value] : "None"
+                        }
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={null}>None</SelectItem>
+                      {endPeriodOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                  {fieldErrors["timeframe.endPeriod"] && (
+                    <FieldError>{fieldErrors["timeframe.endPeriod"]}</FieldError>
+                  )}
+                </Field>
+              )
+            }}
+          </form.Field>
+
+          <form.Field
+            name="timeframe.endYear"
+            validators={{ onBlur: validateField(timeframeShape.endYear) }}
+          >
+            {(field) => {
+              const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+              return (
+                <Field data-invalid={isInvalid || undefined}>
+                  <FieldLabel htmlFor={field.name}>End year</FieldLabel>
+                  <Input
+                    aria-invalid={isInvalid}
+                    id={field.name}
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onChange={(event) =>
+                      field.handleChange(
+                        event.target.value === "" ? undefined : Number(event.target.value),
+                      )
+                    }
+                    type="number"
+                    value={field.state.value ?? ""}
+                  />
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                  {fieldErrors["timeframe.endYear"] && (
+                    <FieldError>{fieldErrors["timeframe.endYear"]}</FieldError>
+                  )}
+                </Field>
+              )
+            }}
+          </form.Field>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <form.Field
             name="outputTarget"
             validators={{ onBlur: validateField(formShape.outputTarget) }}
           >
@@ -264,6 +351,37 @@ export const PostProposalForm = ({ onSuccess }: PostProposalFormProps) => {
             }}
           </form.Field>
         </div>
+
+        <form.Field name="tags">
+          {(field) => (
+            <FieldSet>
+              <FieldLegend variant="label">Tags</FieldLegend>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {tagOptions.map((option) => (
+                  <div className="flex items-center gap-2" key={option.value}>
+                    <Checkbox
+                      checked={field.state.value.includes(option.value)}
+                      id={`${field.name}-${option.value}`}
+                      onCheckedChange={(checked) =>
+                        field.handleChange(
+                          tagOptions
+                            .map((o) => o.value)
+                            .filter((v) =>
+                              v === option.value ? checked : field.state.value.includes(v),
+                            ),
+                        )
+                      }
+                    />
+                    <Label className="font-normal" htmlFor={`${field.name}-${option.value}`}>
+                      {option.label}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              {fieldErrors.tags && <FieldError>{fieldErrors.tags}</FieldError>}
+            </FieldSet>
+          )}
+        </form.Field>
 
         <form.Field name="summary" validators={{ onBlur: validateField(formShape.summary) }}>
           {(field) => {
