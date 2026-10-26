@@ -323,8 +323,24 @@ export const assertVersionDeletable: CollectionBeforeDeleteHook = async ({ id, r
 
   if (!isPublished(version) && !version.publishedAt) return
 
-  // The one exception: an admin deleting the whole course takes its history with it.
+  // An admin deleting the whole course takes its history with it.
   if (admin(req) && req.context[COURSE_DELETE] === course.id) return
 
-  fail("Published offerings cannot be deleted. Their history is permanent.", 409)
+  // Otherwise only the owner may remove a published offering, and never the last one:
+  // that would leave a published course with nothing to show, and deleting a course
+  // stays with admins.
+  if (relationID(course.owner) !== req.user?.id)
+    fail("Only the course's owner can delete a published offering.", 403)
+
+  const { totalDocs: published } = await req.payload.count({
+    collection: Slugs.Collections.COURSE_VERSIONS,
+    where: {
+      course: { equals: course.id },
+      or: [{ _status: { equals: "published" } }, { publishedAt: { exists: true } }],
+    },
+    req,
+    overrideAccess: true,
+  })
+  if (published <= 1)
+    fail("This is the course's only published offering. Ask an admin to delete the course.", 409)
 }
