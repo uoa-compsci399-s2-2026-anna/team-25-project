@@ -1,11 +1,15 @@
 "use client"
 
 import { ItemActionsMenu, type SavedAttachment } from "@repo/ui/components/composite"
+import { toast } from "@repo/ui/components/ui"
 import { useRouter } from "next/navigation"
 import * as React from "react"
+import { deleteResource } from "../actions/deleteResource"
 import type { ResourceCourseOption } from "../resources.queries"
 import type { ResourceFormValues } from "./AddResourceForm"
 import { EditResourceDialog } from "./EditResourceDialog"
+
+const DELETE_FAILED = "Could not delete this resource. Try again."
 
 export interface ResourceCardActionsProps {
   resourceId: number
@@ -16,7 +20,7 @@ export interface ResourceCardActionsProps {
 }
 
 /**
- * The resource card's Edit dropdown. Only rendered for the resource's
+ * The resource card's Edit/Delete dropdown. Only rendered for the resource's
  * owner and admins (see `ResourceCardActionsServer`).
  */
 export function ResourceCardActions({
@@ -34,7 +38,22 @@ export function ResourceCardActions({
   return (
     <>
       <ItemActionsMenu
+        deleteConfirmMessage="This can't be undone."
         itemLabel={title}
+        onDelete={async () => {
+          try {
+            const result = await deleteResource(resourceId)
+            if (!result.ok) {
+              toast.add({ description: result.formError ?? DELETE_FAILED, title: "Delete failed" })
+              return
+            }
+            toast.add({ description: `"${title}" was deleted.`, title: "Resource deleted" })
+            router.refresh()
+          } catch (error) {
+            console.error("deleteResource failed", error)
+            toast.add({ description: DELETE_FAILED, title: "Delete failed" })
+          }
+        }}
         onEdit={() => {
           setEditKey((key) => key + 1)
           setEditOpen(true)

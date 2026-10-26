@@ -3,11 +3,13 @@ import { toast } from "@repo/ui/components/ui"
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { deleteResource } from "../actions/deleteResource"
 import { updateResource } from "../actions/updateResource"
 import { ResourceCardActions } from "./ResourceCardActions"
 
 const refresh = vi.fn()
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh }) }))
+vi.mock("../actions/deleteResource", () => ({ deleteResource: vi.fn() }))
 vi.mock("../actions/updateResource", () => ({ updateResource: vi.fn() }))
 vi.mock("../actions/createResource", () => ({ createResource: vi.fn() }))
 // Lexical can't be rendered under jsdom, so a stand-in shows the value it was given.
@@ -137,11 +139,52 @@ describe("ResourceCardActions", () => {
     expect(screen.getByText("rubric.pdf")).toBeInTheDocument()
   })
 
-  it("has no Delete option", async () => {
+  it("deletes and refreshes the list when Confirm delete succeeds", async () => {
+    vi.mocked(deleteResource).mockResolvedValue({ ok: true })
     const user = renderActions()
-    await user.click(screen.getByRole("button", { name: `Actions for ${TITLE}` }))
+    await openMenuItem(user, "Delete")
+    await user.click(await screen.findByRole("button", { name: "Confirm delete" }))
 
-    expect(await screen.findByRole("menuitem", { name: "Edit" })).toBeInTheDocument()
-    expect(screen.queryByRole("menuitem", { name: "Delete" })).not.toBeInTheDocument()
+    await waitFor(() => expect(deleteResource).toHaveBeenCalledWith(3))
+    expect(toast.add).toHaveBeenCalledWith(expect.objectContaining({ title: "Resource deleted" }))
+    expect(refresh).toHaveBeenCalledOnce()
+  })
+
+  it("shows the failure message and doesn't refresh when delete fails", async () => {
+    vi.mocked(deleteResource).mockResolvedValue({
+      formError: "Could not delete this resource. Try again.",
+      ok: false,
+    })
+    const user = renderActions()
+    await openMenuItem(user, "Delete")
+    await user.click(await screen.findByRole("button", { name: "Confirm delete" }))
+
+    await waitFor(() =>
+      expect(toast.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          description: "Could not delete this resource. Try again.",
+          title: "Delete failed",
+        }),
+      ),
+    )
+    expect(refresh).not.toHaveBeenCalled()
+  })
+
+  it("shows the failure message and doesn't refresh when deleteResource throws", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    vi.mocked(deleteResource).mockRejectedValue(new Error("network down"))
+    const user = renderActions()
+    await openMenuItem(user, "Delete")
+    await user.click(await screen.findByRole("button", { name: "Confirm delete" }))
+
+    await waitFor(() =>
+      expect(toast.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          description: "Could not delete this resource. Try again.",
+          title: "Delete failed",
+        }),
+      ),
+    )
+    expect(refresh).not.toHaveBeenCalled()
   })
 })
