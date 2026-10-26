@@ -27,7 +27,8 @@ export const useGlobe = (markers: GlobeMarker[]) => {
       mapSamples: 16000,
       mapBrightness: 6,
       baseColor: [1, 1, 1],
-      markerColor: [0.2, 0.4, 1],
+      // brand-rose from brand.css as 0-1 RGB - cobe can't read CSS variables.
+      markerColor: [0.698, 0.42, 0.49],
       markerElevation: 0.02,
       glowColor: [1, 1, 1],
       markers: markers.map((marker) => ({

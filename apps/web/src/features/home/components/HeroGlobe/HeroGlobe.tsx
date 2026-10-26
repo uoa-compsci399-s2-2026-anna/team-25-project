@@ -21,7 +21,7 @@ export const HeroGlobe = ({ markers }: { markers: GlobeMarker[] }) => {
         className="aspect-square w-full cursor-grab touch-none active:cursor-grabbing"
         ref={canvasRef}
       />
-      {/* A blue ping around each marker - the dot itself stays put. It's also the hover
+      {/* A rose ping around each marker - the dot itself stays put. It's also the hover
           target for the marker's label, so it's a little larger than the ping. Rendered
           before the labels so they sit on top of it. */}
       {markers.map((marker) => (
@@ -43,8 +43,8 @@ export const HeroGlobe = ({ markers }: { markers: GlobeMarker[] }) => {
             } as CSSProperties
           }
         >
-          {/* #3366ff matches markerColor in useGlobe.ts. */}
-          <span className="size-3 rounded-full bg-[#3366ff] motion-safe:animate-ping" />
+          {/* brand-rose matches markerColor in useGlobe.ts. */}
+          <span className="size-3 rounded-full bg-brand-rose motion-safe:animate-ping" />
         </div>
       ))}
       {markers.map((marker) => (
