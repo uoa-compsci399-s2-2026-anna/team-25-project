@@ -59,9 +59,9 @@ describe("ResetPasswordForm", () => {
     expect(
       await screen.findByRole("heading", { level: 1, name: "This link has expired" }),
     ).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Back to log in" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Request a new link" })).toHaveAttribute(
       "href",
-      Routes.LOGIN,
+      Routes.PASSWORD.FORGOT(),
     )
     expect(screen.queryByLabelText("New password")).not.toBeInTheDocument()
     expect(screen.queryByRole("heading", { name: "Set a new password" })).not.toBeInTheDocument()

@@ -13,6 +13,9 @@ import { PasswordField } from "./PasswordField"
 
 const passwordSchema = resetPasswordSchema.pick({ password: true })
 
+// Built once here: it takes no input, and a call in render reads as a component call to lint.
+const requestNewLinkHref = Routes.PASSWORD.FORGOT()
+
 /** Both states share one frame, so swapping between them doesn't shift the page. */
 const ResetLayout = ({
   title,
@@ -44,11 +47,11 @@ export const ResetLinkInvalid = () => (
     <Button
       className="w-full"
       nativeButton={false}
-      render={<Link href={Routes.LOGIN} />}
+      render={<Link href={requestNewLinkHref} />}
       size="xl"
       variant="button-mauve"
     >
-      Back to log in
+      Request a new link
     </Button>
   </ResetLayout>
 )

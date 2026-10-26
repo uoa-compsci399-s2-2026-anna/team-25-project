@@ -92,9 +92,17 @@ export function LoginForm() {
               <Field data-invalid={isInvalid}>
                 <div className="flex flex-row items-center justify-between">
                   <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                  <Link className="text-primary text-sm underline underline-offset-4" href="/">
-                    Forgot password?
-                  </Link>
+                  {/* Carries the email typed so far, so it needn't be typed again. */}
+                  <form.Subscribe selector={(state) => state.values.email.trim()}>
+                    {(email) => (
+                      <Link
+                        className="text-primary text-sm underline underline-offset-4"
+                        href={Routes.PASSWORD.FORGOT(email || undefined)}
+                      >
+                        Forgot password?
+                      </Link>
+                    )}
+                  </form.Subscribe>
                 </div>
                 <PasswordField
                   autoComplete="current-password"

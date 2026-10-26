@@ -99,6 +99,17 @@ describe("LoginForm", () => {
     )
   })
 
+  it("links to forgot password, carrying the email typed so far", () => {
+    render(<LoginForm />, { wrapper: withNuqsTestingAdapter() })
+    const link = screen.getByRole("link", { name: "Forgot password?" })
+    expect(link).toHaveAttribute("href", "/forgot-password")
+
+    fireEvent.change(screen.getByLabelText("University email"), {
+      target: { value: "a.tui@uni.ac.nz" },
+    })
+    expect(link).toHaveAttribute("href", "/forgot-password?email=a.tui%40uni.ac.nz")
+  })
+
   it("does not show a validation error when blurring an empty field", async () => {
     render(<LoginForm />, { wrapper: withNuqsTestingAdapter() })
     const emailInput = screen.getByLabelText("University email")
