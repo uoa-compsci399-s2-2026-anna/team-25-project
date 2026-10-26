@@ -1,5 +1,6 @@
 import type { Course, Resource } from "@repo/shared/payload-types"
 import type { SavedAttachment } from "@repo/ui/components/composite"
+import type { Route } from "next"
 import { cache } from "react"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
@@ -47,14 +48,17 @@ type ResourceCardActionsServerProps = {
   /** Who owns it, from the card's own data, so viewers who can't manage it cost no lookup. */
   ownerId: number | undefined
   title: string
+  /** Where to go after a delete, when the resource's own page is showing it. */
+  deletedHref?: Route
 }
 
 // getCurrentUser() reads headers(), which is dynamic - every list that renders this sits
-// inside a Suspense boundary already, so there is nothing extra to isolate here.
+// inside a Suspense boundary already, and the resource's page gives it its own.
 export const ResourceCardActionsServer = async ({
   resourceId,
   ownerId,
   title,
+  deletedHref,
 }: ResourceCardActionsServerProps) => {
   const { collection, user } = await getCurrentUser()
   const isAdmin = collection === Slugs.Collections.ADMIN
@@ -73,6 +77,7 @@ export const ResourceCardActionsServer = async ({
   return (
     <ResourceCardActions
       courses={withCurrentCourse(options, course)}
+      deletedHref={deletedHref}
       initialValues={{
         course: course?.id ?? null,
         description: resource.description,

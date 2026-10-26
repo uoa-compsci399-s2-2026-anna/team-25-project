@@ -2,13 +2,15 @@ import type { RichTextValue } from "@repo/ui/components/composite"
 import { toast } from "@repo/ui/components/ui"
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import type { Route } from "next"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { deleteResource } from "../actions/deleteResource"
 import { updateResource } from "../actions/updateResource"
 import { ResourceCardActions } from "./ResourceCardActions"
 
+const push = vi.fn()
 const refresh = vi.fn()
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh }) }))
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh }) }))
 vi.mock("../actions/deleteResource", () => ({ deleteResource: vi.fn() }))
 vi.mock("../actions/updateResource", () => ({ updateResource: vi.fn() }))
 vi.mock("../actions/createResource", () => ({ createResource: vi.fn() }))
@@ -39,10 +41,11 @@ const description = {
 
 const TITLE = "Individual contribution rubric"
 
-const renderActions = () => {
+const renderActions = (props: { deletedHref?: Route } = {}) => {
   const user = userEvent.setup()
   render(
     <ResourceCardActions
+      {...props}
       courses={[{ label: "COMPSCI 399 - University of Auckland", value: 9 }]}
       initialValues={{ course: 9, description, title: TITLE }}
       resourceId={3}
@@ -148,6 +151,16 @@ describe("ResourceCardActions", () => {
     await waitFor(() => expect(deleteResource).toHaveBeenCalledWith(3))
     expect(toast.add).toHaveBeenCalledWith(expect.objectContaining({ title: "Resource deleted" }))
     expect(refresh).toHaveBeenCalledOnce()
+  })
+
+  it("goes to the given page instead of refreshing, from the resource's own page", async () => {
+    vi.mocked(deleteResource).mockResolvedValue({ ok: true })
+    const user = renderActions({ deletedHref: "/resources" })
+    await openMenuItem(user, "Delete")
+    await user.click(await screen.findByRole("button", { name: "Confirm delete" }))
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/resources"))
+    expect(refresh).not.toHaveBeenCalled()
   })
 
   it("shows the failure message and doesn't refresh when delete fails", async () => {

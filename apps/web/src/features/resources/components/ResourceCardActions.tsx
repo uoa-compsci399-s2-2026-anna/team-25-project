@@ -2,6 +2,7 @@
 
 import { ItemActionsMenu, type SavedAttachment } from "@repo/ui/components/composite"
 import { toast } from "@repo/ui/components/ui"
+import type { Route } from "next"
 import { useRouter } from "next/navigation"
 import * as React from "react"
 import { deleteResource } from "../actions/deleteResource"
@@ -17,11 +18,16 @@ export interface ResourceCardActionsProps {
   initialValues: ResourceFormValues
   savedAttachments: SavedAttachment[]
   courses: ResourceCourseOption[]
+  /**
+   * Where to go after a delete. Omitted on a list, which refreshes instead - on the
+   * resource's own page a refresh would land on its 404.
+   */
+  deletedHref?: Route
 }
 
 /**
- * The resource card's Edit/Delete dropdown. Only rendered for the resource's
- * owner and admins (see `ResourceCardActionsServer`).
+ * A resource's Edit/Delete dropdown, on its cards and beside its page's title. Only
+ * rendered for the resource's owner and admins (see `ResourceCardActionsServer`).
  */
 export function ResourceCardActions({
   resourceId,
@@ -29,6 +35,7 @@ export function ResourceCardActions({
   initialValues,
   savedAttachments,
   courses,
+  deletedHref,
 }: ResourceCardActionsProps) {
   const router = useRouter()
   const [editOpen, setEditOpen] = React.useState(false)
@@ -48,7 +55,8 @@ export function ResourceCardActions({
               return
             }
             toast.add({ description: `"${title}" was deleted.`, title: "Resource deleted" })
-            router.refresh()
+            if (deletedHref) router.push(deletedHref)
+            else router.refresh()
           } catch (error) {
             console.error("deleteResource failed", error)
             toast.add({ description: DELETE_FAILED, title: "Delete failed" })

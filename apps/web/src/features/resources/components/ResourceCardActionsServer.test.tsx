@@ -89,6 +89,19 @@ describe("ResourceCardActionsServer", () => {
     })
   })
 
+  it("passes on where to go after a delete", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue(member(7))
+
+    await ResourceCardActionsServer({
+      deletedHref: "/resources",
+      ownerId: 7,
+      resourceId: 3,
+      title: "Contribution rubric",
+    }).then(render)
+
+    expect(received).toHaveBeenCalledWith(expect.objectContaining({ deletedHref: "/resources" }))
+  })
+
   it("gives an admin the menu with every course", async () => {
     vi.mocked(getCurrentUser).mockResolvedValue({ collection: "admin", user: { id: 1 } } as never)
 
