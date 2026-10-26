@@ -1,9 +1,17 @@
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getCourseResourcesCached } from "../resources.queries"
 import { COURSE_RESOURCES_SHOWN, CourseResources, CourseResourcesSkeleton } from "./CourseResources"
 
 vi.mock("../resources.queries", () => ({ getCourseResourcesCached: vi.fn() }))
+// Signed out unless a test says otherwise, so no Edit/Delete menus.
+vi.mock("@/lib/payload/getCurrentUser", () => ({
+  getCurrentUser: vi.fn().mockResolvedValue({ collection: null, user: null }),
+}))
+const push = vi.fn()
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }))
+vi.mock("../actions/deleteResource", () => ({ deleteResource: vi.fn() }))
 
 const description = (text: string) => ({
   root: {
@@ -82,6 +90,32 @@ describe("CourseResources", () => {
       "href",
       "/resources?course=4",
     )
+  })
+
+  it.each([
+    ["the owner", { collection: "members", user: { id: 7 } }],
+    ["an admin", { collection: "admin", user: { id: 1 } }],
+  ])(
+    "gives %s the Edit/Delete menu, whose Edit opens the resource's editor",
+    async (_, current) => {
+      vi.mocked(getCurrentUser).mockResolvedValueOnce(current as never)
+      await renderSection([resource(18, "Contribution rubric")])
+
+      fireEvent.click(screen.getByRole("button", { name: "Actions for Contribution rubric" }))
+      fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }))
+
+      expect(push).toHaveBeenCalledWith("/resources/18#edit")
+    },
+  )
+
+  it("has no Edit/Delete menu on another member's resource", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValueOnce({
+      collection: "members",
+      user: { id: 8 },
+    } as never)
+    await renderSection([resource(18, "Contribution rubric")])
+
+    expect(screen.queryByRole("button", { name: /^Actions for / })).not.toBeInTheDocument()
   })
 
   it("has no view-all link when every resource is shown", async () => {

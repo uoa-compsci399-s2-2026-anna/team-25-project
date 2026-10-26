@@ -1,8 +1,6 @@
 import { PaginationNav, ResourceCard, ResourceCardSkeleton } from "@repo/ui/components/composite"
-import { Button } from "@repo/ui/components/ui"
 import { FolderOpen, SearchX } from "lucide-react"
 import type { Route } from "next"
-import Link from "next/link"
 import type { SearchParams } from "nuqs/server"
 import { withEditHash } from "@/components/Editor/editOnLoad"
 import { EmptyState } from "@/components/EmptyState"
@@ -17,6 +15,7 @@ import {
   serializeResourceSearchParams,
   toResourceFilters,
 } from "../resources.search-params"
+import { ResourceCardActions } from "./ResourceCardActions"
 
 const PAGE_SIZE = 10
 // Stable keys for the placeholder cards, which have no data of their own.
@@ -66,25 +65,19 @@ export const ResourcesList = async ({ searchParams }: { searchParams: Promise<Se
         {resources.map((resource) => {
           const card = toResourceCardProps(resource)
           const ownerId = typeof resource.owner === "object" ? resource.owner.id : resource.owner
-          // Same rule as ResourceEditButton: admins, and the resource's owner.
-          const canEdit =
+          // Same rule as Payload's isAdminOrOwner: admins, and the resource's owner.
+          const canManage =
             collection === Slugs.Collections.ADMIN || (user !== null && user.id === ownerId)
 
           return (
             <ResourceCard
               action={
-                canEdit && (
-                  <Button
-                    aria-label={`Edit ${resource.title}`}
-                    borderColor="charcoal"
-                    className="shrink-0"
-                    nativeButton={false}
-                    render={<Link href={withEditHash(card.href)} />}
-                    size="sm"
-                    variant="button-transparent"
-                  >
-                    Edit
-                  </Button>
+                canManage && (
+                  <ResourceCardActions
+                    editHref={withEditHash(card.href)}
+                    resourceId={resource.id}
+                    title={resource.title}
+                  />
                 )
               }
               key={resource.id}
