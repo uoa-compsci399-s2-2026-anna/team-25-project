@@ -1,10 +1,11 @@
 import { mockInstitution } from "@repo/shared/mocks/institution"
 import type { Institution, Member } from "@repo/shared/payload-types"
 import { revalidateTag } from "next/cache"
-import { type PayloadRequest, ValidationError } from "payload"
+import { Forbidden, type PayloadRequest, ValidationError } from "payload"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { Slugs } from "@/lib/payload/slugs"
 import {
+  allowPasswordResetsFromAppOnly,
   assertMemberDeletable,
   enforceInstitutionDomain,
   normaliseStoredInterests,
@@ -205,5 +206,30 @@ describe("assertMemberDeletable", () => {
   ])("refuses a member who owns %i, asking for them to be dealt with first", async (n, message) => {
     await expect(remove(n).result).rejects.toThrow(`${message} Delete or reassign them first.`)
     await expect(remove(n).result).rejects.toMatchObject({ status: 409 })
+  })
+})
+
+describe("allowPasswordResetsFromAppOnly", () => {
+  const run = (operation: string, payloadAPI: PayloadRequest["payloadAPI"]) =>
+    allowPasswordResetsFromAppOnly({
+      args: { data: {} },
+      operation,
+      req: { payloadAPI, t: () => "" },
+    } as never)
+
+  it.each(["forgotPassword", "resetPassword"])(
+    "refuses %s through REST or GraphQL, which would skip the app's limits",
+    (operation) => {
+      expect(() => run(operation, "REST")).toThrow(Forbidden)
+      expect(() => run(operation, "GraphQL")).toThrow(Forbidden)
+    },
+  )
+
+  it.each(["forgotPassword", "resetPassword"])("lets the app's own %s through", (operation) => {
+    expect(run(operation, "local")).toEqual({ data: {} })
+  })
+
+  it("leaves other operations alone", () => {
+    expect(run("login", "REST")).toEqual({ data: {} })
   })
 })
