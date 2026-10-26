@@ -74,4 +74,17 @@ describe("resourceAttachmentsError", () => {
       `Attachments must be ${RESOURCE_ATTACHMENTS_MAX_MB} MB or smaller in total.`,
     )
   })
+
+  it("counts the files a resource already has toward the limits", () => {
+    const kept = Array.from({ length: RESOURCE_ATTACHMENTS_MAX_FILES - 1 }, () => ({ size: 10 }))
+    expect(resourceAttachmentsError([pdf()], kept)).toBeUndefined()
+    expect(resourceAttachmentsError([pdf(), pdf("notes.pdf")], kept)).toBe(
+      `Attach at most ${RESOURCE_ATTACHMENTS_MAX_FILES} files.`,
+    )
+
+    const half = RESOURCE_ATTACHMENTS_MAX_BYTES / 2
+    expect(resourceAttachmentsError([pdf("a.pdf", half + 1)], [{ size: half }])).toBe(
+      `Attachments must be ${RESOURCE_ATTACHMENTS_MAX_MB} MB or smaller in total.`,
+    )
+  })
 })

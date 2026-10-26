@@ -25,9 +25,15 @@ type AttachmentLike = { name: string; size: number; type: string }
 /**
  * The first problem with a set of attachments, or `undefined` when they can all be uploaded.
  * Shared so the form can say so before sending and the action can refuse what slips past it.
+ *
+ * `kept` are files the resource already has, when editing it. They were checked when they
+ * were uploaded, so they only count toward the file and size limits.
  */
-export const resourceAttachmentsError = (files: readonly AttachmentLike[]) => {
-  if (files.length > RESOURCE_ATTACHMENTS_MAX_FILES) {
+export const resourceAttachmentsError = (
+  files: readonly AttachmentLike[],
+  kept: readonly { size: number }[] = [],
+) => {
+  if (files.length + kept.length > RESOURCE_ATTACHMENTS_MAX_FILES) {
     return `Attach at most ${RESOURCE_ATTACHMENTS_MAX_FILES} files.`
   }
   const empty = files.find((file) => file.size === 0)
@@ -40,7 +46,7 @@ export const resourceAttachmentsError = (files: readonly AttachmentLike[]) => {
   if (unsupported) {
     return `${unsupported.name} isn't a supported file type. Attach PDF, Word, PowerPoint, Excel, text or CSV files.`
   }
-  const totalBytes = files.reduce((total, file) => total + file.size, 0)
+  const totalBytes = [...kept, ...files].reduce((total, file) => total + file.size, 0)
   if (totalBytes > RESOURCE_ATTACHMENTS_MAX_BYTES) {
     return `Attachments must be ${RESOURCE_ATTACHMENTS_MAX_MB} MB or smaller in total.`
   }
