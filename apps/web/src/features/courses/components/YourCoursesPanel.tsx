@@ -53,9 +53,9 @@ const tileClassName = "flex flex-col gap-1 rounded-lg border bg-background p-4"
 function CourseTile({ course, year }: { course: MyCourse; year: number }) {
   return (
     <li className={tileClassName}>
-      <div className="flex flex-wrap items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-2">
         <Link
-          className={`block min-w-0 truncate font-medium ${linkClassName}`}
+          className={`line-clamp-2 min-w-0 flex-1 font-medium ${linkClassName}`}
           href={Routes.COURSES.COURSE(course.courseId)}
         >
           {course.code} {course.title}
