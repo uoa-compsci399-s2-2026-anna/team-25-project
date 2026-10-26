@@ -1,6 +1,6 @@
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
-import { isAdmin, isSignedIn } from "../access"
+import { isSignedIn } from "../access"
 import { courseWrite } from "../access/Courses/Courses"
 import { admin } from "../access/helpers"
 import { isAdminOrOwner } from "../access/Resources"
@@ -21,7 +21,8 @@ export const Resources: CollectionConfig = {
     read: isSignedIn,
     create: isSignedIn,
     update: isAdminOrOwner,
-    delete: isAdmin,
+    // Matches update: a member who can change their resource can take it down too.
+    delete: isAdminOrOwner,
   },
   hooks: {
     afterChange: [revalidateResources],

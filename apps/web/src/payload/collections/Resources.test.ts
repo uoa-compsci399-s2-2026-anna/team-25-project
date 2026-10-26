@@ -1,6 +1,7 @@
 import type { PayloadRequest, RelationshipField } from "payload"
 import { describe, expect, it } from "vitest"
 import { Slugs } from "@/lib/payload/slugs"
+import { isAdminOrOwner } from "../access/Resources"
 import { validateResourceCourse } from "../validation/Resources"
 import { Resources } from "./Resources"
 
@@ -21,6 +22,11 @@ describe("Resources collection", () => {
       relationTo: Slugs.Collections.RESOURCE_ATTACHMENTS,
       hasMany: true,
     })
+  })
+
+  it("lets the owner or an admin update and delete a resource", () => {
+    expect(Resources.access?.update).toBe(isAdminOrOwner)
+    expect(Resources.access?.delete).toBe(isAdminOrOwner)
   })
 
   it("lets only admins transfer ownership", async () => {
