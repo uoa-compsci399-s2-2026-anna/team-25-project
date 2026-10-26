@@ -6,6 +6,14 @@ import { getResourceByIdCached } from "../resources.queries"
 import { ResourcePage } from "./ResourcePage"
 
 vi.mock("../resources.queries", () => ({ getResourceByIdCached: vi.fn() }))
+// An async server component, which jsdom can't render - stood in for by its props.
+vi.mock("./ResourceCardActionsServer", () => ({
+  ResourceCardActionsServer: (props: {
+    deletedHref?: string
+    ownerId?: number
+    resourceId: number
+  }) => <button type="button">{`Actions ${JSON.stringify(props)}`}</button>,
+}))
 vi.mock("next/navigation", () => ({
   notFound: vi.fn(() => {
     throw new Error("NEXT_NOT_FOUND")
@@ -65,6 +73,18 @@ describe("ResourcePage", () => {
     expect(screen.getByText("Shared 3 Jun 2026")).toBeInTheDocument()
     expect(screen.getByRole("link", { name: /Anna Tui/ })).toHaveAttribute("href", "/members/7")
     expect(screen.getByText("Description")).toBeInTheDocument()
+  })
+
+  it("puts the Edit/Delete menu beside the title, going back to the list after a delete", async () => {
+    await renderPage()
+
+    const menu = screen.getByRole("button", { name: /^Actions/ })
+    expect(menu).toHaveTextContent(
+      'Actions {"deletedHref":"/resources","ownerId":7,"resourceId":1,"title":"Individual contribution rubric"}',
+    )
+    expect(menu.parentElement).toContainElement(
+      screen.getByRole("heading", { level: 1, name: "Individual contribution rubric" }),
+    )
   })
 
   it("lists the attachments to download", async () => {

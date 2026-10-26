@@ -1,7 +1,7 @@
 import { resourceAttachmentTypeLabel } from "@repo/shared/constants/resource-attachments"
 import type { ResourceAttachment } from "@repo/shared/payload-types"
 import { AttachmentList } from "@repo/ui/components/composite"
-import { Badge, Heading, Skeleton } from "@repo/ui/components/ui"
+import { AnimatedSuspense, Badge, Heading, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { RichTextContent } from "@/components/RichTextContent"
@@ -14,6 +14,7 @@ import { AuthorByline } from "@/features/proposals/components/AuthorByline/Autho
 import { Routes } from "@/lib/routes"
 import { parseResourceId, type ResourceRouteParams } from "../resources.params"
 import { getResourceByIdCached } from "../resources.queries"
+import { ResourceCardActionsServer } from "./ResourceCardActionsServer"
 
 // Aliased as the React compiler rule reads a capitalized call inside a component as
 // a component rendered the wrong way.
@@ -72,7 +73,20 @@ export const ResourcePage = async ({ params }: { params: ResourceRouteParams }) 
             </>
           )}
         </div>
-        <Heading level="h1">{resource.title}</Heading>
+        <div className="flex items-start justify-between gap-4">
+          <Heading className="min-w-0 flex-1" level="h1">
+            {resource.title}
+          </Heading>
+          {/* Its own boundary: the viewer check is dynamic, and the page around it isn't. */}
+          <AnimatedSuspense fallback={null}>
+            <ResourceCardActionsServer
+              deletedHref={Routes.RESOURCES.ROOT}
+              ownerId={owner?.id}
+              resourceId={resource.id}
+              title={resource.title}
+            />
+          </AnimatedSuspense>
+        </div>
         {owner && (
           <Link className="self-start hover:underline" href={memberHref(owner.id)}>
             <AuthorByline authors={[owner]} />
