@@ -9,7 +9,12 @@ export const REDIRECT_PARAM = "redirect"
 // another host (e.g. "//evil.com", "/\evil.com") shows up as a changed origin.
 const BASE = "http://localhost"
 
-const authRoutes = new Set<string>([Routes.LOGIN, Routes.REGISTER.ROOT, Routes.REGISTER.PROFILE])
+const authRoutes = new Set<string>([
+  Routes.LOGIN,
+  Routes.REGISTER.ROOT,
+  Routes.REGISTER.PROFILE,
+  Routes.RESET_PASSWORD,
+])
 
 export const isAuthRoute = (pathname: string) => authRoutes.has(pathname)
 

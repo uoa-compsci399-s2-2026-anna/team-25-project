@@ -23,12 +23,15 @@ describe("safeRedirect", () => {
     expect(safeRedirect(value)).toBeNull()
   })
 
-  it.each([Routes.LOGIN, Routes.REGISTER.ROOT, Routes.REGISTER.PROFILE, "/login?redirect=/login"])(
-    "rejects auth page %s to avoid a loop",
-    (value) => {
-      expect(safeRedirect(value)).toBeNull()
-    },
-  )
+  it.each([
+    Routes.LOGIN,
+    Routes.REGISTER.ROOT,
+    Routes.REGISTER.PROFILE,
+    Routes.RESET_PASSWORD,
+    "/login?redirect=/login",
+  ])("rejects auth page %s to avoid a loop", (value) => {
+    expect(safeRedirect(value)).toBeNull()
+  })
 })
 
 describe("redirectTarget", () => {
