@@ -5,8 +5,10 @@ import Link from "next/link"
 import { EmptyState } from "@/components/EmptyState"
 import { withRedirect } from "@/features/auth/redirect"
 import { formatDate } from "@/features/courses/courses.format"
+import { ResourceCardActionsServer } from "@/features/resources/components/ResourceCardActionsServer"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Routes } from "@/lib/routes"
+import { isOwnProfile } from "../../members.ownership"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberResourcesCached } from "../../members.queries"
 import { mobileSection } from "./mobileSection"
@@ -28,7 +30,11 @@ export const MemberResources = async ({ params }: { params: MembersRouteParams }
     <section className={cn("flex flex-col gap-4 max-md:order-5", mobileSection)}>
       <Heading level="h2">Resources</Heading>
       {user ? (
-        <ResourceList resources={await getMemberResourcesCached(memberId)} />
+        <ResourceList
+          canEdit={await isOwnProfile(memberId)}
+          memberId={memberId}
+          resources={await getMemberResourcesCached(memberId)}
+        />
       ) : (
         <p className="text-muted-foreground text-sm">
           <Link
@@ -44,7 +50,16 @@ export const MemberResources = async ({ params }: { params: MembersRouteParams }
   )
 }
 
-const ResourceList = ({ resources }: { resources: MemberResource[] }) => {
+const ResourceList = ({
+  canEdit,
+  memberId,
+  resources,
+}: {
+  /** On the member's own profile: an Edit/Delete menu per resource. */
+  canEdit: boolean
+  memberId: number
+  resources: MemberResource[]
+}) => {
   if (resources.length === 0) {
     return <EmptyState icon={<FolderOpen />} title="No resources shared yet" variant="section" />
   }
@@ -57,22 +72,34 @@ const ResourceList = ({ resources }: { resources: MemberResource[] }) => {
         const attachments = resource.attachments?.length ?? 0
 
         return (
-          <Link className="group" href={resourceHref(String(resource.id))} key={resource.id}>
-            <Card className="transition-colors group-hover:ring-foreground/25">
-              <CardHeader className="flex items-center justify-between gap-3">
-                <Badge variant="blue">{course?.code ?? "Resource"}</Badge>
-                {shared && <span className="text-muted-foreground text-xs">Shared {shared}</span>}
-              </CardHeader>
-              <CardContent className="flex flex-col gap-1">
-                <span className="font-medium group-hover:underline">{resource.title}</span>
-                {attachments > 0 && (
-                  <span className="text-muted-foreground text-xs">
-                    {attachments === 1 ? "1 attachment" : `${attachments} attachments`}
-                  </span>
-                )}
-              </CardContent>
-            </Card>
-          </Link>
+          // The menu sits beside the card's link, not inside it - its buttons can't nest in a link.
+          <div className="relative" key={resource.id}>
+            <Link className="group" href={resourceHref(String(resource.id))}>
+              <Card className="transition-colors group-hover:ring-foreground/25">
+                <CardHeader className="flex items-center justify-between gap-3">
+                  <Badge variant="blue">{course?.code ?? "Resource"}</Badge>
+                  {shared && <span className="text-muted-foreground text-xs">Shared {shared}</span>}
+                </CardHeader>
+                <CardContent className={cn("flex flex-col gap-1", canEdit && "pr-10")}>
+                  <span className="font-medium group-hover:underline">{resource.title}</span>
+                  {attachments > 0 && (
+                    <span className="text-muted-foreground text-xs">
+                      {attachments === 1 ? "1 attachment" : `${attachments} attachments`}
+                    </span>
+                  )}
+                </CardContent>
+              </Card>
+            </Link>
+            {canEdit && (
+              <div className="absolute right-4 bottom-4">
+                <ResourceCardActionsServer
+                  ownerId={memberId}
+                  resourceId={resource.id}
+                  title={resource.title}
+                />
+              </div>
+            )}
+          </div>
         )
       })}
     </div>

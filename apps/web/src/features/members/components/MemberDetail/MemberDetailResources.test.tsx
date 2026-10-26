@@ -6,6 +6,16 @@ import { MemberResources, MemberResourcesSkeleton } from "./MemberDetailResource
 
 vi.mock("../../members.queries", () => ({ getMemberResourcesCached: vi.fn() }))
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
+// An async server component, which jsdom can't render - stood in for by its props.
+vi.mock("@/features/resources/components/ResourceCardActionsServer", () => ({
+  ResourceCardActionsServer: ({
+    ownerId,
+    resourceId,
+  }: {
+    ownerId?: number
+    resourceId: number
+  }) => <button type="button">{`Actions for resource ${resourceId}, owner ${ownerId}`}</button>,
+}))
 
 type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>
 
@@ -63,6 +73,43 @@ describe("MemberResources", () => {
 
     expect(screen.getByText("Resource")).toBeInTheDocument()
     expect(screen.queryByText(/attachment/)).not.toBeInTheDocument()
+  })
+
+  it("gives each resource an Edit/Delete menu outside its link on the member's own profile", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      user: { id: 7 },
+    } as unknown as CurrentUser)
+    vi.mocked(getMemberResourcesCached).mockResolvedValue([
+      {
+        attachments: [],
+        course: null,
+        createdAt: "2026-06-03T00:00:00.000Z",
+        id: 18,
+        title: "Rubric",
+      },
+    ] as never)
+
+    await renderResources()
+
+    const menu = screen.getByRole("button", { name: "Actions for resource 18, owner 7" })
+    expect(menu.closest("a")).toBeNull()
+  })
+
+  it("has no Edit/Delete menu on someone else's profile", async () => {
+    vi.mocked(getMemberResourcesCached).mockResolvedValue([
+      {
+        attachments: [],
+        course: null,
+        createdAt: "2026-06-03T00:00:00.000Z",
+        id: 18,
+        title: "Rubric",
+      },
+    ] as never)
+
+    await renderResources()
+
+    expect(screen.queryByRole("button", { name: /Actions for/ })).not.toBeInTheDocument()
   })
 
   it("says so when the member has shared nothing", async () => {
