@@ -11,6 +11,7 @@ export const Slugs = {
     RESOURCES: "resources",
     RESOURCE_ATTACHMENTS: "resourceAttachments",
     EMAIL_VERIFICATION_CODES: "emailVerificationCodes",
+    RATE_LIMITS: "rateLimits",
   },
   Globals: {
     PRIVACY_POLICY: "privacy-policy",

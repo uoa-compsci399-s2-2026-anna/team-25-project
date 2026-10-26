@@ -18,6 +18,7 @@ import { Media } from "./payload/collections/Media"
 import { Members } from "./payload/collections/Members"
 import { Proposals } from "./payload/collections/Proposals"
 import { Publications } from "./payload/collections/Publications"
+import { RateLimits } from "./payload/collections/RateLimits"
 import { ResourceAttachments } from "./payload/collections/ResourceAttachments"
 import { Resources } from "./payload/collections/Resources"
 import { CommunityGuidelines } from "./payload/globals/CommunityGuidelines"
@@ -73,6 +74,7 @@ export default buildConfig({
     Resources,
     ResourceAttachments,
     EmailVerificationCodes,
+    RateLimits,
   ],
   globals: [PrivacyPolicy, CommunityGuidelines],
   editor: lexicalEditor({ features: richTextFeatures }),
