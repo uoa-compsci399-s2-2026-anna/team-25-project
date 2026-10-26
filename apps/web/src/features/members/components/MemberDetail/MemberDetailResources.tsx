@@ -1,12 +1,4 @@
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  Heading,
-  Skeleton,
-} from "@repo/ui/components/ui"
+import { Badge, Card, CardContent, CardHeader, Heading, Skeleton } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import { FolderOpen } from "lucide-react"
 import Link from "next/link"
@@ -14,6 +6,7 @@ import { withEditHash } from "@/components/Editor/editOnLoad"
 import { EmptyState } from "@/components/EmptyState"
 import { withRedirect } from "@/features/auth/redirect"
 import { formatDate } from "@/features/courses/courses.format"
+import { ResourceCardActions } from "@/features/resources/components/ResourceCardActions"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Routes } from "@/lib/routes"
 import { isOwnProfile } from "../../members.ownership"
@@ -61,7 +54,7 @@ const ResourceList = ({
   canEdit,
   resources,
 }: {
-  /** On the member's own profile: an Edit link per resource that opens its editor. */
+  /** On the member's own profile: an Edit/Delete menu per resource. */
   canEdit: boolean
   resources: MemberResource[]
 }) => {
@@ -78,7 +71,7 @@ const ResourceList = ({
         const href = resourceHref(String(resource.id))
 
         return (
-          // The Edit link sits beside the card's link, not inside it - links can't nest.
+          // The menu sits beside the card's link, not inside it - its buttons can't nest in a link.
           <div className="relative" key={resource.id}>
             <Link className="group" href={href}>
               <Card className="transition-colors group-hover:ring-foreground/25">
@@ -86,7 +79,7 @@ const ResourceList = ({
                   <Badge variant="blue">{course?.code ?? "Resource"}</Badge>
                   {shared && <span className="text-muted-foreground text-xs">Shared {shared}</span>}
                 </CardHeader>
-                <CardContent className={cn("flex flex-col gap-1", canEdit && "pr-20")}>
+                <CardContent className={cn("flex flex-col gap-1", canEdit && "pr-10")}>
                   <span className="font-medium group-hover:underline">{resource.title}</span>
                   {attachments > 0 && (
                     <span className="text-muted-foreground text-xs">
@@ -97,17 +90,13 @@ const ResourceList = ({
               </Card>
             </Link>
             {canEdit && (
-              <Button
-                aria-label={`Edit ${resource.title}`}
-                borderColor="charcoal"
-                className="absolute right-4 bottom-4"
-                nativeButton={false}
-                render={<Link href={withEditHash(href)} />}
-                size="sm"
-                variant="button-transparent"
-              >
-                Edit
-              </Button>
+              <div className="absolute right-4 bottom-4">
+                <ResourceCardActions
+                  editHref={withEditHash(href)}
+                  resourceId={resource.id}
+                  title={resource.title}
+                />
+              </div>
             )}
           </div>
         )

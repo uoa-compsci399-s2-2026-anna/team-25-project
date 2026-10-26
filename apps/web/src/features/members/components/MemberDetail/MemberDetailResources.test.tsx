@@ -1,10 +1,13 @@
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { isOwnProfile } from "../../members.ownership"
 import { getMemberResourcesCached } from "../../members.queries"
 import { MemberResources, MemberResourcesSkeleton } from "./MemberDetailResources"
 
+const push = vi.fn()
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }))
+vi.mock("@/features/resources/actions/deleteResource", () => ({ deleteResource: vi.fn() }))
 vi.mock("../../members.queries", () => ({ getMemberResourcesCached: vi.fn() }))
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
 // Someone else's profile unless a test says otherwise, so no Edit links.
@@ -69,7 +72,7 @@ describe("MemberResources", () => {
     expect(screen.queryByText(/attachment/)).not.toBeInTheDocument()
   })
 
-  it("links each resource into its editor on the member's own profile only", async () => {
+  it("gives each resource an Edit/Delete menu on the member's own profile only", async () => {
     vi.mocked(getMemberResourcesCached).mockResolvedValue([
       {
         attachments: [],
@@ -81,16 +84,20 @@ describe("MemberResources", () => {
     ] as never)
 
     await renderResources()
-    expect(screen.queryByRole("button", { name: "Edit Reading list" })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Actions for Reading list" }),
+    ).not.toBeInTheDocument()
     cleanup()
 
     vi.mocked(isOwnProfile).mockResolvedValue(true)
     await renderResources()
     expect(isOwnProfile).toHaveBeenCalledWith(7)
-    expect(screen.getByRole("button", { name: "Edit Reading list" })).toHaveAttribute(
-      "href",
-      "/resources/19#edit",
-    )
+    const menu = screen.getByRole("button", { name: "Actions for Reading list" })
+    // Beside the card's link, not inside it - its buttons can't nest in a link.
+    expect(menu.closest("a")).toBeNull()
+    fireEvent.click(menu)
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }))
+    expect(push).toHaveBeenCalledWith("/resources/19#edit")
   })
 
   it("says so when the member has shared nothing", async () => {
