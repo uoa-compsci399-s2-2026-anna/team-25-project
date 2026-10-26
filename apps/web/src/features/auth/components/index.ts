@@ -1,3 +1,4 @@
+export * from "./ForgotPasswordForm"
 export * from "./InstitutionSelect"
 export * from "./PasswordField"
 export * from "./RegisterDetailsForm"

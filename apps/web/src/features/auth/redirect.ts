@@ -13,6 +13,7 @@ const authRoutes = new Set<string>([
   Routes.LOGIN,
   Routes.REGISTER.ROOT,
   Routes.REGISTER.PROFILE,
+  Routes.PASSWORD.FORGOT(),
   Routes.PASSWORD.RESET,
 ])
 
