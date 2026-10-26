@@ -15,7 +15,10 @@ export type ActionResult =
   | ({ ok: false } & FormError & Partial<FieldErrors>)
   | ({ ok: false } & Partial<FormError> & FieldErrors)
 
-/** Sending a code can be refused for a while; the form counts this down before offering a resend. */
+/**
+ * Sending an email (a sign-up code or a reset link) can be refused for a while;
+ * the form counts this down before offering a resend.
+ */
 export type SendCodeResult =
   | ActionResult
   | ({ ok: false; retryAfterSeconds: number } & FormError & Partial<FieldErrors>)

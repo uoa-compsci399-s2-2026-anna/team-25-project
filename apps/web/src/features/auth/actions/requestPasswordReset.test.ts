@@ -1,0 +1,112 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { getPayloadClient } from "@/lib/payload/getPayloadClient"
+import { releaseRateLimit, takeRateLimit } from "../helpers/rateLimit"
+import { requestPasswordReset } from "./requestPasswordReset"
+
+vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
+vi.mock("@/lib/siteUrl", () => ({ siteUrl: new URL("https://ccca.example") }))
+vi.mock("../helpers/rateLimit", () => ({ releaseRateLimit: vi.fn(), takeRateLimit: vi.fn() }))
+
+const mockPayload = (overrides: Record<string, unknown> = {}) => {
+  const payload = {
+    email: { name: "nodemailer" },
+    forgotPassword: vi.fn().mockResolvedValue("reset-token"),
+    logger: { error: vi.fn() },
+    sendEmail: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  }
+  // biome-ignore lint/suspicious/noExplicitAny: minimal Payload mock, only the operations the action calls
+  vi.mocked(getPayloadClient).mockResolvedValue(payload as any)
+  return payload
+}
+
+describe("requestPasswordReset", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(takeRateLimit).mockResolvedValue({ ok: true })
+    vi.mocked(releaseRateLimit).mockResolvedValue(undefined)
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it("emails a link to the reset page on the public site", async () => {
+    const payload = mockPayload()
+
+    await expect(requestPasswordReset({ email: "a.tui@uni.ac.nz" })).resolves.toEqual({ ok: true })
+    expect(payload.forgotPassword).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { email: "a.tui@uni.ac.nz" }, disableEmail: true }),
+    )
+    const sent = payload.sendEmail.mock.calls[0][0]
+    expect(sent.to).toBe("a.tui@uni.ac.nz")
+    expect(sent.text).toContain("https://ccca.example/reset-password?token=reset-token")
+    expect(sent.html).toContain("https://ccca.example/reset-password?token=reset-token")
+  })
+
+  it("answers the same for an address with no account, and still counts the send", async () => {
+    const payload = mockPayload({ forgotPassword: vi.fn().mockResolvedValue(null) })
+
+    await expect(requestPasswordReset({ email: "nobody@uni.ac.nz" })).resolves.toEqual({
+      ok: true,
+    })
+    expect(takeRateLimit).toHaveBeenCalledWith("reset:nobody@uni.ac.nz", expect.anything())
+    expect(payload.sendEmail).not.toHaveBeenCalled()
+  })
+
+  it("limits by the address however it's typed, at 2 min apart and 3 an hour", async () => {
+    mockPayload()
+
+    await requestPasswordReset({ email: "A.Tui@Uni.ac.NZ" })
+
+    expect(takeRateLimit).toHaveBeenCalledWith("reset:a.tui@uni.ac.nz", {
+      cooldownSeconds: 120,
+      max: 3,
+      windowMinutes: 60,
+    })
+  })
+
+  it("says how long to wait when the limit refuses, without sending", async () => {
+    const payload = mockPayload()
+    vi.mocked(takeRateLimit).mockResolvedValue({ ok: false, retryAfterSeconds: 95 })
+
+    await expect(requestPasswordReset({ email: "a.tui@uni.ac.nz" })).resolves.toEqual({
+      formError: "You can ask for another email in 2 minutes.",
+      ok: false,
+      retryAfterSeconds: 95,
+    })
+    expect(payload.forgotPassword).not.toHaveBeenCalled()
+  })
+
+  it("gives the send back when the email fails, so the member can retry", async () => {
+    const payload = mockPayload({ sendEmail: vi.fn().mockRejectedValue(new Error("SES down")) })
+
+    await expect(requestPasswordReset({ email: "a.tui@uni.ac.nz" })).resolves.toEqual({
+      formError: "We couldn't send the email right now. Try again.",
+      ok: false,
+    })
+    expect(releaseRateLimit).toHaveBeenCalledWith("reset:a.tui@uni.ac.nz")
+    expect(payload.logger.error).toHaveBeenCalled()
+  })
+
+  it("rejects an invalid email before touching the limit", async () => {
+    mockPayload()
+
+    await expect(requestPasswordReset({ email: "not-an-email" })).resolves.toEqual({
+      fieldErrors: { email: "Enter a valid email address" },
+      ok: false,
+    })
+    expect(takeRateLimit).not.toHaveBeenCalled()
+  })
+
+  it("refuses in production when no email adapter is set up", async () => {
+    vi.stubEnv("NODE_ENV", "production")
+    const payload = mockPayload({ email: { name: "console" } })
+
+    await expect(requestPasswordReset({ email: "a.tui@uni.ac.nz" })).resolves.toEqual({
+      formError: "We couldn't send the email right now. Try again.",
+      ok: false,
+    })
+    expect(payload.forgotPassword).not.toHaveBeenCalled()
+  })
+})
