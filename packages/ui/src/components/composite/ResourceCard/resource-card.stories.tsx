@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
+import { ItemActionsMenu } from "../ItemActionsMenu/item-actions-menu"
 import { ResourceCard, ResourceCardSkeleton } from "./resource-card"
 
 const meta: Meta<typeof ResourceCard> = {
@@ -34,6 +35,19 @@ export default meta
 type Story = StoryObj<typeof ResourceCard>
 
 export const Primary: Story = {}
+
+/** As the resource's owner or an admin sees it: the Edit/Delete menu ends the footer. */
+export const WithActions: Story = {
+  args: {
+    action: (
+      <ItemActionsMenu
+        itemLabel="Individual contribution rubric for team projects"
+        onDelete={() => {}}
+        onEdit={() => {}}
+      />
+    ),
+  },
+}
 
 /** Only the required fields: no course, summary, photo or links. */
 export const Minimal: Story = {

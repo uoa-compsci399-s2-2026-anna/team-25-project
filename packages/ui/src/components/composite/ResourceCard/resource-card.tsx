@@ -42,6 +42,8 @@ type ResourceCardProps = Omit<React.ComponentProps<"div">, "title"> & {
   sharedAt: Date | string
   /** How many files the resource has to download. Nothing shows for none. */
   attachments?: number
+  /** Shown at the end of the footer, e.g. an Edit/Delete menu for the resource's owner. */
+  action?: React.ReactNode
   size?: "default" | "sm"
 }
 
@@ -53,6 +55,7 @@ const sharedFormatter = new Intl.DateTimeFormat("en-NZ", {
 })
 
 function ResourceCard({
+  action,
   attachments = 0,
   className,
   course,
@@ -127,11 +130,16 @@ function ResourceCard({
           ) : (
             <div className="flex min-w-0 items-center gap-2">{byline}</div>
           )}
-          {attachments > 0 && (
-            <p className="flex shrink-0 items-center gap-1.5 text-muted-foreground text-xs">
-              <Paperclip aria-hidden className="size-3.5" />
-              {attachments === 1 ? "1 attachment" : `${attachments} attachments`}
-            </p>
+          {(attachments > 0 || action) && (
+            <div className="flex shrink-0 items-center gap-3">
+              {attachments > 0 && (
+                <p className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                  <Paperclip aria-hidden className="size-3.5" />
+                  {attachments === 1 ? "1 attachment" : `${attachments} attachments`}
+                </p>
+              )}
+              {action}
+            </div>
           )}
         </div>
       </CardFooter>

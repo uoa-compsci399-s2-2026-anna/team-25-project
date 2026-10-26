@@ -66,6 +66,20 @@ describe("ResourceCard", () => {
     expect(screen.queryByText(/attachment/)).not.toBeInTheDocument()
   })
 
+  it("renders the action in the footer, after the attachment count", () => {
+    render(
+      <ResourceCard {...props} action={<button type="button">Actions</button>} attachments={2} />,
+    )
+    const action = screen.getByRole("button", { name: "Actions" })
+    expect(action.closest("[data-slot=card-footer]")).toBeInTheDocument()
+    expect(screen.getByText("2 attachments").nextElementSibling).toBe(action)
+  })
+
+  it("renders the action without attachments too", () => {
+    render(<ResourceCard {...props} action={<button type="button">Actions</button>} />)
+    expect(screen.getByRole("button", { name: "Actions" })).toBeInTheDocument()
+  })
+
   it("links the title to the resource's detail page", () => {
     render(<ResourceCard {...props} href="/resources/1" />)
     expect(screen.getByRole("link", { name: props.title })).toHaveAttribute("href", "/resources/1")
