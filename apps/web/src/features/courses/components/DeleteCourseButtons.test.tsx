@@ -3,11 +3,13 @@ import { act, cleanup, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { deleteCourse } from "../actions/deleteCourse"
-import { DeleteCourseButton } from "./DeleteCourseButtons"
+import { deleteOffering } from "../actions/deleteOffering"
+import { DeleteCourseButton, DeleteOfferingButton } from "./DeleteCourseButtons"
 
 const push = vi.fn()
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }))
 vi.mock("../actions/deleteCourse", () => ({ deleteCourse: vi.fn() }))
+vi.mock("../actions/deleteOffering", () => ({ deleteOffering: vi.fn() }))
 
 const confirmDelete = async (label: string) => {
   const user = userEvent.setup()
@@ -37,5 +39,20 @@ describe("DeleteCourseButtons", () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith("/courses"))
     expect(deleteCourse).toHaveBeenCalledWith({ courseId: 4 })
     expect(toast.add).toHaveBeenCalledWith(expect.objectContaining({ title: "Course deleted" }))
+  })
+
+  it("deletes the offering, then shows the course's current one", async () => {
+    vi.mocked(deleteOffering).mockResolvedValue({ ok: true })
+    render(<DeleteOfferingButton courseId={4} offeringId={100} period="Semester 1 2026" />)
+
+    expect(screen.queryByText("Delete Semester 1 2026?")).not.toBeInTheDocument()
+    await confirmDelete("Delete offering")
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/courses/4"))
+    expect(deleteOffering).toHaveBeenCalledWith({ courseId: 4, offeringId: 100 })
+    expect(toast.add).toHaveBeenCalledWith({
+      description: "Semester 1 2026 was deleted.",
+      title: "Offering deleted",
+    })
   })
 })
