@@ -13,9 +13,12 @@ export const useGlobe = (markers: GlobeMarker[]) => {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    // Starts where the globe is drawn, so the first drag doesn't jump back to 0.
-    let phi = 2.4
-    let theta = -0.3
+    // Starts where the globe is drawn, so the first drag doesn't jump back to 0. Centred
+    // north of the Tasman Sea (about 23°S, 160°E) so both Australia's and New Zealand's
+    // markers sit near the middle without tilting much of Antarctica into view -
+    // phi = π - (longitude - 90°), theta = latitude, both in radians.
+    let phi = 1.92
+    let theta = -0.4
     const globe = createGlobe(canvas, {
       devicePixelRatio: 1,
       width: 600 * 2,
