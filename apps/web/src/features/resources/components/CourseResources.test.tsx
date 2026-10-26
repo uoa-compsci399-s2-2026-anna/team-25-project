@@ -4,6 +4,16 @@ import { getCourseResourcesCached } from "../resources.queries"
 import { COURSE_RESOURCES_SHOWN, CourseResources, CourseResourcesSkeleton } from "./CourseResources"
 
 vi.mock("../resources.queries", () => ({ getCourseResourcesCached: vi.fn() }))
+// An async server component, which jsdom can't render - stood in for by its props.
+vi.mock("./ResourceCardActionsServer", () => ({
+  ResourceCardActionsServer: ({
+    ownerId,
+    resourceId,
+  }: {
+    ownerId?: number
+    resourceId: number
+  }) => <span data-testid="resource-actions">{`resource ${resourceId}, owner ${ownerId}`}</span>,
+}))
 
 const description = (text: string) => ({
   root: {
@@ -72,6 +82,7 @@ describe("CourseResources", () => {
       "/members/7",
     )
     expect(document.querySelector("[data-slot=badge]")).not.toBeInTheDocument()
+    expect(screen.getByTestId("resource-actions")).toHaveTextContent("resource 18, owner 7")
   })
 
   it("links to the course's filtered resources list when there are more than shown", async () => {

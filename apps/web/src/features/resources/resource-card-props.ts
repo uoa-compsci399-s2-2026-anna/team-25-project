@@ -9,6 +9,10 @@ type CardResource = Pick<
 > &
   Partial<Pick<Resource, "course">>
 
+/** The owner's id, whether the owner was populated or left as an id. */
+export const resourceOwnerId = ({ owner }: Pick<Resource, "owner">) =>
+  typeof owner === "object" ? owner?.id : owner
+
 /**
  * What a `ResourceCard` draws of a resource, from one loaded with its owner (and the owner's
  * avatar) populated. A course is only badged when it was loaded too.

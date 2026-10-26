@@ -8,9 +8,10 @@ import { StringHrefLink } from "@/components/StringHrefLink"
 import { CourseOfferingSection } from "@/features/courses/components/CourseOffering/CourseOfferingPrimitives"
 import { type CourseRouteParams, parseCourseId } from "@/features/courses/courses.params"
 import { Routes } from "@/lib/routes"
-import { toResourceCardProps } from "../resource-card-props"
+import { resourceOwnerId, toResourceCardProps } from "../resource-card-props"
 import { getCourseResourcesCached } from "../resources.queries"
 import { serializeResourceSearchParams } from "../resources.search-params"
+import { ResourceCardActionsServer } from "./ResourceCardActionsServer"
 
 /** Enough to show what's there; the rest are one click away on the filtered resources list. */
 export const COURSE_RESOURCES_SHOWN = 5
@@ -37,6 +38,13 @@ export const CourseResources = async ({ params }: { params: CourseRouteParams })
           <div className="flex flex-col gap-4">
             {resources.map((resource) => (
               <ResourceCard
+                action={
+                  <ResourceCardActionsServer
+                    ownerId={resourceOwnerId(resource)}
+                    resourceId={resource.id}
+                    title={resource.title}
+                  />
+                }
                 key={resource.id}
                 linkComponent={StringHrefLink}
                 size="sm"

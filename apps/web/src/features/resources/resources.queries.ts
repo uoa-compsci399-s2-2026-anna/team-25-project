@@ -164,7 +164,7 @@ export const getCourseResourcesCached = async (courseId: number, limit: number) 
 
 export type ResourceCourseOption = { value: Course["id"]; label: string }
 
-const toCourseOption = ({
+export const toCourseOption = ({
   code,
   id,
   institution,
@@ -224,6 +224,20 @@ export const getEditableCourseOptions = async (
     select: { code: true, institution: true },
     sort: "code",
     where: { or: [{ owner: { equals: memberId } }, { editors: { contains: memberId } }] },
+  })
+  return docs.map(toCourseOption)
+}
+
+/** Every course, for an admin editing a resource: `courseWrite` lets admins link any of them. */
+export const getAllCourseOptions = async (): Promise<ResourceCourseOption[]> => {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: Slugs.Collections.COURSES,
+    depth: 1,
+    pagination: false,
+    populate: { [Slugs.Collections.INSTITUTIONS]: { name: true } },
+    select: { code: true, institution: true },
+    sort: "code",
   })
   return docs.map(toCourseOption)
 }

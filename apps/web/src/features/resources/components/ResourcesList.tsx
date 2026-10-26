@@ -5,13 +5,14 @@ import type { SearchParams } from "nuqs/server"
 import { EmptyState } from "@/components/EmptyState"
 import { StringHrefLink } from "@/components/StringHrefLink"
 import { Routes } from "@/lib/routes"
-import { toResourceCardProps } from "../resource-card-props"
+import { resourceOwnerId, toResourceCardProps } from "../resource-card-props"
 import { loadResourcesPage } from "../resources.queries"
 import {
   loadResourceSearchParams,
   serializeResourceSearchParams,
   toResourceFilters,
 } from "../resources.search-params"
+import { ResourceCardActionsServer } from "./ResourceCardActionsServer"
 
 const PAGE_SIZE = 10
 // Stable keys for the placeholder cards, which have no data of their own.
@@ -64,6 +65,13 @@ export const ResourcesList = async ({ searchParams }: { searchParams: Promise<Se
       <div className="flex w-full flex-col gap-8">
         {resources.map((resource) => (
           <ResourceCard
+            action={
+              <ResourceCardActionsServer
+                ownerId={resourceOwnerId(resource)}
+                resourceId={resource.id}
+                title={resource.title}
+              />
+            }
             key={resource.id}
             linkComponent={StringHrefLink}
             {...toResourceCardProps(resource)}

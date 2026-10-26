@@ -2,12 +2,14 @@ import { connection } from "next/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import {
+  getAllCourseOptions,
   getCourseResources,
   getEditableCourseOptions,
   getResourceById,
   getResourceCourseOptions,
   getResources,
   loadResourcesPage,
+  toCourseOption,
 } from "./resources.queries"
 
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
@@ -168,6 +170,32 @@ describe("getEditableCourseOptions", () => {
         where: { or: [{ owner: { equals: 7 } }, { editors: { contains: 7 } }] },
       }),
     )
+  })
+})
+
+describe("getAllCourseOptions", () => {
+  it("lists every course, labelled with its university", async () => {
+    find.mockResolvedValue({
+      docs: [
+        { code: "COMPSCI 399", id: 9, institution: { id: 12, name: "University of Auckland" } },
+        { code: "SE 101", id: 4, institution: { id: 13, name: "Victoria University" } },
+      ],
+    })
+
+    await expect(getAllCourseOptions()).resolves.toEqual([
+      { label: "COMPSCI 399 - University of Auckland", value: 9 },
+      { label: "SE 101 - Victoria University", value: 4 },
+    ])
+    expect(find).toHaveBeenCalledWith(expect.not.objectContaining({ where: expect.anything() }))
+  })
+})
+
+describe("toCourseOption", () => {
+  it("falls back to the code alone when the institution wasn't loaded", () => {
+    expect(toCourseOption({ code: "SE 101", id: 4, institution: 13 })).toEqual({
+      label: "SE 101",
+      value: 4,
+    })
   })
 })
 

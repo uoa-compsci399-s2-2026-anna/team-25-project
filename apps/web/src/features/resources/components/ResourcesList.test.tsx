@@ -5,6 +5,16 @@ import { loadResourcesPage } from "../resources.queries"
 import { ResourcesList, ResourcesListSkeleton } from "./ResourcesList"
 
 vi.mock("../resources.queries", () => ({ loadResourcesPage: vi.fn() }))
+// An async server component, which jsdom can't render - stood in for by its props.
+vi.mock("./ResourceCardActionsServer", () => ({
+  ResourceCardActionsServer: ({
+    ownerId,
+    resourceId,
+  }: {
+    ownerId?: number
+    resourceId: number
+  }) => <span data-testid="resource-actions">{`resource ${resourceId}, owner ${ownerId}`}</span>,
+}))
 
 const paragraph = (text: string) => ({
   root: {
@@ -74,6 +84,17 @@ describe("ResourcesList", () => {
       "href",
       "/members/7",
     )
+  })
+
+  it("gives each card the Edit/Delete menu, which decides for itself who sees it", async () => {
+    mockPage([resource(), resource({ id: 2, owner: 9 })])
+
+    render(await ResourcesList({ searchParams: Promise.resolve({}) }))
+
+    expect(screen.getAllByTestId("resource-actions").map((el) => el.textContent)).toEqual([
+      "resource 1, owner 7",
+      "resource 2, owner 9",
+    ])
   })
 
   it("passes the filters and page to the query", async () => {
