@@ -1,11 +1,14 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
+import { isOwnProfile } from "../../members.ownership"
 import { getMemberResourcesCached } from "../../members.queries"
 import { MemberResources, MemberResourcesSkeleton } from "./MemberDetailResources"
 
 vi.mock("../../members.queries", () => ({ getMemberResourcesCached: vi.fn() }))
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
+// Someone else's profile unless a test says otherwise, so no Edit links.
+vi.mock("../../members.ownership", () => ({ isOwnProfile: vi.fn() }))
 
 type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>
 
@@ -19,6 +22,7 @@ describe("MemberResources", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(getCurrentUser).mockResolvedValue(signedIn)
+    vi.mocked(isOwnProfile).mockResolvedValue(false)
   })
 
   afterEach(() => {
@@ -63,6 +67,30 @@ describe("MemberResources", () => {
 
     expect(screen.getByText("Resource")).toBeInTheDocument()
     expect(screen.queryByText(/attachment/)).not.toBeInTheDocument()
+  })
+
+  it("links each resource into its editor on the member's own profile only", async () => {
+    vi.mocked(getMemberResourcesCached).mockResolvedValue([
+      {
+        attachments: [],
+        course: null,
+        createdAt: "2026-06-03T00:00:00.000Z",
+        id: 19,
+        title: "Reading list",
+      },
+    ] as never)
+
+    await renderResources()
+    expect(screen.queryByRole("button", { name: "Edit Reading list" })).not.toBeInTheDocument()
+    cleanup()
+
+    vi.mocked(isOwnProfile).mockResolvedValue(true)
+    await renderResources()
+    expect(isOwnProfile).toHaveBeenCalledWith(7)
+    expect(screen.getByRole("button", { name: "Edit Reading list" })).toHaveAttribute(
+      "href",
+      "/resources/19#edit",
+    )
   })
 
   it("says so when the member has shared nothing", async () => {

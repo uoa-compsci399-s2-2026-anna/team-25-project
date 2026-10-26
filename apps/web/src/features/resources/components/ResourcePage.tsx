@@ -1,7 +1,7 @@
 import { resourceAttachmentTypeLabel } from "@repo/shared/constants/resource-attachments"
 import type { ResourceAttachment } from "@repo/shared/payload-types"
 import { AttachmentList } from "@repo/ui/components/composite"
-import { Badge, Heading, Skeleton } from "@repo/ui/components/ui"
+import { AnimatedSuspense, Badge, Heading, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { RichTextContent } from "@/components/RichTextContent"
@@ -14,6 +14,10 @@ import { AuthorByline } from "@/features/proposals/components/AuthorByline/Autho
 import { Routes } from "@/lib/routes"
 import { parseResourceId, type ResourceRouteParams } from "../resources.params"
 import { getResourceByIdCached } from "../resources.queries"
+import { ResourceEditButton } from "./ResourceEditButton"
+import { ResourceCourseEdit } from "./ResourceEditor/ResourceCourseEdit"
+import { ResourceEditProvider } from "./ResourceEditor/ResourceEditProvider"
+import { ResourceEdit } from "./ResourceEditor/resourceEditFields"
 
 // Aliased as the React compiler rule reads a capitalized call inside a component as
 // a component rendered the wrong way.
@@ -56,11 +60,24 @@ export const ResourcePage = async ({ params }: { params: ResourceRouteParams }) 
     course && typeof course.institution === "object" ? course.institution : undefined
   const attachments = toAttachmentItems(resource.attachments)
 
+  const courseView = course ? (
+    // A course with nothing published 404s, so only those with an offering link.
+    course.hasPublishedVersion ? (
+      <Link className="underline underline-offset-4" href={courseHref(String(course.id))}>
+        {course.code}
+      </Link>
+    ) : (
+      course.code
+    )
+  ) : (
+    "Not linked to a course"
+  )
+
   const shared = dateFormatter.format(new Date(resource.createdAt))
   const updated = dateFormatter.format(new Date(resource.updatedAt))
 
   return (
-    <>
+    <ResourceEditProvider resourceId={id}>
       <div className="flex min-w-0 flex-col gap-6">
         <div className="flex flex-wrap items-center gap-2 text-muted-foreground text-sm">
           {course && <Badge variant="blue">{course.code}</Badge>}
@@ -72,19 +89,38 @@ export const ResourcePage = async ({ params }: { params: ResourceRouteParams }) 
             </>
           )}
         </div>
-        <Heading level="h1">{resource.title}</Heading>
+        <ResourceEdit.Input
+          label="Title"
+          maxLength={200}
+          name="title"
+          value={resource.title}
+          view={<Heading level="h1">{resource.title}</Heading>}
+        />
         {owner && (
           <Link className="self-start hover:underline" href={memberHref(owner.id)}>
             <AuthorByline authors={[owner]} />
           </Link>
         )}
-        <RichTextContent data={resource.description} />
+        <ResourceEdit.RichText
+          className="[&_[contenteditable]]:min-h-72"
+          label="Description"
+          name="description"
+          value={resource.description}
+          view={<RichTextContent data={resource.description} />}
+        />
         <CourseOfferingSection title={`Attachments - ${attachments.length}`}>
-          {attachments.length > 0 ? (
-            <AttachmentList attachments={attachments} />
-          ) : (
-            <p className="text-muted-foreground text-sm">No files have been attached.</p>
-          )}
+          <ResourceEdit.Attachments
+            existing={attachments}
+            label="Attachments"
+            name="attachments"
+            view={
+              attachments.length > 0 ? (
+                <AttachmentList attachments={attachments} />
+              ) : (
+                <p className="text-muted-foreground text-sm">No files have been attached.</p>
+              )
+            }
+          />
         </CourseOfferingSection>
       </div>
 
@@ -93,29 +129,21 @@ export const ResourcePage = async ({ params }: { params: ResourceRouteParams }) 
           <CourseOfferingDetail
             label="Course"
             value={
-              course ? (
-                // A course with nothing published 404s, so only those with an offering link.
-                course.hasPublishedVersion ? (
-                  <Link
-                    className="underline underline-offset-4"
-                    href={courseHref(String(course.id))}
-                  >
-                    {course.code}
-                  </Link>
-                ) : (
-                  course.code
-                )
-              ) : (
-                "Not linked to a course"
-              )
+              // The view stands in while the viewer's course options load.
+              <AnimatedSuspense fallback={courseView}>
+                <ResourceCourseEdit course={course} view={courseView} />
+              </AnimatedSuspense>
             }
           />
           {institution && <CourseOfferingDetail label="University" value={institution.name} />}
           <CourseOfferingDetail label="Shared" value={shared} />
           <CourseOfferingDetail label="Last updated" value={updated} />
+          <AnimatedSuspense fallback={null}>
+            <ResourceEditButton id={id} />
+          </AnimatedSuspense>
         </CourseOfferingSidebarCard>
       </aside>
-    </>
+    </ResourceEditProvider>
   )
 }
 

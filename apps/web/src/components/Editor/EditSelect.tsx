@@ -10,13 +10,14 @@ import {
 import type { ReactNode } from "react"
 import { EditField } from "./EditField"
 
-export type EditSelectOption = { label: string; value: string }
+export type EditSelectOption<V extends string | number = string> = { label: string; value: V }
 
 /**
  * Pick one value from a fixed list. Pass `toSelectOptions(SomeLabels)` so the
- * options come straight from the enum. `nullLabel` adds a "no value" item.
+ * options come straight from the enum, or ids for a relationship. `nullLabel` adds a
+ * "no value" item.
  */
-export const EditSelect = ({
+export const EditSelect = <V extends string | number>({
   className,
   label,
   name,
@@ -30,11 +31,11 @@ export const EditSelect = ({
   name: string
   /** Shown for, and as the item that clears to, null - e.g. "None". Omit to require a value. */
   nullLabel?: string
-  options: EditSelectOption[]
-  value: string | null | undefined
+  options: EditSelectOption<V>[]
+  value: V | null | undefined
   view?: ReactNode
 }) => {
-  const labelFor = (selected: string | null) =>
+  const labelFor = (selected: V | null) =>
     options.find((option) => option.value === selected)?.label ?? nullLabel ?? ""
 
   return (
@@ -42,7 +43,7 @@ export const EditSelect = ({
       {(control) => (
         <Select
           disabled={control.disabled}
-          onValueChange={(next) => control.setValue(next as string | null)}
+          onValueChange={(next) => control.setValue(next as V | null)}
           value={control.value}
         >
           <SelectTrigger
@@ -57,7 +58,7 @@ export const EditSelect = ({
           <SelectContent align="start" alignItemWithTrigger={false}>
             {nullLabel !== undefined && <SelectItem value={null}>{nullLabel}</SelectItem>}
             {options.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
+              <SelectItem key={String(option.value)} value={option.value}>
                 {option.label}
               </SelectItem>
             ))}

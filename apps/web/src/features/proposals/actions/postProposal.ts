@@ -6,10 +6,10 @@ import { postProposalFormSchema } from "@repo/shared/schemas/proposals"
 import { updateTag } from "next/cache"
 import { ValidationError } from "payload"
 import type { ActionResult } from "@/features/auth/actions/types"
+import { fieldErrorsFromIssues, resultFromValidationError } from "@/lib/actions/validationErrors"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
-import { fieldErrorsFromIssues, resultFromValidationError } from "./validationErrors"
 
 export const postProposal = async (input: unknown): Promise<ActionResult> => {
   const parsed = postProposalFormSchema.safeParse(input)

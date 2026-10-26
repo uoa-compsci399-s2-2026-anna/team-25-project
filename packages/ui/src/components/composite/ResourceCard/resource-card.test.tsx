@@ -84,6 +84,11 @@ describe("ResourceCard", () => {
     )
   })
 
+  it("renders an action beside the byline", () => {
+    render(<ResourceCard {...props} action={<button type="button">Edit</button>} />)
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument()
+  })
+
   it("falls back to the owner's initials without a photo", () => {
     render(<ResourceCard {...props} />)
     expect(screen.getByText("AT")).toBeInTheDocument()

@@ -1,9 +1,14 @@
 import { PaginationNav, ResourceCard, ResourceCardSkeleton } from "@repo/ui/components/composite"
+import { Button } from "@repo/ui/components/ui"
 import { FolderOpen, SearchX } from "lucide-react"
 import type { Route } from "next"
+import Link from "next/link"
 import type { SearchParams } from "nuqs/server"
+import { withEditHash } from "@/components/Editor/editOnLoad"
 import { EmptyState } from "@/components/EmptyState"
 import { StringHrefLink } from "@/components/StringHrefLink"
+import { getCurrentUser } from "@/lib/payload/getCurrentUser"
+import { Slugs } from "@/lib/payload/slugs"
 import { Routes } from "@/lib/routes"
 import { toResourceCardProps } from "../resource-card-props"
 import { loadResourcesPage } from "../resources.queries"
@@ -19,14 +24,10 @@ const skeletonCardIds = Array.from({ length: PAGE_SIZE }, (_, i) => `resource-sk
 
 export const ResourcesList = async ({ searchParams }: { searchParams: Promise<SearchParams> }) => {
   const params = await loadResourceSearchParams(searchParams)
-  const {
-    docs: resources,
-    totalDocs,
-    totalPages,
-  } = await loadResourcesPage(toResourceFilters(params), {
-    limit: PAGE_SIZE,
-    page: params.page,
-  })
+  const [{ docs: resources, totalDocs, totalPages }, { collection, user }] = await Promise.all([
+    loadResourcesPage(toResourceFilters(params), { limit: PAGE_SIZE, page: params.page }),
+    getCurrentUser(),
+  ])
 
   // Keeps the current filters, so moving between pages only changes the page.
   const getPageHref = (page: number) =>
@@ -62,13 +63,36 @@ export const ResourcesList = async ({ searchParams }: { searchParams: Promise<Se
   return (
     <div className="flex w-full flex-col gap-8 p-10 md:p-12">
       <div className="flex w-full flex-col gap-8">
-        {resources.map((resource) => (
-          <ResourceCard
-            key={resource.id}
-            linkComponent={StringHrefLink}
-            {...toResourceCardProps(resource)}
-          />
-        ))}
+        {resources.map((resource) => {
+          const card = toResourceCardProps(resource)
+          const ownerId = typeof resource.owner === "object" ? resource.owner.id : resource.owner
+          // Same rule as ResourceEditButton: admins, and the resource's owner.
+          const canEdit =
+            collection === Slugs.Collections.ADMIN || (user !== null && user.id === ownerId)
+
+          return (
+            <ResourceCard
+              action={
+                canEdit && (
+                  <Button
+                    aria-label={`Edit ${resource.title}`}
+                    borderColor="charcoal"
+                    className="shrink-0"
+                    nativeButton={false}
+                    render={<Link href={withEditHash(card.href)} />}
+                    size="sm"
+                    variant="button-transparent"
+                  >
+                    Edit
+                  </Button>
+                )
+              }
+              key={resource.id}
+              linkComponent={StringHrefLink}
+              {...card}
+            />
+          )
+        })}
       </div>
       <PaginationNav
         getHref={getPageHref}

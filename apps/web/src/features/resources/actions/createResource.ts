@@ -5,38 +5,11 @@ import { addResourceFormSchema, resourceAttachmentsError } from "@repo/shared/sc
 import { updateTag } from "next/cache"
 import { ValidationError } from "payload"
 import type { ActionResult } from "@/features/auth/actions/types"
+import { fieldErrorsFromIssues, resultFromValidationError } from "@/lib/actions/validationErrors"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
-
-type ZodIssue = { message: string; path: PropertyKey[] }
-
-const fieldErrorsFromIssues = (issues: readonly ZodIssue[]): Record<string, string> => {
-  const fieldErrors: Record<string, string> = {}
-  for (const issue of issues) {
-    const field = issue.path.join(".")
-    // Only the first message per field is shown, matching one message per input.
-    if (field && !fieldErrors[field]) {
-      fieldErrors[field] = issue.message
-    }
-  }
-  return fieldErrors
-}
-
-const resultFromValidationError = (
-  error: ValidationError,
-  fallbackFormError: string,
-): ActionResult => {
-  const fieldErrors: Record<string, string> = {}
-  for (const { path, message } of error.data?.errors ?? []) {
-    if (path && !fieldErrors[path]) {
-      fieldErrors[path] = message
-    }
-  }
-  return Object.keys(fieldErrors).length > 0
-    ? { fieldErrors, ok: false }
-    : { formError: fallbackFormError, ok: false }
-}
+import { uploadAttachments } from "./uploadAttachments"
 
 // The rich-text description can't travel as a plain FormData value, so the form sends it as
 // JSON. Anything unreadable becomes undefined and fails the schema as a missing description.
@@ -96,39 +69,16 @@ export const createResource = async (formData: FormData): Promise<ActionResult> 
   const req = transactionID ? { transactionID } : undefined
 
   try {
-    const attachmentIds: number[] = []
-    for (const file of attachments) {
-      try {
-        const attachment = await payload.create({
-          collection: Slugs.Collections.RESOURCE_ATTACHMENTS,
-          data: {},
-          file: {
-            data: Buffer.from(await file.arrayBuffer()),
-            mimetype: file.type,
-            name: file.name,
-            size: file.size,
-          },
-          overrideAccess: false,
-          req,
-          user,
-        })
-        attachmentIds.push(attachment.id)
-      } catch (error) {
-        // Payload checks each file's contents (e.g. a PDF that isn't really one), and its
-        // message names no file, so the field error says which one it was.
-        if (error instanceof ValidationError) {
-          const message = error.data?.errors?.[0]?.message ?? "This file could not be uploaded."
-          if (transactionID) await payload.db.rollbackTransaction(transactionID)
-          return { fieldErrors: { attachments: `${file.name}: ${message}` }, ok: false }
-        }
-        throw error
-      }
+    const uploaded = await uploadAttachments(payload, attachments, { req, user })
+    if ("fieldError" in uploaded) {
+      if (transactionID) await payload.db.rollbackTransaction(transactionID)
+      return { fieldErrors: { attachments: uploaded.fieldError }, ok: false }
     }
 
     await payload.create({
       collection: Slugs.Collections.RESOURCES,
       data: {
-        attachments: attachmentIds,
+        attachments: uploaded.ids,
         course: parsed.data.course,
         description: parsed.data.description,
         // Required by the type; defaultResourceOwner sets it to the signed-in member anyway.

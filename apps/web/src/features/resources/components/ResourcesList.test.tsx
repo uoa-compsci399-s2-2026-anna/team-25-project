@@ -1,10 +1,15 @@
 import type { Resource } from "@repo/shared/payload-types"
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { loadResourcesPage } from "../resources.queries"
 import { ResourcesList, ResourcesListSkeleton } from "./ResourcesList"
 
 vi.mock("../resources.queries", () => ({ loadResourcesPage: vi.fn() }))
+// Signed out unless a test says otherwise, so no Edit links.
+vi.mock("@/lib/payload/getCurrentUser", () => ({
+  getCurrentUser: vi.fn().mockResolvedValue({ collection: null, user: null }),
+}))
 
 const paragraph = (text: string) => ({
   root: {
@@ -131,6 +136,32 @@ describe("ResourcesList", () => {
       "href",
       "/resources",
     )
+  })
+
+  it.each([
+    ["the owner", { collection: "members", user: { id: 7 } }],
+    ["an admin", { collection: "admin", user: { id: 99 } }],
+  ])("links %s straight into the resource's editor", async (_, currentUser) => {
+    vi.mocked(getCurrentUser).mockResolvedValueOnce(currentUser as never)
+    mockPage([resource()])
+
+    render(await ResourcesList({ searchParams: Promise.resolve({}) }))
+
+    expect(
+      screen.getByRole("button", { name: "Edit Individual contribution rubric" }),
+    ).toHaveAttribute("href", "/resources/1#edit")
+  })
+
+  it("has no Edit link on another member's resource", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValueOnce({
+      collection: "members",
+      user: { id: 8 },
+    } as never)
+    mockPage([resource()])
+
+    render(await ResourcesList({ searchParams: Promise.resolve({}) }))
+
+    expect(screen.queryByRole("button", { name: /^Edit / })).not.toBeInTheDocument()
   })
 
   it("has no clear link when no filter is set", async () => {

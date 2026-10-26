@@ -4,7 +4,12 @@ import {
   RESOURCE_ATTACHMENTS_MAX_FILES,
   RESOURCE_ATTACHMENTS_MAX_MB,
 } from "../constants/resource-attachments"
-import { addResourceFormSchema, resourceAttachmentsError } from "./resources"
+import {
+  addResourceFormSchema,
+  resourceAttachmentsEditSchema,
+  resourceAttachmentsError,
+  updateResourceSchema,
+} from "./resources"
 
 const description = (text: string) => ({
   root: {
@@ -40,6 +45,29 @@ describe("addResourceFormSchema", () => {
   })
 })
 
+describe("updateResourceSchema", () => {
+  it("accepts any subset of the fields, so a left-out field is kept as is", () => {
+    expect(updateResourceSchema.safeParse({}).success).toBe(true)
+    expect(updateResourceSchema.parse({ title: " New title " })).toEqual({ title: "New title" })
+  })
+
+  it("accepts a course id, or null to unlink it", () => {
+    expect(updateResourceSchema.parse({ course: 4 })).toEqual({ course: 4 })
+    expect(updateResourceSchema.parse({ course: null })).toEqual({ course: null })
+  })
+
+  it.each([0, -1, 1.5, "4"])("refuses a course that isn't an id (%o)", (course) => {
+    expect(updateResourceSchema.safeParse({ course }).success).toBe(false)
+  })
+
+  it.each([
+    [{ title: "  " }, "Title is required"],
+    [{ description: description("") }, "Description is required"],
+  ])("still refuses an emptied field (%o)", (input, message) => {
+    expect(updateResourceSchema.safeParse(input).error?.issues[0]?.message).toBe(message)
+  })
+})
+
 describe("resourceAttachmentsError", () => {
   it("accepts no attachments, or supported ones within the limits", () => {
     expect(resourceAttachmentsError([])).toBeUndefined()
@@ -51,6 +79,13 @@ describe("resourceAttachmentsError", () => {
       pdf(`file-${i}.pdf`),
     )
     expect(resourceAttachmentsError(files)).toBe(
+      `Attach at most ${RESOURCE_ATTACHMENTS_MAX_FILES} files.`,
+    )
+  })
+
+  it("counts the files already linked toward the file cap", () => {
+    expect(resourceAttachmentsError([pdf()], RESOURCE_ATTACHMENTS_MAX_FILES - 1)).toBeUndefined()
+    expect(resourceAttachmentsError([pdf()], RESOURCE_ATTACHMENTS_MAX_FILES)).toBe(
       `Attach at most ${RESOURCE_ATTACHMENTS_MAX_FILES} files.`,
     )
   })
@@ -73,5 +108,36 @@ describe("resourceAttachmentsError", () => {
     expect(resourceAttachmentsError([pdf("a.pdf", half), pdf("b.pdf", half + 1)])).toBe(
       `Attachments must be ${RESOURCE_ATTACHMENTS_MAX_MB} MB or smaller in total.`,
     )
+  })
+})
+
+describe("resourceAttachmentsEditSchema", () => {
+  const file = (name = "rubric.pdf", type = "application/pdf") =>
+    new File(["%PDF-1.4"], name, { type })
+
+  it("accepts saved ids to keep and new files to add", () => {
+    const value = { add: [file()], keep: [4, 5] }
+    expect(resourceAttachmentsEditSchema.parse(value)).toEqual(value)
+    expect(updateResourceSchema.parse({ attachments: value })).toEqual({ attachments: value })
+  })
+
+  it.each([0, -1, 1.5, "4"])("refuses a kept id that isn't an id (%o)", (id) => {
+    expect(resourceAttachmentsEditSchema.safeParse({ add: [], keep: [id] }).success).toBe(false)
+  })
+
+  it("refuses an added value that isn't a file", () => {
+    const add = [{ name: "rubric.pdf", size: 8, type: "application/pdf" }]
+    expect(resourceAttachmentsEditSchema.safeParse({ add, keep: [] }).success).toBe(false)
+  })
+
+  it("refuses new files with the attachments message, counting the kept ones", () => {
+    const keep = Array.from({ length: RESOURCE_ATTACHMENTS_MAX_FILES }, (_, i) => i + 1)
+    expect(
+      resourceAttachmentsEditSchema.safeParse({ add: [file()], keep }).error?.issues[0]?.message,
+    ).toBe(`Attach at most ${RESOURCE_ATTACHMENTS_MAX_FILES} files.`)
+    expect(
+      resourceAttachmentsEditSchema.safeParse({ add: [file("page.html", "text/html")], keep: [] })
+        .error?.issues[0]?.message,
+    ).toMatch(/^page\.html isn't a supported file type/)
   })
 })
