@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
-import { getOtherAuthorCandidates } from "./authorCandidates.queries"
+import { getAllAuthorCandidates, getOtherAuthorCandidates } from "./authorCandidates.queries"
 
 vi.mock("next/cache", () => ({ cacheLife: vi.fn(), cacheTag: vi.fn() }))
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
@@ -68,4 +68,28 @@ describe("getOtherAuthorCandidates", () => {
       }),
     )
   })
+})
+
+describe("getAllAuthorCandidates", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    find.mockResolvedValue({ docs: [memberDoc(1, "Ann"), memberDoc(2, "Ben")] })
+    vi.mocked(getPayloadClient).mockResolvedValue({ find } as unknown as Awaited<
+      ReturnType<typeof getPayloadClient>
+    >)
+  })
+
+  it("returns null when signed out", async () => {
+    signInAs(null)
+    expect(await getAllAuthorCandidates()).toBeNull()
+    expect(find).not.toHaveBeenCalled()
+  })
+
+  it.each([["members"], ["admin"]] as const)(
+    "returns every member, the signed-in one included, to a %s user",
+    async (collection) => {
+      signInAs(collection, 1)
+      expect((await getAllAuthorCandidates())?.map((member) => member.id)).toEqual([1, 2])
+    },
+  )
 })

@@ -15,6 +15,7 @@ import {
   serializePublicationSearchParams,
   toPublicationFilters,
 } from "../publications.search-params"
+import { PublicationCardActionsServer } from "./PublicationCardActionsServer"
 
 const PAGE_SIZE = 10
 // Stable keys for the placeholder cards, which have no data of their own.
@@ -71,6 +72,7 @@ export const PublicationsList = async ({
       <div className="flex w-full flex-col gap-8">
         {publications.map((publication) => (
           <PublicationCard
+            action={<PublicationCardActionsServer publication={publication} />}
             key={publication.id}
             linkComponent={StringHrefLink}
             memberHref={Routes.MEMBERS.MEMBER}

@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { getOtherAuthorCandidates } from "../authorCandidates.queries"
+import { getAllAuthorCandidates, getOtherAuthorCandidates } from "../authorCandidates.queries"
 import { matchBibtexAuthors } from "./matchBibtexAuthors"
 import { searchAuthorCandidates } from "./searchAuthorCandidates"
 
-vi.mock("../authorCandidates.queries", () => ({ getOtherAuthorCandidates: vi.fn() }))
+vi.mock("../authorCandidates.queries", () => ({
+  getAllAuthorCandidates: vi.fn(),
+  getOtherAuthorCandidates: vi.fn(),
+}))
 
 const member = (id: number, firstName: string, lastName: string) => ({
   id,
@@ -57,6 +60,34 @@ describe("author candidate actions", () => {
     it("refuses a non-member", async () => {
       vi.mocked(getOtherAuthorCandidates).mockResolvedValue(null)
       expect(await searchAuthorCandidates("Ben")).toEqual({ ok: false })
+    })
+
+    describe("with includeSelf, for editing", () => {
+      const anna = member(1, "Anna", "Smith")
+
+      it("searches every member, the signed-in one included", async () => {
+        vi.mocked(getAllAuthorCandidates).mockResolvedValue([anna, janeSmith])
+
+        expect(await searchAuthorCandidates("Anna", { includeSelf: true })).toEqual({
+          ok: true,
+          members: [anna],
+        })
+        expect(getOtherAuthorCandidates).not.toHaveBeenCalled()
+      })
+
+      it("refuses when signed out", async () => {
+        vi.mocked(getAllAuthorCandidates).mockResolvedValue(null)
+        expect(await searchAuthorCandidates("Anna", { includeSelf: true })).toEqual({ ok: false })
+      })
+
+      it.each([[undefined], [{}], [{ includeSelf: false }], [{ includeSelf: "yes" }], ["junk"]])(
+        "leaves the signed-in member out for options %j",
+        async (options) => {
+          await searchAuthorCandidates("Ben", options)
+          expect(getOtherAuthorCandidates).toHaveBeenCalledOnce()
+          expect(getAllAuthorCandidates).not.toHaveBeenCalled()
+        },
+      )
     })
   })
 

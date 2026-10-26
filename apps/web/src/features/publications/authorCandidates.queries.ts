@@ -43,3 +43,16 @@ export const getOtherAuthorCandidates = async (): Promise<AuthorCandidate[] | nu
   if (collection !== Slugs.Collections.MEMBERS) return null
   return (await getAuthorCandidatesCached()).filter((member) => member.id !== user.id)
 }
+
+/**
+ * Every member, the signed-in one included, for editing a publication: an edit
+ * has no "self" row, so a member who removed their own row must be able to find
+ * themselves again. Admins get the list too - fixing links is much of why they
+ * edit. Payload's access rules on the publication decide who can save.
+ * Null when signed out.
+ */
+export const getAllAuthorCandidates = async (): Promise<AuthorCandidate[] | null> => {
+  const { user } = await getCurrentUser()
+  if (!user) return null
+  return getAuthorCandidatesCached()
+}

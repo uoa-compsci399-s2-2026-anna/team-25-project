@@ -215,6 +215,16 @@ describe("PublicationCard", () => {
     render(<PublicationCard data-testid="card" publication={publication} size="sm" />)
     expect(screen.getByTestId("card")).toHaveAttribute("data-size", "sm")
   })
+
+  it("renders the action beside the published date", () => {
+    renderCard({}, { action: <button type="button">Actions</button> })
+    expect(screen.getByRole("button", { name: "Actions" })).toBeInTheDocument()
+  })
+
+  it("omits the action when none is given", () => {
+    renderCard()
+    expect(screen.queryByRole("button")).not.toBeInTheDocument()
+  })
 })
 
 describe("PublicationCardSkeleton", () => {

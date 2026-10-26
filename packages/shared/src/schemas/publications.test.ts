@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { PublicationType } from "../enums/publications"
-import { addPublicationFormSchema } from "./publications"
+import { addPublicationFormSchema, editPublicationFormSchema } from "./publications"
 
 const validForm = {
   type: PublicationType.ARTICLE,
@@ -157,5 +157,54 @@ describe("addPublicationFormSchema", () => {
   it("says the year is required when the year input is empty", () => {
     const result = addPublicationFormSchema.safeParse({ ...validForm, year: Number.NaN })
     expect(result.error?.issues.map((issue) => issue.message)).toEqual(["Year is required"])
+  })
+})
+
+describe("editPublicationFormSchema", () => {
+  const validEditForm = {
+    ...validForm,
+    authors: [{ id: "1", kind: "member", memberId: 3, name: "Anna Smith" }],
+  }
+
+  const editErrorPaths = (input: unknown) => {
+    const result = editPublicationFormSchema.safeParse(input)
+    return result.success ? [] : result.error.issues.map((issue) => issue.path.join("."))
+  }
+
+  it("accepts authors with no signed-in-member row", () => {
+    expect(editErrorPaths(validEditForm)).toEqual([])
+  })
+
+  it("rejects a self row - editing doesn't assume the editor is an author", () => {
+    expect(
+      editErrorPaths({
+        ...validEditForm,
+        authors: [{ id: "1", kind: "self", name: "" }],
+      }),
+    ).toEqual(["authors.0.kind"])
+  })
+
+  it("rejects an empty author list", () => {
+    expect(editErrorPaths({ ...validEditForm, authors: [] })).toEqual(["authors"])
+  })
+
+  it("rejects the same member twice", () => {
+    expect(
+      editErrorPaths({
+        ...validEditForm,
+        authors: [
+          { id: "1", kind: "member", memberId: 3, name: "Anna Smith" },
+          { id: "2", kind: "member", memberId: 3, name: "A. Smith" },
+        ],
+      }),
+    ).toEqual(["authors"])
+  })
+
+  it("still requires a DOI or a URL", () => {
+    expect(editErrorPaths({ ...validEditForm, doi: "", url: "" })).toEqual(["doi", "url"])
+  })
+
+  it("still requires a title", () => {
+    expect(editErrorPaths({ ...validEditForm, title: " " })).toEqual(["title"])
   })
 })

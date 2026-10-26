@@ -4,6 +4,7 @@ import { cn } from "@repo/ui/lib/utils"
 import { BookOpen } from "lucide-react"
 import { EmptyState } from "@/components/EmptyState"
 import { StringHrefLink } from "@/components/StringHrefLink"
+import { PublicationCardActionsServer } from "@/features/publications/components/PublicationCardActionsServer"
 import { Routes } from "@/lib/routes"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberPublicationsCached } from "../../members.queries"
@@ -22,6 +23,7 @@ export const MemberPublications = async ({ params }: { params: MembersRouteParam
       {publications.length > 0 ? (
         publications.map((publication) => (
           <PublicationCard
+            action={<PublicationCardActionsServer publication={publication} />}
             key={publication.id}
             linkComponent={StringHrefLink}
             memberHref={Routes.MEMBERS.MEMBER}

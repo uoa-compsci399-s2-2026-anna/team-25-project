@@ -42,10 +42,43 @@ const formAuthorSchema = z.discriminatedUnion("kind", [
   z.object({ id: z.string(), kind: z.literal("external"), name: authorNameSchema }),
 ])
 
+// Shared by both the add and edit schemas - every field but `authors`, which each
+// defines on its own since only add expects a "self" row.
+const publicationFieldsSchema = {
+  type: z.enum(PublicationType),
+  title: z.string().trim().min(1, "Title is required"),
+  // An empty year input gives NaN, which fails the number check.
+  year: z
+    .number({ error: "Year is required" })
+    .int("Enter a whole year")
+    .min(1000, "Enter a 4-digit year")
+    .refine((year) => year <= latestPublicationYear(), {
+      error: () => `Enter a year no later than ${latestPublicationYear()}`,
+    }),
+  month: blankOr(z.string().regex(/^([1-9]|1[0-2])$/, "Choose a month")),
+  doi: blankOr(z.string().trim().regex(DOI_PATTERN, DOI_ERROR)),
+  url: blankOr(webUrlSchema),
+  venue: z.string(),
+  volume: z.string(),
+  issue: z.string(),
+  pages: z.string(),
+  publisher: z.string(),
+  citationKey: z.string(),
+  abstract: z.string(),
+  // Comma-separated.
+  tags: z.string(),
+}
+
+const uniqueMemberIds = (authors: { kind: string; memberId?: number }[]) => {
+  const ids = authors.flatMap((author) =>
+    author.kind === "member" ? [author.memberId as number] : [],
+  )
+  return new Set(ids).size === ids.length
+}
+
 export const addPublicationFormSchema = z
   .object({
-    type: z.enum(PublicationType),
-    title: z.string().trim().min(1, "Title is required"),
+    ...publicationFieldsSchema,
     // Ordered as cited. The signed-in member appears exactly once, in any position.
     authors: z
       .array(formAuthorSchema)
@@ -53,30 +86,7 @@ export const addPublicationFormSchema = z
         (authors) => authors.filter((author) => author.kind === "self").length === 1,
         "Include yourself as one of the authors.",
       )
-      .refine((authors) => {
-        const ids = authors.flatMap((author) => (author.kind === "member" ? [author.memberId] : []))
-        return new Set(ids).size === ids.length
-      }, "Each member can be an author only once."),
-    // An empty year input gives NaN, which fails the number check.
-    year: z
-      .number({ error: "Year is required" })
-      .int("Enter a whole year")
-      .min(1000, "Enter a 4-digit year")
-      .refine((year) => year <= latestPublicationYear(), {
-        error: () => `Enter a year no later than ${latestPublicationYear()}`,
-      }),
-    month: blankOr(z.string().regex(/^([1-9]|1[0-2])$/, "Choose a month")),
-    doi: blankOr(z.string().trim().regex(DOI_PATTERN, DOI_ERROR)),
-    url: blankOr(webUrlSchema),
-    venue: z.string(),
-    volume: z.string(),
-    issue: z.string(),
-    pages: z.string(),
-    publisher: z.string(),
-    citationKey: z.string(),
-    abstract: z.string(),
-    // Comma-separated.
-    tags: z.string(),
+      .refine(uniqueMemberIds, "Each member can be an author only once."),
   })
   .superRefine(({ doi, url }, ctx) => {
     if (doi || url) return
@@ -86,3 +96,33 @@ export const addPublicationFormSchema = z
   })
 
 export type AddPublicationFormInput = z.infer<typeof addPublicationFormSchema>
+
+// No "self" row: editing doesn't assume the signed-in person is one of the
+// authors - an admin correcting someone else's publication isn't.
+const editAuthorSchema = z.discriminatedUnion("kind", [
+  z.object({
+    id: z.string(),
+    kind: z.literal("member"),
+    memberId: z.number().int().positive(),
+    name: authorNameSchema,
+  }),
+  z.object({ id: z.string(), kind: z.literal("external"), name: authorNameSchema }),
+])
+
+export const editPublicationFormSchema = z
+  .object({
+    ...publicationFieldsSchema,
+    // Ordered as cited.
+    authors: z
+      .array(editAuthorSchema)
+      .min(1, "Include at least one author.")
+      .refine(uniqueMemberIds, "Each member can be an author only once."),
+  })
+  .superRefine(({ doi, url }, ctx) => {
+    if (doi || url) return
+    for (const path of ["doi", "url"]) {
+      ctx.addIssue({ code: "custom", path: [path], message: DOI_OR_URL_ERROR })
+    }
+  })
+
+export type EditPublicationFormInput = z.infer<typeof editPublicationFormSchema>

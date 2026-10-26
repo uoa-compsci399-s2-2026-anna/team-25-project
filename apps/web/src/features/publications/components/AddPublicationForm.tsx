@@ -22,6 +22,7 @@ import {
   type AddPublicationFormInput,
   addPublicationFormSchema,
   authorNameSchema,
+  editPublicationFormSchema,
   latestPublicationYear,
 } from "@repo/shared/schemas/publications"
 import type {
@@ -83,6 +84,7 @@ const MONTHS = [
 const formShape = addPublicationFormSchema.shape
 
 const CREATE_FAILED = "Could not add this publication. Try again."
+const UPDATE_FAILED = "Could not save this publication. Try again."
 const MATCH_FAILED = "Could not match the imported authors to members. Link them by hand."
 
 // Server field errors that the form shows next to a field. Any other key (for
@@ -165,25 +167,41 @@ const authorsKey = (rows: AuthorRow[]) =>
     }),
   )
 
-type FormValues = Omit<AddPublicationFormInput, "authors"> & { authors: AuthorRow[] }
+export type FormValues = Omit<AddPublicationFormInput, "authors"> & { authors: AuthorRow[] }
 
 // TanStack wants the schema's input to be the form's type. A member row adds fields
 // that the schema strips, so it is a valid input, but zod cannot type the extra fields.
 const submitSchema = addPublicationFormSchema as unknown as StandardSchemaV1<FormValues>
+// No "self" row in edit mode, but the cast is the same leap: a member row's extra
+// fields are valid input zod can't type.
+const editSubmitSchema = editPublicationFormSchema as unknown as StandardSchemaV1<FormValues>
 
 type LastImport = { values: BibtexImportValues; authors?: AuthorRow[] }
 
-type AddPublicationFormProps = {
-  /** The signed-in member, shown on their own author row. */
-  currentUser: PersonName
-  onSuccess?: () => void
-}
+type AddPublicationFormProps =
+  | {
+      mode?: "create"
+      /** The signed-in member, shown on their own author row. */
+      currentUser: PersonName
+      onSuccess?: () => void
+    }
+  | {
+      mode: "edit"
+      /** The publication's saved values - no "self" row, since the editor need not be an author. */
+      initialValues: FormValues
+      onSave: (values: FormValues) => Promise<ActionResult>
+      onSuccess?: () => void
+    }
 
-export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFormProps) => {
-  const defaultAuthorName = `${currentUser.firstName} ${currentUser.lastName}`
+export const AddPublicationForm = (props: AddPublicationFormProps) => {
+  const { onSuccess } = props
+  const mode = props.mode ?? "create"
+  const defaultAuthorName =
+    props.mode === "edit" ? "" : `${props.currentUser.firstName} ${props.currentUser.lastName}`
   const [formError, setFormError] = useState<string | undefined>(undefined)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const [manualOpen, setManualOpen] = useState(false)
+  // Edit has no BibTeX import to check first, so its fields start open.
+  const [manualOpen, setManualOpen] = useState(mode === "edit")
   const [matchError, setMatchError] = useState<string | undefined>(undefined)
   const [selfAuthorId] = useState(() => crypto.randomUUID())
   // Only the latest import may apply its member matches.
@@ -199,24 +217,27 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
   )
 
   const form = useForm({
-    defaultValues: {
-      type: PublicationType.ARTICLE as PublicationType,
-      title: "",
-      authors: [{ id: selfAuthorId, kind: "self", name: "" }] as AuthorRow[],
-      year: new Date().getFullYear(),
-      month: "",
-      doi: "",
-      url: "",
-      venue: "",
-      volume: "",
-      issue: "",
-      pages: "",
-      publisher: "",
-      citationKey: "",
-      abstract: "",
-      tags: "",
-    },
-    validators: { onSubmit: submitSchema },
+    defaultValues:
+      props.mode === "edit"
+        ? props.initialValues
+        : {
+            type: PublicationType.ARTICLE as PublicationType,
+            title: "",
+            authors: [{ id: selfAuthorId, kind: "self", name: "" }] as AuthorRow[],
+            year: new Date().getFullYear(),
+            month: "",
+            doi: "",
+            url: "",
+            venue: "",
+            volume: "",
+            issue: "",
+            pages: "",
+            publisher: "",
+            citationKey: "",
+            abstract: "",
+            tags: "",
+          },
+    validators: { onSubmit: mode === "edit" ? editSubmitSchema : submitSchema },
     // Errors show on the fields, so open the section that holds them.
     onSubmitInvalid: () => setManualOpen(true),
     onSubmit: async ({ value, formApi }) => {
@@ -224,23 +245,33 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
       setFormError(undefined)
 
       // Only the action call is in the try. An error after a successful save must
-      // not tell the user to add the publication again.
+      // not tell the user to add/save the publication again.
       let result: ActionResult
       try {
-        result = await createPublication(value)
+        result = props.mode === "edit" ? await props.onSave(value) : await createPublication(value)
       } catch (error) {
-        console.error("createPublication failed", error)
-        setFormError(CREATE_FAILED)
+        console.error(
+          `${mode === "edit" ? "updatePublication" : "createPublication"} failed`,
+          error,
+        )
+        setFormError(mode === "edit" ? UPDATE_FAILED : CREATE_FAILED)
         return
       }
 
       if (result.ok) {
-        toast.add({ type: "success", title: "Publication added" })
-        formApi.reset()
-        lastImport.current = { values: {} }
-        // A match that is still running must not change the empty form.
-        importCount.current++
-        setMatchError(undefined)
+        toast.add({
+          type: "success",
+          title: mode === "edit" ? "Publication updated" : "Publication added",
+        })
+        // Edit reopens from the latest saved values every time (see EditPublicationDialog's
+        // remount key), so there is no blank state here to reset back to.
+        if (mode === "create") {
+          formApi.reset()
+          lastImport.current = { values: {} }
+          // A match that is still running must not change the empty form.
+          importCount.current++
+          setMatchError(undefined)
+        }
         onSuccess?.()
         return
       }
@@ -352,7 +383,7 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
       }}
     >
       <FieldGroup className="gap-5 py-4">
-        <BibtexImport onImport={handleImport} self={currentUser} />
+        {props.mode !== "edit" && <BibtexImport onImport={handleImport} self={props.currentUser} />}
 
         {/* Kept mounted while closed, so the fields keep their state and validators. */}
         <Collapsible onOpenChange={setManualOpen} open={manualOpen}>
@@ -575,6 +606,7 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
                                                 <div className="min-w-0 flex-1">
                                                   <AuthorPicker
                                                     id={field.name}
+                                                    includeSelf={mode === "edit"}
                                                     invalid={invalid}
                                                     label={`Author ${position} name`}
                                                     onBlur={field.handleBlur}
@@ -805,7 +837,13 @@ export const AddPublicationForm = ({ currentUser, onSuccess }: AddPublicationFor
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(isSubmitting) => (
             <Button disabled={isSubmitting} type="submit" variant="button-mauve">
-              {isSubmitting ? "Adding..." : "Add publication"}
+              {mode === "edit"
+                ? isSubmitting
+                  ? "Saving..."
+                  : "Save changes"
+                : isSubmitting
+                  ? "Adding..."
+                  : "Add publication"}
             </Button>
           )}
         </form.Subscribe>

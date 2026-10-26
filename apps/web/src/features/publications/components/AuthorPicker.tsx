@@ -56,6 +56,8 @@ type AuthorPickerProps = {
   id: string
   label: string
   invalid: boolean
+  /** Also suggest the signed-in member, for editing - which has no "self" row of its own. */
+  includeSelf?: boolean
   /** The name in the input. Only typing changes it. A name with no member is saved as an external author. */
   value: string
   onChange: (name: string) => void
@@ -68,6 +70,7 @@ export const AuthorPicker = ({
   id,
   label,
   invalid,
+  includeSelf = false,
   value,
   onChange,
   onBlur,
@@ -85,7 +88,7 @@ export const AuthorPicker = ({
     if (query.length < MIN_QUERY_LENGTH) return undefined
     // A slow reply for older text must not replace the results for newer text.
     let current = true
-    searchAuthorCandidates(query)
+    searchAuthorCandidates(query, { includeSelf })
       .then((reply) => {
         if (current) setFound({ query, result: reply })
       })
@@ -96,7 +99,7 @@ export const AuthorPicker = ({
     return () => {
       current = false
     }
-  }, [query])
+  }, [query, includeSelf])
 
   return (
     <Combobox<AuthorCandidate>
