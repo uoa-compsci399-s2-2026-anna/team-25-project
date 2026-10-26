@@ -82,7 +82,7 @@ describe("getCoursesTableData", () => {
     })
   })
 
-  it("pairs each course with its current offering, and summarizes the directory", async () => {
+  it("pairs each course with its current offering", async () => {
     const auckland = course({ id: 1, code: "COMPSCI 399" })
     const otago = course({
       id: 2,
@@ -104,7 +104,7 @@ describe("getCoursesTableData", () => {
       // Already sorted newest first, as the real query would return them.
       .mockResolvedValueOnce({ docs: [next, current, past] })
 
-    const { rows, summary } = await getCoursesTableData("2026-08-01")
+    const rows = await getCoursesTableData("2026-08-01")
 
     expect(rows).toEqual([
       expect.objectContaining({
@@ -120,8 +120,6 @@ describe("getCoursesTableData", () => {
         offerings: 0,
       }),
     ])
-    expect(summary.totalCourses).toBe(2)
-    expect(summary.yearLongCourses).toBe(1)
   })
 })
 
@@ -168,29 +166,43 @@ describe("getMyCoursesSummary", () => {
     expect(find).not.toHaveBeenCalled()
   })
 
-  it("scopes the owned-course lookup to the signed-in member", async () => {
+  it("scopes every lookup to the signed-in member", async () => {
     const member = { id: 1 } as Member
     vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: member })
-    find.mockResolvedValueOnce({ docs: [{ id: 1 }] })
+    find.mockResolvedValue({ docs: [] })
 
     await getMyCoursesSummary(rows)
 
     expect(find).toHaveBeenCalledWith(
       expect.objectContaining({
         collection: "courses",
-        where: { owner: { equals: 1 } },
+        where: { or: [{ owner: { equals: 1 } }, { editors: { contains: 1 } }] },
         overrideAccess: false,
         user: member,
       }),
     )
-  })
-
-  it("summarizes the member's owned courses against the given rows", async () => {
-    const member = { id: 1 } as Member
-    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: member })
-    find.mockResolvedValueOnce({ docs: [{ id: 1 }] })
-
-    expect(await getMyCoursesSummary(rows)).toEqual({ total: 1, upToDate: 1, year: currentYear })
+    expect(find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: "courseVersions",
+        where: {
+          and: [{ "teachingTeam.member": { equals: 1 } }, { _status: { equals: "published" } }],
+        },
+        overrideAccess: false,
+        sort: NEWEST_FIRST,
+        user: member,
+      }),
+    )
+    expect(find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: "courseVersions",
+        where: {
+          and: [{ "course.owner": { equals: 1 } }, { _status: { equals: "published" } }],
+        },
+        overrideAccess: false,
+        sort: NEWEST_FIRST,
+        user: member,
+      }),
+    )
   })
 })
 

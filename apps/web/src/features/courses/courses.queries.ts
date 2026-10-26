@@ -7,12 +7,11 @@ import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
 import type { CourseTableRow } from "./components/CoursesTable"
 import {
-  type CoursesSummaryStats,
   findCurrentOffering,
   getToday,
+  groupByCourseId,
   type MyCoursesSummary,
   type MyDraftCourses,
-  summarizeCourses,
   summarizeMyCourses,
   toCourseTableRow,
   toEditableDraftCourse,
@@ -22,24 +21,6 @@ import {
 // keeps the pick stable if two offerings ever share a `startDate`.
 const NEWEST_FIRST = ["-startDate", "-id"]
 
-const courseIdOf = (version: CourseVersion): number =>
-  typeof version.course === "number" ? version.course : version.course.id
-
-// Keeps each course's offerings in the order they arrive: newest first.
-const offeringsByCourseId = (versions: CourseVersion[]) => {
-  const offerings = new Map<number, CourseVersion[]>()
-  for (const version of versions) {
-    const courseId = courseIdOf(version)
-    offerings.set(courseId, [...(offerings.get(courseId) ?? []), version])
-  }
-  return offerings
-}
-
-export interface CoursesTableData {
-  rows: CourseTableRow[]
-  summary: CoursesSummaryStats
-}
-
 /**
  * The public, published-only view of the directory: it looks the same for
  * every viewer, so it's safe to cache. The trick is not passing a `user`
@@ -47,7 +28,7 @@ export interface CoursesTableData {
  * back to their published-only rule for everyone, admins included, which is
  * what keeps the result viewer-independent.
  */
-export const getCoursesTableData = async (today = getToday()): Promise<CoursesTableData> => {
+export const getCoursesTableData = async (today = getToday()): Promise<CourseTableRow[]> => {
   const payload = await getPayloadClient()
 
   const [{ docs: courses }, { docs: versions }] = await Promise.all([
@@ -67,14 +48,12 @@ export const getCoursesTableData = async (today = getToday()): Promise<CoursesTa
     }),
   ])
 
-  const offerings = offeringsByCourseId(versions)
-  const rows = courses.map((course) => {
+  const offerings = groupByCourseId(versions)
+  return courses.map((course) => {
     const courseOfferings = offerings.get(course.id) ?? []
     const { primary } = findCurrentOffering(courseOfferings, today)
     return toCourseTableRow(course, primary, courseOfferings.length)
   })
-
-  return { rows, summary: summarizeCourses(rows) }
 }
 
 const NO_DRAFTS: MyDraftCourses = { editable: {}, rows: [] }
@@ -130,7 +109,7 @@ export const getMyDraftCourses = async (): Promise<MyDraftCourses> => {
   // with no offering shouldn't exist - but if one did, it would have nothing to
   // reopen and no course page to link to, so it's left out rather than listed
   // as a dead end.
-  const offerings = offeringsByCourseId(versions)
+  const offerings = groupByCourseId(versions)
   const viewer = { id: user.id, role: user.position ?? "" }
   const drafts: MyDraftCourses = { editable: {}, rows: [] }
   for (const course of courses) {
@@ -154,15 +133,16 @@ export const getCoursesTableDataCached = async () => {
 }
 
 /**
- * The courses the signed-in viewer convenes, or `null` if nobody's signed in.
- * Gated to the `members` collection specifically: `getCurrentUser` can also
- * return an admin, and an admin's numeric id can collide with a completely
- * different member's id since they're separate collections - so just
- * checking that a `user` exists isn't enough to know whose courses to look up.
+ * The signed-in viewer's own courses, the ones they edit, and the offerings they
+ * taught, or `null` if nobody's signed in. Gated to the `members` collection
+ * specifically: `getCurrentUser` can also return an admin, and an admin's numeric
+ * id can collide with a completely different member's id since they're separate
+ * collections - so just checking that a `user` exists isn't enough to know whose
+ * courses to look up.
  *
  * This stays dynamic and uncached on purpose, reading the request straight
  * through `getCurrentUser` - kept out of `getCoursesTableDataCached` so a
- * shared cache can never leak one viewer's own-course count to another.
+ * shared cache can never leak one viewer's courses to another.
  */
 export const getMyCoursesSummary = async (
   rows: CourseTableRow[],
@@ -171,17 +151,33 @@ export const getMyCoursesSummary = async (
   if (collection !== Slugs.Collections.MEMBERS) return null
 
   const payload = await getPayloadClient()
-  const { docs: myCourses } = await payload.find({
-    collection: Slugs.Collections.COURSES,
-    where: { owner: { equals: user.id } },
-    depth: 0,
-    overrideAccess: false,
-    pagination: false,
-    user,
-  })
+  const publishedOfferings = (where: Where) =>
+    payload.find({
+      collection: Slugs.Collections.COURSE_VERSIONS,
+      where: { and: [where, { _status: { equals: "published" } }] },
+      depth: 0,
+      overrideAccess: false,
+      pagination: false,
+      select: { course: true, period: true, startDate: true },
+      sort: NEWEST_FIRST,
+      user,
+    })
+  const [{ docs: courses }, { docs: taughtOfferings }, { docs: ownedOfferings }] =
+    await Promise.all([
+      payload.find({
+        collection: Slugs.Collections.COURSES,
+        where: { or: [{ owner: { equals: user.id } }, { editors: { contains: user.id } }] },
+        depth: 0,
+        overrideAccess: false,
+        pagination: false,
+        select: { owner: true },
+        user,
+      }),
+      publishedOfferings({ "teachingTeam.member": { equals: user.id } }),
+      publishedOfferings({ "course.owner": { equals: user.id } }),
+    ])
 
-  const myCourseIds = new Set(myCourses.map((course) => String(course.id)))
-  return summarizeMyCourses(myCourseIds, rows)
+  return summarizeMyCourses({ memberId: user.id, courses, rows, taughtOfferings, ownedOfferings })
 }
 
 const publishedCourseWhere = (courseId: number): Where => ({

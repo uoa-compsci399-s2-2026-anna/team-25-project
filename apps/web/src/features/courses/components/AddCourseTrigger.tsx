@@ -12,7 +12,7 @@ const loadDefaultRole = async (): Promise<string> => {
 // The signed-in member's profile is per-viewer, so it's isolated here rather
 // than read in CoursesPageHeader directly - that keeps the header's own
 // shell viewer-independent and prerenderable, matching how NavAuthStatus and
-// "Your Entries" stream in beside an otherwise-static parent.
+// "Your courses" stream in beside an otherwise-static parent.
 export async function AddCourseTriggerWithDefaultRole() {
   // Waiting on the request itself (instant once one exists) is what marks
   // this boundary as dynamic during prerendering. The member lookup is then
