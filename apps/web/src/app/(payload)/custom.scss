@@ -171,3 +171,23 @@ h6 {
   width: 100%;
   height: 100%;
 }
+
+// ReturnToSite: a way out of the admin panel from the login page and the nav
+.return-to-site {
+  color: var(--theme-elevation-500);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--theme-elevation-800);
+  }
+}
+
+.login .return-to-site {
+  display: block;
+  margin-top: 24px;
+  text-align: center;
+}
+
+.nav .return-to-site {
+  margin-top: 16px;
+}

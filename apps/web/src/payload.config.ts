@@ -42,6 +42,8 @@ export default buildConfig({
     user: Admin.slug, // members cannot reach /admin
     theme: "light",
     components: {
+      afterLogin: ["/payload/components/ReturnToSite#ReturnToSiteLoginLink"],
+      afterNavLinks: ["/payload/components/ReturnToSite#ReturnToSiteNavLink"],
       graphics: {
         Logo: "/payload/components/AdminLogo#AdminLogo",
         Icon: "/payload/components/AdminIcon#AdminIcon",
