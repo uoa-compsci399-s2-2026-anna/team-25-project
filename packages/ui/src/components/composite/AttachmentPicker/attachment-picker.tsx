@@ -6,9 +6,15 @@ import { FileText, Paperclip, X } from "lucide-react"
 import { useId, useRef } from "react"
 import { formatFileSize } from "../AttachmentList/attachment-list"
 
+/** A file the record already has, e.g. when editing a resource. */
+type SavedAttachment = { id: number | string; name: string; size?: number }
+
 type AttachmentPickerProps = {
   files: File[]
   onFilesChange: (files: File[]) => void
+  /** Files already saved, listed above the picked ones. Removing one calls `onSavedChange`. */
+  saved?: SavedAttachment[]
+  onSavedChange?: (saved: SavedAttachment[]) => void
   /** Passed to the file input, e.g. a list of MIME types. */
   accept?: string
   /** Goes on the "Add files" button, so a field label can point at it. */
@@ -28,6 +34,39 @@ type AttachmentPickerProps = {
 // Picking the same file twice adds nothing, since there is no way to tell the copies apart.
 const fileKey = (file: File) => `${file.name}:${file.size}:${file.lastModified}`
 
+const AttachmentRow = ({
+  disabled,
+  name,
+  onRemove,
+  size,
+}: {
+  disabled?: boolean
+  name: string
+  onRemove: () => void
+  size?: number
+}) => (
+  <li className="flex items-center gap-3 px-4 py-2">
+    <FileText aria-hidden className="size-5 shrink-0 text-muted-foreground" />
+    <div className="mr-auto flex min-w-0 flex-col pr-3">
+      <p className="truncate font-medium text-sm">{name}</p>
+      {size !== undefined && (
+        <p className="text-muted-foreground text-xs">{formatFileSize(size)}</p>
+      )}
+    </div>
+    <Button
+      aria-label={`Remove ${name}`}
+      className="shrink-0"
+      disabled={disabled}
+      onClick={onRemove}
+      size="icon"
+      type="button"
+      variant="button-transparent"
+    >
+      <X />
+    </Button>
+  </li>
+)
+
 function AttachmentPicker({
   "aria-describedby": describedBy,
   "aria-labelledby": labelledBy,
@@ -38,6 +77,8 @@ function AttachmentPicker({
   id,
   invalid,
   onFilesChange,
+  onSavedChange,
+  saved = [],
 }: AttachmentPickerProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const fallbackId = useId()
@@ -51,27 +92,25 @@ function AttachmentPicker({
 
   return (
     <div className={cn("flex flex-col items-start gap-3", className)}>
-      {files.length > 0 && (
+      {saved.length + files.length > 0 && (
         <ul className="flex w-fit max-w-full flex-col divide-y rounded-lg border">
+          {saved.map((attachment) => (
+            <AttachmentRow
+              disabled={disabled}
+              key={`saved-${attachment.id}`}
+              name={attachment.name}
+              onRemove={() => onSavedChange?.(saved.filter((other) => other !== attachment))}
+              size={attachment.size}
+            />
+          ))}
           {files.map((file) => (
-            <li className="flex items-center gap-3 px-4 py-2" key={fileKey(file)}>
-              <FileText aria-hidden className="size-5 shrink-0 text-muted-foreground" />
-              <div className="mr-auto flex min-w-0 flex-col pr-3">
-                <p className="truncate font-medium text-sm">{file.name}</p>
-                <p className="text-muted-foreground text-xs">{formatFileSize(file.size)}</p>
-              </div>
-              <Button
-                aria-label={`Remove ${file.name}`}
-                className="shrink-0"
-                disabled={disabled}
-                onClick={() => onFilesChange(files.filter((other) => other !== file))}
-                size="icon"
-                type="button"
-                variant="button-transparent"
-              >
-                <X />
-              </Button>
-            </li>
+            <AttachmentRow
+              disabled={disabled}
+              key={fileKey(file)}
+              name={file.name}
+              onRemove={() => onFilesChange(files.filter((other) => other !== file))}
+              size={file.size}
+            />
           ))}
         </ul>
       )}
@@ -110,4 +149,4 @@ function AttachmentPicker({
   )
 }
 
-export { AttachmentPicker, type AttachmentPickerProps }
+export { AttachmentPicker, type AttachmentPickerProps, type SavedAttachment }

@@ -50,6 +50,41 @@ describe("AttachmentPicker", () => {
     expect(onFilesChange).toHaveBeenCalledWith([notes])
   })
 
+  it("lists saved files above the picked ones", () => {
+    render(
+      <AttachmentPicker
+        files={[pdf("notes.pdf")]}
+        onFilesChange={vi.fn()}
+        saved={[{ id: 4, name: "rubric.pdf", size: 1536 }]}
+      />,
+    )
+
+    const items = screen.getAllByRole("listitem")
+    expect(items[0]).toHaveTextContent("rubric.pdf1.5 KB")
+    expect(items[1]).toHaveTextContent("notes.pdf")
+  })
+
+  it("removes a saved file without touching the picked ones", async () => {
+    const user = userEvent.setup()
+    const onFilesChange = vi.fn()
+    const onSavedChange = vi.fn()
+    const rubric = { id: 4, name: "rubric.pdf" }
+    const slides = { id: 5, name: "slides.pptx" }
+    render(
+      <AttachmentPicker
+        files={[pdf("notes.pdf")]}
+        onFilesChange={onFilesChange}
+        onSavedChange={onSavedChange}
+        saved={[rubric, slides]}
+      />,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Remove rubric.pdf" }))
+
+    expect(onSavedChange).toHaveBeenCalledWith([slides])
+    expect(onFilesChange).not.toHaveBeenCalled()
+  })
+
   it("opens the file picker from the Add files button", async () => {
     const user = userEvent.setup()
     const id = "attachments"

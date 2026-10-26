@@ -22,7 +22,16 @@ const meta: Meta<typeof AttachmentPicker> = {
   // Holds the picked files the way a form would, so adding and removing work in the story.
   render: function Render(args) {
     const [files, setFiles] = useState(args.files)
-    return <AttachmentPicker {...args} files={files} onFilesChange={setFiles} />
+    const [saved, setSaved] = useState(args.saved)
+    return (
+      <AttachmentPicker
+        {...args}
+        files={files}
+        onFilesChange={setFiles}
+        onSavedChange={setSaved}
+        saved={saved}
+      />
+    )
   },
 }
 
@@ -37,6 +46,14 @@ export const WithFiles: Story = {
       file("individual-contribution-rubric.pdf", 2_516_582),
       file("moderation-notes.pdf", 48_230),
     ],
+  },
+}
+
+/** Editing a record: the files it already has sit above any new ones, and either can be removed. */
+export const WithSavedFiles: Story = {
+  args: {
+    files: [file("moderation-notes.pdf", 48_230)],
+    saved: [{ id: 1, name: "individual-contribution-rubric.pdf", size: 2_516_582 }],
   },
 }
 
