@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { isResetTokenLive } from "./resetToken"
 
+vi.mock("next/server", () => ({ connection: vi.fn() }))
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
 
 const count = vi.fn()

@@ -1,3 +1,4 @@
+import { connection } from "next/server"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
 
@@ -7,6 +8,8 @@ import { Slugs } from "@/lib/payload/slugs"
  * the link runs out while the page is open.
  */
 export const isResetTokenLive = async (token: string) => {
+  // Reading the clock below would otherwise block prerendering, as in getCurrentUser.
+  await connection()
   const payload = await getPayloadClient()
   const { totalDocs } = await payload.count({
     collection: Slugs.Collections.MEMBERS,
