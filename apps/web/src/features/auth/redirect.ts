@@ -13,7 +13,7 @@ const authRoutes = new Set<string>([
   Routes.LOGIN,
   Routes.REGISTER.ROOT,
   Routes.REGISTER.PROFILE,
-  Routes.RESET_PASSWORD,
+  Routes.PASSWORD.RESET,
 ])
 
 export const isAuthRoute = (pathname: string) => authRoutes.has(pathname)

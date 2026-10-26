@@ -7,8 +7,6 @@ export function route<T extends string>(path: Route<T>): Route<T> {
 export const Routes = {
   HOME: route("/"),
   LOGIN: route("/login"),
-  /** Opened from the emailed reset link, which carries `?token=`. */
-  RESET_PASSWORD: route("/reset-password"),
   /** Payload's own admin UI, which only admins can reach (see payload.config.ts). */
   ADMIN: route("/admin"),
   COURSES: {
@@ -35,6 +33,10 @@ export const Routes = {
   PUBLICATIONS: route("/publications"),
   PRIVACY: route("/privacy"),
   GUIDELINES: route("/guidelines"),
+  PASSWORD: {
+    /** Opened from the emailed reset link, which carries `?token=`. */
+    RESET: route("/reset-password"),
+  },
   REGISTER: {
     ROOT: route("/register"),
     PROFILE: route("/register/profile"),
