@@ -66,7 +66,7 @@ export function ManageEditorsButton({ courseId, owner, editors }: ManageEditorsB
       onOpenChange={handleOpenChange}
       onSave={() => void save(chosen)}
       onSearch={searchMembers}
-      // A transfer keeps the saved editors, leaving any unsaved changes behind.
+      // The dialog offers a transfer only when the list has no unsaved changes.
       onTransfer={(editor) => void save(editors, editor)}
       open={open}
       owner={owner}

@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../../ui/Dialog/dialog"
-import { FieldError } from "../../ui/Field/field"
+import { FieldDescription, FieldError } from "../../ui/Field/field"
 import {
   MemberLabel,
   type MemberOption,
@@ -71,6 +71,11 @@ export function ManageEditorsDialog({
   // A transfer saves the stored editors, so edits made while it waits to be confirmed
   // would be lost.
   const listLocked = busy || confirming !== null
+  // A transfer saves only the stored editors, so it waits until changes to the list are saved.
+  const unsaved =
+    editors.length !== transferableIds.length ||
+    editors.some((editor) => !transferableIds.includes(editor.id))
+  const canTransfer = Boolean(onTransfer) && transferableIds.length > 0
 
   // Closing backs out of a pending transfer. It waits for a save, so the result shows.
   const handleOpenChange = (
@@ -122,7 +127,7 @@ export function ManageEditorsDialog({
                 {onTransfer && transferableIds.includes(editor.id) && (
                   <Button
                     aria-label={`Make ${memberName(editor)} the owner`}
-                    disabled={busy}
+                    disabled={busy || unsaved}
                     onClick={() => setConfirming(editor)}
                     size="sm"
                     type="button"
@@ -145,6 +150,10 @@ export function ManageEditorsDialog({
             </li>
           ))}
         </ul>
+
+        {canTransfer && unsaved && (
+          <FieldDescription>Save your changes before you transfer ownership.</FieldDescription>
+        )}
 
         {formError && <FieldError role="alert">{formError}</FieldError>}
 

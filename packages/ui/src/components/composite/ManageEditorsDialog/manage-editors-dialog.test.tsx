@@ -35,7 +35,7 @@ describe("ManageEditorsDialog", () => {
 
   it("asks to confirm before transferring ownership", () => {
     const onTransfer = vi.fn()
-    renderDialog({ onTransfer, transferableIds: [2] })
+    renderDialog({ onTransfer, transferableIds: [2, 3] })
 
     fireEvent.click(screen.getByRole("button", { name: "Make Alan Turing the owner" }))
     expect(onTransfer).not.toHaveBeenCalled()
@@ -47,9 +47,16 @@ describe("ManageEditorsDialog", () => {
     expect(onTransfer).toHaveBeenCalledWith(alan)
   })
 
+  it("waits for unsaved changes to the list before it offers a transfer", () => {
+    renderDialog({ editors: [alan], onTransfer: vi.fn(), transferableIds: [2, 3] })
+
+    expect(screen.getByRole("button", { name: "Make Alan Turing the owner" })).toBeDisabled()
+    expect(screen.getByText("Save your changes before you transfer ownership.")).toBeInTheDocument()
+  })
+
   it("backs out of a transfer", () => {
     const onTransfer = vi.fn()
-    renderDialog({ onTransfer, transferableIds: [2] })
+    renderDialog({ onTransfer, transferableIds: [2, 3] })
 
     fireEvent.click(screen.getByRole("button", { name: "Make Alan Turing the owner" }))
     fireEvent.click(screen.getByRole("button", { name: "Keep ownership" }))
@@ -104,7 +111,7 @@ describe("ManageEditorsDialog", () => {
 
   // A transfer saves the stored editors, so the list must not change while it waits.
   it("locks the editor list while a transfer waits to be confirmed", () => {
-    renderDialog({ onTransfer: vi.fn(), transferableIds: [2] })
+    renderDialog({ onTransfer: vi.fn(), transferableIds: [2, 3] })
 
     fireEvent.click(screen.getByRole("button", { name: "Make Alan Turing the owner" }))
 
