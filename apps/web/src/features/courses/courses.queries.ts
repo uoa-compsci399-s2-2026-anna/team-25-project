@@ -6,6 +6,7 @@ import { getAuthorCandidates } from "@/features/publications/authorCandidates.qu
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
+import { relationID } from "@/payload/access/Courses/helpers"
 import type { CourseTableRow } from "./components/CoursesTable"
 import {
   findCurrentOffering,
@@ -255,14 +256,14 @@ export const getMyDraftOfferings = async (courseId: number): Promise<CourseVersi
 
 /**
  * The members on these offerings' teaching teams, read fresh rather than from the
- * cached member list: the dialog saves the whole team, so a new member missing from
- * the cache would be dropped from it.
+ * cached member list: the dialog saves a changed team whole, so a new member missing
+ * from the cache would be dropped from it.
  */
 export const getTeamMembers = (versions: Pick<CourseVersion, "teachingTeam">[]) =>
   getAuthorCandidates(
     versions.flatMap((version) =>
       (version.teachingTeam ?? []).flatMap(({ member }) => {
-        const id = typeof member === "number" ? member : member?.id
+        const id = relationID(member)
         return id ? [id] : []
       }),
     ),
