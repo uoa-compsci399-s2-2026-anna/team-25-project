@@ -14,10 +14,10 @@ import { AuthorByline } from "@/features/proposals/components/AuthorByline/Autho
 import { Routes } from "@/lib/routes"
 import { parseResourceId, type ResourceRouteParams } from "../resources.params"
 import { getResourceByIdCached } from "../resources.queries"
-import { ResourceEditButton } from "./ResourceEditButton"
 import { ResourceCourseEdit } from "./ResourceEditor/ResourceCourseEdit"
 import { ResourceEditProvider } from "./ResourceEditor/ResourceEditProvider"
 import { ResourceEdit } from "./ResourceEditor/resourceEditFields"
+import { ResourceTitleActionsServer } from "./ResourceTitleActionsServer"
 
 // Aliased as the React compiler rule reads a capitalized call inside a component as
 // a component rendered the wrong way.
@@ -89,13 +89,22 @@ export const ResourcePage = async ({ params }: { params: ResourceRouteParams }) 
             </>
           )}
         </div>
-        <ResourceEdit.Input
-          label="Title"
-          maxLength={200}
-          name="title"
-          value={resource.title}
-          view={<Heading level="h1">{resource.title}</Heading>}
-        />
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <ResourceEdit.Input
+              label="Title"
+              maxLength={200}
+              name="title"
+              value={resource.title}
+              view={<Heading level="h1">{resource.title}</Heading>}
+            />
+          </div>
+          {/* Outside the title's view, not inside it: unlike the view, this stays
+              mounted while editing too, so it can swap to Cancel/Done. */}
+          <AnimatedSuspense fallback={null}>
+            <ResourceTitleActionsServer id={id} />
+          </AnimatedSuspense>
+        </div>
         {owner && (
           <Link className="self-start hover:underline" href={memberHref(owner.id)}>
             <AuthorByline authors={[owner]} />
@@ -138,9 +147,6 @@ export const ResourcePage = async ({ params }: { params: ResourceRouteParams }) 
           {institution && <CourseOfferingDetail label="University" value={institution.name} />}
           <CourseOfferingDetail label="Shared" value={shared} />
           <CourseOfferingDetail label="Last updated" value={updated} />
-          <AnimatedSuspense fallback={null}>
-            <ResourceEditButton id={id} />
-          </AnimatedSuspense>
         </CourseOfferingSidebarCard>
       </aside>
     </ResourceEditProvider>

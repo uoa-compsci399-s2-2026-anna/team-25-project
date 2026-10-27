@@ -1,12 +1,15 @@
 import type { Resource } from "@repo/shared/payload-types"
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { loadResourcesPage } from "../resources.queries"
 import { ResourcesList, ResourcesListSkeleton } from "./ResourcesList"
 
 vi.mock("../resources.queries", () => ({ loadResourcesPage: vi.fn() }))
-// Signed out unless a test says otherwise, so no Edit links.
+const push = vi.fn()
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }))
+vi.mock("../actions/deleteResource", () => ({ deleteResource: vi.fn() }))
+// Signed out unless a test says otherwise, so no Edit/Delete menus.
 vi.mock("@/lib/payload/getCurrentUser", () => ({
   getCurrentUser: vi.fn().mockResolvedValue({ collection: null, user: null }),
 }))
@@ -141,18 +144,23 @@ describe("ResourcesList", () => {
   it.each([
     ["the owner", { collection: "members", user: { id: 7 } }],
     ["an admin", { collection: "admin", user: { id: 99 } }],
-  ])("links %s straight into the resource's editor", async (_, currentUser) => {
-    vi.mocked(getCurrentUser).mockResolvedValueOnce(currentUser as never)
-    mockPage([resource()])
+  ])(
+    "gives %s the Edit/Delete menu, whose Edit opens the resource's editor",
+    async (_, currentUser) => {
+      vi.mocked(getCurrentUser).mockResolvedValueOnce(currentUser as never)
+      mockPage([resource()])
 
-    render(await ResourcesList({ searchParams: Promise.resolve({}) }))
+      render(await ResourcesList({ searchParams: Promise.resolve({}) }))
+      fireEvent.click(
+        screen.getByRole("button", { name: "Actions for Individual contribution rubric" }),
+      )
+      fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }))
 
-    expect(
-      screen.getByRole("button", { name: "Edit Individual contribution rubric" }),
-    ).toHaveAttribute("href", "/resources/1#edit")
-  })
+      expect(push).toHaveBeenCalledWith("/resources/1#edit")
+    },
+  )
 
-  it("has no Edit link on another member's resource", async () => {
+  it("has no Edit/Delete menu on another member's resource", async () => {
     vi.mocked(getCurrentUser).mockResolvedValueOnce({
       collection: "members",
       user: { id: 8 },
@@ -161,7 +169,7 @@ describe("ResourcesList", () => {
 
     render(await ResourcesList({ searchParams: Promise.resolve({}) }))
 
-    expect(screen.queryByRole("button", { name: /^Edit / })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /^Actions for / })).not.toBeInTheDocument()
   })
 
   it("has no clear link when no filter is set", async () => {

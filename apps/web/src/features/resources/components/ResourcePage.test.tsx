@@ -6,6 +6,12 @@ import { getResourceByIdCached } from "../resources.queries"
 import { ResourcePage } from "./ResourcePage"
 
 vi.mock("../resources.queries", () => ({ getResourceByIdCached: vi.fn() }))
+// An async server component, which jsdom can't render - stood in for by its props.
+vi.mock("./ResourceTitleActionsServer", () => ({
+  ResourceTitleActionsServer: ({ id }: { id: number }) => (
+    <button type="button">{`Actions for resource ${id}`}</button>
+  ),
+}))
 vi.mock("next/navigation", () => ({
   notFound: vi.fn(() => {
     throw new Error("NEXT_NOT_FOUND")
@@ -65,6 +71,16 @@ describe("ResourcePage", () => {
     expect(screen.getByText("Shared 3 Jun 2026")).toBeInTheDocument()
     expect(screen.getByRole("link", { name: /Anna Tui/ })).toHaveAttribute("href", "/members/7")
     expect(screen.getByText("Description")).toBeInTheDocument()
+  })
+
+  it("puts the Edit/Delete menu beside the title, in place of a sidebar Edit button", async () => {
+    await renderPage()
+
+    const menu = await screen.findByRole("button", { name: "Actions for resource 1" })
+    expect(menu.parentElement?.parentElement).toContainElement(
+      screen.getByRole("heading", { level: 1, name: "Individual contribution rubric" }),
+    )
+    expect(screen.queryByRole("button", { name: "Edit resource" })).not.toBeInTheDocument()
   })
 
   it("lists the attachments to download", async () => {
