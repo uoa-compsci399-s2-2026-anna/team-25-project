@@ -61,7 +61,10 @@ export function ManageEditorsDialog({
   formError,
 }: ManageEditorsDialogProps) {
   const pickerId = React.useId()
-  const chosen = [owner.id, ...editors.map((editor) => editor.id)]
+  const chosen = React.useMemo(
+    () => [owner.id, ...editors.map((editor) => editor.id)],
+    [owner.id, editors],
+  )
   const [confirming, setConfirming] = React.useState<MemberOption | null>(null)
   const busy = Boolean(saving)
 

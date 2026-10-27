@@ -33,7 +33,7 @@ describe("MemberPicker", () => {
     expect(onSearch).not.toHaveBeenCalled()
 
     await user.type(input(), "d")
-    await waitFor(() => expect(onSearch).toHaveBeenCalledWith("ad"))
+    await waitFor(() => expect(onSearch).toHaveBeenCalledWith("ad", []))
   })
 
   it("searches once for text typed quickly", async () => {
@@ -55,6 +55,16 @@ describe("MemberPicker", () => {
     expect(screen.queryByRole("option", { name: /Ada Lovelace/ })).not.toBeInTheDocument()
   })
 
+  it("asks the search to leave out excluded members", async () => {
+    const user = userEvent.setup()
+    const onSearch = vi.fn<MemberSearch>().mockResolvedValue([alan])
+    const exclude = [ada.id]
+    renderPicker({ exclude, onSearch })
+
+    await user.type(input(), "al")
+    await waitFor(() => expect(onSearch).toHaveBeenCalledWith("al", exclude))
+  })
+
   it("ignores a slow reply for older text", async () => {
     const user = userEvent.setup()
     let answerOld: (members: typeof sampleMembers) => void = () => undefined
@@ -68,7 +78,7 @@ describe("MemberPicker", () => {
     renderPicker({ onSearch })
 
     await user.type(input(), "ad")
-    await waitFor(() => expect(onSearch).toHaveBeenCalledWith("ad"))
+    await waitFor(() => expect(onSearch).toHaveBeenCalledWith("ad", []))
     await user.clear(input())
     await user.type(input(), "alan")
     await screen.findByRole("option", { name: /Alan Turing/ })

@@ -22,12 +22,20 @@ export type MemberOption = {
   readonly avatarUrl?: string
 }
 
-/** Resolves to the members that fit the text, or the reason the search could not run. */
-export type MemberSearch = (query: string) => Promise<MemberOption[] | { error: string }>
+/**
+ * Resolves to the members that fit the text, leaving out `exclude`, or the reason the
+ * search could not run.
+ */
+export type MemberSearch = (
+  query: string,
+  exclude: readonly number[],
+) => Promise<MemberOption[] | { error: string }>
 
 const SEARCH_DEBOUNCE_MS = 250
 const MIN_QUERY_LENGTH = 2
 const SEARCH_FAILED = "Could not search members. Try again."
+// A stable default, so the search does not run again on each render.
+const NO_MEMBERS: readonly number[] = []
 
 export const memberName = (member: MemberOption) => `${member.firstName} ${member.lastName}`
 
@@ -57,7 +65,7 @@ export type MemberPickerProps = {
   placeholder?: string
   onSearch: MemberSearch
   onSelect: (member: MemberOption) => void
-  /** Members already chosen, left out of the results. */
+  /** Members already chosen, left out of the results. Keep the array stable between renders. */
   exclude?: readonly number[]
   disabled?: boolean
 }
@@ -69,7 +77,7 @@ export function MemberPicker({
   placeholder = "Search members",
   onSearch,
   onSelect,
-  exclude = [],
+  exclude = NO_MEMBERS,
   disabled,
 }: MemberPickerProps) {
   // The popup lines up with the whole input box, not just the text field inside it.
@@ -91,7 +99,7 @@ export function MemberPicker({
     // A slow reply for older text must not replace the results for newer text.
     let current = true
     const timer = setTimeout(() => {
-      onSearch(typed)
+      onSearch(typed, exclude)
         .then((result) => {
           if (current) setFound({ query: typed, result })
         })
@@ -104,7 +112,7 @@ export function MemberPicker({
       current = false
       clearTimeout(timer)
     }
-  }, [typed, onSearch])
+  }, [typed, exclude, onSearch])
 
   const emptyMessage = !reply
     ? "Searching…"

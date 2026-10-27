@@ -32,13 +32,15 @@ export const sampleMembers: MemberOption[] = [
 ]
 
 /** Matches names in memory after a short delay, like the real server search. */
-export const searchSampleMembers: MemberSearch = (query) =>
+export const searchSampleMembers: MemberSearch = (query, exclude) =>
   new Promise((resolve) =>
     setTimeout(() => {
       const text = query.toLowerCase()
       resolve(
-        sampleMembers.filter((member) =>
-          `${member.firstName} ${member.lastName}`.toLowerCase().includes(text),
+        sampleMembers.filter(
+          (member) =>
+            !exclude.includes(member.id) &&
+            `${member.firstName} ${member.lastName}`.toLowerCase().includes(text),
         ),
       )
     }, 300),
