@@ -8,6 +8,7 @@ vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
 vi.mock("../courses.queries", () => ({
   getPublishedCourseCached: vi.fn(),
   getPublishedOfferingsCached: vi.fn(),
+  getTeamMembers: vi.fn().mockResolvedValue([]),
 }))
 // The dialogs are covered on their own; stand-ins show which actions rendered.
 vi.mock("./OfferingDialogs", () => ({
