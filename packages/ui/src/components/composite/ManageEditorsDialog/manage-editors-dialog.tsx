@@ -62,10 +62,7 @@ export function ManageEditorsDialog({
   formError,
 }: ManageEditorsDialogProps) {
   const pickerId = React.useId()
-  const chosen = React.useMemo(
-    () => [owner.id, ...editors.map((editor) => editor.id)],
-    [owner.id, editors],
-  )
+  const chosen = [owner.id, ...editors.map((editor) => editor.id)]
   const [confirming, setConfirming] = React.useState<MemberOption | null>(null)
   const busy = Boolean(saving)
   // A transfer saves the stored editors, so edits made while it waits to be confirmed
