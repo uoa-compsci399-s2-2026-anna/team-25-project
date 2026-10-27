@@ -1,10 +1,13 @@
 "use client"
 
-import type { AddCapstoneCourseDialogValues } from "@repo/ui/components/composite"
+import type {
+  AddCapstoneCourseDialogFieldErrors,
+  AddCapstoneCourseDialogValues,
+} from "@repo/ui/components/composite"
 import { useState } from "react"
 import type { ActionResult } from "@/features/auth/actions/types"
 
-type FieldErrors = Partial<Record<keyof AddCapstoneCourseDialogValues, string>>
+type FieldErrors = AddCapstoneCourseDialogFieldErrors
 export type CourseFormIntent = "draft" | "publish"
 type Submitting = CourseFormIntent | "delete"
 

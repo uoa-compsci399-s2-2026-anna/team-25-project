@@ -346,6 +346,31 @@ describe("AddCapstoneCourseDialog teaching team", () => {
     expect(onChange).toHaveBeenLastCalledWith([rows[1]])
   })
 
+  it("marks a blank role when the team has an error", () => {
+    render(
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        fieldErrors={{ teachingTeam: "Give each teaching team member a role to publish." }}
+        kind="correction"
+        onPublish={vi.fn()}
+        onValueChange={vi.fn()}
+        open
+        teachingTeam={{
+          onChange: vi.fn(),
+          onSearch: vi.fn(),
+          rows: [rows[0], { member: alan, role: " " }],
+        }}
+        values={emptyValues}
+      />,
+    )
+
+    expect(
+      screen.getByText("Give each teaching team member a role to publish."),
+    ).toBeInTheDocument()
+    expect(screen.getByLabelText("Role of Alan Turing")).toHaveAttribute("aria-invalid", "true")
+    expect(screen.getByLabelText("Role of Ada Lovelace")).not.toHaveAttribute("aria-invalid")
+  })
+
   it("shows the team read-only without onChange", () => {
     renderTeam({ onSearch: vi.fn(), rows })
 

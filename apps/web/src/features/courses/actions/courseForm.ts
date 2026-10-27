@@ -147,4 +147,18 @@ export const parseTeachingTeam = (input: unknown) => {
   return { error: { formError, ok: false } satisfies ActionResult }
 }
 
-export const NO_TEACHING_TEAM_ERROR = "Add at least one teaching team member to publish."
+/**
+ * Why the team cannot be published, or undefined when it can. The course hooks check
+ * this too, but their message points at no field.
+ */
+export const teachingTeamPublishError = (
+  team: { role?: string | null }[],
+): ActionResult | undefined => {
+  if (!team.length)
+    return { formError: "Add at least one teaching team member to publish.", ok: false }
+  if (team.some((row) => !row.role?.trim()))
+    return {
+      fieldErrors: { teachingTeam: "Give each teaching team member a role to publish." },
+      ok: false,
+    }
+}

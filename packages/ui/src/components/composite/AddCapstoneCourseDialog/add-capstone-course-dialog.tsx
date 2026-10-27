@@ -106,7 +106,7 @@ const RequiredAsterisk = () => (
 type RichTextField = "learningOutcomes" | "assessments" | "additionalInfo"
 
 export type AddCapstoneCourseDialogFieldErrors = Partial<
-  Record<keyof AddCapstoneCourseDialogValues, string>
+  Record<keyof AddCapstoneCourseDialogValues | "teachingTeam", string>
 >
 
 export type AddCapstoneCourseDialogOption = { label: string; value: string }
@@ -129,7 +129,8 @@ function TeachingTeamSection({
   onChange,
   onSearch,
   disabled,
-}: TeachingTeamSectionProps & { disabled: boolean }) {
+  error,
+}: TeachingTeamSectionProps & { disabled: boolean; error?: string }) {
   const pickerId = React.useId()
 
   return (
@@ -167,6 +168,7 @@ function TeachingTeamSection({
             {onChange ? (
               <span className="flex items-center gap-2">
                 <Input
+                  aria-invalid={(Boolean(error) && !row.role.trim()) || undefined}
                   aria-label={`Role of ${memberName(row.member)}`}
                   className="w-48"
                   disabled={disabled}
@@ -197,6 +199,7 @@ function TeachingTeamSection({
           </li>
         ))}
       </ul>
+      {error && <FieldError>{error}</FieldError>}
     </FieldGroup>
   )
 }
@@ -416,7 +419,11 @@ export function AddCapstoneCourseDialog({
             </FieldGroup>
 
             {kind !== "course" && teachingTeam && (
-              <TeachingTeamSection {...teachingTeam} disabled={Boolean(submitting)} />
+              <TeachingTeamSection
+                {...teachingTeam}
+                disabled={Boolean(submitting)}
+                error={fieldErrors?.teachingTeam}
+              />
             )}
 
             {kind === "course" && (

@@ -12,10 +12,10 @@ import { relationID } from "@/payload/access/Courses/helpers"
 import {
   fieldErrorsFromIssues,
   liveTeachingTeam,
-  NO_TEACHING_TEAM_ERROR,
   parseTeachingTeam,
   requireMember,
   resultFromWriteError,
+  teachingTeamPublishError,
   toVersionData,
 } from "./courseForm"
 
@@ -77,7 +77,8 @@ export const updateOffering = async (input: unknown): Promise<ActionResult> => {
     }
 
     const teachingTeam = team.teachingTeam ?? liveTeachingTeam(offering.teachingTeam)
-    if (!teachingTeam.length) return { formError: NO_TEACHING_TEAM_ERROR, ok: false }
+    const teamError = teachingTeamPublishError(teachingTeam)
+    if (teamError) return teamError
 
     await payload.update({
       collection: Slugs.Collections.COURSE_VERSIONS,

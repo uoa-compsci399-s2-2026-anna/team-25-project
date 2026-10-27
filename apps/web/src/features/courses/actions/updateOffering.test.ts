@@ -142,6 +142,16 @@ describe("updateOffering", () => {
     expect(payload.update).not.toHaveBeenCalled()
   })
 
+  it("points at the team when a member has no role", async () => {
+    const payload = mockPayload()
+
+    expect(await updateOffering({ ...input, teachingTeam: [{ member: 8, role: "  " }] })).toEqual({
+      fieldErrors: { teachingTeam: "Give each teaching team member a role to publish." },
+      ok: false,
+    })
+    expect(payload.update).not.toHaveBeenCalled()
+  })
+
   it("refuses a teaching team that lists a member twice", async () => {
     const payload = mockPayload()
 
