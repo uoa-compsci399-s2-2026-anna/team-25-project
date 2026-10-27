@@ -9,7 +9,7 @@ import type {
 } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { relationID } from "../access/Courses/helpers"
-import { admin } from "../access/helpers"
+import { admin, member } from "../access/helpers"
 import { revalidateCourse } from "./Courses"
 import {
   COURSE_DELETE,
@@ -329,7 +329,7 @@ export const assertVersionDeletable: CollectionBeforeDeleteHook = async ({ id, r
   // Otherwise only the owner may remove a published offering, and never the last one:
   // that would leave a published course with nothing to show, and deleting a course
   // stays with admins.
-  if (relationID(course.owner) !== req.user?.id)
+  if (!member(req) || relationID(course.owner) !== req.user?.id)
     fail("Only the course's owner can delete a published offering.", 403)
 
   const { totalDocs: published } = await req.payload.count({

@@ -688,6 +688,8 @@ describe("assertVersionDeletable", () => {
   it.each([
     ["an editor who isn't the owner", coEditor],
     ["an admin deleting just the offering", administrator],
+    // Admins and members are separate collections, so their ids can collide.
+    ["an admin whose id matches the owner's", { ...administrator, id: 42 }],
   ])("refuses a published offering to %s", async (_label, user) => {
     const { req } = publishedRequest({ user })
 
