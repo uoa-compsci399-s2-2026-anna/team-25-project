@@ -12,6 +12,7 @@ import { relationID } from "@/payload/access/Courses/helpers"
 import {
   fieldErrorsFromIssues,
   liveTeachingTeam,
+  NO_TEACHING_TEAM_ERROR,
   parseTeachingTeam,
   requireMember,
   resultFromWriteError,
@@ -74,6 +75,8 @@ export const createOffering = async (input: unknown): Promise<ActionResult> => {
 
     // Separate calls so `draft` stays a literal - see createCourse.
     if (parsed.data.intent === "publish") {
+      if (!offeringData.teachingTeam.length) return { formError: NO_TEACHING_TEAM_ERROR, ok: false }
+
       await payload.create({
         collection: Slugs.Collections.COURSE_VERSIONS,
         data: {
