@@ -36,13 +36,27 @@ export const updateProposal = async (id: number, input: unknown): Promise<Action
     return withFormError({ fieldErrors: fieldErrorsFromIssues(parsed.error.issues), ok: false })
   }
 
+  // The editor sends the whole timeframe, and an emptied end year comes as undefined. Payload
+  // keeps a saved value it isn't sent, so null is what clears the end.
+  const { timeframe } = parsed.data
+  const data = timeframe
+    ? {
+        ...parsed.data,
+        timeframe: {
+          ...timeframe,
+          endYear: timeframe.endYear ?? null,
+          endPeriod: timeframe.endPeriod ?? null,
+        },
+      }
+    : parsed.data
+
   const payload = await getPayloadClient()
 
   try {
     await payload.update({
       collection: Slugs.Collections.PROPOSALS,
       id,
-      data: parsed.data,
+      data,
       user,
       overrideAccess: false,
     })

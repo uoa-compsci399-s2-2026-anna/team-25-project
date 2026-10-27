@@ -107,6 +107,28 @@ describe("updateProposal", () => {
       expect(payload.update.mock.calls[0]?.[0].data).toEqual({ summary: "New summary" })
     })
 
+    it("clears an end left out of a sent timeframe", async () => {
+      const payload = mockPayload()
+
+      await updateProposal(3, { timeframe: { startPeriod: "sem1", startYear: 2027 } })
+
+      expect(payload.update.mock.calls[0]?.[0].data).toEqual({
+        timeframe: { endPeriod: null, endYear: null, startPeriod: "sem1", startYear: 2027 },
+      })
+    })
+
+    it("keeps a sent end year and period", async () => {
+      const payload = mockPayload()
+
+      await updateProposal(3, {
+        timeframe: { endPeriod: "late", endYear: 2028, startPeriod: "sem1", startYear: 2027 },
+      })
+
+      expect(payload.update.mock.calls[0]?.[0].data).toEqual({
+        timeframe: { endPeriod: "late", endYear: 2028, startPeriod: "sem1", startYear: 2027 },
+      })
+    })
+
     it("refreshes the proposal and the list after a save", async () => {
       mockPayload()
 

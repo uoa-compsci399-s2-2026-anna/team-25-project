@@ -6,16 +6,19 @@ import {
 import type { Proposal } from "@repo/shared/payload-types"
 import { toSelectOptions } from "@repo/shared/utils/select-options"
 import { cn } from "@repo/ui/lib/utils"
+import { EditSwitch } from "@/components/Editor/EditField"
 import { ProposalEdit } from "../ProposalEditor/proposalEditFields"
 
 export const formatTimeframe = (timeframe: Proposal["timeframe"]) => {
   const start = `${ProposalTimeframeStartPeriodLabels[timeframe.startPeriod]} ${timeframe.startYear}`
 
-  if (!timeframe.endYear || !timeframe.endPeriod) {
+  if (!timeframe.endYear) {
     return start
   }
 
-  const end = `${ProposalTimeframeEndPeriodLabels[timeframe.endPeriod]} ${timeframe.endYear}`
+  const end = timeframe.endPeriod
+    ? `${ProposalTimeframeEndPeriodLabels[timeframe.endPeriod]} ${timeframe.endYear}`
+    : timeframe.endYear
   return `${start} → ${end}`
 }
 
@@ -31,23 +34,42 @@ export const ProposalMeta = ({
   const items = [
     {
       label: "Timeframe",
-      // Both start fields show together, as the schema needs both. The end isn't sent, so
-      // Payload keeps the saved end and checks the new start against it.
+      // While editing, the end fields must show with the start fields. The form sends only the
+      // fields on screen, and updateProposal clears an end the timeframe doesn't send.
       value: (
-        <div className="flex gap-2">
-          <ProposalEdit.Select
-            label="Start period"
-            name="timeframe.startPeriod"
-            options={toSelectOptions(ProposalTimeframeStartPeriodLabels)}
-            value={timeframe.startPeriod}
-            view={formatTimeframe(timeframe)}
-          />
-          <ProposalEdit.NumberInput
-            className="w-24"
-            label="Start year"
-            name="timeframe.startYear"
-            value={timeframe.startYear}
-          />
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <ProposalEdit.Select
+              label="Start period"
+              name="timeframe.startPeriod"
+              options={toSelectOptions(ProposalTimeframeStartPeriodLabels)}
+              value={timeframe.startPeriod}
+              view={formatTimeframe(timeframe)}
+            />
+            <ProposalEdit.NumberInput
+              className="w-24"
+              label="Start year"
+              name="timeframe.startYear"
+              value={timeframe.startYear}
+            />
+          </div>
+          <EditSwitch>
+            <div className="flex gap-2">
+              <ProposalEdit.Select
+                label="End period"
+                name="timeframe.endPeriod"
+                nullLabel="No end period"
+                options={toSelectOptions(ProposalTimeframeEndPeriodLabels)}
+                value={timeframe.endPeriod}
+              />
+              <ProposalEdit.NumberInput
+                className="w-24"
+                label="End year"
+                name="timeframe.endYear"
+                value={timeframe.endYear}
+              />
+            </div>
+          </EditSwitch>
         </div>
       ),
     },

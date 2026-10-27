@@ -65,6 +65,30 @@ describe("createProposalSchema", () => {
     expect(result.success).toBe(false)
   })
 
+  it("accepts an end year without an end period", () => {
+    const result = createProposalSchema.safeParse({
+      ...validInput,
+      timeframe: { ...validInput.timeframe, endYear: 2028 },
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it("accepts a cleared end, as null", () => {
+    const result = createProposalSchema.safeParse({
+      ...validInput,
+      timeframe: { ...validInput.timeframe, endYear: null, endPeriod: null },
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it("rejects an end period with a null end year", () => {
+    const result = createProposalSchema.safeParse({
+      ...validInput,
+      timeframe: { ...validInput.timeframe, endYear: null, endPeriod: "early" },
+    })
+    expect(result.success).toBe(false)
+  })
+
   it("accepts a full timeframe", () => {
     const result = createProposalSchema.safeParse({
       ...validInput,
@@ -91,6 +115,7 @@ describe("postProposalFormSchema", () => {
       ...formInput,
       body: bodyWithText,
       outputTarget: "",
+      tags: [],
     })
     expect(result.success).toBe(true)
   })

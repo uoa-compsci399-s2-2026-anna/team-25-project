@@ -13,17 +13,15 @@ const timeframeSchema = z
   .object({
     startYear: z.number({ error: "Start year is required" }).int().min(2000).max(2100),
     startPeriod: z.enum(ProposalTimeframeStartPeriod),
-    endYear: z.number().int().min(2000).max(2100).optional(),
-    endPeriod: z.enum(ProposalTimeframeEndPeriod).optional(),
+    // Nullable as well, so an edit can clear a saved end.
+    endYear: z.number().int().min(2000).max(2100).nullable().optional(),
+    endPeriod: z.enum(ProposalTimeframeEndPeriod).nullable().optional(),
   })
-  .refine(
-    (timeframe) => timeframe.endYear === undefined || timeframe.endYear >= timeframe.startYear,
-    {
-      error: "End year cannot be before the start year.",
-      path: ["endYear"],
-    },
-  )
-  .refine((timeframe) => timeframe.endPeriod === undefined || timeframe.endYear !== undefined, {
+  .refine((timeframe) => timeframe.endYear == null || timeframe.endYear >= timeframe.startYear, {
+    error: "End year cannot be before the start year.",
+    path: ["endYear"],
+  })
+  .refine((timeframe) => timeframe.endPeriod == null || timeframe.endYear != null, {
     error: "Set an end year before choosing an end period.",
     path: ["endPeriod"],
   })
@@ -45,6 +43,7 @@ export const postProposalFormSchema = createProposalSchema
   .extend({
     body: richTextSchema.refine((body) => richTextHasText(body.root), "Body is required"),
     outputTarget: z.string(),
+    tags: z.array(z.enum(ProposalTag)),
   })
 
 // Editing in place: any field may be left out to keep it as is. author isn't listed, so zod
