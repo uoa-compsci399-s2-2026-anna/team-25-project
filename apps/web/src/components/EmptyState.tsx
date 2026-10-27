@@ -12,7 +12,7 @@ import type { Route } from "next"
 import Link from "next/link"
 import type { ReactNode } from "react"
 
-const variantClassNames = {
+export const variantClassNames = {
   page: "p-10 md:p-24",
   list: "p-10 md:p-12",
   section: "border p-6",
