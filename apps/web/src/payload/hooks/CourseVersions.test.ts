@@ -12,7 +12,13 @@ import {
   validatePublication,
   validateVersionChanges,
 } from "./CourseVersions"
-import { internal, isInternal, VERSION_WRITE, type VersionMetadataKey } from "./helpers"
+import {
+  COURSE_DELETE,
+  internal,
+  isInternal,
+  VERSION_WRITE,
+  type VersionMetadataKey,
+} from "./helpers"
 
 vi.mock("@/lib/payload/lock", () => ({ lockDocument: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }))
@@ -638,13 +644,79 @@ describe("assertVersionDeletable", () => {
     await expect(remove(req)).rejects.toThrow("You cannot edit this course.")
   })
 
-  it.each([
-    ["a published offering", { _status: "published" }],
-    ["one that has been published before", { publishedAt: "2026-01-01T00:00:00.000Z" }],
-  ])("refuses %s", async (_label, state) => {
-    const { req } = request({ current: { id: 3, course: 5, ...state } })
+  // `editor` is the course's owner in these fixtures (both id 42).
+  const coEditor = { id: 43, collection: Slugs.Collections.MEMBERS }
 
-    await expect(remove(req)).rejects.toThrow("Published offerings cannot be deleted.")
+  const publishedRequest = ({
+    user = editor as unknown,
+    published = 2,
+    state = { _status: "published" } as Partial<CourseVersion>,
+  } = {}) => {
+    const built = request({ user, current: { id: 3, course: 5, ...state } })
+    vi.mocked(lockDocument).mockResolvedValue({ ...course, editors: [43] } as never)
+    const count = vi.fn().mockResolvedValue({ totalDocs: published })
+    Object.assign(built.req.payload, { count })
+    return { ...built, count }
+  }
+
+  it.each([
+    ["a published offering", { _status: "published" as const }],
+    ["one that has been published before", { publishedAt: "2026-01-01T00:00:00.000Z" }],
+  ])("lets the owner delete %s while the course has another", async (_label, state) => {
+    const { req, count } = publishedRequest({ state })
+
+    await expect(remove(req)).resolves.toBeUndefined()
+    expect(count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: Slugs.Collections.COURSE_VERSIONS,
+        where: {
+          course: { equals: 5 },
+          or: [{ _status: { equals: "published" } }, { publishedAt: { exists: true } }],
+        },
+      }),
+    )
+  })
+
+  it("refuses the owner the course's last published offering", async () => {
+    const { req } = publishedRequest({ published: 1 })
+
+    await expect(remove(req)).rejects.toThrow(
+      "This is the course's only published offering. Ask an admin to delete the course.",
+    )
+  })
+
+  it.each([
+    ["an editor who isn't the owner", coEditor],
+    ["an admin deleting just the offering", administrator],
+    // Admins and members are separate collections, so their ids can collide.
+    ["an admin whose id matches the owner's", { ...administrator, id: 42 }],
+  ])("refuses a published offering to %s", async (_label, user) => {
+    const { req } = publishedRequest({ user })
+
+    await expect(remove(req)).rejects.toThrow(
+      "Only the course's owner can delete a published offering.",
+    )
+  })
+
+  it("lets an admin delete a published offering while deleting its whole course", async () => {
+    const { req, count } = publishedRequest({ published: 1, user: administrator })
+    req.context[COURSE_DELETE] = 5
+
+    await expect(remove(req)).resolves.toBeUndefined()
+    // Even the last one: the course goes with it.
+    expect(count).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ["an admin deleting another course", administrator, 6],
+    ["an editor, even with the flag set", coEditor, 5],
+  ])("doesn't honour the course-delete flag for %s", async (_label, user, deleting) => {
+    const { req } = publishedRequest({ user })
+    req.context[COURSE_DELETE] = deleting
+
+    await expect(remove(req)).rejects.toThrow(
+      "Only the course's owner can delete a published offering.",
+    )
   })
 
   // The status is read again under the lock, so a publication that lands between
