@@ -29,7 +29,7 @@ const FALLBACK_ERROR = "Could not save this draft. Try again."
 
 /**
  * Saves the dialog over a draft offering, or publishes it. It takes the teaching team
- * the dialog sends, or else keeps the draft's, less any member deleted since.
+ * the dialog sends, or else keeps the newest draft's, less any member deleted since.
  *
  * The write runs as the member, so the course hooks still decide whether they may
  * edit this course, and still check the offering is complete enough to publish.
@@ -82,7 +82,19 @@ export const updateDraftOffering = async (input: unknown): Promise<ActionResult>
 
     // Separate calls so `draft` stays a literal - see createCourse.
     if (parsed.data.intent === "publish") {
-      const teachingTeam = team.teachingTeam ?? liveTeachingTeam(offering.teachingTeam)
+      // The course hooks compare the team with the newest draft, not the collection
+      // row, so keeping the team means keeping the draft's.
+      const latest = team.teachingTeam
+        ? undefined
+        : await payload.findByID({
+            collection: Slugs.Collections.COURSE_VERSIONS,
+            id: offeringId,
+            depth: 0,
+            draft: true,
+            overrideAccess: false,
+            user,
+          })
+      const teachingTeam = team.teachingTeam ?? liveTeachingTeam(latest?.teachingTeam)
       if (!teachingTeam.length) return { formError: NO_TEACHING_TEAM_ERROR, ok: false }
 
       await payload.update({

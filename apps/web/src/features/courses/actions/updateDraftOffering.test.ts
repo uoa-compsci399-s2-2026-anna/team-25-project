@@ -142,6 +142,22 @@ describe("updateDraftOffering", () => {
     expect(updateTag).toHaveBeenCalledWith(QueryKeys.COURSES.ID(1))
   })
 
+  // The collection row can hold an older team than the newest draft, which is what the
+  // course hooks compare with.
+  it("publishes with the newest draft's team when the dialog sends none", async () => {
+    const draftTeam = [{ member: 8, role: "Tutor" }]
+    const payload = mockPayload({
+      findByID: vi
+        .fn()
+        .mockResolvedValueOnce(offering)
+        .mockResolvedValueOnce({ ...offering, teachingTeam: draftTeam }),
+    })
+
+    expect(await updateDraftOffering(input)).toEqual({ ok: true })
+    expect(payload.findByID).toHaveBeenLastCalledWith(expect.objectContaining({ draft: true }))
+    expect(payload.update.mock.calls[0][0].data.teachingTeam).toEqual(draftTeam)
+  })
+
   it("publishes with the teaching team the dialog sends", async () => {
     const payload = mockPayload()
     const teachingTeam = [{ member: 8, role: "Tutor" }]
