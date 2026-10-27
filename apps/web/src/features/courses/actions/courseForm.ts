@@ -137,8 +137,8 @@ export const liveTeachingTeam = (rows: CourseVersion["teachingTeam"]) =>
   })
 
 /**
- * The teaching team the dialog sent, or undefined when it sent none - teaching staff
- * who are not course editors get no team controls, so the offering keeps its own.
+ * The teaching team the dialog sent, or undefined when it sent none - it sends one
+ * only when the team was changed there, so otherwise the offering keeps its own.
  */
 export const parseTeachingTeam = (input: unknown) => {
   const parsed = teachingTeamInputSchema.safeParse(input)

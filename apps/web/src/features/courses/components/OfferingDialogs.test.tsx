@@ -25,11 +25,14 @@ const values = {
 }
 
 const ada = { id: 7, firstName: "Ada", lastName: "Lovelace" }
+const grace = { id: 8, firstName: "Grace", lastName: "Hopper" }
 
-const openAndSave = async (team: OfferingTeam) => {
+const openAndSave = async (team: OfferingTeam, edit?: () => void) => {
   vi.mocked(updateOffering).mockResolvedValue({ formError: "stop", ok: false })
   render(<EditOfferingDialog courseId={1} initialValues={values} offeringId={10} team={team} />)
   fireEvent.click(screen.getByRole("button", { name: "Edit offering" }))
+  await screen.findByRole("button", { name: "Save changes" })
+  edit?.()
   fireEvent.click(await screen.findByRole("button", { name: "Save changes" }))
   await waitFor(() => expect(updateOffering).toHaveBeenCalled())
   return vi.mocked(updateOffering).mock.calls[0][0] as Record<string, unknown>
@@ -48,10 +51,26 @@ describe("EditOfferingDialog teaching team", () => {
     expect(sent.teachingTeam).toBeUndefined()
   })
 
-  it("sends the team as member IDs and roles", async () => {
+  // The stored team may have changed since the page loaded, so an untouched team is not sent.
+  it("sends no team when the editor did not change it", async () => {
     const sent = await openAndSave({ editable: true, rows: [{ member: ada, role: "Tutor" }] })
 
-    expect(sent.teachingTeam).toEqual([{ member: 7, role: "Tutor" }])
+    expect(sent.teachingTeam).toBeUndefined()
+  })
+
+  it("sends a changed team as member IDs and roles", async () => {
+    const sent = await openAndSave(
+      {
+        editable: true,
+        rows: [
+          { member: ada, role: "Tutor" },
+          { member: grace, role: "Lecturer" },
+        ],
+      },
+      () => fireEvent.click(screen.getByRole("button", { name: "Remove Ada Lovelace" })),
+    )
+
+    expect(sent.teachingTeam).toEqual([{ member: 8, role: "Lecturer" }])
   })
 
   it("drops unsaved team changes when it reopens", async () => {

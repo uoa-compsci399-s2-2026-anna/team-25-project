@@ -29,17 +29,25 @@ export interface OfferingTeam {
 /** The dialog's teaching-team section, and what the save sends for it. */
 function useTeachingTeam(team: OfferingTeam) {
   const [rows, setRows] = useState(team.rows)
+  const [changed, setChanged] = useState(false)
   return {
-    reset: () => setRows(team.rows),
+    reset: () => {
+      setRows(team.rows)
+      setChanged(false)
+    },
     dialogProps: {
-      onChange: team.editable ? setRows : undefined,
+      onChange: team.editable
+        ? (next: TeachingTeamRow[]) => {
+            setRows(next)
+            setChanged(true)
+          }
+        : undefined,
       onSearch: searchMembers,
       rows,
     },
-    // A viewer who may not change the team sends none, so the offering keeps its own.
-    input: team.editable
-      ? rows.map(({ member, role }) => ({ member: member.id, role }))
-      : undefined,
+    // Without a change the save sends no team, so the offering keeps the stored one.
+    // Sending the team the dialog loaded with could undo another editor's change.
+    input: changed ? rows.map(({ member, role }) => ({ member: member.id, role })) : undefined,
   }
 }
 
