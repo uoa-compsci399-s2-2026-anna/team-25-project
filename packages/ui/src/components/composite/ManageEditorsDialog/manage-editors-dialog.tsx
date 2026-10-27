@@ -1,5 +1,6 @@
 "use client"
 
+import type { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import * as React from "react"
 import { Button } from "../../ui/Button/button"
 import {
@@ -71,8 +72,15 @@ export function ManageEditorsDialog({
   // would be lost.
   const listLocked = busy || confirming !== null
 
-  // Closing backs out of a pending transfer.
-  const handleOpenChange = (nextOpen: boolean) => {
+  // Closing backs out of a pending transfer. It waits for a save, so the result shows.
+  const handleOpenChange = (
+    nextOpen: boolean,
+    eventDetails: DialogPrimitive.Root.ChangeEventDetails,
+  ) => {
+    if (!nextOpen && busy) {
+      eventDetails.cancel()
+      return
+    }
     if (!nextOpen) setConfirming(null)
     onOpenChange?.(nextOpen)
   }
@@ -169,6 +177,7 @@ export function ManageEditorsDialog({
         ) : (
           <DialogFooter>
             <DialogClose
+              disabled={busy}
               render={<Button borderColor="charcoal" type="button" variant="button-transparent" />}
             >
               Cancel

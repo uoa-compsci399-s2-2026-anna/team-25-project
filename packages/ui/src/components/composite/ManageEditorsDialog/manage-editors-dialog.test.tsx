@@ -90,6 +90,16 @@ describe("ManageEditorsDialog", () => {
 
     expect(screen.getByRole("button", { name: "Saving..." })).toBeDisabled()
     expect(screen.getByRole("button", { name: "Remove Alan Turing" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled()
+  })
+
+  it("stays open while saving", () => {
+    const onOpenChange = vi.fn()
+    renderDialog({ onOpenChange, saving: "editors" })
+
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" })
+
+    expect(onOpenChange).not.toHaveBeenCalled()
   })
 
   // A transfer saves the stored editors, so the list must not change while it waits.
