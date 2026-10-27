@@ -36,3 +36,13 @@ export const MembersHeader = async ({ searchParams }: { searchParams: Promise<Se
     />
   )
 }
+
+/** What MembersHeader falls back to when the counts fail to load: the same header, without numbers. */
+export const MembersHeaderWithoutCounts = () => (
+  <PageHeader
+    align="end"
+    centerOnMobile
+    description="Academics who teach or research computing capstones across Australia and New Zealand. Profiles are public; contact details are shown to members."
+    title="Members"
+  />
+)

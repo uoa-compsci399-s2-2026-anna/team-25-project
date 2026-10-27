@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+import { FallbackOnError } from "@/components/FallbackOnError"
 import {
   AboutSection,
   BenefitsSection,
@@ -15,9 +16,12 @@ export default function Page() {
       <PageContainer>
         <HeroSection />
       </PageContainer>
-      <Suspense fallback={<InstitutionsTickerSkeleton />}>
-        <InstitutionsTicker />
-      </Suspense>
+      {/* Decorative, so it hides on error in the same way it hides with no institutions. */}
+      <FallbackOnError fallback={null}>
+        <Suspense fallback={<InstitutionsTickerSkeleton />}>
+          <InstitutionsTicker />
+        </Suspense>
+      </FallbackOnError>
       <PageContainer>
         <AboutSection />
         <BenefitsSection />

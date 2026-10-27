@@ -1,5 +1,6 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
 import type { Metadata } from "next"
+import { SuspenseSection } from "@/components/SuspenseSection"
 import { CourseHeader, CourseHeaderSkeleton } from "@/features/courses/components/CourseHeader"
 import {
   CourseOffering,
@@ -42,18 +43,33 @@ export default function Page({
     <PageContainer>
       <BackLink href={Routes.COURSES.ROOT}>Courses</BackLink>
       <article className="grid w-full gap-x-10 gap-y-4 p-10 md:p-12 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-12">
-        <AnimatedSuspense fallback={<CourseOfferingMetaSkeleton />}>
+        <SuspenseSection
+          errorPlacementClassName="lg:col-start-1 lg:row-start-1"
+          errorTitle="Could not load the offering details"
+          errorVariant="section"
+          fallback={<CourseOfferingMetaSkeleton />}
+        >
           <CourseOfferingMeta params={params} searchParams={searchParams} />
-        </AnimatedSuspense>
+        </SuspenseSection>
         <AnimatedSuspense fallback={<CourseHeaderSkeleton />}>
           <CourseHeader params={params} searchParams={searchParams} />
         </AnimatedSuspense>
-        <AnimatedSuspense fallback={<CourseOfferingSkeleton />}>
+        <SuspenseSection
+          errorPlacementClassName="mt-4 lg:col-start-1 lg:row-start-3"
+          errorTitle="Could not load this offering"
+          errorVariant="section"
+          fallback={<CourseOfferingSkeleton />}
+        >
           <CourseOffering params={params} searchParams={searchParams} />
-        </AnimatedSuspense>
-        <AnimatedSuspense fallback={<CourseResourcesSkeleton />}>
+        </SuspenseSection>
+        <SuspenseSection
+          errorPlacementClassName="mt-4 lg:col-start-1 lg:row-start-4"
+          errorTitle="Could not load resources"
+          errorVariant="section"
+          fallback={<CourseResourcesSkeleton />}
+        >
           <CourseResources params={params} />
-        </AnimatedSuspense>
+        </SuspenseSection>
       </article>
     </PageContainer>
   )

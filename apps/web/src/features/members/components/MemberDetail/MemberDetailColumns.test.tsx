@@ -1,6 +1,6 @@
-import { AnimatedSuspense } from "@repo/ui/components/ui"
 import { isValidElement, type ReactElement, type ReactNode } from "react"
 import { describe, expect, it, vi } from "vitest"
+import { SuspenseSection } from "@/components/SuspenseSection"
 import { MemberBio, MemberBioSkeleton } from "./MemberDetailBio"
 import { MemberContacts, MemberContactsSkeleton } from "./MemberDetailContacts"
 import { MemberDetailLeftColumn } from "./MemberDetailLeftColumn"
@@ -21,10 +21,10 @@ const childrenOf = (element: ReactElement<Props>) =>
     ? element.props.children
     : [element.props.children]) as ReactElement<Props>[]
 
-// Each AnimatedSuspense boundary as [the component it wraps, its fallback's component].
+// Each SuspenseSection boundary as [the component it wraps, its fallback's component].
 const boundaries = (column: ReactElement<Props>) =>
   childrenOf(column)
-    .filter((child) => child.type === AnimatedSuspense)
+    .filter((child) => child.type === SuspenseSection)
     .map((boundary) => {
       const [inner] = childrenOf(boundary)
       const fallback = boundary.props.fallback
@@ -48,7 +48,7 @@ describe("MemberDetailLeftColumn", () => {
   it("passes the route params to each async section", () => {
     const column = MemberDetailLeftColumn({ params }) as ReactElement<Props>
 
-    for (const boundary of childrenOf(column).filter((child) => child.type === AnimatedSuspense)) {
+    for (const boundary of childrenOf(column).filter((child) => child.type === SuspenseSection)) {
       expect(childrenOf(boundary)[0]?.props.params).toBe(params)
     }
   })

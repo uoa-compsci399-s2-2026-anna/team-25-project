@@ -1,6 +1,9 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
 import type { Metadata } from "next"
 import type { SearchParams } from "nuqs/server"
+import { FallbackOnError } from "@/components/FallbackOnError"
+import { FiltersUnavailable } from "@/components/FiltersUnavailable"
+import { SuspenseSection } from "@/components/SuspenseSection"
 import { PageContainer } from "@/features/layout/components"
 import {
   PublicationsFilterServer,
@@ -11,6 +14,7 @@ import {
   PublicationsList,
   PublicationsListSkeleton,
 } from "@/features/publications/components/PublicationsList"
+import { Routes } from "@/lib/routes"
 
 export const metadata: Metadata = {
   title: "Publications",
@@ -23,13 +27,19 @@ export default function Page({ searchParams }: { searchParams: Promise<SearchPar
       <PageContainer>
         <PublicationsHeader />
       </PageContainer>
-      <AnimatedSuspense fallback={<PublicationsFilterServerSkeleton />}>
-        <PublicationsFilterServer />
-      </AnimatedSuspense>
-      <PageContainer>
-        <AnimatedSuspense fallback={<PublicationsListSkeleton />}>
-          <PublicationsList searchParams={searchParams} />
+      <FallbackOnError fallback={<FiltersUnavailable clearHref={Routes.PUBLICATIONS} />}>
+        <AnimatedSuspense fallback={<PublicationsFilterServerSkeleton />}>
+          <PublicationsFilterServer />
         </AnimatedSuspense>
+      </FallbackOnError>
+      <PageContainer>
+        <SuspenseSection
+          errorTitle="Could not load publications"
+          errorVariant="list"
+          fallback={<PublicationsListSkeleton />}
+        >
+          <PublicationsList searchParams={searchParams} />
+        </SuspenseSection>
       </PageContainer>
     </>
   )

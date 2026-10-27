@@ -1,5 +1,6 @@
 import { Eyebrow, Heading } from "@repo/ui/components/ui"
 import { Suspense } from "react"
+import { FallbackOnError } from "@/components/FallbackOnError"
 import { HeroGlobeSkeleton, InstitutionsGlobe } from "../HeroGlobe/InstitutionsGlobe"
 
 export const HeroSection = () => {
@@ -21,9 +22,12 @@ export const HeroSection = () => {
       {/* Splits the row evenly with the copy. The globe sits towards the right of its half,
           with padding so it isn't pinned to the section's edge. */}
       <div className="flex justify-center lg:min-w-0 lg:flex-1 lg:justify-end lg:pr-12">
-        <Suspense fallback={<HeroGlobeSkeleton />}>
-          <InstitutionsGlobe />
-        </Suspense>
+        {/* Decorative, so it hides on error and leaves the copy on its own. */}
+        <FallbackOnError fallback={null}>
+          <Suspense fallback={<HeroGlobeSkeleton />}>
+            <InstitutionsGlobe />
+          </Suspense>
+        </FallbackOnError>
       </div>
     </section>
   )

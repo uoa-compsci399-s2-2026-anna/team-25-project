@@ -1,5 +1,6 @@
-import { AnimatedSuspense, Skeleton } from "@repo/ui/components/ui"
+import { Skeleton } from "@repo/ui/components/ui"
 import { Suspense } from "react"
+import { SuspenseSection } from "@/components/SuspenseSection"
 import { PageHeaderSkeleton } from "@/features/layout/components"
 import {
   getCoursesTableDataCached,
@@ -16,16 +17,37 @@ import { CoursesPageHeader, coursesPageHeading } from "./CoursesPageHeader"
 import type { CourseTableRow } from "./CoursesTable"
 import { YourCoursesPanel, YourCoursesPanelSkeleton } from "./YourCoursesPanel"
 
-// The header and table are cached and look the same for every viewer, so
-// they can be prerendered. The table starts as that same published-only list
-// and the viewer's own drafts stream into it, and "Your courses" streams in
-// too - both depend on whoever's looking.
+// The header's export needs the same cached rows as the table. It reads them
+// on its own, outside the list's boundary, so the header stays up if the list fails.
+export async function CoursesHeader() {
+  return <CoursesPageHeader rows={await getCoursesTableDataCached()} />
+}
+
+export function CoursesHeaderSkeleton() {
+  return (
+    <PageHeaderSkeleton
+      actions={
+        // Only the export needs the rows; the add button needs no data.
+        <div className="flex shrink-0 items-center gap-3">
+          <Skeleton className="h-9 w-32 rounded-full" />
+          <AddCourseTriggerButton />
+        </div>
+      }
+      centerOnMobile
+      {...coursesPageHeading}
+    />
+  )
+}
+
+// The table is cached and looks the same for every viewer, so it can be
+// prerendered. It starts as that same published-only list and the viewer's
+// own drafts stream into it, and "Your courses" streams in too - both depend
+// on whoever's looking.
 export async function CoursesList() {
   const rows = await getCoursesTableDataCached()
 
   return (
     <>
-      <CoursesPageHeader rows={rows} />
       {/* Only the drafts sit behind the boundary, not the table: swapping in a
           second table once they arrived would reset any search, filter or sort
           the viewer had already set on the first. */}
@@ -37,9 +59,13 @@ export async function CoursesList() {
         }
         rows={rows}
       />
-      <AnimatedSuspense fallback={<YourCoursesPanelSkeleton />}>
+      <SuspenseSection
+        errorTitle="Could not load your courses"
+        errorVariant="card"
+        fallback={<YourCoursesPanelSkeleton />}
+      >
         <YourCourses rows={rows} />
-      </AnimatedSuspense>
+      </SuspenseSection>
     </>
   )
 }
@@ -59,17 +85,6 @@ async function YourCourses({ rows }: { rows: CourseTableRow[] }) {
 export function CoursesListSkeleton() {
   return (
     <>
-      <PageHeaderSkeleton
-        actions={
-          // Only the export needs the rows; the add button needs no data.
-          <div className="flex shrink-0 items-center gap-3">
-            <Skeleton className="h-9 w-32 rounded-full" />
-            <AddCourseTriggerButton />
-          </div>
-        }
-        centerOnMobile
-        {...coursesPageHeading}
-      />
       <CoursesListClientSkeleton />
       <YourCoursesPanelSkeleton />
     </>

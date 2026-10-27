@@ -1,6 +1,9 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
 import type { Metadata } from "next"
 import type { SearchParams } from "nuqs/server"
+import { FallbackOnError } from "@/components/FallbackOnError"
+import { FiltersUnavailable } from "@/components/FiltersUnavailable"
+import { SuspenseSection } from "@/components/SuspenseSection"
 import { PageContainer, PageHeader } from "@/features/layout/components"
 import { AddResourceTrigger } from "@/features/resources/components/AddResourceTrigger"
 import {
@@ -8,6 +11,7 @@ import {
   ResourcesFilterServerSkeleton,
 } from "@/features/resources/components/ResourcesFilterServer"
 import { ResourcesList, ResourcesListSkeleton } from "@/features/resources/components/ResourcesList"
+import { Routes } from "@/lib/routes"
 
 export const metadata: Metadata = {
   title: "Resources",
@@ -24,13 +28,19 @@ export default function Page({ searchParams }: { searchParams: Promise<SearchPar
           title="Resources"
         />
       </PageContainer>
-      <AnimatedSuspense fallback={<ResourcesFilterServerSkeleton />}>
-        <ResourcesFilterServer />
-      </AnimatedSuspense>
-      <PageContainer>
-        <AnimatedSuspense fallback={<ResourcesListSkeleton />}>
-          <ResourcesList searchParams={searchParams} />
+      <FallbackOnError fallback={<FiltersUnavailable clearHref={Routes.RESOURCES.ROOT} />}>
+        <AnimatedSuspense fallback={<ResourcesFilterServerSkeleton />}>
+          <ResourcesFilterServer />
         </AnimatedSuspense>
+      </FallbackOnError>
+      <PageContainer>
+        <SuspenseSection
+          errorTitle="Could not load resources"
+          errorVariant="list"
+          fallback={<ResourcesListSkeleton />}
+        >
+          <ResourcesList searchParams={searchParams} />
+        </SuspenseSection>
       </PageContainer>
     </>
   )
