@@ -28,16 +28,29 @@ async function assignMemberOwner(req: PayloadRequest, course: Partial<Course>) {
   course.institution = relationID(owner.institution)
 }
 
-function validateCourseChanges(req: PayloadRequest, next: Partial<Course>, current?: Course) {
+async function validateCourseChanges(req: PayloadRequest, next: Partial<Course>, current?: Course) {
   if (current && !admin(req)) {
     // The owner may hand the course to one of its editors; anything else is an admin's call.
     const nextOwner = relationID(next.owner)
-    if (
-      nextOwner !== relationID(current.owner) &&
-      (relationID(current.owner) !== req.user?.id ||
-        !(current.editors ?? []).some((editor) => relationID(editor) === nextOwner))
-    )
-      fail("Only the owner can transfer ownership, and only to one of the course's editors.", 403)
+    if (nextOwner !== relationID(current.owner)) {
+      if (
+        relationID(current.owner) !== req.user?.id ||
+        !(current.editors ?? []).some((editor) => relationID(editor) === nextOwner)
+      )
+        fail("Only the owner can transfer ownership, and only to one of the course's editors.", 403)
+
+      // A member can only create courses at their own institution, so a transfer must not
+      // hand the course to a member from another one.
+      const newOwner = await req.payload.findByID({
+        collection: Slugs.Collections.MEMBERS,
+        id: requireID(nextOwner),
+        depth: 0,
+        req,
+        overrideAccess: true,
+      })
+      if (relationID(newOwner.institution) !== relationID(current.institution))
+        fail("Only a member at the course's institution can own it.", 403)
+    }
     if (
       relationID(current.owner) !== req.user?.id &&
       !isDeepStrictEqual(
@@ -94,7 +107,7 @@ export const prepareCourse: CollectionBeforeValidateHook<Course> = async ({
   const next = { ...current, ...data }
   next.code = typeof next.code === "string" ? next.code.trim().toUpperCase() : next.code
   if (!current && member(req)) await assignMemberOwner(req, next)
-  validateCourseChanges(req, next, current)
+  await validateCourseChanges(req, next, current)
   cleanEditors(next)
   next.hasPublishedVersion = current?.hasPublishedVersion ?? false
 

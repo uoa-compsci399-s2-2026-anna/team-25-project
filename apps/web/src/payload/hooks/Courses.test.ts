@@ -192,6 +192,15 @@ describe("prepareCourse updates", () => {
     ).resolves.toMatchObject({ owner: 7, editors: [42] })
   })
 
+  it("refuses a transfer to an editor from another institution", async () => {
+    vi.mocked(lockDocument).mockResolvedValue(saved())
+    const { req } = request(owner, { member: { id: 7, institution: 4 } })
+
+    await expect(prepare(req, { owner: 7 }, "update", saved())).rejects.toThrow(
+      "Only a member at the course's institution can own it.",
+    )
+  })
+
   it("refuses the owner a transfer to someone who is not an editor", async () => {
     vi.mocked(lockDocument).mockResolvedValue(saved())
     const { req } = request(owner)
