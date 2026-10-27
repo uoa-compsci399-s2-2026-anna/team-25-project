@@ -91,4 +91,14 @@ describe("ManageEditorsDialog", () => {
     expect(screen.getByRole("button", { name: "Saving..." })).toBeDisabled()
     expect(screen.getByRole("button", { name: "Remove Alan Turing" })).toBeDisabled()
   })
+
+  // A transfer saves the stored editors, so the list must not change while it waits.
+  it("locks the editor list while a transfer waits to be confirmed", () => {
+    renderDialog({ onTransfer: vi.fn(), transferableIds: [2] })
+
+    fireEvent.click(screen.getByRole("button", { name: "Make Alan Turing the owner" }))
+
+    expect(screen.getByRole("button", { name: "Remove Grace Hopper" })).toBeDisabled()
+    expect(screen.getByRole("combobox", { name: "Add an editor" })).toBeDisabled()
+  })
 })

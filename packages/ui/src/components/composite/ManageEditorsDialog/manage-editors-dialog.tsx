@@ -67,6 +67,9 @@ export function ManageEditorsDialog({
   )
   const [confirming, setConfirming] = React.useState<MemberOption | null>(null)
   const busy = Boolean(saving)
+  // A transfer saves the stored editors, so edits made while it waits to be confirmed
+  // would be lost.
+  const listLocked = busy || confirming !== null
 
   // Closing backs out of a pending transfer.
   const handleOpenChange = (nextOpen: boolean) => {
@@ -87,7 +90,7 @@ export function ManageEditorsDialog({
         </div>
 
         <MemberPicker
-          disabled={busy}
+          disabled={listLocked}
           exclude={chosen}
           id={pickerId}
           label="Add an editor"
@@ -122,7 +125,7 @@ export function ManageEditorsDialog({
                 )}
                 <Button
                   aria-label={`Remove ${memberName(editor)}`}
-                  disabled={busy}
+                  disabled={listLocked}
                   onClick={() => onEditorsChange(editors.filter(({ id }) => id !== editor.id))}
                   size="sm"
                   type="button"
