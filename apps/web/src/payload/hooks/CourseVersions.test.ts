@@ -329,7 +329,8 @@ describe("syncUnpublishedTeam", () => {
   }
 
   // Access is read from the collection row, so its team must follow the newest draft.
-  it("copies a changed team onto a never-published offering's row", async () => {
+  // The adapter write skips Payload's field hooks, so each row needs its own id.
+  it("copies a changed team, with row ids, onto a never-published offering's row", async () => {
     const { run, updateOne } = sync(
       { id: 3, _status: "draft", teachingTeam: [...team, { member: 9, role: "Tutor" }] },
       { id: 3, _status: "draft", teachingTeam: team },
@@ -342,8 +343,8 @@ describe("syncUnpublishedTeam", () => {
         id: 3,
         data: {
           teachingTeam: [
-            { member: 1, role: "Lecturer" },
-            { member: 9, role: "Tutor" },
+            { id: expect.any(String), member: 1, role: "Lecturer" },
+            { id: expect.any(String), member: 9, role: "Tutor" },
           ],
         },
       }),

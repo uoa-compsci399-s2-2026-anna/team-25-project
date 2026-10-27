@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import type { Course, CourseVersion } from "@repo/shared/payload-types"
 import type {
@@ -316,10 +317,12 @@ export const syncUnpublishedTeam: CollectionAfterChangeHook<CourseVersion> = asy
   if (operation !== "update" || isPublished(doc)) return doc
   const row = await readVersion(req, doc.id)
   if (isPublished(row) || isDeepStrictEqual(liveTeam(doc), liveTeam(row))) return doc
+  // The adapter write skips the field hook that gives each array row its id, and the
+  // rows table needs one.
   await req.payload.db.updateOne({
     collection: Slugs.Collections.COURSE_VERSIONS,
     id: doc.id,
-    data: { teachingTeam: liveTeam(doc) },
+    data: { teachingTeam: liveTeam(doc).map((row) => ({ ...row, id: randomUUID() })) },
     req,
   })
   return doc
