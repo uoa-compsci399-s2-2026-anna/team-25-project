@@ -371,6 +371,29 @@ describe("AddCapstoneCourseDialog teaching team", () => {
     expect(screen.getByLabelText("Role of Ada Lovelace")).not.toHaveAttribute("aria-invalid")
   })
 
+  // Teaching staff see the team read-only, so they cannot fill the role in themselves.
+  it("asks a read-only viewer to have an editor add a missing role", () => {
+    render(
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        fieldErrors={{ teachingTeam: "Give each teaching team member a role to publish." }}
+        kind="correction"
+        onPublish={vi.fn()}
+        onValueChange={vi.fn()}
+        open
+        teachingTeam={{ onSearch: vi.fn(), rows: [rows[0], { member: alan, role: "" }] }}
+        values={emptyValues}
+      />,
+    )
+
+    expect(
+      screen.getByText(/Ask the course's owner or an editor to add the missing roles\./),
+    ).toBeInTheDocument()
+    expect(screen.getByRole("list", { name: "Teaching team" })).toHaveTextContent(
+      "Alan TuringNo role",
+    )
+  })
+
   it("shows the team read-only without onChange", () => {
     renderTeam({ onSearch: vi.fn(), rows })
 

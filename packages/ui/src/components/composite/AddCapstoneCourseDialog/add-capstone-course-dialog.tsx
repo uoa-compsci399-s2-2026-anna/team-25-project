@@ -194,12 +194,25 @@ function TeachingTeamSection({
                 </Button>
               </span>
             ) : (
-              row.role && <span className="text-muted-foreground text-sm">{row.role}</span>
+              <span
+                className={cn(
+                  "text-sm",
+                  row.role.trim() ? "text-muted-foreground" : error && "text-destructive",
+                )}
+              >
+                {row.role.trim() ? row.role : error && "No role"}
+              </span>
             )}
           </li>
         ))}
       </ul>
-      {error && <FieldError>{error}</FieldError>}
+      {error && (
+        <FieldError>
+          {error}
+          {/* A viewer without the controls cannot fill the roles in themselves. */}
+          {!onChange && " Ask the course's owner or an editor to add the missing roles."}
+        </FieldError>
+      )}
     </FieldGroup>
   )
 }
