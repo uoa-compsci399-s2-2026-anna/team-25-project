@@ -251,15 +251,28 @@ export type MemberCourse = {
   period: string
 }
 
-/** The member's courses with a published offering, each shown by its newest offering. */
+/**
+ * The member's published courses: ones they own, edit, or taught an offering of - the
+ * same rule as `summarizeMyCourses`. Each is shown by its newest matching offering, so a
+ * course they only taught shows the last period they taught it, not its latest overall.
+ */
 export const getMemberCourses = async (memberId: number): Promise<MemberCourse[]> => {
   const payload = await getPayloadClient()
   const { docs } = await payload.find({
     collection: Slugs.Collections.COURSE_VERSIONS,
     where: {
-      and: [{ "course.owner": { equals: memberId } }, { _status: { equals: "published" } }],
+      and: [
+        {
+          or: [
+            { "course.owner": { equals: memberId } },
+            { "course.editors": { contains: memberId } },
+            { "teachingTeam.member": { equals: memberId } },
+          ],
+        },
+        { _status: { equals: "published" } },
+      ],
     },
-    // Newest first, so the first offering seen for each course is its latest.
+    // Newest first, so the first offering seen for each course is its latest match.
     sort: ["-startDate", "-id"],
     depth: 0,
     pagination: false,

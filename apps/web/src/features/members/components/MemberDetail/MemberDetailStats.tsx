@@ -52,7 +52,7 @@ export const MemberStats = async ({ params }: { params: MembersRouteParams }) =>
 
   return (
     <div className="flex flex-col gap-4 max-md:contents">
-      <StatCard className="max-md:order-6" label="Courses convened">
+      <StatCard className="max-md:order-6" label="Courses">
         {courses.length === 0 ? (
           <EmptyState icon={<GraduationCap />} title="No courses yet" variant="card" />
         ) : (

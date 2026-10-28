@@ -31,7 +31,7 @@ describe("MemberStats", () => {
     cleanup()
   })
 
-  it("lists each convened course with its period, code and name", async () => {
+  it("lists each course with its period, code and name", async () => {
     vi.mocked(getMemberDetailsCached).mockResolvedValue(member as never)
     vi.mocked(getMemberCoursesCached).mockResolvedValue([
       { courseId: 12, code: "COMPSCI 399", name: "Capstone Project", period: "2026 Semester 2" },
@@ -53,7 +53,7 @@ describe("MemberStats", () => {
     expect(screen.getByRole("link")).toHaveTextContent(/^2026 Semester 2$/)
   })
 
-  it("shows an empty state when the member convenes no courses", async () => {
+  it("shows an empty state when the member has no courses", async () => {
     vi.mocked(getMemberDetailsCached).mockResolvedValue(member as never)
     vi.mocked(getMemberCoursesCached).mockResolvedValue([])
 
