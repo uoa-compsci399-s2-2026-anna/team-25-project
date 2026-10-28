@@ -1,10 +1,14 @@
 import { MemberTitleLabels } from "@repo/shared/enums/members"
 import {
+  DEPARTMENT_MAX_LENGTH,
+  FACULTY_MAX_LENGTH,
   LINK_LABEL_MAX_LENGTH,
   LINKS_MAX,
   POSITION_MAX_LENGTH,
   RESEARCH_INTEREST_MAX_LENGTH,
   RESEARCH_INTERESTS_MAX,
+  TEACHING_INTEREST_MAX_LENGTH,
+  TEACHING_INTERESTS_MAX,
 } from "@repo/shared/schemas/register"
 import { toSelectOptions } from "@repo/shared/utils/select-options"
 import type { CollectionConfig } from "payload"
@@ -70,6 +74,8 @@ export const Members: CollectionConfig = {
       options: toSelectOptions(MemberTitleLabels),
     },
     { name: "position", type: "text", required: true, maxLength: POSITION_MAX_LENGTH },
+    { name: "department", type: "text", maxLength: DEPARTMENT_MAX_LENGTH },
+    { name: "faculty", type: "text", maxLength: FACULTY_MAX_LENGTH },
     { name: "bio", type: "textarea" },
     {
       name: "researchInterests",
@@ -78,6 +84,14 @@ export const Members: CollectionConfig = {
       maxRows: RESEARCH_INTERESTS_MAX,
       // With hasMany, maxLength applies to each interest rather than the list.
       maxLength: RESEARCH_INTEREST_MAX_LENGTH,
+      hooks: { beforeValidate: [normaliseStoredInterests] },
+    },
+    {
+      name: "teachingInterests",
+      type: "text",
+      hasMany: true,
+      maxRows: TEACHING_INTERESTS_MAX,
+      maxLength: TEACHING_INTEREST_MAX_LENGTH,
       hooks: { beforeValidate: [normaliseStoredInterests] },
     },
     {

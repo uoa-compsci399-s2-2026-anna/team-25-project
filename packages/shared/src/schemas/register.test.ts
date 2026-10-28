@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest"
 import { registerProfileSchema, verificationCodeSchema } from "./register"
 
-const profile = (researchInterests: string) => ({ bio: "", links: [], researchInterests })
+const profile = (researchInterests: string, overrides: Record<string, unknown> = {}) => ({
+  bio: "",
+  department: "",
+  faculty: "",
+  links: [],
+  researchInterests,
+  teachingInterests: "",
+  ...overrides,
+})
 
 describe("registerProfileSchema researchInterests", () => {
   it("splits the comma-separated input into trimmed interests", () => {
@@ -38,6 +46,35 @@ describe("registerProfileSchema researchInterests", () => {
     expect(result.error?.issues).toEqual([
       expect.objectContaining({ message, path: ["researchInterests"] }),
     ])
+  })
+})
+
+describe("registerProfileSchema", () => {
+  it("splits teaching interests the same way as research interests", () => {
+    const result = registerProfileSchema.parse(
+      profile("", { teachingInterests: " Capstone, , Capstone, Data science " }),
+    )
+    expect(result.teachingInterests).toEqual(["Capstone", "Data science"])
+  })
+
+  it("names teaching interests in their own errors", () => {
+    const result = registerProfileSchema.safeParse(
+      profile("", { teachingInterests: "x".repeat(51) }),
+    )
+    expect(result.error?.issues).toEqual([
+      expect.objectContaining({
+        message: "Keep each teaching interest under 50 characters",
+        path: ["teachingInterests"],
+      }),
+    ])
+  })
+
+  it.each([
+    ["department", "Keep your department under 100 characters"],
+    ["faculty", "Keep your faculty under 100 characters"],
+  ])("rejects a %s over 100 characters", (field, message) => {
+    const result = registerProfileSchema.safeParse(profile("", { [field]: "x".repeat(101) }))
+    expect(result.error?.issues).toEqual([expect.objectContaining({ message, path: [field] })])
   })
 })
 

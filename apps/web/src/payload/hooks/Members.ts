@@ -120,8 +120,8 @@ export const enforceInstitutionDomain: CollectionBeforeValidateHook<Member> = as
   return data
 }
 
-// The directory filter matches interests exactly, so a stored " Teamwork" would never match the
-// trimmed value readers filter by. Runs before validation so maxRows counts what is kept.
-export const normaliseStoredInterests: FieldHook<Member, Member["researchInterests"]> = ({
+// Runs before validation so maxRows counts what is kept. The directory filter also matches
+// research interests exactly, so a stored " Teamwork" would never match the trimmed value.
+export const normaliseStoredInterests: FieldHook<Member, string[] | null | undefined> = ({
   value,
 }) => (Array.isArray(value) ? normaliseInterests(value) : value)
