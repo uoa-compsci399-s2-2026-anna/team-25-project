@@ -13,6 +13,7 @@ vi.mock("./FooterLinkList", () => ({
       ))}
     </ul>
   ),
+  GuestFooterLinkList: () => null,
 }))
 
 describe("Footer", () => {

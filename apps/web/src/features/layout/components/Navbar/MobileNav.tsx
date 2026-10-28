@@ -7,10 +7,9 @@ import { type MobileNavAccount, MobileNavMenu } from "./MobileNavMenu"
 
 export const MobileNav = async () => {
   const { collection, user } = await getCurrentUser()
-  const links = visibleLinks(navbarLinks, Boolean(user)).map(({ href, name }) => ({ href, name }))
 
   if (!user) {
-    return <MobileNavMenu key="guest" links={links} />
+    return <GuestMobileNav />
   }
 
   const name = `${user.firstName} ${user.lastName}`
@@ -29,5 +28,13 @@ export const MobileNav = async () => {
         }
       : { ...base, href: Routes.ADMIN, hrefLabel: "Admin dashboard", subtitle: "Administrator" }
 
-  return <MobileNavMenu account={account} key={`${collection}-${user.id}`} links={links} />
+  return (
+    <MobileNavMenu account={account} key={`${collection}-${user.id}`} links={menuLinks(true)} />
+  )
 }
+
+/** What MobileNav shows to a guest, and falls back to when the user cannot be read. */
+export const GuestMobileNav = () => <MobileNavMenu key="guest" links={menuLinks(false)} />
+
+const menuLinks = (signedIn: boolean) =>
+  visibleLinks(navbarLinks, signedIn).map(({ href, name }) => ({ href, name }))

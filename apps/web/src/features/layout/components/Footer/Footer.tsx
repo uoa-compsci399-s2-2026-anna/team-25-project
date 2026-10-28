@@ -1,7 +1,8 @@
 import { AnimatedSuspense, Heading, Skeleton } from "@repo/ui/components/ui"
+import { FallbackOnError } from "@/components/FallbackOnError"
 import { Logo } from "@/components/Logo"
 import { siteLinks } from "@/features/layout/links"
-import { FooterLinkList } from "./FooterLinkList"
+import { FooterLinkList, GuestFooterLinkList } from "./FooterLinkList"
 
 const groups = {
   Explore: [siteLinks.home, siteLinks.members, siteLinks.courses, siteLinks.proposals],
@@ -28,21 +29,23 @@ export const Footer = () => {
             <Heading className="uppercase" level="h6">
               {category}
             </Heading>
-            <AnimatedSuspense
-              fallback={
-                <div className="flex flex-col">
-                  {links
-                    .filter((link) => !link.membersOnly)
-                    .map((link) => (
-                      <div className="flex h-6 items-center" key={link.name}>
-                        <Skeleton className="h-4 w-16 rounded-full" />
-                      </div>
-                    ))}
-                </div>
-              }
-            >
-              <FooterLinkList links={links} />
-            </AnimatedSuspense>
+            <FallbackOnError fallback={<GuestFooterLinkList links={links} />}>
+              <AnimatedSuspense
+                fallback={
+                  <div className="flex flex-col">
+                    {links
+                      .filter((link) => !link.membersOnly)
+                      .map((link) => (
+                        <div className="flex h-6 items-center" key={link.name}>
+                          <Skeleton className="h-4 w-16 rounded-full" />
+                        </div>
+                      ))}
+                  </div>
+                }
+              >
+                <FooterLinkList links={links} />
+              </AnimatedSuspense>
+            </FallbackOnError>
           </div>
         ))}
       </nav>

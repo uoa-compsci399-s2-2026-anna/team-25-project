@@ -1,5 +1,6 @@
 import { AnimatedSuspense, Eyebrow, Heading } from "@repo/ui/components/ui"
-import { JoinButtons, JoinButtonsSkeleton } from "./JoinButtons"
+import { FallbackOnError } from "@/components/FallbackOnError"
+import { GuestJoinButtons, JoinButtons, JoinButtonsSkeleton } from "./JoinButtons"
 
 const criteria = [
   "Academics and teaching staff involved in computing capstone courses",
@@ -37,9 +38,11 @@ export const WhoCanJoinSection = () => {
             ))}
           </ul>
 
-          <AnimatedSuspense fallback={<JoinButtonsSkeleton />}>
-            <JoinButtons />
-          </AnimatedSuspense>
+          <FallbackOnError fallback={<GuestJoinButtons />}>
+            <AnimatedSuspense fallback={<JoinButtonsSkeleton />}>
+              <JoinButtons />
+            </AnimatedSuspense>
+          </FallbackOnError>
         </div>
 
         <div className="flex flex-col gap-6 rounded-lg bg-brand-blush/60 p-5 sm:p-8">

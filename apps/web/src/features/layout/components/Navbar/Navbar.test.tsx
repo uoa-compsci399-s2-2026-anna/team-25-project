@@ -12,9 +12,11 @@ vi.mock("./NavAuthStatus", () => ({
 }))
 vi.mock("./NavLinks", () => ({
   NavLinks: () => <div data-testid="nav-links" />,
+  GuestNavLinks: () => null,
 }))
 vi.mock("./MobileNav", () => ({
   MobileNav: () => <div data-testid="mobile-nav" />,
+  GuestMobileNav: () => null,
 }))
 
 describe("Navbar", () => {

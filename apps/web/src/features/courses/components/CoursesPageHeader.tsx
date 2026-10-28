@@ -10,7 +10,8 @@ export const coursesPageHeading = {
 }
 
 export interface CoursesPageHeaderProps {
-  rows: CourseTableRow[]
+  /** Left out when the rows fail to load, which drops the export. */
+  rows?: CourseTableRow[]
 }
 
 export function CoursesPageHeader({ rows }: CoursesPageHeaderProps) {
@@ -18,7 +19,7 @@ export function CoursesPageHeader({ rows }: CoursesPageHeaderProps) {
     <PageHeader
       actions={
         <div className="flex items-center gap-3">
-          <CoursesExportButton rows={rows} />
+          {rows && <CoursesExportButton rows={rows} />}
           <AddCourseTrigger />
         </div>
       }

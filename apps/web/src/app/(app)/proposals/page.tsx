@@ -1,6 +1,8 @@
 import { AnimatedSuspense } from "@repo/ui/components/ui"
 import type { Metadata } from "next"
 import type { SearchParams } from "nuqs/server"
+import { FallbackOnError } from "@/components/FallbackOnError"
+import { SuspenseSection } from "@/components/SuspenseSection"
 import { PageContainer } from "@/features/layout/components"
 import {
   ProposalsFilterBarSkeleton,
@@ -21,17 +23,24 @@ export default function Page({ searchParams }: { searchParams: Promise<SearchPar
       <PageContainer>
         <ProposalsHeader />
       </PageContainer>
-      <div className="w-full bg-brand-cream/60">
-        <PageContainer className="px-10 py-5 md:px-12">
-          <AnimatedSuspense fallback={<ProposalsFilterBarSkeleton />}>
-            <ProposalsFilterServer searchParams={searchParams} />
-          </AnimatedSuspense>
-        </PageContainer>
-      </div>
+      {/* Filters are optional: if they fail, hide the whole band and keep the list. */}
+      <FallbackOnError fallback={null}>
+        <div className="w-full bg-brand-cream/60">
+          <PageContainer className="px-10 py-5 md:px-12">
+            <AnimatedSuspense fallback={<ProposalsFilterBarSkeleton />}>
+              <ProposalsFilterServer searchParams={searchParams} />
+            </AnimatedSuspense>
+          </PageContainer>
+        </div>
+      </FallbackOnError>
       <PageContainer>
-        <AnimatedSuspense fallback={<ProposalsListSkeleton />}>
+        <SuspenseSection
+          errorTitle="Could not load proposals"
+          errorVariant="list"
+          fallback={<ProposalsListSkeleton />}
+        >
           <ProposalsList searchParams={searchParams} />
-        </AnimatedSuspense>
+        </SuspenseSection>
       </PageContainer>
     </>
   )
