@@ -1,5 +1,5 @@
 import { InstitutionCountry } from "@repo/shared/enums/institutions"
-import { normaliseResearchInterests } from "@repo/shared/utils/research-interests"
+import { normaliseInterests } from "@repo/shared/utils/interests"
 // `nuqs/server` carries no "use client" boundary, so these parsers work in server and client code.
 import {
   createLoader,
@@ -45,7 +45,7 @@ export const toMemberFilters = ({
   country: country ?? undefined,
   institutionId: institution ?? undefined,
   // Capped here as well as in the bar, so a hand-edited URL cannot widen the query.
-  researchInterests: normaliseResearchInterests(interest).slice(0, MEMBER_INTEREST_FILTER_MAX),
+  researchInterests: normaliseInterests(interest).slice(0, MEMBER_INTEREST_FILTER_MAX),
   search: q.trim() || undefined,
   sort,
 })

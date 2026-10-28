@@ -7,7 +7,7 @@ import { Slugs } from "@/lib/payload/slugs"
 import {
   assertMemberDeletable,
   enforceInstitutionDomain,
-  normaliseStoredResearchInterests,
+  normaliseStoredInterests,
   revalidateDeletedMemberProposals,
   revalidateMemberProposals,
 } from "./Members"
@@ -159,17 +159,17 @@ describe("enforceInstitutionDomain", () => {
   })
 })
 
-describe("normaliseStoredResearchInterests", () => {
+describe("normaliseStoredInterests", () => {
   it("stores interests trimmed, without blanks or repeats", () => {
     expect(
-      normaliseStoredResearchInterests({
+      normaliseStoredInterests({
         value: ["  Teamwork  ", "", "Teamwork", "Ethics"],
       } as never),
     ).toEqual(["Teamwork", "Ethics"])
   })
 
   it.each([null, undefined])("leaves %s alone", (value) => {
-    expect(normaliseStoredResearchInterests({ value } as never)).toBe(value)
+    expect(normaliseStoredInterests({ value } as never)).toBe(value)
   })
 })
 

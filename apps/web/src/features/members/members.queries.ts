@@ -2,7 +2,7 @@ import { QueryKeys } from "@repo/shared/constants/query-keys"
 import type { InstitutionCountry } from "@repo/shared/enums/institutions"
 import type { Institution, Member } from "@repo/shared/payload-types"
 import type { Pagination } from "@repo/shared/types/pagination"
-import { normaliseResearchInterests } from "@repo/shared/utils/research-interests"
+import { normaliseInterests } from "@repo/shared/utils/interests"
 import { cacheLife, cacheTag } from "next/cache"
 import { connection } from "next/server"
 import type { Where } from "payload"
@@ -112,9 +112,7 @@ export const getResearchInterestOptions = async (): Promise<ResearchInterestOpti
     select: { researchInterests: true },
   })
 
-  return normaliseResearchInterests(
-    docs.flatMap(({ researchInterests }) => researchInterests ?? []),
-  )
+  return normaliseInterests(docs.flatMap(({ researchInterests }) => researchInterests ?? []))
     .sort((a, b) => a.localeCompare(b))
     .map((interest) => ({ label: interest, value: interest }))
 }

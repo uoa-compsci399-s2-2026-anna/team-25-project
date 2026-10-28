@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { MemberTitle } from "../enums/members"
+import { normaliseInterests } from "../utils/interests"
 import { isHttpUrl } from "../utils/is-http-url"
-import { normaliseResearchInterests } from "../utils/research-interests"
 
 /**
  * Shared by the client form and the server action, so a field can never be
@@ -71,7 +71,7 @@ export const registerWithCodeSchema = registerDetailsSchema.extend({ code: verif
 export type RegisterWithCode = z.infer<typeof registerWithCodeSchema>
 
 // Deduplicated because each interest is also its React key when listed.
-const splitResearchInterests = (value: string) => normaliseResearchInterests(value.split(","))
+const splitResearchInterests = (value: string) => normaliseInterests(value.split(","))
 
 /**
  * Every profile field is skippable - the Figma frames this step as optional
