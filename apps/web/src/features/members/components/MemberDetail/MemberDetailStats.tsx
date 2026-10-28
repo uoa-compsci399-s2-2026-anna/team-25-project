@@ -1,7 +1,12 @@
-import { RESEARCH_INTEREST_MAX_LENGTH, RESEARCH_INTERESTS_MAX } from "@repo/shared/schemas/register"
+import {
+  RESEARCH_INTEREST_MAX_LENGTH,
+  RESEARCH_INTERESTS_MAX,
+  TEACHING_INTEREST_MAX_LENGTH,
+  TEACHING_INTERESTS_MAX,
+} from "@repo/shared/schemas/register"
 import { Badge, Card, CardContent, CardHeader, Skeleton } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
-import { GraduationCap, Tag } from "lucide-react"
+import { GraduationCap, Lightbulb } from "lucide-react"
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { EmptyState } from "@/components/EmptyState"
@@ -100,7 +105,30 @@ export const MemberStats = async ({ params }: { params: MembersRouteParams }) =>
                 ))}
               </ul>
             ) : (
-              <EmptyState icon={<Tag />} title="No interests yet" variant="card" />
+              <EmptyState icon={<Lightbulb />} title="No interests yet" variant="card" />
+            )
+          }
+        />
+      </StatCard>
+      <StatCard className="max-md:order-8" label="Teaching interests">
+        <MemberEdit.TagList
+          itemLabel="teaching interest"
+          label="Teaching interests"
+          max={TEACHING_INTERESTS_MAX}
+          maxLength={TEACHING_INTEREST_MAX_LENGTH}
+          name="teachingInterests"
+          value={member.teachingInterests}
+          view={
+            member.teachingInterests?.length ? (
+              <ul className="flex flex-wrap gap-1">
+                {member.teachingInterests.map((interest) => (
+                  <li key={interest}>
+                    <Badge>{interest}</Badge>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyState icon={<GraduationCap />} title="No interests yet" variant="card" />
             )
           }
         />
@@ -119,6 +147,9 @@ export const MemberStatsSkeleton = () => (
   <div className="flex flex-col gap-4 max-md:contents">
     <div className={cn("max-md:order-6", mobileSection)}>
       <Skeleton className="h-36 w-full" />
+    </div>
+    <div className={cn("max-md:order-8", mobileSection)}>
+      <Skeleton className="h-20 w-full" />
     </div>
     <div className={cn("max-md:order-8", mobileSection)}>
       <Skeleton className="h-20 w-full" />

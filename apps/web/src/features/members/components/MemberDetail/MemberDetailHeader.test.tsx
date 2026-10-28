@@ -66,6 +66,32 @@ describe("MemberHeader", () => {
     expect(container).toHaveTextContent("Senior Lecturer - University of Auckland - NZ")
   })
 
+  it("shows the faculty and department on their own line", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue(
+      member({ department: "Computer Science", faculty: "Science" }) as never,
+    )
+
+    await renderHeader()
+    expect(screen.getByText("Senior Lecturer - University of Auckland - NZ")).toBeInTheDocument()
+    expect(screen.getByText("Science - Computer Science")).toBeInTheDocument()
+  })
+
+  it("shows only the faculty or department the member has", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue(member({ faculty: "Science" }) as never)
+
+    await renderHeader()
+    expect(screen.getByText("Science")).toBeInTheDocument()
+  })
+
+  it("leaves out the faculty line when there is neither", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue(member() as never)
+
+    await renderHeader()
+    const affiliationLine = screen.getByText("Senior Lecturer - University of Auckland - NZ")
+    // Nothing follows the affiliation row, so no blank line adds space under it.
+    expect(affiliationLine.parentElement?.nextElementSibling).toBeNull()
+  })
+
   it("puts the member's title before their name", async () => {
     vi.mocked(getMemberDetailsCached).mockResolvedValue(member({ title: "assocProf" }) as never)
 
@@ -120,8 +146,10 @@ describe("MemberHeader", () => {
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
   })
 
-  it("swaps the photo, name, title and position for inputs when editing", async () => {
-    vi.mocked(getMemberDetailsCached).mockResolvedValue(member() as never)
+  it("swaps the photo, name, title and affiliation for inputs when editing", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue(
+      member({ department: "Computer Science", faculty: null }) as never,
+    )
     vi.mocked(getCurrentUser).mockResolvedValue({
       collection: "members",
       user: { id: 7 },
@@ -137,6 +165,8 @@ describe("MemberHeader", () => {
     expect(screen.getByRole("textbox", { name: "First name" })).toHaveValue("Anna")
     expect(screen.getByRole("textbox", { name: "Last name" })).toHaveValue("Tui")
     expect(screen.getByRole("textbox", { name: "Position" })).toHaveValue("Senior Lecturer")
+    expect(screen.getByRole("textbox", { name: "Department" })).toHaveValue("Computer Science")
+    expect(screen.getByRole("textbox", { name: "Faculty" })).toHaveValue("")
   })
 
   it("tags the research interests under the name for phones, hidden from screen readers", async () => {
