@@ -1,4 +1,4 @@
-import { Badge, Card, CardContent, CardHeader, Heading, Skeleton } from "@repo/ui/components/ui"
+import { Badge, Card, CardContent, CardHeader, Skeleton } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import { FolderOpen } from "lucide-react"
 import Link from "next/link"
@@ -12,6 +12,7 @@ import { Routes } from "@/lib/routes"
 import { isOwnProfile } from "../../members.ownership"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberResourcesCached } from "../../members.queries"
+import { MemberDetailSection } from "./MemberDetailSection"
 import { mobileSection } from "./mobileSection"
 
 // Aliased as the React compiler rule reads a capitalized call inside a component as
@@ -28,8 +29,7 @@ export const MemberResources = async ({ params }: { params: MembersRouteParams }
   const { user } = await getCurrentUser()
 
   return (
-    <section className={cn("flex flex-col gap-4 max-md:order-5", mobileSection)}>
-      <Heading level="h2">Resources</Heading>
+    <MemberDetailSection className={cn("max-md:order-5", mobileSection)} title="Resources">
       {user ? (
         <ResourceList
           canEdit={await isOwnProfile(memberId)}
@@ -46,7 +46,7 @@ export const MemberResources = async ({ params }: { params: MembersRouteParams }
           to see the resources this member has shared.
         </p>
       )}
-    </section>
+    </MemberDetailSection>
   )
 }
 

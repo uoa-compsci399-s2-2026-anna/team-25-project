@@ -8,6 +8,7 @@ import { PublicationCardActionsServer } from "@/features/publications/components
 import { Routes } from "@/lib/routes"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberPublicationsCached } from "../../members.queries"
+import { MemberDetailSection } from "./MemberDetailSection"
 import { mobileSection } from "./mobileSection"
 
 // Stable keys for the placeholder cards, which have no data of their own.
@@ -18,8 +19,7 @@ export const MemberPublications = async ({ params }: { params: MembersRouteParam
   const publications = await getMemberPublicationsCached(memberId)
 
   return (
-    <section className={cn("flex flex-col gap-4 max-md:order-7", mobileSection)}>
-      <Heading level="h2">Publications</Heading>
+    <MemberDetailSection className={cn("max-md:order-7", mobileSection)} title="Publications">
       {publications.length > 0 ? (
         publications.map((publication) => (
           <PublicationCard
@@ -33,7 +33,7 @@ export const MemberPublications = async ({ params }: { params: MembersRouteParam
       ) : (
         <EmptyState icon={<BookOpen />} title="No publications yet" variant="section" />
       )}
-    </section>
+    </MemberDetailSection>
   )
 }
 

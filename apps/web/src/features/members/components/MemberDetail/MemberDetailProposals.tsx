@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  Heading,
   Skeleton,
   Tabs,
   TabsContent,
@@ -24,6 +23,7 @@ import { Routes } from "@/lib/routes"
 import { isOwnProfile } from "../../members.ownership"
 import { type MembersRouteParams, parseMemberId } from "../../members.params"
 import { getMemberProposalsCached } from "../../members.queries"
+import { MemberDetailSection } from "./MemberDetailSection"
 import { mobileSection } from "./mobileSection"
 
 type MemberProposal = Awaited<ReturnType<typeof getMemberProposalsCached>>[number]
@@ -35,8 +35,7 @@ export const MemberProposals = async ({ params }: { params: MembersRouteParams }
 
   if (!user) {
     return (
-      <section className={cn("flex flex-col gap-4 max-md:order-4", mobileSection)}>
-        <Heading level="h2">Proposals</Heading>
+      <MemberDetailSection className={cn("max-md:order-4", mobileSection)} title="Proposals">
         <p className="text-muted-foreground text-sm">
           <Link
             className="underline underline-offset-2"
@@ -46,7 +45,7 @@ export const MemberProposals = async ({ params }: { params: MembersRouteParams }
           </Link>{" "}
           to see the proposals this member has posted.
         </p>
-      </section>
+      </MemberDetailSection>
     )
   }
 
@@ -58,28 +57,29 @@ export const MemberProposals = async ({ params }: { params: MembersRouteParams }
   const closed = proposals.filter((proposal) => proposal.status === ProposalStatus.CLOSED)
 
   return (
-    <Tabs
-      className={cn("gap-4 max-md:order-4", mobileSection)}
-      defaultValue={ProposalStatus.ACTIVE}
-      render={<section />}
-    >
-      <div className="flex flex-row items-center justify-between gap-3">
-        <Heading level="h2">Proposals</Heading>
-        <TabsList className="w-80 max-md:w-auto max-md:text-xs" variant="pill">
-          <TabsTrigger value={ProposalStatus.ACTIVE}>
-            {`${ProposalStatusLabels.active} - ${active.length}`}
-          </TabsTrigger>
-          <TabsTrigger value={ProposalStatus.CLOSED}>
-            {`${ProposalStatusLabels.closed} - ${closed.length}`}
-          </TabsTrigger>
-        </TabsList>
-      </div>
-      <TabsContent value={ProposalStatus.ACTIVE}>
-        <ProposalList canEdit={canEdit} emptyTitle="No active proposals" proposals={active} />
-      </TabsContent>
-      <TabsContent value={ProposalStatus.CLOSED}>
-        <ProposalList canEdit={canEdit} emptyTitle="No closed proposals" proposals={closed} />
-      </TabsContent>
+    // `contents` removes the Tabs box, so the flex parent can apply `order` to the section on small screens.
+    <Tabs className="contents" defaultValue={ProposalStatus.ACTIVE}>
+      <MemberDetailSection
+        className={cn("max-md:order-4", mobileSection)}
+        headerAction={
+          <TabsList className="w-80 max-md:w-auto max-md:text-xs" variant="pill">
+            <TabsTrigger value={ProposalStatus.ACTIVE}>
+              {`${ProposalStatusLabels.active} - ${active.length}`}
+            </TabsTrigger>
+            <TabsTrigger value={ProposalStatus.CLOSED}>
+              {`${ProposalStatusLabels.closed} - ${closed.length}`}
+            </TabsTrigger>
+          </TabsList>
+        }
+        title="Proposals"
+      >
+        <TabsContent value={ProposalStatus.ACTIVE}>
+          <ProposalList canEdit={canEdit} emptyTitle="No active proposals" proposals={active} />
+        </TabsContent>
+        <TabsContent value={ProposalStatus.CLOSED}>
+          <ProposalList canEdit={canEdit} emptyTitle="No closed proposals" proposals={closed} />
+        </TabsContent>
+      </MemberDetailSection>
     </Tabs>
   )
 }
