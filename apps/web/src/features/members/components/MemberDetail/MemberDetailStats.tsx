@@ -52,7 +52,7 @@ export const MemberStats = async ({ params }: { params: MembersRouteParams }) =>
 
   return (
     <div className="flex flex-col gap-4 max-md:contents">
-      <StatCard className="max-md:order-6" label="Courses">
+      <StatCard className="max-md:order-7" label="Courses">
         {courses.length === 0 ? (
           <EmptyState icon={<GraduationCap />} title="No courses yet" variant="card" />
         ) : (
@@ -117,7 +117,7 @@ export const MemberStats = async ({ params }: { params: MembersRouteParams }) =>
 // One placeholder per card, each at its card's phone position, so nothing shifts on load.
 export const MemberStatsSkeleton = () => (
   <div className="flex flex-col gap-4 max-md:contents">
-    <div className={cn("max-md:order-6", mobileSection)}>
+    <div className={cn("max-md:order-7", mobileSection)}>
       <Skeleton className="h-36 w-full" />
     </div>
     <div className={cn("max-md:order-8", mobileSection)}>

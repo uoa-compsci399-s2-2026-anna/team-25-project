@@ -34,14 +34,14 @@ const boundaries = (column: ReactElement<Props>) =>
 const params = Promise.resolve({ memberId: "7" })
 
 describe("MemberDetailLeftColumn", () => {
-  it("streams the bio, proposals, resources and publications, each with its skeleton", () => {
+  it("streams the bio, publications, proposals and resources, each with its skeleton", () => {
     const column = MemberDetailLeftColumn({ params }) as ReactElement<Props>
 
     expect(boundaries(column)).toEqual([
       [MemberBio, MemberBioSkeleton],
+      [MemberPublications, MemberPublicationsSkeleton],
       [MemberProposals, MemberProposalsSkeleton],
       [MemberResources, MemberResourcesSkeleton],
-      [MemberPublications, MemberPublicationsSkeleton],
     ])
   })
 

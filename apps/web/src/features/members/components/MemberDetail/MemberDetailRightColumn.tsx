@@ -16,7 +16,7 @@ export const MemberDetailRightColumn = ({ params }: { params: MembersRouteParams
       <MemberContacts params={params} />
     </SuspenseSection>
     <SuspenseSection
-      errorPlacementClassName={cn("max-md:order-6", mobileSection)}
+      errorPlacementClassName={cn("max-md:order-7", mobileSection)}
       errorTitle="Could not load stats"
       errorVariant="section"
       fallback={<MemberStatsSkeleton />}

@@ -19,6 +19,14 @@ export const MemberDetailLeftColumn = ({ params }: { params: MembersRouteParams 
     </SuspenseSection>
     <SuspenseSection
       errorPlacementClassName={cn("max-md:order-4", mobileSection)}
+      errorTitle="Could not load publications"
+      errorVariant="section"
+      fallback={<MemberPublicationsSkeleton />}
+    >
+      <MemberPublications params={params} />
+    </SuspenseSection>
+    <SuspenseSection
+      errorPlacementClassName={cn("max-md:order-5", mobileSection)}
       errorTitle="Could not load proposals"
       errorVariant="section"
       fallback={<MemberProposalsSkeleton />}
@@ -26,20 +34,12 @@ export const MemberDetailLeftColumn = ({ params }: { params: MembersRouteParams 
       <MemberProposals params={params} />
     </SuspenseSection>
     <SuspenseSection
-      errorPlacementClassName={cn("max-md:order-5", mobileSection)}
+      errorPlacementClassName={cn("max-md:order-6", mobileSection)}
       errorTitle="Could not load resources"
       errorVariant="section"
       fallback={<MemberResourcesSkeleton />}
     >
       <MemberResources params={params} />
-    </SuspenseSection>
-    <SuspenseSection
-      errorPlacementClassName={cn("max-md:order-7", mobileSection)}
-      errorTitle="Could not load publications"
-      errorVariant="section"
-      fallback={<MemberPublicationsSkeleton />}
-    >
-      <MemberPublications params={params} />
     </SuspenseSection>
   </div>
 )

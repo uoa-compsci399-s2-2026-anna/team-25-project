@@ -35,7 +35,7 @@ export const MemberProposals = async ({ params }: { params: MembersRouteParams }
 
   if (!user) {
     return (
-      <MemberDetailSection className={cn("max-md:order-4", mobileSection)} title="Proposals">
+      <MemberDetailSection className={cn("max-md:order-5", mobileSection)} title="Proposals">
         <p className="text-muted-foreground text-sm">
           <Link
             className="underline underline-offset-2"
@@ -60,7 +60,7 @@ export const MemberProposals = async ({ params }: { params: MembersRouteParams }
     // `contents` removes the Tabs box, so the flex parent can apply `order` to the section on small screens.
     <Tabs className="contents" defaultValue={ProposalStatus.ACTIVE}>
       <MemberDetailSection
-        className={cn("max-md:order-4", mobileSection)}
+        className={cn("max-md:order-5", mobileSection)}
         headerAction={
           <TabsList className="w-80 max-md:w-auto max-md:text-xs" variant="pill">
             <TabsTrigger value={ProposalStatus.ACTIVE}>
@@ -145,7 +145,7 @@ const ProposalList = ({
 }
 
 export const MemberProposalsSkeleton = () => (
-  <div className={cn("flex flex-col gap-4 max-md:order-4", mobileSection)}>
+  <div className={cn("flex flex-col gap-4 max-md:order-5", mobileSection)}>
     <Skeleton className="h-7 w-40" />
     <Skeleton className="h-16 w-full" />
     <Skeleton className="h-16 w-full" />

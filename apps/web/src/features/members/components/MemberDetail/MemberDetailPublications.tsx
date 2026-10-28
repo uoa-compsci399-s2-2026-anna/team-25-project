@@ -1,7 +1,7 @@
 import { PublicationCard, PublicationCardSkeleton } from "@repo/ui/components/composite"
 import { Heading } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
-import { BookOpen } from "lucide-react"
+import { BookOpen, ChevronDownIcon } from "lucide-react"
 import { EmptyState } from "@/components/EmptyState"
 import { StringHrefLink } from "@/components/StringHrefLink"
 import { PublicationCardActionsServer } from "@/features/publications/components/PublicationCardActionsServer"
@@ -19,7 +19,7 @@ export const MemberPublications = async ({ params }: { params: MembersRouteParam
   const publications = await getMemberPublicationsCached(memberId)
 
   return (
-    <MemberDetailSection className={cn("max-md:order-7", mobileSection)} title="Publications">
+    <MemberDetailSection className={cn("max-md:order-4", mobileSection)} title="Publications">
       {publications.length > 0 ? (
         publications.map((publication) => (
           <PublicationCard
@@ -38,8 +38,11 @@ export const MemberPublications = async ({ params }: { params: MembersRouteParam
 }
 
 export const MemberPublicationsSkeleton = () => (
-  <section className={cn("flex flex-col gap-4 max-md:order-7", mobileSection)}>
-    <Heading level="h2">Publications</Heading>
+  <section className={cn("flex flex-col gap-4 max-md:order-4", mobileSection)}>
+    <Heading className="flex items-center gap-2" level="h2">
+      Publications
+      <ChevronDownIcon aria-hidden="true" className="size-5 rotate-180" />
+    </Heading>
     {skeletonCardIds.map((id) => (
       <PublicationCardSkeleton key={id} />
     ))}

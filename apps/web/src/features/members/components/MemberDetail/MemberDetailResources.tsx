@@ -29,7 +29,7 @@ export const MemberResources = async ({ params }: { params: MembersRouteParams }
   const { user } = await getCurrentUser()
 
   return (
-    <MemberDetailSection className={cn("max-md:order-5", mobileSection)} title="Resources">
+    <MemberDetailSection className={cn("max-md:order-6", mobileSection)} title="Resources">
       {user ? (
         <ResourceList
           canEdit={await isOwnProfile(memberId)}
@@ -106,7 +106,7 @@ const ResourceList = ({
 }
 
 export const MemberResourcesSkeleton = () => (
-  <div className={cn("flex flex-col gap-4 max-md:order-5", mobileSection)}>
+  <div className={cn("flex flex-col gap-4 max-md:order-6", mobileSection)}>
     <Skeleton className="h-7 w-40" />
     <Skeleton className="h-16 w-full" />
     <Skeleton className="h-16 w-full" />
