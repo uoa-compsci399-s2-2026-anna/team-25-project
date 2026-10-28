@@ -1,14 +1,20 @@
-import { expect, test as setup } from "@playwright/test"
+import { test as setup } from "@playwright/test"
 import { Routes } from "@/lib/routes"
-
-export const MEMBER_STORAGE_STATE = "e2e/.auth/member.json"
+import { ADMIN_STORAGE_STATE, MEMBER_STORAGE_STATE, SEED_ADMIN } from "./auth-state"
+import { gotoHydrated, logIn } from "./helpers"
 
 setup("log in as a member", async ({ page }) => {
-  // Wait for hydration: it resets the controlled inputs, which wipes anything typed before it.
-  await page.goto(Routes.LOGIN, { waitUntil: "networkidle" })
-  await page.getByLabel("University email").fill("arohan.patel@auckland.ac.nz")
-  await page.getByLabel("Password").fill("changeme")
-  await page.getByRole("button", { name: "Log in" }).click()
-  await expect(page).not.toHaveURL(/\/login/)
+  await gotoHydrated(page, Routes.LOGIN)
+  await logIn(page, "arohan.patel@auckland.ac.nz")
   await page.context().storageState({ path: MEMBER_STORAGE_STATE })
+})
+
+// Admins are Payload users, not members, so they log in through Payload's own form.
+setup("log in as an admin", async ({ page }) => {
+  await gotoHydrated(page, `${Routes.ADMIN}/login`)
+  await page.getByLabel("Email").fill(SEED_ADMIN.email)
+  await page.getByLabel("Password").fill(SEED_ADMIN.password)
+  await page.getByRole("button", { name: "Login" }).click()
+  await page.waitForURL((url) => !url.pathname.endsWith("/login"))
+  await page.context().storageState({ path: ADMIN_STORAGE_STATE })
 })
