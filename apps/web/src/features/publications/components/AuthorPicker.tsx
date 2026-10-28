@@ -150,9 +150,9 @@ type LinkedAuthorProps = {
 
 /** A row linked to a member: their profile, and a button to undo the link. */
 export const LinkedAuthor = ({ member, position, matched, onUnlink }: LinkedAuthorProps) => (
-  <div className="flex items-center justify-between gap-3 rounded-lg border px-2 py-1.5 text-sm">
+  <div className="flex items-center justify-between gap-x-3 gap-y-1.5 rounded-lg border px-2 py-1.5 text-sm max-sm:flex-wrap">
     <CandidateLabel member={member} />
-    <span className="flex shrink-0 items-center gap-2">
+    <span className="ml-auto flex shrink-0 items-center gap-2 max-sm:shrink max-sm:flex-wrap">
       {matched && <Badge variant="blue">Matched from BibTeX</Badge>}
       <Button
         aria-label={`Unlink author ${position} from ${candidateName(member)}`}

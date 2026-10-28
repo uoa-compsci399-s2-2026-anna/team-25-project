@@ -474,7 +474,7 @@ export const AddPublicationForm = (props: AddPublicationFormProps) => {
                   }
 
                   return (
-                    <FieldSet className="gap-3">
+                    <FieldSet className="min-w-0 gap-3">
                       <FieldLegend variant="label">
                         Authors <RequiredAsterisk />
                       </FieldLegend>
