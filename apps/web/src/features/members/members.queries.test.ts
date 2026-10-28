@@ -356,13 +356,22 @@ describe("getMemberPublications", () => {
 })
 
 describe("getMemberCourses", () => {
-  it("reads published offerings of the member's courses, newest first", async () => {
+  it("reads published offerings of courses the member owns, edits or teaches, newest first", async () => {
     await getMemberCourses(7)
 
     expect(find).toHaveBeenCalledWith({
       collection: "courseVersions",
       where: {
-        and: [{ "course.owner": { equals: 7 } }, { _status: { equals: "published" } }],
+        and: [
+          {
+            or: [
+              { "course.owner": { equals: 7 } },
+              { "course.editors": { contains: 7 } },
+              { "teachingTeam.member": { equals: 7 } },
+            ],
+          },
+          { _status: { equals: "published" } },
+        ],
       },
       sort: ["-startDate", "-id"],
       depth: 0,
