@@ -44,6 +44,10 @@
       "outputs": ["coverage/**"],
       "persistent": true
     },
+    "test:e2e": {
+      "cache": false,
+      "passThroughEnv": ["CI", "E2E_DATABASE_URL", "PAYLOAD_SECRET"]
+    },
     "dev": {
       "cache": false,
       "persistent": true

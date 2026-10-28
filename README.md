@@ -97,6 +97,7 @@ Run from the repo root; Turborepo fans each one out to the workspaces that defin
 | `pnpm build:app` | Build apps only (`apps/*`) |
 | `pnpm types:check` | Type-check every workspace |
 | `pnpm test` | Run tests in every workspace |
+| `pnpm test:e2e` | Run the Playwright end-to-end tests |
 | `pnpm test:coverage:merge` | Merge per-workspace coverage reports |
 | `pnpm lint:check` | Check lint/format rules (Biome) across the repo |
 | `pnpm lint:fix` | Auto-fix lint/format issues across the repo |
@@ -147,6 +148,17 @@ Never edit `payload-types.ts` by hand — it's regenerated automatically.
 | `packages/shared` | `pnpm --filter @repo/shared test` — Vitest |
 
 Or run everything at once from the root with `pnpm test`.
+
+### End-to-end tests
+
+`apps/web/e2e/` holds Playwright tests. They need the Postgres container running.
+
+```bash
+pnpm --filter web exec playwright install chromium   # once
+pnpm test:e2e
+```
+
+Each run resets and seeds a separate `casa_e2e` database, so your dev data is safe. It then starts the app on port 3100: `next dev` locally, and a production build in CI. S3 and SES are turned off for the run. To use a different database, set `E2E_DATABASE_URL`.
 
 ## Tech stack
 

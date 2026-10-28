@@ -25,7 +25,9 @@
     "test": "cross-env NODE_OPTIONS=--no-deprecation NODE_ENV=test vitest run --config ./vitest.config.mts",
     "test:watch": "cross-env NODE_OPTIONS=--no-deprecation NODE_ENV=test vitest",
     "test:coverage": "cross-env NODE_ENV=test vitest run --coverage",
-    "test:coverage:watch": "cross-env NODE_ENV=test vitest --coverage"
+    "test:coverage:watch": "cross-env NODE_ENV=test vitest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:db:reset": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:fresh --force-accept-warning && pnpm db:seed"
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.1152.0",
@@ -58,6 +60,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@repo/test-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "^4",
