@@ -55,6 +55,7 @@ import {
   toast,
 } from "@repo/ui/components/ui"
 import { type AnyFieldApi, type StandardSchemaV1, useForm } from "@tanstack/react-form"
+import { X } from "lucide-react"
 import { type ComponentProps, type ReactNode, useId, useRef, useState } from "react"
 import type { ActionResult } from "@/features/auth/actions/types"
 import { createPublication } from "../actions/createPublication"
@@ -515,11 +516,11 @@ export const AddPublicationForm = (props: AddPublicationFormProps) => {
                                 <Button
                                   aria-label={`Remove author ${position}`}
                                   onClick={removeRow}
-                                  size="sm"
+                                  size="icon-sm"
                                   type="button"
                                   variant="button-transparent"
                                 >
-                                  Remove
+                                  <X />
                                 </Button>
                               )
 
