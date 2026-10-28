@@ -1,6 +1,6 @@
 # `@repo/typescript-config`
 
-Shared `tsconfig.json` bases for the [Casa](../../README.md) monorepo.
+Shared `tsconfig.json` bases for the [CCCA](../../README.md) monorepo.
 
 ## What's here
 

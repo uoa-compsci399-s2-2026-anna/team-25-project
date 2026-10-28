@@ -1,6 +1,6 @@
 # `@repo/ui`
 
-Shared [shadcn/ui](https://ui.shadcn.com/) component library for the [Casa](../../README.md) monorepo, with Storybook for isolated development.
+Shared [shadcn/ui](https://ui.shadcn.com/) component library for the [CCCA](../../README.md) monorepo, with Storybook for isolated development.
 
 ## Stack
 

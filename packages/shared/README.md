@@ -1,6 +1,6 @@
 # `@repo/shared`
 
-Shared types, schemas, enums, constants, and utilities used across the [Casa](../../README.md) monorepo.
+Shared types, schemas, enums, constants, and utilities used across the [CCCA](../../README.md) monorepo.
 
 ## What's here
 
