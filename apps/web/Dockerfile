@@ -19,7 +19,7 @@ WORKDIR /app
 # Root manifests only, so turbo is reinstalled only when these files change.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,target=/pnpm/store \
-    pnpm install --frozen-lockfile --ignore-scripts --filter casa
+    pnpm install --frozen-lockfile --ignore-scripts --filter ccca
 COPY . .
 # --docker splits manifests (out/json) from sources (out/full) for the deps stage.
 RUN pnpm turbo prune web --docker

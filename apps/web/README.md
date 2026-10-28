@@ -2,7 +2,7 @@
 
 The full-stack app: a single Next.js 16 App Router project that hosts both the
 product UI and Payload CMS (admin panel and REST API). Part of the
-[Casa](../../README.md) monorepo.
+[CCCA](../../README.md) monorepo.
 
 ## Stack
 

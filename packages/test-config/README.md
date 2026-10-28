@@ -1,6 +1,6 @@
 # `@repo/test-config`
 
-Shared Vitest configuration and coverage tooling for the [Casa](../../README.md) monorepo.
+Shared Vitest configuration and coverage tooling for the [CCCA](../../README.md) monorepo.
 
 ## What's here
 

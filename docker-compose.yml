@@ -3,15 +3,15 @@ services:
     image: postgres:18
     restart: unless-stopped
     environment:
-      POSTGRES_USER: casa
-      POSTGRES_PASSWORD: casa
-      POSTGRES_DB: casa
+      POSTGRES_USER: ccca
+      POSTGRES_PASSWORD: ccca
+      POSTGRES_DB: ccca
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U casa -d casa"]
+      test: ["CMD-SHELL", "pg_isready -U ccca -d ccca"]
       interval: 5s
       timeout: 5s
       retries: 10

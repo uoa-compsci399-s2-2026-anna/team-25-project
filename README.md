@@ -1,4 +1,4 @@
-# Casa
+# CCCA
 
 Team 25's project for COMPSCI 399 (University of Auckland). A Turborepo monorepo with a full-stack Next.js + Payload CMS app on Postgres, and shared packages.
 
@@ -48,7 +48,7 @@ cp apps/web/.env.example apps/web/.env
 
 | Variable | Description |
 | --- | --- |
-| `DATABASE_URL` | Postgres connection string (`postgres://casa:casa@localhost:5432/casa` for the container) |
+| `DATABASE_URL` | Postgres connection string (`postgres://ccca:ccca@localhost:5432/ccca` for the container) |
 | `PAYLOAD_SECRET` | Secret used by Payload to sign/encrypt data |
 
 ### 3. Start the local database
