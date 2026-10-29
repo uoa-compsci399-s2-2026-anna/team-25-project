@@ -103,6 +103,25 @@ describe("updateDraftOffering", () => {
     expect(payload.update.mock.calls[0][0].data).not.toHaveProperty("_status")
   })
 
+  it("saves the teaching team the dialog sends with a draft", async () => {
+    const payload = mockPayload()
+    const teachingTeam = [{ member: 8, role: "" }]
+
+    const result = await updateDraftOffering({ ...input, intent: "draft", teachingTeam })
+
+    expect(result).toEqual({ ok: true })
+    expect(payload.update.mock.calls[0][0].data.teachingTeam).toEqual(teachingTeam)
+  })
+
+  // Teaching staff who are not course editors send no team, so the draft keeps its own.
+  it("leaves the draft's team alone when the dialog sends none", async () => {
+    const payload = mockPayload()
+
+    await updateDraftOffering({ ...input, intent: "draft" })
+
+    expect(payload.update.mock.calls[0][0].data).not.toHaveProperty("teachingTeam")
+  })
+
   it("publishes the draft as the member, keeping its teaching team", async () => {
     const payload = mockPayload()
 
@@ -121,6 +140,40 @@ describe("updateDraftOffering", () => {
       }),
     )
     expect(updateTag).toHaveBeenCalledWith(QueryKeys.COURSES.ID(1))
+  })
+
+  // The collection row can hold an older team than the newest draft, which is what the
+  // course hooks compare with.
+  it("publishes with the newest draft's team when the dialog sends none", async () => {
+    const draftTeam = [{ member: 8, role: "Tutor" }]
+    const payload = mockPayload({
+      findByID: vi
+        .fn()
+        .mockResolvedValueOnce(offering)
+        .mockResolvedValueOnce({ ...offering, teachingTeam: draftTeam }),
+    })
+
+    expect(await updateDraftOffering(input)).toEqual({ ok: true })
+    expect(payload.findByID).toHaveBeenLastCalledWith(expect.objectContaining({ draft: true }))
+    expect(payload.update.mock.calls[0][0].data.teachingTeam).toEqual(draftTeam)
+  })
+
+  it("publishes with the teaching team the dialog sends", async () => {
+    const payload = mockPayload()
+    const teachingTeam = [{ member: 8, role: "Tutor" }]
+
+    expect(await updateDraftOffering({ ...input, teachingTeam })).toEqual({ ok: true })
+    expect(payload.update.mock.calls[0][0].data.teachingTeam).toEqual(teachingTeam)
+  })
+
+  it("refuses to publish when the dialog sends an empty team", async () => {
+    const payload = mockPayload()
+
+    expect(await updateDraftOffering({ ...input, teachingTeam: [] })).toEqual({
+      formError: "Add at least one teaching team member to publish.",
+      ok: false,
+    })
+    expect(payload.update).not.toHaveBeenCalled()
   })
 
   it("leaves out a teaching-team row whose member has been deleted when publishing", async () => {
@@ -148,7 +201,7 @@ describe("updateDraftOffering", () => {
     const result = await updateDraftOffering(input)
 
     expect(result).toEqual({
-      formError: "This offering has no teaching team left. Ask an admin to add one.",
+      formError: "Add at least one teaching team member to publish.",
       ok: false,
     })
     expect(payload.update).not.toHaveBeenCalled()

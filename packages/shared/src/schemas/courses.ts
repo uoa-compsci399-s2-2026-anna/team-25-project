@@ -120,8 +120,8 @@ export type AddCourseFormInput = z.infer<typeof addCourseFormSchema>
 
 /**
  * A new offering of an existing course, saved as a draft or published. The course
- * already has its code, and the offering keeps the teaching team it was copied
- * from, so neither the code nor "Your role" is asked for.
+ * already has its code, and the dialog sends the teaching team instead of "Your
+ * role", so neither is asked for here.
  */
 export const addOfferingFormSchema = z
   .discriminatedUnion("intent", [
@@ -137,3 +137,19 @@ export const correctOfferingFormSchema = z
   .object(publishOfferingFields)
   .omit({ role: true })
   .refine(datesInOrder, datesInOrderError)
+
+/**
+ * The teaching team the offering dialog sends. Only the course's owner and editors
+ * see the team controls; a dialog without them sends no team, and the offering keeps
+ * the one it has. The hooks still check publication rules and who may change it.
+ */
+export const teachingTeamInputSchema = z.object({
+  teachingTeam: z
+    .array(z.object({ member: z.number().int().positive(), role: z.string().trim().max(200) }))
+    .max(50)
+    .refine(
+      (rows) => new Set(rows.map((row) => row.member)).size === rows.length,
+      "Each member can be on the teaching team once.",
+    )
+    .optional(),
+})

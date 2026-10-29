@@ -17,6 +17,7 @@ import {
   toCourseTableRow,
   toNewOfferingValues,
   toOfferingValues,
+  toTeachingTeamRows,
 } from "./courses.format"
 
 const member = (overrides: Partial<Member> = {}): Member =>
@@ -441,5 +442,20 @@ describe("course roles", () => {
     expect(isTeachingStaff(offering, 3)).toBe(true)
     expect(isTeachingStaff(offering, 4)).toBe(true)
     expect(isTeachingStaff(offering, 5)).toBe(false)
+  })
+})
+
+describe("toTeachingTeamRows", () => {
+  const ada = { id: 3, firstName: "Ada", lastName: "Lovelace" }
+
+  it("pairs each row with its member and leaves out deleted members", () => {
+    const offering = version({
+      teachingTeam: [
+        { member: 3, role: "Tutor" },
+        { member: 9, role: "Gone" },
+        { member: null, role: "Also gone" },
+      ],
+    })
+    expect(toTeachingTeamRows(offering, [ada])).toEqual([{ member: ada, role: "Tutor" }])
   })
 })

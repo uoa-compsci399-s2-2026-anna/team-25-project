@@ -8,9 +8,14 @@ import {
   selectOffering,
   toNewOfferingValues,
   toOfferingValues,
+  toTeachingTeamRows,
 } from "../courses.format"
 import { type CourseRouteSearchParams, parseOfferingId } from "../courses.params"
-import { getPublishedCourseCached, getPublishedOfferingsCached } from "../courses.queries"
+import {
+  getPublishedCourseCached,
+  getPublishedOfferingsCached,
+  getTeamMembers,
+} from "../courses.queries"
 import { DeleteOfferingButton } from "./DeleteCourseButtons"
 import { AddOfferingDialog, EditOfferingDialog } from "./OfferingDialogs"
 
@@ -18,7 +23,7 @@ import { AddOfferingDialog, EditOfferingDialog } from "./OfferingDialogs"
  * "Add offering" and "Edit offering" for the course's owner and editors. A new
  * offering is filled in from the current one; Edit corrects the one being viewed.
  * The owner can also delete the one being viewed, while the course has another.
- * The viewed offering's teaching staff get Edit too.
+ * The viewed offering's teaching staff get Edit too, with the team read-only.
  * Per-viewer, so the course page renders this in its own Suspense boundary.
  */
 export async function OfferingActions({
@@ -45,6 +50,8 @@ export async function OfferingActions({
   const isEditor = isCourseEditor(course, user.id)
   if (!isEditor && !isTeachingStaff(offering, user.id)) return null
 
+  const members = await getTeamMembers([offering, primary])
+
   // The hooks refuse the last published offering, as that would leave the course empty.
   const canDelete = ownerIdOf(course) === user.id && offerings.length > 1
 
@@ -56,12 +63,14 @@ export async function OfferingActions({
         // A fresh dialog per offering, so switching offerings never keeps the last one's edits.
         key={offering.id}
         offeringId={offering.id}
+        team={{ editable: isEditor, rows: toTeachingTeamRows(offering, members) }}
       />
       {isEditor && (
         <AddOfferingDialog
           courseId={courseId}
           initialValues={toNewOfferingValues(primary)}
           sourceId={primary.id}
+          team={{ editable: true, rows: toTeachingTeamRows(primary, members) }}
         />
       )}
       {canDelete && (

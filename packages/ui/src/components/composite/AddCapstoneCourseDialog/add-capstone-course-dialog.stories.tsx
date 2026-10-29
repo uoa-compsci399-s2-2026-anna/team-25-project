@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 import * as React from "react"
 import { Button } from "../../ui/Button/button"
+import { sampleMembers, searchSampleMembers } from "../MemberPicker/member-picker.fixtures"
 import {
   AddCapstoneCourseDialog,
   type AddCapstoneCourseDialogValues,
+  type TeachingTeamRow,
 } from "./add-capstone-course-dialog"
 
 const deliveryFormatOptions = [
@@ -155,16 +157,24 @@ export const EditingDraftOffering: Story = {
   },
 }
 
+const sampleTeam: TeachingTeamRow[] = [
+  { member: sampleMembers[0] as TeachingTeamRow["member"], role: "Course Coordinator" },
+  { member: sampleMembers[3] as TeachingTeamRow["member"], role: "Tutor" },
+]
+
+const publishedValues = {
+  ...emptyValues,
+  endDate: "2026-11-06",
+  name: "Capstone Project",
+  period: "Semester 2 2026",
+  startDate: "2026-07-20",
+}
+
 // Correcting a published offering, which goes live on save.
 export const EditingOffering: Story = {
   render: () => {
-    const [values, setValues] = React.useState({
-      ...emptyValues,
-      endDate: "2026-11-06",
-      name: "Capstone Project",
-      period: "Semester 2 2026",
-      startDate: "2026-07-20",
-    })
+    const [values, setValues] = React.useState(publishedValues)
+    const [team, setTeam] = React.useState(sampleTeam)
 
     return (
       <AddCapstoneCourseDialog
@@ -172,6 +182,30 @@ export const EditingOffering: Story = {
         kind="correction"
         onPublish={() => undefined}
         onValueChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
+        teachingTeam={{ onChange: setTeam, onSearch: searchSampleMembers, rows: team }}
+        trigger={
+          <Button size="sm" type="button" variant="button-transparent">
+            Edit offering
+          </Button>
+        }
+        values={values}
+      />
+    )
+  },
+}
+
+// A teaching-team member who is not a course editor sees the team but cannot change it.
+export const EditingOfferingAsTeachingStaff: Story = {
+  render: () => {
+    const [values, setValues] = React.useState(publishedValues)
+
+    return (
+      <AddCapstoneCourseDialog
+        deliveryFormatOptions={deliveryFormatOptions}
+        kind="correction"
+        onPublish={() => undefined}
+        onValueChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
+        teachingTeam={{ onSearch: searchSampleMembers, rows: sampleTeam }}
         trigger={
           <Button size="sm" type="button" variant="button-transparent">
             Edit offering

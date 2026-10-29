@@ -12,8 +12,10 @@ import { relationID } from "@/payload/access/Courses/helpers"
 import {
   fieldErrorsFromIssues,
   liveTeachingTeam,
+  parseTeachingTeam,
   requireMember,
   resultFromWriteError,
+  teachingTeamPublishError,
   toVersionData,
 } from "./courseForm"
 
@@ -26,9 +28,9 @@ const FALLBACK_ERROR = "Could not add this offering. Try again."
 
 /**
  * Adds a new offering of an existing course, copied from `sourceId` (the offering
- * the dialog was filled in from), either published or saved as a draft. The dialog
- * has no member picker, so the new offering keeps the source's teaching team - a
- * draft holds it too, ready for when it's published.
+ * the dialog was filled in from), either published or saved as a draft. It takes
+ * the teaching team the dialog sends, or else keeps the source's - a draft holds it
+ * too, ready for when it's published.
  *
  * The write runs as the member, so the course hooks still decide whether they may
  * edit this course, and still check the offering is complete enough to publish.
@@ -41,6 +43,9 @@ export const createOffering = async (input: unknown): Promise<ActionResult> => {
   if (!parsed.success) {
     return { fieldErrors: fieldErrorsFromIssues(parsed.error.issues), ok: false }
   }
+
+  const team = parseTeachingTeam(input)
+  if (team.error) return team.error
 
   const member = await requireMember({
     notMember: "Only members can add an offering - admins manage the directory, not entries in it.",
@@ -65,11 +70,14 @@ export const createOffering = async (input: unknown): Promise<ActionResult> => {
     const offeringData = {
       ...toVersionData(parsed.data, undefined),
       course: courseId,
-      teachingTeam: liveTeachingTeam(source.teachingTeam),
+      teachingTeam: team.teachingTeam ?? liveTeachingTeam(source.teachingTeam),
     }
 
     // Separate calls so `draft` stays a literal - see createCourse.
     if (parsed.data.intent === "publish") {
+      const teamError = teachingTeamPublishError(offeringData.teachingTeam)
+      if (teamError) return teamError
+
       await payload.create({
         collection: Slugs.Collections.COURSE_VERSIONS,
         data: {

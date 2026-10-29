@@ -10,9 +10,11 @@ import {
   DialogTitle,
   DialogTrigger,
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldTitle,
   Input,
   Select,
   SelectContent,
@@ -22,6 +24,13 @@ import {
 } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import * as React from "react"
+import {
+  MemberLabel,
+  type MemberOption,
+  MemberPicker,
+  type MemberSearch,
+  memberName,
+} from "../MemberPicker/member-picker"
 import { RichTextEditor, type RichTextValue } from "../RichTextEditor/rich-text-editor"
 
 export type AddCapstoneCourseDialogValues = {
@@ -97,10 +106,116 @@ const RequiredAsterisk = () => (
 type RichTextField = "learningOutcomes" | "assessments" | "additionalInfo"
 
 export type AddCapstoneCourseDialogFieldErrors = Partial<
-  Record<keyof AddCapstoneCourseDialogValues, string>
+  Record<keyof AddCapstoneCourseDialogValues | "teachingTeam", string>
 >
 
 export type AddCapstoneCourseDialogOption = { label: string; value: string }
+
+export type TeachingTeamRow = { member: MemberOption; role: string }
+
+export type TeachingTeamSectionProps = {
+  rows: TeachingTeamRow[]
+  /** Left out when the viewer may not change the team, which then shows read-only. */
+  onChange?: (rows: TeachingTeamRow[]) => void
+  onSearch: MemberSearch
+}
+
+/**
+ * The offering's teaching team. Being on it lets a member edit the offering, so
+ * only the course's owner and editors get the controls.
+ */
+function TeachingTeamSection({
+  rows,
+  onChange,
+  onSearch,
+  disabled,
+  error,
+}: TeachingTeamSectionProps & { disabled: boolean; error?: string }) {
+  const pickerId = React.useId()
+
+  return (
+    <FieldGroup className="gap-3">
+      {onChange ? (
+        <Field>
+          <FieldLabel htmlFor={pickerId}>
+            Teaching team <RequiredAsterisk />
+          </FieldLabel>
+          <MemberPicker
+            disabled={disabled}
+            exclude={rows.map((row) => row.member.id)}
+            id={pickerId}
+            label="Add a teaching team member"
+            onSearch={onSearch}
+            onSelect={(member) => onChange([...rows, { member, role: "" }])}
+            placeholder="Search members to add"
+          />
+        </Field>
+      ) : (
+        <Field>
+          <FieldTitle>Teaching team</FieldTitle>
+          <FieldDescription>
+            Only the course's owner and editors can change the teaching team.
+          </FieldDescription>
+        </Field>
+      )}
+      <ul aria-label="Teaching team" className="flex flex-col gap-2">
+        {rows.map((row, index) => (
+          <li
+            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border px-2 py-1.5"
+            key={row.member.id}
+          >
+            <MemberLabel member={row.member} />
+            {onChange ? (
+              <span className="flex items-center gap-2">
+                <Input
+                  aria-invalid={(Boolean(error) && !row.role.trim()) || undefined}
+                  aria-label={`Role of ${memberName(row.member)}`}
+                  className="w-48"
+                  disabled={disabled}
+                  onChange={(event) =>
+                    onChange(
+                      rows.map((other, at) =>
+                        at === index ? { ...other, role: event.target.value } : other,
+                      ),
+                    )
+                  }
+                  placeholder="e.g. Lecturer"
+                  value={row.role}
+                />
+                <Button
+                  aria-label={`Remove ${memberName(row.member)}`}
+                  disabled={disabled}
+                  onClick={() => onChange(rows.filter((_, at) => at !== index))}
+                  size="sm"
+                  type="button"
+                  variant="button-transparent"
+                >
+                  Remove
+                </Button>
+              </span>
+            ) : (
+              <span
+                className={cn(
+                  "text-sm",
+                  row.role.trim() ? "text-muted-foreground" : error && "text-destructive",
+                )}
+              >
+                {row.role.trim() ? row.role : error && "No role"}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+      {error && (
+        <FieldError>
+          {error}
+          {/* A viewer without the controls cannot fill the roles in themselves. */}
+          {!onChange && " Ask the course's owner or an editor to add the missing roles."}
+        </FieldError>
+      )}
+    </FieldGroup>
+  )
+}
 
 export type AddCapstoneCourseDialogProps = {
   /**
@@ -112,7 +227,7 @@ export type AddCapstoneCourseDialogProps = {
   /**
    * "offering" adds an offering to a course that already exists, "draft" reopens a
    * saved draft of one, and "correction" edits a published one. All three drop the
-   * course code, and "Your role" since the offering keeps its teaching team.
+   * course code, and "Your role" since they show the teaching team instead.
    * Defaults to "course".
    */
   kind?: keyof typeof kindText
@@ -136,6 +251,8 @@ export type AddCapstoneCourseDialogProps = {
   onPublish: () => void
   /** Shows a "Delete draft" button, which asks to confirm before calling this. */
   onDelete?: () => void
+  /** Shows the offering's teaching team. Not used by "course", which asks for "Your role". */
+  teachingTeam?: TeachingTeamSectionProps
 }
 
 /**
@@ -158,6 +275,7 @@ export function AddCapstoneCourseDialog({
   onSaveDraft,
   onPublish,
   onDelete,
+  teachingTeam,
 }: AddCapstoneCourseDialogProps) {
   const [confirmingDelete, setConfirmingDelete] = React.useState(false)
 
@@ -312,6 +430,14 @@ export function AddCapstoneCourseDialog({
               {richTextField("assessments", "Assessments")}
               {richTextField("additionalInfo", "Additional information")}
             </FieldGroup>
+
+            {kind !== "course" && teachingTeam && (
+              <TeachingTeamSection
+                {...teachingTeam}
+                disabled={Boolean(submitting)}
+                error={fieldErrors?.teachingTeam}
+              />
+            )}
 
             {kind === "course" && (
               <FieldGroup className="grid gap-4 md:grid-cols-2">

@@ -117,6 +117,59 @@ describe("updateOffering", () => {
     expect(payload.update.mock.calls[0][0].data.teachingTeam).toEqual(offering.teachingTeam)
   })
 
+  it("saves the teaching team the dialog sends", async () => {
+    const payload = mockPayload()
+    const teachingTeam = [
+      { member: 7, role: "Course coordinator" },
+      { member: 8, role: "Tutor" },
+    ]
+
+    const result = await updateOffering({ ...input, teachingTeam })
+
+    expect(result).toEqual({ ok: true })
+    expect(payload.update.mock.calls[0][0].data.teachingTeam).toEqual(teachingTeam)
+  })
+
+  it("refuses a sent teaching team that is empty", async () => {
+    const payload = mockPayload()
+
+    const result = await updateOffering({ ...input, teachingTeam: [] })
+
+    expect(result).toEqual({
+      formError: "Add at least one teaching team member to publish.",
+      ok: false,
+    })
+    expect(payload.update).not.toHaveBeenCalled()
+  })
+
+  it("points at the team when a member has no role", async () => {
+    const payload = mockPayload()
+
+    expect(await updateOffering({ ...input, teachingTeam: [{ member: 8, role: "  " }] })).toEqual({
+      fieldErrors: { teachingTeam: "Give each teaching team member a role to publish." },
+      ok: false,
+    })
+    expect(payload.update).not.toHaveBeenCalled()
+  })
+
+  it("refuses a teaching team that lists a member twice", async () => {
+    const payload = mockPayload()
+
+    const result = await updateOffering({
+      ...input,
+      teachingTeam: [
+        { member: 8, role: "Tutor" },
+        { member: 8, role: "Lecturer" },
+      ],
+    })
+
+    expect(result).toEqual({
+      formError: "Each member can be on the teaching team once.",
+      ok: false,
+    })
+    expect(payload.findByID).not.toHaveBeenCalled()
+  })
+
   it("refuses an offering with no teaching team left", async () => {
     const payload = mockPayload({
       findByID: vi.fn().mockResolvedValue({
@@ -128,7 +181,7 @@ describe("updateOffering", () => {
     const result = await updateOffering(input)
 
     expect(result).toEqual({
-      formError: "This offering has no teaching team left. Ask an admin to add one.",
+      formError: "Add at least one teaching team member to publish.",
       ok: false,
     })
     expect(payload.update).not.toHaveBeenCalled()

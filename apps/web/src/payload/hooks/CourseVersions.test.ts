@@ -9,6 +9,7 @@ import {
   prepareVersion,
   revalidateCourseVersions,
   revalidateDeletedCourseVersion,
+  syncUnpublishedTeam,
   validatePublication,
   validateVersionChanges,
 } from "./CourseVersions"
@@ -312,6 +313,63 @@ describe("course version cache revalidation", () => {
       expect(revalidateTag).not.toHaveBeenCalled()
     },
   )
+})
+
+describe("syncUnpublishedTeam", () => {
+  const team = [{ member: 1, role: "Lecturer" }]
+  const sync = (doc: Partial<CourseVersion>, row: Partial<CourseVersion>, operation = "update") => {
+    const updateOne = vi.fn()
+    const req = {
+      payload: { db: { updateOne }, findByID: vi.fn(async () => row) },
+    } as unknown as PayloadRequest
+    return {
+      updateOne,
+      run: () => syncUnpublishedTeam({ doc, operation, req } as never),
+    }
+  }
+
+  // Access is read from the collection row, so its team must follow the newest draft.
+  // The adapter write skips Payload's field hooks, so each row needs its own id.
+  it("copies a changed team, with row ids, onto a never-published offering's row", async () => {
+    const { run, updateOne } = sync(
+      { id: 3, _status: "draft", teachingTeam: [...team, { member: 9, role: "Tutor" }] },
+      { id: 3, _status: "draft", teachingTeam: team },
+    )
+    await run()
+
+    expect(updateOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: Slugs.Collections.COURSE_VERSIONS,
+        id: 3,
+        data: {
+          teachingTeam: [
+            { id: expect.any(String), member: 1, role: "Lecturer" },
+            { id: expect.any(String), member: 9, role: "Tutor" },
+          ],
+        },
+      }),
+    )
+  })
+
+  it("leaves a published offering's row alone", async () => {
+    const { run, updateOne } = sync(
+      { id: 3, _status: "draft", teachingTeam: [{ member: 9, role: "Tutor" }] },
+      { id: 3, _status: "published", teachingTeam: team },
+    )
+    await run()
+
+    expect(updateOne).not.toHaveBeenCalled()
+  })
+
+  it("skips the write when the team is unchanged", async () => {
+    const { run, updateOne } = sync(
+      { id: 3, _status: "draft", teachingTeam: team },
+      { id: 3, _status: "draft", teachingTeam: team },
+    )
+    await run()
+
+    expect(updateOne).not.toHaveBeenCalled()
+  })
 })
 
 describe("prepareVersion guards", () => {

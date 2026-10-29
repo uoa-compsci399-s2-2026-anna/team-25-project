@@ -13,8 +13,10 @@ import { relationID } from "@/payload/access/Courses/helpers"
 import {
   fieldErrorsFromIssues,
   liveTeachingTeam,
+  parseTeachingTeam,
   requireMember,
   resultFromWriteError,
+  teachingTeamPublishError,
   toVersionData,
 } from "./courseForm"
 
@@ -26,9 +28,8 @@ const offeringIdsSchema = z.object({
 const FALLBACK_ERROR = "Could not save this draft. Try again."
 
 /**
- * Saves the dialog over a draft offering, or publishes it. The draft already holds
- * the teaching team it was copied with, so publishing keeps that, less any member
- * deleted since.
+ * Saves the dialog over a draft offering, or publishes it. It takes the teaching team
+ * the dialog sends, or else keeps the newest draft's, less any member deleted since.
  *
  * The write runs as the member, so the course hooks still decide whether they may
  * edit this course, and still check the offering is complete enough to publish.
@@ -41,6 +42,9 @@ export const updateDraftOffering = async (input: unknown): Promise<ActionResult>
   if (!parsed.success) {
     return { fieldErrors: fieldErrorsFromIssues(parsed.error.issues), ok: false }
   }
+
+  const team = parseTeachingTeam(input)
+  if (team.error) return team.error
 
   const member = await requireMember({
     notMember:
@@ -71,17 +75,28 @@ export const updateDraftOffering = async (input: unknown): Promise<ActionResult>
     }
 
     // `null`, not `undefined`, for a blank field: see `toVersionData`.
-    const versionData = toVersionData(parsed.data, null)
+    const versionData = {
+      ...toVersionData(parsed.data, null),
+      ...(team.teachingTeam && { teachingTeam: team.teachingTeam }),
+    }
 
     // Separate calls so `draft` stays a literal - see createCourse.
     if (parsed.data.intent === "publish") {
-      const teachingTeam = liveTeachingTeam(offering.teachingTeam)
-      if (!teachingTeam.length) {
-        return {
-          formError: "This offering has no teaching team left. Ask an admin to add one.",
-          ok: false,
-        }
-      }
+      // The course hooks compare the team with the newest draft, not the collection
+      // row, so keeping the team means keeping the draft's.
+      const latest = team.teachingTeam
+        ? undefined
+        : await payload.findByID({
+            collection: Slugs.Collections.COURSE_VERSIONS,
+            id: offeringId,
+            depth: 0,
+            draft: true,
+            overrideAccess: false,
+            user,
+          })
+      const teachingTeam = team.teachingTeam ?? liveTeachingTeam(latest?.teachingTeam)
+      const teamError = teachingTeamPublishError(teachingTeam)
+      if (teamError) return teamError
 
       await payload.update({
         collection: Slugs.Collections.COURSE_VERSIONS,

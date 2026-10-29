@@ -160,6 +160,26 @@ describe("createOffering", () => {
     )
   })
 
+  it("takes the teaching team the dialog sends over the source's", async () => {
+    const payload = mockPayload()
+    const teachingTeam = [{ member: 8, role: "Lecturer" }]
+
+    const result = await createOffering({ ...input, teachingTeam })
+
+    expect(result).toEqual({ ok: true })
+    expect(payload.create.mock.calls[0]?.[0].data.teachingTeam).toEqual(teachingTeam)
+  })
+
+  it("refuses to publish when the dialog sends an empty team", async () => {
+    const payload = mockPayload()
+
+    expect(await createOffering({ ...input, teachingTeam: [] })).toEqual({
+      formError: "Add at least one teaching team member to publish.",
+      ok: false,
+    })
+    expect(payload.create).not.toHaveBeenCalled()
+  })
+
   it("refuses a source offering from another course", async () => {
     const payload = mockPayload({ findByID: vi.fn().mockResolvedValue({ ...source, course: 2 }) })
 

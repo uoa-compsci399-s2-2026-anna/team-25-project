@@ -1,5 +1,5 @@
 import type { CourseVersion, Member } from "@repo/shared/payload-types"
-import type { AddCourseFormInput } from "@repo/shared/schemas/courses"
+import { type AddCourseFormInput, teachingTeamInputSchema } from "@repo/shared/schemas/courses"
 import { richTextHasText } from "@repo/shared/schemas/shared"
 import { APIError, ValidationError } from "payload"
 import type { ActionResult } from "@/features/auth/actions/types"
@@ -127,10 +127,38 @@ export const toVersionData = <Blank extends null | undefined>(
 
 /**
  * An offering's teaching team without the rows whose member was deleted. Those rows
- * would block publishing, and the offering dialogs can't remove them.
+ * would block publishing. Used when the dialog sends no team - for teaching staff, or
+ * an editor who left the team unchanged - so nobody is blocked by a row they cannot see.
  */
 export const liveTeachingTeam = (rows: CourseVersion["teachingTeam"]) =>
   (rows ?? []).flatMap(({ member, role }) => {
     const memberId = relationID(member)
     return memberId ? [{ member: memberId, role }] : []
   })
+
+/**
+ * The teaching team the dialog sent, or undefined when it sent none - it sends one
+ * only when the team was changed there, so otherwise the offering keeps its own.
+ */
+export const parseTeachingTeam = (input: unknown) => {
+  const parsed = teachingTeamInputSchema.safeParse(input)
+  if (parsed.success) return { teachingTeam: parsed.data.teachingTeam }
+  const formError = parsed.error.issues[0]?.message ?? "Check the teaching team and try again."
+  return { error: { formError, ok: false } satisfies ActionResult }
+}
+
+/**
+ * Why the team cannot be published, or undefined when it can. The course hooks check
+ * this too, but their message points at no field.
+ */
+export const teachingTeamPublishError = (
+  team: { role?: string | null }[],
+): ActionResult | undefined => {
+  if (!team.length)
+    return { formError: "Add at least one teaching team member to publish.", ok: false }
+  if (team.some((row) => !row.role?.trim()))
+    return {
+      fieldErrors: { teachingTeam: "Give each teaching team member a role to publish." },
+      ok: false,
+    }
+}
