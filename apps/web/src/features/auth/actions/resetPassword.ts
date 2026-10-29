@@ -20,14 +20,8 @@ const sessionIdOf = (token: string): string | undefined => {
 }
 
 /**
- * Ends every session but the one the reset just opened, and lifts any login
- * lockout - a reset is what someone does after their password leaked, or after
- * locking themselves out. Payload's reset does neither.
- *
- * Written straight to the database, as Payload's own session bookkeeping is, so
- * the Members hooks and validation can't refuse it. The whole document goes in:
- * a partial write that includes an array field fails the table's required
- * columns on Postgres.
+ * Ends every other session and lifts any lockout, which Payload's reset doesn't.
+ * Written straight to the database so the Members hooks can't refuse it.
  */
 const secureAccount = async (payload: Payload, member: Member, token: string) => {
   const sid = sessionIdOf(token)
