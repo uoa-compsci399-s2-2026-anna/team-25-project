@@ -21,8 +21,7 @@ export interface ProposalCardActionsProps {
 
 /**
  * The proposals list card's Edit/Delete dropdown. Only rendered for the
- * proposal's own authors and admins - the same rule that already gates
- * editing, now also gating delete.
+ * proposal's own authors - admins manage proposals from the admin dashboard.
  */
 export function ProposalCardActions({ proposalId, title, editHref }: ProposalCardActionsProps) {
   const router = useRouter()

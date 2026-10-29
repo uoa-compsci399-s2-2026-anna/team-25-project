@@ -41,13 +41,15 @@ describe("ProposalTitleActionsServer", () => {
     expect(screen.getByRole("button", { name: "Actions for Peer assessment" })).toBeInTheDocument()
   })
 
-  it("shows the dropdown to an admin, even if they aren't an author", async () => {
+  // Admins manage proposals from the admin dashboard - and their ids are their own,
+  // so one matching an author's is no claim to the proposal.
+  it("hides the dropdown from an admin, even one sharing an author's id", async () => {
     vi.mocked(getProposalByIdCached).mockResolvedValue(proposal() as never)
-    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "admin", user: { id: 999 } } as never)
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "admin", user: { id: 10 } } as never)
 
-    render(inEditor(await ProposalTitleActionsServer({ id: 1 })))
+    const { container } = render(inEditor(await ProposalTitleActionsServer({ id: 1 })))
 
-    expect(screen.getByRole("button", { name: "Actions for Peer assessment" })).toBeInTheDocument()
+    expect(container).toBeEmptyDOMElement()
   })
 
   it("hides the dropdown from a signed-in member who isn't an author", async () => {

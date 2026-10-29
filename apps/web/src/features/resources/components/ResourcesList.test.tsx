@@ -141,30 +141,29 @@ describe("ResourcesList", () => {
     )
   })
 
-  it.each([
-    ["the owner", { collection: "members", user: { id: 7 } }],
-    ["an admin", { collection: "admin", user: { id: 99 } }],
-  ])(
-    "gives %s the Edit/Delete menu, whose Edit opens the resource's editor",
-    async (_, currentUser) => {
-      vi.mocked(getCurrentUser).mockResolvedValueOnce(currentUser as never)
-      mockPage([resource()])
-
-      render(await ResourcesList({ searchParams: Promise.resolve({}) }))
-      fireEvent.click(
-        screen.getByRole("button", { name: "Actions for Individual contribution rubric" }),
-      )
-      fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }))
-
-      expect(push).toHaveBeenCalledWith("/resources/1#edit")
-    },
-  )
-
-  it("has no Edit/Delete menu on another member's resource", async () => {
+  it("gives the owner the Edit/Delete menu, whose Edit opens the resource's editor", async () => {
     vi.mocked(getCurrentUser).mockResolvedValueOnce({
       collection: "members",
-      user: { id: 8 },
+      user: { id: 7 },
     } as never)
+    mockPage([resource()])
+
+    render(await ResourcesList({ searchParams: Promise.resolve({}) }))
+    fireEvent.click(
+      screen.getByRole("button", { name: "Actions for Individual contribution rubric" }),
+    )
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }))
+
+    expect(push).toHaveBeenCalledWith("/resources/1#edit")
+  })
+
+  it.each([
+    ["another member's resource", { collection: "members", user: { id: 8 } }],
+    // Admins manage resources from the admin dashboard - and their ids are their own,
+    // so one matching the owner's is no claim to it.
+    ["an admin's view, even one sharing the owner's id", { collection: "admin", user: { id: 7 } }],
+  ])("has no Edit/Delete menu on %s", async (_, currentUser) => {
+    vi.mocked(getCurrentUser).mockResolvedValueOnce(currentUser as never)
     mockPage([resource()])
 
     render(await ResourcesList({ searchParams: Promise.resolve({}) }))

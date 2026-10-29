@@ -37,21 +37,18 @@ const deliveryFormatOptions = Object.values(CourseDeliveryFormat).map((value) =>
 export interface AddCourseDialogProps {
   /**
    * Pre-fills "Your role" from the signed-in member's profile position - still
-   * editable. A promise rather than a value so the server can stream it in
-   * without this dialog having to wait for it: the trigger is usable at once,
-   * and the role lands in the field whenever it arrives.
+   * editable.
    */
-  defaultRole: Promise<string>
+  defaultRole: string
 }
 
 /**
- * The button that opens the dialog - also what stands in for it before it has
- * loaded. `DialogTrigger` clones its own click handling and a ref onto
- * whatever element is passed as its `trigger`, so every prop here has to
- * reach the real `<Button>` underneath rather than being swallowed by this
- * wrapper.
+ * The button that opens the dialog. `DialogTrigger` clones its own click
+ * handling and a ref onto whatever element is passed as its `trigger`, so
+ * every prop here has to reach the real `<Button>` underneath rather than
+ * being swallowed by this wrapper.
  */
-export function AddCourseTriggerButton(props: ComponentProps<typeof Button>) {
+function AddCourseTriggerButton(props: ComponentProps<typeof Button>) {
   return (
     <Button className="font-bold" size="lg" type="button" variant="button-mauve" {...props}>
       + Add your course
@@ -83,14 +80,7 @@ export function AddCourseDialog({ defaultRole }: AddCourseDialogProps) {
     setOpen(nextOpen)
     if (!nextOpen) return
 
-    form.reset(baseValues)
-    // Seed "Your role" from the profile once that's known - but only into a
-    // still-blank field, so a role the user has already typed while it was on
-    // its way is never overwritten. A failed lookup just leaves it blank.
-    void defaultRole.then(
-      (role) => form.setValues((current) => (current.role ? current : { ...current, role })),
-      () => undefined,
-    )
+    form.reset({ ...baseValues, role: defaultRole })
   }
 
   return (

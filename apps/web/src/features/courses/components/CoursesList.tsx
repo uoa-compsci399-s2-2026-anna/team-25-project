@@ -7,7 +7,6 @@ import {
   getMyCoursesSummary,
   getMyDraftCourses,
 } from "../courses.queries"
-import { AddCourseTriggerButton } from "./AddCourseDialog"
 import {
   CoursesListClient,
   CoursesListClientSkeleton,
@@ -27,10 +26,10 @@ export function CoursesHeaderSkeleton() {
   return (
     <PageHeaderSkeleton
       actions={
-        // Only the export needs the rows; the add button needs no data.
+        // Only the export needs the rows.
         <div className="flex shrink-0 items-center gap-3">
           <Skeleton className="h-9 w-32 rounded-full" />
-          <AddCourseTriggerButton />
+          <Skeleton className="h-9 w-36 rounded-full" />
         </div>
       }
       centerOnMobile

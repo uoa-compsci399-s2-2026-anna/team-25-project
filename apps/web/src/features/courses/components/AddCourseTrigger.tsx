@@ -1,35 +1,24 @@
+import { AnimatedSuspense, Skeleton } from "@repo/ui/components/ui"
 import { connection } from "next/server"
-import { Suspense } from "react"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
-import { AddCourseDialog, AddCourseTriggerButton } from "./AddCourseDialog"
+import { AddCourseDialog } from "./AddCourseDialog"
 
-const loadDefaultRole = async (): Promise<string> => {
-  const { collection, user } = await getCurrentUser()
-  return collection === Slugs.Collections.MEMBERS ? (user.position ?? "") : ""
-}
-
-// The signed-in member's profile is per-viewer, so it's isolated here rather
-// than read in CoursesPageHeader directly - that keeps the header's own
-// shell viewer-independent and prerenderable, matching how NavAuthStatus and
-// "Your courses" stream in beside an otherwise-static parent.
-export async function AddCourseTriggerWithDefaultRole() {
-  // Waiting on the request itself (instant once one exists) is what marks
-  // this boundary as dynamic during prerendering. The member lookup is then
-  // deliberately *not* awaited: the dialog mounts once and the role streams
-  // into it as a promise. Awaiting it here instead would hold this boundary
-  // on its fallback until the lookup finished and then swap in a fresh
-  // dialog, discarding anything typed into the fallback in the meantime.
+// Only members can add a course, so the button waits on the viewer rather than
+// prerendering. Isolated here so the header's own
+// shell stays viewer-independent, matching how NavAuthStatus streams in.
+export async function AddCourseTriggerForMember() {
+  // Marks this boundary as dynamic during prerendering.
   await connection()
-  return <AddCourseDialog defaultRole={loadDefaultRole()} />
+  const { collection, user } = await getCurrentUser()
+  if (collection !== Slugs.Collections.MEMBERS) return null
+  return <AddCourseDialog defaultRole={user.position ?? ""} />
 }
 
 export function AddCourseTrigger() {
   return (
-    // Only the bare button as the fallback, never a second dialog - there is
-    // nothing here for a click to lose when the real one takes its place.
-    <Suspense fallback={<AddCourseTriggerButton />}>
-      <AddCourseTriggerWithDefaultRole />
-    </Suspense>
+    <AnimatedSuspense fallback={<Skeleton className="h-9 w-36 rounded-full" />}>
+      <AddCourseTriggerForMember />
+    </AnimatedSuspense>
   )
 }

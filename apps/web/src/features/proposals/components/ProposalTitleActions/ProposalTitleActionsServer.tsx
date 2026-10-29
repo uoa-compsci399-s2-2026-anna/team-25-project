@@ -17,10 +17,9 @@ export const ProposalTitleActionsServer = async ({ id }: { id: number }) => {
   const authorIds = proposal.author.map((author) =>
     typeof author === "object" ? author.id : author,
   )
-  // Same rule as StatusAuthorCardServer, and as Payload's isAdminOrAuthors:
-  // admins, and the proposal's authors - who can edit and delete alike.
-  const canManage =
-    collection === Slugs.Collections.ADMIN || (user !== null && authorIds.includes(user.id))
+  // Same rule as StatusAuthorCardServer: the proposal's authors, who can edit and
+  // delete alike. Admins manage proposals from the admin dashboard.
+  const canManage = collection === Slugs.Collections.MEMBERS && authorIds.includes(user.id)
 
   if (!canManage) {
     return null

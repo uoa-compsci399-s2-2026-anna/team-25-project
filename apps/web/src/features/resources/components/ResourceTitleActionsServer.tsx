@@ -17,10 +17,10 @@ export const ResourceTitleActionsServer = async ({ id }: { id: number }) => {
     return null
   }
 
-  // Same rule as Payload's isAdminOrOwner: admins, and the resource's owner -
-  // who can edit and delete alike.
+  // Only the resource's owner, who can edit and delete alike. Admins manage it
+  // from the admin dashboard instead.
   const ownerId = typeof resource.owner === "object" ? resource.owner.id : resource.owner
-  const canManage = collection === Slugs.Collections.ADMIN || (user !== null && user.id === ownerId)
+  const canManage = collection === Slugs.Collections.MEMBERS && user.id === ownerId
 
   if (!canManage) {
     return null

@@ -234,11 +234,13 @@ describe("ProposalsList", () => {
     expect(screen.getByRole("button", { name: "Actions for Peer assessment" })).toBeInTheDocument()
   })
 
-  it("shows the dropdown to an admin regardless of authorship", async () => {
+  // Admins manage proposals from the admin dashboard - and their ids are their own,
+  // so one matching an author's is no claim to the proposal.
+  it("hides the dropdown from an admin, even one sharing an author's id", async () => {
     vi.mocked(getCurrentUser).mockResolvedValue({
       collection: "admin",
       // biome-ignore lint/suspicious/noExplicitAny: only the fields the component reads
-      user: { id: 999 } as any,
+      user: { id: 1 } as any,
     })
     vi.mocked(loadProposalsPage).mockResolvedValue({
       docs: [proposal({ author: [1] as unknown as Proposal["author"] })],
@@ -248,7 +250,9 @@ describe("ProposalsList", () => {
 
     render(await ProposalsList({ searchParams: Promise.resolve({}) }))
 
-    expect(screen.getByRole("button", { name: "Actions for Peer assessment" })).toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Actions for Peer assessment" }),
+    ).not.toBeInTheDocument()
   })
 
   it("hides the dropdown from a signed-in member who isn't an author", async () => {

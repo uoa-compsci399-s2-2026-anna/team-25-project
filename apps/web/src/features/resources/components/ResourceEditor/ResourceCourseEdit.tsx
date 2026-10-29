@@ -22,7 +22,7 @@ export const ResourceCourseEdit = async ({
   // `editors` join take its random table alias.
   await connection()
   const { collection, user } = await getCurrentUser()
-  // Admins own no courses, as in the add form, so they can only keep or clear the link.
+  // Only members have courses of their own to offer.
   const editable =
     collection === Slugs.Collections.MEMBERS ? await getEditableCourseOptions(user.id) : []
 

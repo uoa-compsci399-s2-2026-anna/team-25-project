@@ -1,4 +1,4 @@
-import { Suspense } from "react"
+import { AnimatedSuspense, Skeleton } from "@repo/ui/components/ui"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
 import { AddPublicationDialog } from "./AddPublicationDialog"
@@ -15,8 +15,8 @@ export async function AddPublicationTriggerForMember() {
 
 export function AddPublicationTrigger() {
   return (
-    <Suspense fallback={null}>
+    <AnimatedSuspense fallback={<Skeleton className="h-9 w-40 rounded-full" />}>
       <AddPublicationTriggerForMember />
-    </Suspense>
+    </AnimatedSuspense>
   )
 }

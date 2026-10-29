@@ -8,7 +8,6 @@ import {
   parseCourseId,
 } from "../courses.params"
 import { getPublishedCourseCached } from "../courses.queries"
-import { DeleteCourseAction } from "./DeleteCourseAction"
 import { OfferingActions } from "./OfferingActions"
 
 export const CourseHeader = async ({
@@ -36,9 +35,6 @@ export const CourseHeader = async ({
       <div className="flex flex-wrap gap-2">
         <Suspense fallback={null}>
           <OfferingActions courseId={courseId} searchParams={searchParams} />
-        </Suspense>
-        <Suspense fallback={null}>
-          <DeleteCourseAction code={course.code} courseId={courseId} />
         </Suspense>
       </div>
     </header>

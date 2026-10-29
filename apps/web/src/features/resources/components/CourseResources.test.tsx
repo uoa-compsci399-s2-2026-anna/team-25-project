@@ -92,27 +92,26 @@ describe("CourseResources", () => {
     )
   })
 
-  it.each([
-    ["the owner", { collection: "members", user: { id: 7 } }],
-    ["an admin", { collection: "admin", user: { id: 1 } }],
-  ])(
-    "gives %s the Edit/Delete menu, whose Edit opens the resource's editor",
-    async (_, current) => {
-      vi.mocked(getCurrentUser).mockResolvedValueOnce(current as never)
-      await renderSection([resource(18, "Contribution rubric")])
-
-      fireEvent.click(screen.getByRole("button", { name: "Actions for Contribution rubric" }))
-      fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }))
-
-      expect(push).toHaveBeenCalledWith("/resources/18#edit")
-    },
-  )
-
-  it("has no Edit/Delete menu on another member's resource", async () => {
+  it("gives the owner the Edit/Delete menu, whose Edit opens the resource's editor", async () => {
     vi.mocked(getCurrentUser).mockResolvedValueOnce({
       collection: "members",
-      user: { id: 8 },
+      user: { id: 7 },
     } as never)
+    await renderSection([resource(18, "Contribution rubric")])
+
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Contribution rubric" }))
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }))
+
+    expect(push).toHaveBeenCalledWith("/resources/18#edit")
+  })
+
+  it.each([
+    ["another member's resource", { collection: "members", user: { id: 8 } }],
+    // Admins manage resources from the admin dashboard - and their ids are their own,
+    // so one matching the owner's is no claim to it.
+    ["an admin's view, even one sharing the owner's id", { collection: "admin", user: { id: 7 } }],
+  ])("has no Edit/Delete menu on %s", async (_, current) => {
+    vi.mocked(getCurrentUser).mockResolvedValueOnce(current as never)
     await renderSection([resource(18, "Contribution rubric")])
 
     expect(screen.queryByRole("button", { name: /^Actions for / })).not.toBeInTheDocument()
