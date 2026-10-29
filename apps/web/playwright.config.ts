@@ -31,7 +31,7 @@ export default defineConfig({
     reuseExistingServer: !isCI,
     timeout: 600_000,
     env: {
-      DATABASE_URL: process.env.E2E_DATABASE_URL ?? "postgres://casa:casa@localhost:5432/casa_e2e",
+      DATABASE_URL: process.env.E2E_DATABASE_URL ?? "postgres://ccca:ccca@localhost:5432/ccca_e2e",
       NEXT_PUBLIC_URL: E2E_BASE_URL,
       // Empty values win over .env, so uploads stay on disk and emails only get logged.
       S3_BUCKET: "",

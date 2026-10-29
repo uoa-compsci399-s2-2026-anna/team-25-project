@@ -158,7 +158,7 @@ pnpm --filter web exec playwright install chromium   # once
 pnpm test:e2e
 ```
 
-Each run resets and seeds a separate `casa_e2e` database, so your dev data is safe. It then starts the app on port 3100: `next dev` locally, and a production build in CI. S3 and SES are turned off for the run. To use a different database, set `E2E_DATABASE_URL`.
+Each run resets and seeds a separate `ccca_e2e` database, so your dev data is safe. It then starts the app on port 3100: `next dev` locally, and a production build in CI. S3 and SES are turned off for the run. To use a different database, set `E2E_DATABASE_URL`.
 
 ## Tech stack
 
