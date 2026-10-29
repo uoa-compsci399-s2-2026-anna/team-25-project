@@ -1,11 +1,11 @@
+import { Button } from "@repo/ui/components/ui"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { Button } from "../../ui/Button/button"
 import {
   AddCapstoneCourseDialog,
   type AddCapstoneCourseDialogProps,
   type AddCapstoneCourseDialogValues,
-} from "./add-capstone-course-dialog"
+} from "./AddCapstoneCourseDialog"
 
 const deliveryFormatOptions = [
   { label: "In person", value: "inPerson" },

@@ -1,10 +1,6 @@
 "use client"
 
 import { CourseDeliveryFormat, CourseDeliveryFormatLabels } from "@repo/shared/enums/courses"
-import {
-  AddCapstoneCourseDialog,
-  type AddCapstoneCourseDialogValues,
-} from "@repo/ui/components/composite"
 import { Button, toast } from "@repo/ui/components/ui"
 import type { ComponentProps } from "react"
 import { useState } from "react"
@@ -12,6 +8,10 @@ import { createCourse } from "../actions/createCourse"
 import { deleteDraftCourse } from "../actions/deleteDraftCourse"
 import { updateDraftCourse } from "../actions/updateDraftCourse"
 import type { EditableDraftCourse } from "../courses.format"
+import {
+  AddCapstoneCourseDialog,
+  type AddCapstoneCourseDialogValues,
+} from "./AddCapstoneCourseDialog"
 import { useCourseForm } from "./useCourseForm"
 
 const baseValues: AddCapstoneCourseDialogValues = {

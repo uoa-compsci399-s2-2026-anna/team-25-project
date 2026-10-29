@@ -1,4 +1,3 @@
-export * from "./AddCapstoneCourseDialog/add-capstone-course-dialog"
 export * from "./AttachmentList/attachment-list"
 export * from "./AttachmentPicker/attachment-picker"
 export * from "./AvatarUpload/avatar-upload"
