@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getMemberPublicationsCached } from "../../members.queries"
 import { MemberPublications, MemberPublicationsSkeleton } from "./MemberDetailPublications"
@@ -34,6 +34,21 @@ describe("MemberPublications", () => {
 
     await renderPublications()
     expect(screen.getByRole("heading", { level: 2, name: "Publications" })).toBeInTheDocument()
+    expect(screen.getByText("No publications yet")).toBeInTheDocument()
+  })
+
+  it("closes and reopens the section when its heading is clicked", async () => {
+    vi.mocked(getMemberPublicationsCached).mockResolvedValue([])
+
+    await renderPublications()
+    const toggle = screen.getByRole("button", { name: "Publications" })
+    expect(toggle).toHaveAttribute("aria-expanded", "true")
+
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute("aria-expanded", "false")
+
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute("aria-expanded", "true")
     expect(screen.getByText("No publications yet")).toBeInTheDocument()
   })
 
