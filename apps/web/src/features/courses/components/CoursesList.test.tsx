@@ -7,11 +7,12 @@ vi.mock("../courses.queries", () => ({}))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }))
 
 describe("CoursesHeaderSkeleton", () => {
-  it("shows the heading and add button, with a placeholder for the export", () => {
+  // The add button is members-only, so it waits on the viewer rather than sitting in here.
+  it("shows the heading, with placeholders for the buttons rather than the add button", () => {
     render(<CoursesHeaderSkeleton />)
 
     expect(screen.getByRole("heading", { level: 1, name: "Capstone courses" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "+ Add your course" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "+ Add your course" })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Export CSV" })).not.toBeInTheDocument()
   })
 })
