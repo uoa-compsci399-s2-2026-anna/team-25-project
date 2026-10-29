@@ -14,6 +14,11 @@ describe("tableName", () => {
     expect(tableName(req, Slugs.Collections.COURSE_VERSIONS)).toBe("renamed_versions")
   })
 
+  it("resolves an array field's own table", () => {
+    const req = withTables([["members_sessions", "members_sessions"]])
+    expect(tableName(req, Slugs.Collections.MEMBERS, "sessions")).toBe("members_sessions")
+  })
+
   it("throws instead of guessing when the slug is not mapped", () => {
     expect(() => tableName(withTables(), Slugs.Collections.COURSES)).toThrow("No table is mapped")
   })

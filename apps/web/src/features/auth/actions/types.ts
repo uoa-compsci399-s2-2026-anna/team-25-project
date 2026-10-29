@@ -19,3 +19,6 @@ export type ActionResult =
 export type SendCodeResult =
   | ActionResult
   | ({ ok: false; retryAfterSeconds: number } & FormError & Partial<FieldErrors>)
+
+/** An expired, used or mangled reset link; the form swaps to "request a new link" instead of retrying. */
+export type ResetPasswordResult = ActionResult | ({ ok: false; invalidToken: true } & FormError)

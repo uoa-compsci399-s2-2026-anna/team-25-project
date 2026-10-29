@@ -6,10 +6,11 @@ import type {
   CollectionAfterChangeHook,
   CollectionAfterDeleteHook,
   CollectionBeforeDeleteHook,
+  CollectionBeforeOperationHook,
   CollectionBeforeValidateHook,
   FieldHook,
 } from "payload"
-import { ValidationError } from "payload"
+import { Forbidden, ValidationError } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { fail } from "./helpers"
 
@@ -125,3 +126,23 @@ export const enforceInstitutionDomain: CollectionBeforeValidateHook<Member> = as
 export const normaliseStoredInterests: FieldHook<Member, string[] | null | undefined> = ({
   value,
 }) => (Array.isArray(value) ? normaliseInterests(value) : value)
+
+/**
+ * Password resets only go through the app's own pages: their server actions
+ * rate-limit the email and end other sessions after a reset. Payload's REST
+ * endpoints for both would skip that, so they're closed - the actions call the
+ * local API, which this lets through.
+ */
+export const allowPasswordResetsFromAppOnly: CollectionBeforeOperationHook = ({
+  args,
+  operation,
+  req,
+}) => {
+  if (
+    (operation === "forgotPassword" || operation === "resetPassword") &&
+    req.payloadAPI !== "local"
+  ) {
+    throw new Forbidden(req.t)
+  }
+  return args
+}

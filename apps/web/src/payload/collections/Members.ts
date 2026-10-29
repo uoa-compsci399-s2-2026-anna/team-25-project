@@ -16,6 +16,7 @@ import { Slugs } from "@/lib/payload/slugs"
 import { canReadEmail, isAdmin, isAdminOrSelf } from "../access"
 import { admin } from "../access/helpers"
 import {
+  allowPasswordResetsFromAppOnly,
   assertMemberDeletable,
   enforceInstitutionDomain,
   normaliseStoredInterests,
@@ -30,6 +31,7 @@ export const Members: CollectionConfig = {
     useAsTitle: "email",
   },
   hooks: {
+    beforeOperation: [allowPasswordResetsFromAppOnly],
     beforeValidate: [enforceInstitutionDomain],
     afterChange: [revalidateMemberProposals],
     afterDelete: [revalidateDeletedMemberProposals],

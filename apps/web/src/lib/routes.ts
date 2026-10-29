@@ -33,6 +33,10 @@ export const Routes = {
   PUBLICATIONS: route("/publications"),
   PRIVACY: route("/privacy"),
   GUIDELINES: route("/guidelines"),
+  PASSWORD: {
+    /** Opened from the emailed reset link, which carries `?token=`. */
+    RESET: route("/reset-password"),
+  },
   REGISTER: {
     ROOT: route("/register"),
     PROFILE: route("/register/profile"),
