@@ -100,9 +100,20 @@ describe("HeroGlobe", () => {
       render(<HeroGlobe markers={MARKERS} />)
       for (const { id } of MARKERS) {
         expect(screen.getByTestId(`marker-pulse-${id}`).firstElementChild).toHaveClass(
-          "motion-safe:animate-ping",
+          "motion-safe:animate-ping-slow",
         )
       }
+    })
+
+    // Staggered so the markers don't all ping at once.
+    it("starts each marker's ping at a different point", () => {
+      render(<HeroGlobe markers={MARKERS} />)
+      const delays = MARKERS.map(({ id }) =>
+        (
+          screen.getByTestId(`marker-pulse-${id}`).firstElementChild as HTMLElement
+        ).style.getPropertyValue("animation-delay"),
+      )
+      expect(new Set(delays).size).toBe(MARKERS.length)
     })
   })
 

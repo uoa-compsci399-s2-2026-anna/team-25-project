@@ -21,6 +21,23 @@
   --color-brand-mauve: var(--brand-mauve);
 }
 
+/* Like animate-ping, but the ping takes the first quarter and the rest is a pause */
+@theme {
+  --animate-ping-slow: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
+
+  @keyframes ping-slow {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    25%,
+    100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+  }
+}
+
 @theme inline {
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
