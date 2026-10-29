@@ -28,17 +28,16 @@ const secureAccount = async (payload: Payload, member: Member, token: string) =>
   const sessions = (member.sessions ?? []).filter((session) => session.id === sid)
   const unlock = { lockUntil: null, loginAttempts: 0 }
 
-  // Writing the list without the new session would end that one too, signing
-  // the member out straight after the reset - leave the sessions alone instead.
+  // Writing the list without the new session would end that one too, so the
+  // other sessions are left alone and the caller reports it.
   if (sessions.length === 0) {
-    payload.logger.error("password reset: the new session wasn't found, other sessions kept")
     await payload.db.updateOne({
       collection: Slugs.Collections.MEMBERS,
       data: unlock,
       id: member.id,
       returning: false,
     })
-    return
+    throw new Error("the new session wasn't found on the member")
   }
 
   await payload.db.updateOne({

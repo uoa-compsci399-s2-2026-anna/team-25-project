@@ -94,7 +94,7 @@ describe("resetPassword", () => {
     )
   })
 
-  it("leaves the sessions alone when the new one isn't on the member", async () => {
+  it("reports an error, leaving sessions alone, when the new one isn't on the member", async () => {
     const payload = mockPayload({
       resetPassword: vi.fn().mockResolvedValue({
         token: tokenFor(NEW_SESSION.id),
@@ -102,11 +102,16 @@ describe("resetPassword", () => {
       }),
     })
 
-    await expect(resetPassword(valid)).resolves.toEqual({ ok: true })
+    await expect(resetPassword(valid)).resolves.toEqual({
+      formError:
+        "Your password was changed, but we couldn't sign you out on your other devices. Log in with your new password.",
+      ok: false,
+    })
     expect(payload.db.updateOne).toHaveBeenCalledWith(
       expect.objectContaining({ data: { lockUntil: null, loginAttempts: 0 }, id: 7 }),
     )
     expect(payload.logger.error).toHaveBeenCalled()
+    expect(setCookie).not.toHaveBeenCalled()
   })
 
   it("rejects a password sign-up would refuse, without using the link", async () => {
