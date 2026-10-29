@@ -42,15 +42,17 @@ describe("StatusAuthorCardServer", () => {
     expect(screen.getByText("Status - Author")).toBeInTheDocument()
   })
 
-  it("shows StatusAuthorCard to an admin, even if they aren't an author", async () => {
+  // Admins manage proposals from the admin dashboard - and their ids are their own,
+  // so one matching an author's is no claim to the proposal.
+  it("hides StatusAuthorCard from an admin, even one sharing an author's id", async () => {
     vi.mocked(getProposalByIdCached).mockResolvedValue(proposal() as never)
     vi.mocked(getCurrentUser).mockResolvedValue({
       collection: "admin",
-      user: { id: 999 },
+      user: { id: 10 },
     } as never)
 
     await renderCard()
-    expect(screen.getByText("Status - Author")).toBeInTheDocument()
+    expect(screen.queryByText("Status - Author")).not.toBeInTheDocument()
   })
 
   it("hides StatusAuthorCard from a signed-in member who isn't an author", async () => {

@@ -80,12 +80,11 @@ export const ProposalsList = async ({ searchParams }: { searchParams: Promise<Se
             ]
           })
           const href = Routes.PROPOSALS.PROPOSAL(proposal.id, proposal.proposalSlug)
-          // Same rule as StatusAuthorCardServer, and as Payload's isAdminOrAuthors:
-          // admins, and the proposal's authors - who can edit and delete alike.
+          // Same rule as StatusAuthorCardServer: the proposal's authors, who can edit
+          // and delete alike. Admins manage proposals from the admin dashboard.
           const canManage =
-            collection === Slugs.Collections.ADMIN ||
-            (user !== null &&
-              proposal.author.some((a) => (typeof a === "number" ? a : a.id) === user.id))
+            collection === Slugs.Collections.MEMBERS &&
+            proposal.author.some((a) => (typeof a === "number" ? a : a.id) === user.id)
 
           return (
             <ProposalCard

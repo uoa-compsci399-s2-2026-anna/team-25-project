@@ -17,8 +17,8 @@ export const StatusAuthorCardServer = async ({ id }: { id: number }) => {
   const authorIds = proposal.author.map((author) =>
     typeof author === "object" ? author.id : author,
   )
-  const canEditProposal =
-    collection === Slugs.Collections.ADMIN || (user !== null && authorIds.includes(user.id))
+  // Admins manage proposals from the admin dashboard, so only authors get this.
+  const canEditProposal = collection === Slugs.Collections.MEMBERS && authorIds.includes(user.id)
 
   if (!canEditProposal) {
     return null
