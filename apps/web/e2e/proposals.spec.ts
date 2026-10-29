@@ -24,7 +24,7 @@ test("a member posts, edits and deletes a proposal", async ({ page }) => {
   await page.getByRole("textbox", { name: "Summary" }).fill("Does pairing help teams ship faster?")
   await page.getByRole("button", { name: "Done" }).click()
   await expect(page.getByRole("textbox", { name: "Summary" })).toBeHidden()
-  await page.reload({ waitUntil: "networkidle" })
+  await page.reload()
   await expect(page.getByText("Does pairing help teams ship faster?")).toBeVisible()
 
   const deleteItem = page.getByRole("menuitem", { name: "Delete" })

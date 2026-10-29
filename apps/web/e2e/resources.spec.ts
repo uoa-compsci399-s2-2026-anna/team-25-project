@@ -33,7 +33,7 @@ test("a member shares, edits and deletes a resource", async ({ page }) => {
   await page.getByRole("textbox", { name: "Title" }).fill(editedTitle)
   await page.getByRole("button", { name: "Done" }).click()
   await expect(page.getByRole("heading", { level: 1, name: editedTitle })).toBeVisible()
-  await page.reload({ waitUntil: "networkidle" })
+  await page.reload()
   await expect(page.getByRole("heading", { level: 1, name: editedTitle })).toBeVisible()
 
   const deleteItem = page.getByRole("menuitem", { name: "Delete" })
