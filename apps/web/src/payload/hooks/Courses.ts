@@ -28,10 +28,29 @@ async function assignMemberOwner(req: PayloadRequest, course: Partial<Course>) {
   course.institution = relationID(owner.institution)
 }
 
-function validateCourseChanges(req: PayloadRequest, next: Partial<Course>, current?: Course) {
+async function validateCourseChanges(req: PayloadRequest, next: Partial<Course>, current?: Course) {
   if (current && !admin(req)) {
-    if (relationID(next.owner) !== relationID(current.owner))
-      fail("Only admins can transfer ownership.", 403)
+    // The owner may hand the course to one of its editors; anything else is an admin's call.
+    const nextOwner = relationID(next.owner)
+    if (nextOwner !== relationID(current.owner)) {
+      if (
+        relationID(current.owner) !== req.user?.id ||
+        !(current.editors ?? []).some((editor) => relationID(editor) === nextOwner)
+      )
+        fail("Only the owner can transfer ownership, and only to one of the course's editors.", 403)
+
+      // A member can only create courses at their own institution, so a transfer must not
+      // hand the course to a member from another one.
+      const newOwner = await req.payload.findByID({
+        collection: Slugs.Collections.MEMBERS,
+        id: requireID(nextOwner),
+        depth: 0,
+        req,
+        overrideAccess: true,
+      })
+      if (relationID(newOwner.institution) !== relationID(current.institution))
+        fail("Only a member at the course's institution can own it.", 403)
+    }
     if (
       relationID(current.owner) !== req.user?.id &&
       !isDeepStrictEqual(
@@ -56,6 +75,17 @@ function validateCourseChanges(req: PayloadRequest, next: Partial<Course>, curre
     fail("Published course identity cannot change.")
 }
 
+// The owner is an editor by owning the course, so listing them, or anyone twice, adds nothing.
+function cleanEditors(course: Partial<Course>) {
+  if (!Array.isArray(course.editors)) return
+  const owner = relationID(course.owner)
+  const ids = course.editors.flatMap((editor) => {
+    const id = relationID(editor)
+    return id !== undefined && id !== owner ? [id] : []
+  })
+  course.editors = [...new Set(ids)]
+}
+
 export const prepareCourse: CollectionBeforeValidateHook<Course> = async ({
   data,
   operation,
@@ -77,7 +107,8 @@ export const prepareCourse: CollectionBeforeValidateHook<Course> = async ({
   const next = { ...current, ...data }
   next.code = typeof next.code === "string" ? next.code.trim().toUpperCase() : next.code
   if (!current && member(req)) await assignMemberOwner(req, next)
-  validateCourseChanges(req, next, current)
+  await validateCourseChanges(req, next, current)
+  cleanEditors(next)
   next.hasPublishedVersion = current?.hasPublishedVersion ?? false
 
   return next

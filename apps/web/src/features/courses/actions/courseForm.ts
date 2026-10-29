@@ -24,16 +24,25 @@ export const fieldErrorsFromIssues = (issues: readonly ZodIssue[]): Record<strin
   return fieldErrors
 }
 
+// Payload refuses a member who no longer exists. The dialogs have no input for these
+// lists, so the error goes on the form.
+const memberListFields = new Set(["editors", "teachingTeam"])
+const MISSING_MEMBER_ERROR = "A chosen member no longer exists. Remove them and try again."
+
 const resultFromValidationError = (
   error: ValidationError,
   fallbackFormError: string,
 ): ActionResult => {
   const fieldErrors: Record<string, string> = {}
+  let formError: string | undefined
   for (const { path, message } of error.data?.errors ?? []) {
-    if (path && !fieldErrors[path]) {
+    if (path && memberListFields.has(path.split(".")[0] ?? "")) {
+      formError = MISSING_MEMBER_ERROR
+    } else if (path && !fieldErrors[path]) {
       fieldErrors[path] = message
     }
   }
+  if (formError) return { fieldErrors, formError, ok: false }
   return Object.keys(fieldErrors).length > 0
     ? { fieldErrors, ok: false }
     : { formError: fallbackFormError, ok: false }

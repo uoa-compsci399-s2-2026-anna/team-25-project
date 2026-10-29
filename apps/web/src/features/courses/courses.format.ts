@@ -15,6 +15,9 @@ export const isCourseEditor = (course: Pick<Course, "owner" | "editors">, member
     (editor) => (typeof editor === "number" ? editor : editor.id) === memberId,
   )
 
+export const isCourseOwner = (course: Pick<Course, "owner">, memberId: number) =>
+  ownerIdOf(course) === memberId
+
 const idOf = (value: number | { id: number } | null | undefined) =>
   typeof value === "number" ? value : value?.id
 

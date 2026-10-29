@@ -42,8 +42,8 @@ export async function OfferingActions({
   )
   if (!offering || !primary) return null
 
-  const editor = isCourseEditor(course, user.id)
-  if (!editor && !isTeachingStaff(offering, user.id)) return null
+  const isEditor = isCourseEditor(course, user.id)
+  if (!isEditor && !isTeachingStaff(offering, user.id)) return null
 
   // The hooks refuse the last published offering, as that would leave the course empty.
   const canDelete = ownerIdOf(course) === user.id && offerings.length > 1
@@ -57,7 +57,7 @@ export async function OfferingActions({
         key={offering.id}
         offeringId={offering.id}
       />
-      {editor && (
+      {isEditor && (
         <AddOfferingDialog
           courseId={courseId}
           initialValues={toNewOfferingValues(primary)}

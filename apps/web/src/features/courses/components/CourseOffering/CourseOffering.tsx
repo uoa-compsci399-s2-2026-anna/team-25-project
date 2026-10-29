@@ -15,6 +15,7 @@ import {
   parseOfferingId,
 } from "../../courses.params"
 import { getPublishedOfferingsCached } from "../../courses.queries"
+import { CourseEditors } from "../CourseEditors"
 import { DraftOfferings } from "../DraftOfferings"
 import {
   CourseOfferingDetail,
@@ -133,6 +134,10 @@ export const CourseOffering = async ({
             ))}
           </CourseOfferingSidebarCard>
         )}
+
+        <Suspense fallback={null}>
+          <CourseEditors courseId={courseId} />
+        </Suspense>
 
         <CourseOfferingSidebarCard title="Offering">
           <CourseOfferingDetail label="Period" value={offering.period} />

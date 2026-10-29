@@ -183,12 +183,50 @@ describe("prepareCourse updates", () => {
     })
   })
 
-  it("refuses an ownership transfer by anyone but an admin", async () => {
+  it("lets the owner transfer ownership to an editor", async () => {
+    vi.mocked(lockDocument).mockResolvedValue(saved())
+    const { req } = request(owner)
+
+    await expect(
+      prepare(req, { owner: 7, editors: [42] }, "update", saved()),
+    ).resolves.toMatchObject({ owner: 7, editors: [42] })
+  })
+
+  it("refuses a transfer to an editor from another institution", async () => {
+    vi.mocked(lockDocument).mockResolvedValue(saved())
+    const { req } = request(owner, { member: { id: 7, institution: 4 } })
+
+    await expect(prepare(req, { owner: 7 }, "update", saved())).rejects.toThrow(
+      "Only a member at the course's institution can own it.",
+    )
+  })
+
+  it("refuses the owner a transfer to someone who is not an editor", async () => {
     vi.mocked(lockDocument).mockResolvedValue(saved())
     const { req } = request(owner)
 
     await expect(prepare(req, { owner: 9 }, "update", saved())).rejects.toThrow(
-      "Only admins can transfer ownership.",
+      "Only the owner can transfer ownership",
+    )
+  })
+
+  // The check reads the stored editors, so naming the new owner as an editor in the
+  // same request does not make them eligible.
+  it("refuses a transfer to a member the same request adds as an editor", async () => {
+    vi.mocked(lockDocument).mockResolvedValue(saved())
+    const { req } = request(owner)
+
+    await expect(prepare(req, { owner: 9, editors: [42, 9] }, "update", saved())).rejects.toThrow(
+      "Only the owner can transfer ownership",
+    )
+  })
+
+  it("refuses an editor who tries to take ownership", async () => {
+    vi.mocked(lockDocument).mockResolvedValue(saved())
+    const { req } = request(editor)
+
+    await expect(prepare(req, { owner: 7 }, "update", saved())).rejects.toThrow(
+      "Only the owner can transfer ownership",
     )
   })
 
@@ -215,6 +253,24 @@ describe("prepareCourse updates", () => {
     await expect(prepare(req, { editors: [7, 9] }, "update", saved())).resolves.toMatchObject({
       editors: [7, 9],
     })
+  })
+
+  it("drops the owner and repeated members from the editor list", async () => {
+    vi.mocked(lockDocument).mockResolvedValue(saved())
+    const { req } = request(owner)
+
+    await expect(
+      prepare(req, { editors: [7, 42, 9, 7] }, "update", saved()),
+    ).resolves.toMatchObject({ editors: [7, 9] })
+  })
+
+  it("drops the new owner from the editor list after a transfer", async () => {
+    vi.mocked(lockDocument).mockResolvedValue(saved())
+    const { req } = request(owner)
+
+    await expect(
+      prepare(req, { owner: 7, editors: [7, 42] }, "update", saved()),
+    ).resolves.toMatchObject({ owner: 7, editors: [42] })
   })
 
   // Populated relationships and IDs describe the same list.
