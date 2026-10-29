@@ -15,14 +15,17 @@ const adapter = (payload: Payload) => payload.db as unknown as PostgresAdapter
  *
  * @param req - The Payload request object, or anything carrying the Payload instance.
  * @param collection - The collection slug.
- * @returns The table name Payload writes the collection to.
+ * @param arrayField - An array field's name, for the table its rows live in.
+ * @returns The table name Payload writes the collection (or that field) to.
  */
 export function tableName(
   req: Pick<PayloadRequest, "payload">,
   collection: CollectionSlug,
+  arrayField?: string,
 ): string {
-  const resolved = adapter(req.payload).tableNameMap.get(snakeCase(collection))
-  if (!resolved) throw new APIError(`No table is mapped for ${collection}.`, 500)
+  const key = snakeCase(arrayField ? `${collection}_${arrayField}` : collection)
+  const resolved = adapter(req.payload).tableNameMap.get(key)
+  if (!resolved) throw new APIError(`No table is mapped for ${key}.`, 500)
   return resolved
 }
 
