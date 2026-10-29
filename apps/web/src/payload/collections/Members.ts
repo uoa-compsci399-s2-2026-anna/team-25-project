@@ -48,10 +48,13 @@ export const Members: CollectionConfig = {
     },
   },
   access: {
-    create: () => true, // public registration
+    // Registration goes through registerMember, which checks the emailed code first.
+    // A direct API create would skip that check, so it stays with admins.
+    create: ({ req }) => Boolean(req.context.registeringVerifiedMember) || admin(req),
     read: () => true, // public directory; sensitive fields gated below
     update: isAdminOrSelf,
     delete: isAdmin,
+    unlock: isAdmin,
   },
   fields: [
     {

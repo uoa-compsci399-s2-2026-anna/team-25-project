@@ -211,6 +211,7 @@ export const registerMember = async (input: RegisterWithCode): Promise<ActionRes
   try {
     await payload.create({
       collection: Slugs.Collections.MEMBERS,
+      context: { registeringVerifiedMember: true },
       data: { email, firstName, institution: institutionId, lastName, password, position, title },
       overrideAccess: false,
     })

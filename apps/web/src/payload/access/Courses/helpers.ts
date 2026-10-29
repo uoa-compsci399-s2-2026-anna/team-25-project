@@ -20,8 +20,11 @@ export const editableWhere = (req: PayloadRequest, prefix: string): Where => ({
 
 export const courseReadAccess =
   (prefix: string, published: Where): Access =>
-  ({ req }) =>
-    admin(req) ? true : { or: [published, ...(member(req) ? [editableWhere(req, prefix)] : [])] }
+  ({ req }) => {
+    if (admin(req)) return true
+    if (!member(req)) return false
+    return { or: [published, editableWhere(req, prefix)] }
+  }
 
 export const courseWriteAccess =
   (prefix: string): Access =>

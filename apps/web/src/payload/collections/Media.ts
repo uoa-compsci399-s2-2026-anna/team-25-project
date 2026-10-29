@@ -1,10 +1,16 @@
 import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
+import { isAdmin, isSignedIn } from "../access"
 
 export const Media: CollectionConfig = {
   slug: Slugs.Collections.MEDIA,
   access: {
     read: () => true,
+    create: isSignedIn,
+    // An upload row carries no owner to scope against, so members cannot change or
+    // remove one directly. updateMemberProfile deletes a member's own old avatar.
+    update: isAdmin,
+    delete: isAdmin,
   },
   fields: [
     {

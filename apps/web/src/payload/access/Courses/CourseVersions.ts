@@ -5,10 +5,10 @@ import { courseWriteAccess, editableWhere, staffOfferingIDs } from "./helpers"
 const published = { _status: { equals: "published" } }
 
 // Payload rewrites these constraints to `version.*` (and `id` to `parent`) for draft
-// reads, so a public request cannot reach a draft through `draft=true` or a direct ID.
+// reads, so a member cannot reach another course's draft through `draft=true` or a direct ID.
 export const versionRead: Access = async ({ req }) => {
   if (admin(req)) return true
-  if (!member(req)) return { or: [published] }
+  if (!member(req)) return false
   const staffOf = await staffOfferingIDs(req)
   return {
     or: [

@@ -204,9 +204,7 @@ describe("updateMemberProfile", () => {
 
       expect(result).toEqual({ ok: true })
       expect(payload.delete).toHaveBeenCalledTimes(1)
-      expect(payload.delete).toHaveBeenCalledWith(
-        expect.objectContaining({ collection: "media", id: 12, overrideAccess: false }),
-      )
+      expect(payload.delete).toHaveBeenCalledWith({ collection: "media", id: 12 })
     })
 
     it("clears the saved photo and deletes it when the member removes it", async () => {

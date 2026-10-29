@@ -23,10 +23,8 @@ describe("versionRead", () => {
     expect(await versionRead(request(adminUser))).toBe(true)
   })
 
-  // Payload rewrites `_status` for draft reads, so this constraint also blocks a
-  // public request that asks for a draft by ID.
-  it("limits the public to published offerings", async () => {
-    expect(await versionRead(request(null))).toEqual({ or: [published] })
+  it("denies an anonymous request", async () => {
+    expect(await versionRead(request(null))).toBe(false)
   })
 
   it("adds a member's own offerings to what is published", async () => {

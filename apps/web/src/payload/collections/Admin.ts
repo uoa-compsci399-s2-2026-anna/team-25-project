@@ -14,6 +14,7 @@ export const Admin: CollectionConfig = {
     create: isAdmin,
     update: isAdmin,
     delete: isAdmin,
+    unlock: isAdmin,
   },
   fields: [
     { name: "firstName", type: "text", required: true },
