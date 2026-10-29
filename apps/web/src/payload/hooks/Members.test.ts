@@ -47,13 +47,25 @@ type HookArgs = Parameters<typeof enforceInstitutionDomain>[0]
 
 // Builds fake hook args with a stubbed req.payload.findByID, so these stay
 // unit tests of the domain-matching logic - no live Payload/Postgres needed.
-const makeArgs = (data: Partial<Member>, findByIDResult: Institution | null = null) => {
+const makeArgs = (
+  data: Partial<Member>,
+  findByIDResult: Institution | null = null,
+  context: HookArgs["req"]["context"] = {},
+) => {
   const findByID = vi.fn().mockResolvedValue(findByIDResult)
-  const args = { data, req: { payload: { findByID } } } as unknown as HookArgs
+  const args = { data, req: { context, payload: { findByID } } } as unknown as HookArgs
   return { args, findByID }
 }
 
 describe("enforceInstitutionDomain", () => {
+  it("skips the check when the write asks it to", async () => {
+    const { args, findByID } = makeArgs({ email: "student@gone.ac.nz", institution: 1 }, null, {
+      skipDomainCheck: true,
+    })
+    await expect(enforceInstitutionDomain(args)).resolves.toEqual(args.data)
+    expect(findByID).not.toHaveBeenCalled()
+  })
+
   it("skips the check when email is missing, leaving required-field validation to reject it", async () => {
     const { args, findByID } = makeArgs({ institution: 1 })
     await expect(enforceInstitutionDomain(args)).resolves.toEqual(args.data)

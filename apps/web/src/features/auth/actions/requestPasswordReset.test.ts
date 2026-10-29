@@ -36,7 +36,11 @@ describe("requestPasswordReset", () => {
 
     await expect(requestPasswordReset({ email: "a.tui@uni.ac.nz" })).resolves.toEqual({ ok: true })
     expect(payload.forgotPassword).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { email: "a.tui@uni.ac.nz" }, disableEmail: true }),
+      expect.objectContaining({
+        context: { disableRevalidate: true, skipDomainCheck: true },
+        data: { email: "a.tui@uni.ac.nz" },
+        disableEmail: true,
+      }),
     )
     const sent = payload.sendEmail.mock.calls[0][0]
     expect(sent.to).toBe("a.tui@uni.ac.nz")

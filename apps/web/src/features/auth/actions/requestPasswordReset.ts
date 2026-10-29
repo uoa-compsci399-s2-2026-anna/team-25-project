@@ -59,8 +59,10 @@ export const requestPasswordReset = async (input: ForgotPassword): Promise<SendC
 
     // Creates and stores the token, or returns null for an unknown address.
     // Payload's own email is off so ours can carry a plain-text part too.
+    // Only the token is written, so the profile caches and domain check stay out of it.
     const token = await payload.forgotPassword({
       collection: Slugs.Collections.MEMBERS,
+      context: { disableRevalidate: true, skipDomainCheck: true },
       data: { email },
       disableEmail: true,
     })

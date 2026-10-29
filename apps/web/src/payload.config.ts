@@ -32,6 +32,8 @@ declare module "payload" {
     completingRegistration?: boolean
     /** Skips cache revalidation hooks - set by seed.ts, which runs outside a request. */
     disableRevalidate?: boolean
+    /** Skips enforceInstitutionDomain - set by writes that never change the email or institution. */
+    skipDomainCheck?: boolean
   }
 }
 
