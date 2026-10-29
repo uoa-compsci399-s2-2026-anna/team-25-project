@@ -108,10 +108,16 @@ describe("guardCourseWrite refusals", () => {
   })
 
   // Payload's bulk operations catch per-document errors and can commit partial work.
-  it.each(["update", "delete"])("refuses a bulk %s", async (operation) => {
-    await expect(guard({ where: { id: { equals: 1 } } }, operation).result).rejects.toThrow(
+  it("refuses a bulk update", async () => {
+    await expect(guard({ where: { id: { equals: 1 } } }, "update").result).rejects.toThrow(
       "Bulk writes are not supported.",
     )
+  })
+
+  // Each row's beforeDelete hook decides, so the list view gets a refusal per row.
+  it("passes a bulk delete through", async () => {
+    const args = { where: { id: { equals: 1 } } }
+    await expect(guard(args, "delete").result).resolves.toBe(args)
   })
 
   it("refuses an update whose ID is empty", async () => {

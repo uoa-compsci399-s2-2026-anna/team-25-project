@@ -13,7 +13,7 @@ import {
   versionMetadataKeys,
 } from "./helpers"
 
-// The gate every course write passes through: it refuses restores and bulk writes,
+// The gate every course write passes through: it refuses restores and bulk updates,
 // authorizes the caller, and records the raw request body before Payload rewrites it.
 // All of that runs on the course row lock, taken here because beforeOperation is the
 // last point before Payload reads update snapshots or fills omitted fields. Both course
@@ -32,8 +32,10 @@ export const guardCourseWrite: CollectionBeforeOperationHook = async ({
     fail("Restoring a revision is not supported. Save its content as a draft and publish it.", 409)
 
   // Payload bulk operations catch individual errors and can commit partial work.
-  // Require one record per write so a publication always has full rollback.
-  if ((operation === "update" || operation === "delete") && !("id" in args && args.id))
+  // Require one record per update so a publication always has full rollback.
+  // A bulk delete goes through: each row's beforeDelete hook still decides, and the
+  // list view shows each refusal.
+  if (operation === "update" && !("id" in args && args.id))
     fail("Use a record ID for course writes. Bulk writes are not supported.")
 
   if (operation !== "create" && operation !== "update") return args
