@@ -114,10 +114,18 @@ describe("guardCourseWrite refusals", () => {
     )
   })
 
+  // Parallel rows would each pass the "never the last published offering" check.
+  it("refuses a member's bulk delete", async () => {
+    await expect(guard({ where: { id: { equals: 1 } } }, "delete").result).rejects.toThrow(
+      "Bulk writes are not supported.",
+    )
+  })
+
   // Each row's beforeDelete hook decides, so the list view gets a refusal per row.
-  it("passes a bulk delete through", async () => {
+  it("passes an admin's bulk delete through", async () => {
     const args = { where: { id: { equals: 1 } } }
-    await expect(guard(args, "delete").result).resolves.toBe(args)
+    const user = { id: 1, collection: Slugs.Collections.ADMIN }
+    await expect(guard(args, "delete", { user }).result).resolves.toBe(args)
   })
 
   it("refuses an update whose ID is empty", async () => {
