@@ -11,9 +11,9 @@ const DELETE_FAILED = "Could not delete this resource. Try again."
 
 /**
  * Deletes a resource. The id comes from the browser, so it isn't trusted: with
- * overrideAccess: false, Payload's isAdminOrOwner rule refuses anyone but the
- * resource's owner and admins. Its attachments stay, as members can't delete
- * attachment rows (see ResourceAttachments).
+ * overrideAccess: false, Payload's resourceDelete rule refuses anyone but the
+ * resource's owner. Its attachments stay, as members can't delete attachment rows
+ * (see ResourceAttachments). Admins use deleteResourceAndAttachments instead.
  */
 export const deleteResource = async (id: number): Promise<ActionResult> => {
   if (!Number.isInteger(id)) {

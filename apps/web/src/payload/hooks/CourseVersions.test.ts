@@ -4,6 +4,7 @@ import type { PayloadRequest } from "payload"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { lockDocument } from "@/lib/payload/lock"
 import { Slugs } from "@/lib/payload/slugs"
+import { COURSE_DELETE } from "../access/Courses/Courses"
 import {
   assertVersionDeletable,
   prepareVersion,
@@ -13,13 +14,7 @@ import {
   validatePublication,
   validateVersionChanges,
 } from "./CourseVersions"
-import {
-  COURSE_DELETE,
-  internal,
-  isInternal,
-  VERSION_WRITE,
-  type VersionMetadataKey,
-} from "./helpers"
+import { internal, isInternal, VERSION_WRITE, type VersionMetadataKey } from "./helpers"
 
 vi.mock("@/lib/payload/lock", () => ({ lockDocument: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }))
@@ -880,17 +875,25 @@ describe("assertVersionDeletable", () => {
     )
   })
 
-  it.each([
-    ["an editor who isn't the owner", coEditor],
-    ["an admin deleting just the offering", administrator],
-    // Admins and members are separate collections, so their ids can collide.
-    ["an admin whose id matches the owner's", { ...administrator, id: 42 }],
-  ])("refuses a published offering to %s", async (_label, user) => {
-    const { req } = publishedRequest({ user })
+  it("refuses a published offering to an editor who isn't the owner", async () => {
+    const { req } = publishedRequest({ user: coEditor })
 
     await expect(remove(req)).rejects.toThrow(
       "Only the course's owner can delete a published offering.",
     )
+  })
+
+  const ADMIN_REFUSAL =
+    'A published offering is deleted only with its course. Open the course and choose "Delete course and offerings".'
+
+  it.each([
+    ["an admin deleting just the offering", administrator],
+    // Admins and members are separate collections, so their ids can collide.
+    ["an admin whose id matches the owner's", { ...administrator, id: 42 }],
+  ])("sends %s to the course's delete instead", async (_label, user) => {
+    const { req } = publishedRequest({ user })
+
+    await expect(remove(req)).rejects.toThrow(ADMIN_REFUSAL)
   })
 
   it("lets an admin delete a published offering while deleting its whole course", async () => {
@@ -903,15 +906,18 @@ describe("assertVersionDeletable", () => {
   })
 
   it.each([
-    ["an admin deleting another course", administrator, 6],
-    ["an editor, even with the flag set", coEditor, 5],
-  ])("doesn't honour the course-delete flag for %s", async (_label, user, deleting) => {
+    ["an admin deleting another course", administrator, 6, ADMIN_REFUSAL],
+    [
+      "an editor, even with the flag set",
+      coEditor,
+      5,
+      "Only the course's owner can delete a published offering.",
+    ],
+  ])("doesn't honour the course-delete flag for %s", async (_label, user, deleting, refusal) => {
     const { req } = publishedRequest({ user })
     req.context[COURSE_DELETE] = deleting
 
-    await expect(remove(req)).rejects.toThrow(
-      "Only the course's owner can delete a published offering.",
-    )
+    await expect(remove(req)).rejects.toThrow(refusal)
   })
 
   // The status is read again under the lock, so a publication that lands between

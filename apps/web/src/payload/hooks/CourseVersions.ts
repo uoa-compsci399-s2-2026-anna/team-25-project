@@ -9,12 +9,11 @@ import type {
   PayloadRequest,
 } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
-import { canEditCourse } from "../access/Courses/Courses"
+import { COURSE_DELETE, canEditCourse } from "../access/Courses/Courses"
 import { relationID } from "../access/Courses/helpers"
 import { admin, member } from "../access/helpers"
 import { revalidateCourse } from "./Courses"
 import {
-  COURSE_DELETE,
   fail,
   internal,
   isInternal,
@@ -359,8 +358,15 @@ export const assertVersionDeletable: CollectionBeforeDeleteHook = async ({ id, r
 
   if (!isPublished(version) && !version.publishedAt) return
 
-  // An admin deleting the whole course takes its history with it.
-  if (admin(req) && req.context[COURSE_DELETE] === course.id) return
+  // An admin deleting the whole course takes its history with it. That is the only way
+  // an admin removes a published offering.
+  if (admin(req)) {
+    if (req.context[COURSE_DELETE] === course.id) return
+    fail(
+      'A published offering is deleted only with its course. Open the course and choose "Delete course and offerings".',
+      409,
+    )
+  }
 
   // Otherwise only the owner may remove a published offering, and never the last one:
   // that would leave a published course with nothing to show, and deleting a course

@@ -2,6 +2,7 @@ import type { CourseVersion } from "@repo/shared/payload-types"
 import type { CollectionBeforeOperationHook } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { relationID } from "../access/Courses/helpers"
+import { admin } from "../access/helpers"
 import {
   fail,
   isInternal,
@@ -13,7 +14,7 @@ import {
   versionMetadataKeys,
 } from "./helpers"
 
-// The gate every course write passes through: it refuses restores and bulk writes,
+// The gate every course write passes through: it refuses restores and bulk updates,
 // authorizes the caller, and records the raw request body before Payload rewrites it.
 // All of that runs on the course row lock, taken here because beforeOperation is the
 // last point before Payload reads update snapshots or fills omitted fields. Both course
@@ -32,8 +33,12 @@ export const guardCourseWrite: CollectionBeforeOperationHook = async ({
     fail("Restoring a revision is not supported. Save its content as a draft and publish it.", 409)
 
   // Payload bulk operations catch individual errors and can commit partial work.
-  // Require one record per write so a publication always has full rollback.
-  if ((operation === "update" || operation === "delete") && !("id" in args && args.id))
+  // Require one record per write so a publication always has full rollback. Bulk
+  // rows also run in parallel in one transaction, so the lock can't order them and
+  // each would pass the "never the last published offering" check. Admins skip that
+  // check, so their bulk deletes go through and the list view shows each refusal.
+  const isBulk = !("id" in args && args.id)
+  if (isBulk && (operation === "update" || (operation === "delete" && !admin(req))))
     fail("Use a record ID for course writes. Bulk writes are not supported.")
 
   if (operation !== "create" && operation !== "update") return args
