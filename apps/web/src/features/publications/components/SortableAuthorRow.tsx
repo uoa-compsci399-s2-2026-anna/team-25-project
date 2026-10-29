@@ -34,7 +34,7 @@ export const SortableAuthorRow = ({
   return (
     <div
       className={cn(
-        "relative flex gap-2 rounded-lg bg-background",
+        "relative flex gap-1 rounded-lg bg-background sm:gap-2",
         centerHandle ? "items-center" : "items-start",
         isDragging && "z-10 shadow-lg",
       )}
@@ -44,7 +44,12 @@ export const SortableAuthorRow = ({
       {/* Only the handle starts a drag, so typing in the row's input still works. */}
       <Button
         aria-label={`Reorder author ${position}`}
-        className={cn("cursor-grab touch-none active:cursor-grabbing", !centerHandle && "mt-1")}
+        className={cn(
+          "cursor-grab touch-none active:cursor-grabbing",
+          // On mobile, a narrow handle as tall as the row saves width and is still easy to grab.
+          "max-sm:h-auto max-sm:w-6 max-sm:self-stretch",
+          !centerHandle && "sm:mt-1",
+        )}
         ref={setActivatorNodeRef}
         size="icon-sm"
         type="button"
