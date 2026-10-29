@@ -29,6 +29,8 @@ declare module "payload" {
   export interface RequestContext {
     /** Lets completeProfile stamp registrationCompletedAt; see Members.ts. */
     completingRegistration?: boolean
+    /** Lets registerMember create a member once their email code checks out; see Members.ts. */
+    registeringVerifiedMember?: boolean
     /** Skips cache revalidation hooks - set by seed.ts, which runs outside a request. */
     disableRevalidate?: boolean
   }

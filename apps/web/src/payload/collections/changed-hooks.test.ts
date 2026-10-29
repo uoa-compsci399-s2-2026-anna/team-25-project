@@ -41,8 +41,15 @@ describe("changed collection hooks", () => {
       beforeDelete: [assertMemberDeletable],
       beforeValidate: [enforceInstitutionDomain],
     })
-    expect(Members.access?.create?.({} as never)).toBe(true)
     expect(Members.access?.read?.({} as never)).toBe(true)
+  })
+
+  it("lets only a verified registration or an admin create a member", () => {
+    const create = (req: object) => Members.access?.create?.({ req } as never)
+    expect(create({ context: {} })).toBe(false)
+    expect(create({ context: {}, user: { collection: "members" } })).toBe(false)
+    expect(create({ context: { registeringVerifiedMember: true } })).toBe(true)
+    expect(create({ context: {}, user: { collection: "admin" } })).toBe(true)
   })
 
   it("registers proposal cache invalidation", () => {

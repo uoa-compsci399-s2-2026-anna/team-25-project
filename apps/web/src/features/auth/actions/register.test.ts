@@ -144,6 +144,20 @@ describe("registerMember", () => {
     expect(order).toEqual([...order].sort((a, b) => a - b))
   })
 
+  it("creates the account under access control, flagged as verified", async () => {
+    const payload = mockPayload()
+
+    await registerMember(validRegistration)
+
+    expect(payload.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: "members",
+        context: { registeringVerifiedMember: true },
+        overrideAccess: false,
+      }),
+    )
+  })
+
   it("keeps the code when creating the account fails, so it can be retried", async () => {
     mockPayload({ create: vi.fn().mockRejectedValue(new Error("connection lost")) })
 
