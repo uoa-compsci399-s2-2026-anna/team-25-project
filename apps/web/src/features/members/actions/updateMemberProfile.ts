@@ -92,24 +92,21 @@ export const updateMemberProfile = async (formData: FormData): Promise<ActionRes
   } catch (error) {
     payload.logger.error({ err: error }, "updateMemberProfile failed")
     // Nothing points at the new upload, so remove it rather than leave an orphan.
+    // Media deletes are admin-only, so this skips access: the ID is the upload made above.
     if (avatarId !== undefined) {
       await payload
-        .delete({ collection: Slugs.Collections.MEDIA, id: avatarId, user, overrideAccess: false })
+        .delete({ collection: Slugs.Collections.MEDIA, id: avatarId })
         .catch((err) => payload.logger.error({ err }, "orphaned avatar cleanup failed"))
     }
     return { formError: "Could not save your changes. Try again.", ok: false }
   }
 
   // Only once the member no longer points at the old photo is it safe to delete.
+  // The ID comes from the signed-in member's own record, so this skips access too.
   const previousAvatarId = typeof user.avatar === "object" ? user.avatar?.id : user.avatar
   if ("avatar" in avatarChange && previousAvatarId && previousAvatarId !== avatarId) {
     await payload
-      .delete({
-        collection: Slugs.Collections.MEDIA,
-        id: previousAvatarId,
-        user,
-        overrideAccess: false,
-      })
+      .delete({ collection: Slugs.Collections.MEDIA, id: previousAvatarId })
       .catch((err) => payload.logger.error({ err }, "previous avatar cleanup failed"))
   }
 
