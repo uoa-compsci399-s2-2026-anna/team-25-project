@@ -52,6 +52,7 @@ export const Members: CollectionConfig = {
     read: () => true, // public directory; sensitive fields gated below
     update: isAdminOrSelf,
     delete: isAdmin,
+    unlock: isAdmin,
   },
   fields: [
     {
