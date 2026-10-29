@@ -1,3 +1,5 @@
+import type { sql } from "@payloadcms/db-postgres"
+import { PgDialect } from "@payloadcms/db-postgres/drizzle/pg-core"
 import { cookies } from "next/headers"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
@@ -31,12 +33,21 @@ vi.mock("payload/shared", () => ({
 vi.mock("next/headers", () => ({ cookies: vi.fn() }))
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
 
+const execute = vi.fn()
+vi.mock("@/lib/payload/db", () => ({
+  getDbInstance: () => ({ execute }),
+  tableName: () => "members_sessions",
+}))
+
+// The statement as Postgres receives it: SQL text and bound parameters.
+const deleteStatement = () =>
+  new PgDialect().sqlToQuery(execute.mock.calls[0][0] as ReturnType<typeof sql>)
+
 /** A JWT whose claims name session `sid`; only the claims are read. */
 const tokenFor = (sid: string) =>
   `header.${Buffer.from(JSON.stringify({ sid })).toString("base64url")}.signature`
 
-const NEW_SESSION = { expiresAt: "2026-10-26T08:00:00.000Z", id: "new-session" }
-const OLD_SESSION = { expiresAt: "2026-10-26T07:00:00.000Z", id: "old-session" }
+const NEW_SESSION_ID = "new-session"
 
 const valid = { password: "NewPassword1!", token: "reset-token" }
 
@@ -48,8 +59,8 @@ const mockPayload = (overrides: Record<string, unknown> = {}) => {
     config: { cookiePrefix: "payload" },
     logger: { error: vi.fn() },
     resetPassword: vi.fn().mockResolvedValue({
-      token: tokenFor(NEW_SESSION.id),
-      user: { id: 7, sessions: [OLD_SESSION, NEW_SESSION] },
+      token: tokenFor(NEW_SESSION_ID),
+      user: { id: 7 },
     }),
     db: { updateOne: vi.fn().mockResolvedValue(null) },
     ...overrides,
@@ -69,6 +80,7 @@ describe("resetPassword", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(cookies).mockResolvedValue({ set: setCookie } as never)
+    execute.mockResolvedValue({ rows: [] })
   })
 
   it("sets the new password and signs the member in", async () => {
@@ -81,24 +93,24 @@ describe("resetPassword", () => {
     expect(setCookie).toHaveBeenCalledWith("payload-token", "signed-token", expect.anything())
   })
 
-  it("ends every other session and lifts any lockout, keeping the rest of the member", async () => {
+  it("ends every other session and lifts any lockout, without rewriting the member", async () => {
     const payload = mockPayload()
 
     await resetPassword(valid)
 
     expect(payload.db.updateOne).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: { id: 7, lockUntil: null, loginAttempts: 0, sessions: [NEW_SESSION] },
-        id: 7,
-      }),
+      expect.objectContaining({ data: { lockUntil: null, loginAttempts: 0 }, id: 7 }),
     )
+    const { params, sql } = deleteStatement()
+    expect(sql).toContain('DELETE FROM "members_sessions"')
+    expect(params).toEqual([7, NEW_SESSION_ID])
   })
 
-  it("reports an error, leaving sessions alone, when the new one isn't on the member", async () => {
+  it("reports an error, ending no sessions, when the token names no session", async () => {
     const payload = mockPayload({
       resetPassword: vi.fn().mockResolvedValue({
-        token: tokenFor(NEW_SESSION.id),
-        user: { id: 7, sessions: [] },
+        token: `header.${Buffer.from("{}").toString("base64url")}.signature`,
+        user: { id: 7 },
       }),
     })
 
@@ -107,10 +119,8 @@ describe("resetPassword", () => {
         "Your password was changed, but we couldn't sign you out on your other devices. Log in with your new password.",
       ok: false,
     })
-    expect(payload.db.updateOne).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { lockUntil: null, loginAttempts: 0 }, id: 7 }),
-    )
-    expect(payload.logger.error).toHaveBeenCalled()
+    expect(payload.db.updateOne).toHaveBeenCalled()
+    expect(execute).not.toHaveBeenCalled()
     expect(setCookie).not.toHaveBeenCalled()
   })
 
@@ -154,9 +164,8 @@ describe("resetPassword", () => {
   })
 
   it("reports an error, without signing in, when ending other sessions fails", async () => {
-    const payload = mockPayload({
-      db: { updateOne: vi.fn().mockRejectedValue(new Error("db down")) },
-    })
+    const payload = mockPayload()
+    execute.mockRejectedValue(new Error("db down"))
 
     await expect(resetPassword(valid)).resolves.toEqual({
       formError:

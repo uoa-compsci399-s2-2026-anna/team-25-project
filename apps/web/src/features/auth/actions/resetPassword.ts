@@ -1,8 +1,9 @@
 "use server"
 
-import type { Member } from "@repo/shared/payload-types"
+import { sql } from "@payloadcms/db-postgres"
 import { type ResetPassword, resetPasswordSchema } from "@repo/shared/schemas/passwordReset"
 import { APIError, type Payload } from "payload"
+import { getDbInstance, tableName } from "@/lib/payload/db"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
 import { setSessionCookie } from "../helpers/sessionCookie"
@@ -23,29 +24,24 @@ const sessionIdOf = (token: string): string | undefined => {
  * Ends every other session and lifts any lockout, which Payload's reset doesn't.
  * Written straight to the database so the Members hooks can't refuse it.
  */
-const secureAccount = async (payload: Payload, member: Member, token: string) => {
-  const sid = sessionIdOf(token)
-  const sessions = (member.sessions ?? []).filter((session) => session.id === sid)
-  const unlock = { lockUntil: null, loginAttempts: 0 }
-
-  // Writing the list without the new session would end that one too, so the
-  // other sessions are left alone and the caller reports it.
-  if (sessions.length === 0) {
-    await payload.db.updateOne({
-      collection: Slugs.Collections.MEMBERS,
-      data: unlock,
-      id: member.id,
-      returning: false,
-    })
-    throw new Error("the new session wasn't found on the member")
-  }
-
+const secureAccount = async (payload: Payload, memberId: number, token: string) => {
   await payload.db.updateOne({
     collection: Slugs.Collections.MEMBERS,
-    data: { ...member, ...unlock, sessions },
-    id: member.id,
+    data: { lockUntil: null, loginAttempts: 0 },
+    id: memberId,
     returning: false,
   })
+
+  // Without it, the delete below would end the new session too.
+  const sid = sessionIdOf(token)
+  if (!sid) throw new Error("the reset token names no session")
+
+  // A Payload write that includes `sessions` needs the whole member, which
+  // could overwrite a profile edit made meanwhile - so the rows go directly.
+  const sessions = sql.identifier(tableName({ payload }, Slugs.Collections.MEMBERS, "sessions"))
+  await getDbInstance(payload).execute(
+    sql`DELETE FROM ${sessions} WHERE _parent_id = ${memberId} AND id <> ${sid}`,
+  )
 }
 
 /** Sets a new password from an emailed reset link, then signs the member in. */
@@ -66,8 +62,6 @@ export const resetPassword = async (input: ResetPassword): Promise<ResetPassword
     result = await payload.resetPassword({
       collection: Slugs.Collections.MEMBERS,
       data: parsed.data,
-      // Also what lets the returned user include `sessions`, which only the
-      // member themselves can otherwise read - `secureAccount` relies on it.
       overrideAccess: true,
     })
   } catch (error) {
@@ -83,7 +77,7 @@ export const resetPassword = async (input: ResetPassword): Promise<ResetPassword
   }
 
   try {
-    await secureAccount(payload, user as unknown as Member, token)
+    await secureAccount(payload, user.id as number, token)
   } catch (error) {
     payload.logger.error({ err: error }, "ending other sessions after a password reset failed")
     return {
