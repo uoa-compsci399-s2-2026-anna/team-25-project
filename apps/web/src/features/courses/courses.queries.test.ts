@@ -68,15 +68,15 @@ describe("getCoursesTableData", () => {
     // every viewer, admins included. See the function's own doc comment.
     expect(find).toHaveBeenCalledWith({
       collection: "courses",
+      where: { hasPublishedVersion: { equals: true } },
       depth: 1,
-      overrideAccess: false,
       pagination: false,
       sort: "code",
     })
     expect(find).toHaveBeenCalledWith({
       collection: "courseVersions",
+      where: { _status: { equals: "published" } },
       depth: 1,
-      overrideAccess: false,
       pagination: false,
       sort: ["-startDate", "-id"],
     })

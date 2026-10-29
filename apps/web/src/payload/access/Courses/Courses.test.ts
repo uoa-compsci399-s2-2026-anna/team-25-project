@@ -48,10 +48,8 @@ describe("canEditCourse", () => {
 })
 
 describe("course collection access", () => {
-  it("exposes only published courses to the public", () => {
-    expect(courseRead({ req: request(null) })).toEqual({
-      or: [{ hasPublishedVersion: { equals: true } }],
-    })
+  it("hides every course from an anonymous request", () => {
+    expect(courseRead({ req: request(null) })).toBe(false)
   })
 
   it("constrains a member's writes to their own courses", () => {

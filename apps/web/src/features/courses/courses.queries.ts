@@ -24,11 +24,9 @@ import {
 const NEWEST_FIRST = ["-startDate", "-id"]
 
 /**
- * The public, published-only view of the directory: it looks the same for
- * every viewer, so it's safe to cache. The trick is not passing a `user`
- * into these queries - without one, `courseRead`/`versionRead` both fall
- * back to their published-only rule for everyone, admins included, which is
- * what keeps the result viewer-independent.
+ * The published-only view of the directory: it looks the same for every
+ * viewer, so it's safe to cache. The published filters are explicit rather
+ * than left to `courseRead`/`versionRead`, which deny signed-out requests.
  */
 export const getCoursesTableData = async (today = getToday()): Promise<CourseTableRow[]> => {
   const payload = await getPayloadClient()
@@ -36,15 +34,15 @@ export const getCoursesTableData = async (today = getToday()): Promise<CourseTab
   const [{ docs: courses }, { docs: versions }] = await Promise.all([
     payload.find({
       collection: Slugs.Collections.COURSES,
+      where: { hasPublishedVersion: { equals: true } },
       depth: 1,
-      overrideAccess: false,
       pagination: false,
       sort: "code",
     }),
     payload.find({
       collection: Slugs.Collections.COURSE_VERSIONS,
+      where: { _status: { equals: "published" } },
       depth: 1,
-      overrideAccess: false,
       pagination: false,
       sort: NEWEST_FIRST,
     }),

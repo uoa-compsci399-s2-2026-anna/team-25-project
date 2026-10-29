@@ -66,8 +66,8 @@ describe("courseReadAccess", () => {
     })
   })
 
-  it("limits an anonymous request to what is published", () => {
-    expect(access({ req: anonReq })).toEqual({ or: [published] })
+  it("denies an anonymous request", () => {
+    expect(access({ req: anonReq })).toBe(false)
   })
 })
 
