@@ -65,9 +65,8 @@ export const ResourcesList = async ({ searchParams }: { searchParams: Promise<Se
         {resources.map((resource) => {
           const card = toResourceCardProps(resource)
           const ownerId = typeof resource.owner === "object" ? resource.owner.id : resource.owner
-          // Same rule as Payload's isAdminOrOwner: admins, and the resource's owner.
-          const canManage =
-            collection === Slugs.Collections.ADMIN || (user !== null && user.id === ownerId)
+          // Only the owner - admins manage resources from the admin dashboard.
+          const canManage = collection === Slugs.Collections.MEMBERS && user.id === ownerId
 
           return (
             <ResourceCard

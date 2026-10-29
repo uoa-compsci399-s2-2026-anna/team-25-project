@@ -21,8 +21,7 @@ export interface ResourceCardActionsProps {
 
 /**
  * A resource card's Edit/Delete dropdown. Only rendered for the resource's
- * owner and admins - the same rule as Payload's isAdminOrOwner, which gates
- * both editing and deleting.
+ * owner - admins manage resources from the admin dashboard instead.
  */
 export function ResourceCardActions({ resourceId, title, editHref }: ResourceCardActionsProps) {
   const router = useRouter()

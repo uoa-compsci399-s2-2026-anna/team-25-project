@@ -49,17 +49,11 @@ describe("ResourceTitleActionsServer", () => {
     },
   )
 
-  it("shows the dropdown to an admin who doesn't own the resource", async () => {
-    vi.mocked(getResourceByIdCached).mockResolvedValue(resource() as never)
-    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "admin", user: { id: 999 } } as never)
-
-    await renderActions()
-
-    expect(menu()).toBeInTheDocument()
-  })
-
   it.each([
     ["a member who doesn't own it", { collection: "members", user: { id: 999 } }],
+    // Admins manage resources from the admin dashboard - and their ids are their own,
+    // so one matching the owner's is no claim to it.
+    ["an admin, even one sharing the owner's id", { collection: "admin", user: { id: 10 } }],
     ["a signed-out visitor", { collection: null, user: null }],
   ])("hides the dropdown from %s", async (_, current) => {
     vi.mocked(getResourceByIdCached).mockResolvedValue(resource() as never)
