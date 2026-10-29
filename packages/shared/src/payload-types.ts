@@ -79,6 +79,7 @@ export interface Config {
     resources: Resource;
     resourceAttachments: ResourceAttachment;
     emailVerificationCodes: EmailVerificationCode;
+    rateLimits: RateLimit;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -97,6 +98,7 @@ export interface Config {
     resources: ResourcesSelect<false> | ResourcesSelect<true>;
     resourceAttachments: ResourceAttachmentsSelect<false> | ResourceAttachmentsSelect<true>;
     emailVerificationCodes: EmailVerificationCodesSelect<false> | EmailVerificationCodesSelect<true>;
+    rateLimits: RateLimitsSelect<false> | RateLimitsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -576,6 +578,20 @@ export interface EmailVerificationCode {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rateLimits".
+ */
+export interface RateLimit {
+  id: number;
+  key: string;
+  sentAt: string;
+  countInWindow: number;
+  windowStartedAt: string;
+  expiresAt: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -641,6 +657,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'emailVerificationCodes';
         value: number | EmailVerificationCode;
+      } | null)
+    | ({
+        relationTo: 'rateLimits';
+        value: number | RateLimit;
       } | null);
   globalSlug?: string | null;
   user:
@@ -959,6 +979,19 @@ export interface EmailVerificationCodesSelect<T extends boolean = true> {
   attempts?: T;
   sendsInWindow?: T;
   windowStartedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rateLimits_select".
+ */
+export interface RateLimitsSelect<T extends boolean = true> {
+  key?: T;
+  sentAt?: T;
+  countInWindow?: T;
+  windowStartedAt?: T;
+  expiresAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
