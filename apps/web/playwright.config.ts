@@ -33,6 +33,8 @@ export default defineConfig({
     env: {
       DATABASE_URL: process.env.E2E_DATABASE_URL ?? "postgres://ccca:ccca@localhost:5432/ccca_e2e",
       NEXT_PUBLIC_URL: E2E_BASE_URL,
+      // next dev locks its dist directory, so a shared one fails while a dev server runs.
+      NEXT_DIST_DIR: ".next-e2e",
       // Empty values win over .env, so uploads stay on disk and emails only get logged.
       S3_BUCKET: "",
       SES_FROM_ADDRESS: "",
