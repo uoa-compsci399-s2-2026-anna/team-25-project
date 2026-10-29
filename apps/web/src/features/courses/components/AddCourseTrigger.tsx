@@ -12,7 +12,7 @@ export async function AddCourseTriggerForMember() {
   await connection()
   const { collection, user } = await getCurrentUser()
   if (collection !== Slugs.Collections.MEMBERS) return null
-  return <AddCourseDialog defaultRole={Promise.resolve(user.position ?? "")} />
+  return <AddCourseDialog defaultRole={user.position ?? ""} />
 }
 
 export function AddCourseTrigger() {

@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { AddCourseTriggerForMember } from "./AddCourseTrigger"
@@ -12,10 +12,6 @@ const openDialog = async () => {
   render(await AddCourseTriggerForMember())
   fireEvent.click(screen.getByRole("button", { name: "+ Add your course" }))
 }
-
-// The role is seeded once the dialog opens, so a "blank" check has to let that
-// settle first or it would pass before it ran.
-const settle = () => act(async () => {})
 
 describe("AddCourseTriggerForMember", () => {
   afterEach(() => {
@@ -31,9 +27,7 @@ describe("AddCourseTriggerForMember", () => {
 
     await openDialog()
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/^Your role/)).toHaveValue("Senior Lecturer")
-    })
+    expect(screen.getByLabelText(/^Your role/)).toHaveValue("Senior Lecturer")
   })
 
   it("leaves Your role blank when the member has no position set", async () => {
@@ -44,7 +38,6 @@ describe("AddCourseTriggerForMember", () => {
     })
 
     await openDialog()
-    await settle()
 
     expect(screen.getByLabelText(/^Your role/)).toHaveValue("")
   })

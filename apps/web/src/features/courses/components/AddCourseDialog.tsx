@@ -39,7 +39,7 @@ export interface AddCourseDialogProps {
    * Pre-fills "Your role" from the signed-in member's profile position - still
    * editable.
    */
-  defaultRole: Promise<string>
+  defaultRole: string
 }
 
 /**
@@ -80,14 +80,7 @@ export function AddCourseDialog({ defaultRole }: AddCourseDialogProps) {
     setOpen(nextOpen)
     if (!nextOpen) return
 
-    form.reset(baseValues)
-    // Seed "Your role" from the profile once that's known - but only into a
-    // still-blank field, so a role the user has already typed while it was on
-    // its way is never overwritten. A failed lookup just leaves it blank.
-    void defaultRole.then(
-      (role) => form.setValues((current) => (current.role ? current : { ...current, role })),
-      () => undefined,
-    )
+    form.reset({ ...baseValues, role: defaultRole })
   }
 
   return (
