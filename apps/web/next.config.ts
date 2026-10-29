@@ -2,6 +2,8 @@ import { withPayload } from "@payloadcms/next/withPayload"
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
+  // The e2e server builds into its own directory, so it can run next to a dev server.
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   output: "standalone",
   transpilePackages: ["@repo/ui"],
   cacheComponents: true,

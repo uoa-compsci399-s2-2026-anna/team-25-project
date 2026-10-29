@@ -8,6 +8,7 @@
       "!pnpm-lock.yaml",
       "!**/.github/",
       "!**/.next",
+      "!**/.next-e2e",
       "!**/dist",
       "!**/.turbo",
       "!**/.vscode",

@@ -5,9 +5,13 @@ node_modules
 
 # testing
 coverage
+apps/web/e2e/.auth/
+apps/web/playwright-report/
+apps/web/test-results/
 
 # next.js
 .next/
+.next-e2e/
 out/
 
 # production
