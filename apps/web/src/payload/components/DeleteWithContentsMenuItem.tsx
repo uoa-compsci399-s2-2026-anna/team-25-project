@@ -50,7 +50,14 @@ function DeleteWithContentsMenuItem({
   const modalSlug = `delete-with-contents-${id}`
 
   const confirmDelete = async () => {
-    const result = await onDelete(id)
+    // ConfirmationModal doesn't catch, so a thrown action would leave it stuck on "Deleting…".
+    let result: ActionResult
+    try {
+      result = await onDelete(id)
+    } catch {
+      toast.error("Could not reach the server. Reload the page and try again.")
+      return
+    }
     if (!result.ok) {
       toast.error(result.formError ?? "Could not delete this. Try again.")
       return

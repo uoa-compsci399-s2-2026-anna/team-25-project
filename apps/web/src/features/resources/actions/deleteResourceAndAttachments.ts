@@ -20,7 +20,8 @@ const FALLBACK_ERROR = "Could not delete this resource. Try again."
  * another resource also links to is kept for that resource.
  *
  * RESOURCE_DELETE is what lets an admin past resourceDelete. A rollback can't restore
- * a stored file that was already removed, so attachments go last.
+ * a stored file that was already removed, so attachments go last. A failure part way
+ * through them can still leave a row without its file.
  */
 export const deleteResourceAndAttachments = async (input: unknown): Promise<ActionResult> => {
   const parsed = inputSchema.safeParse(input)
@@ -56,6 +57,7 @@ export const deleteResourceAndAttachments = async (input: unknown): Promise<Acti
       user,
     })
 
+    // The resource is already gone in this transaction, so the count finds only others.
     for (const attachment of resource.attachments ?? []) {
       const attachmentId = typeof attachment === "object" ? attachment.id : attachment
       const { totalDocs: linkedElsewhere } = await payload.count({
@@ -80,11 +82,16 @@ export const deleteResourceAndAttachments = async (input: unknown): Promise<Acti
   } catch (error) {
     if (transactionID) await payload.db.rollbackTransaction(transactionID)
 
-    // Payload's NotFound, e.g. the resource was deleted in another tab.
-    if (error instanceof APIError && error.status === 404) {
-      return { formError: "This resource no longer exists. Reload the page.", ok: false }
-    }
     payload.logger.error({ err: error }, "deleteResourceAndAttachments failed")
+    // Payload's NotFound says only "Not Found", and may be for the resource or a file.
+    if (error instanceof APIError && error.status === 404) {
+      return {
+        formError: "This resource or one of its files no longer exists. Reload the page.",
+        ok: false,
+      }
+    }
+    // A hook's or access rule's refusal is already fit to show.
+    if (error instanceof APIError) return { formError: error.message, ok: false }
     return { formError: FALLBACK_ERROR, ok: false }
   }
 

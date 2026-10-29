@@ -72,6 +72,10 @@ describe("deleteResourceAndAttachments", () => {
         user: admin.user,
       })
     }
+    // The count must not see the resource being deleted.
+    expect(payload.delete.mock.invocationCallOrder[0]).toBeLessThan(
+      payload.count.mock.invocationCallOrder[0],
+    )
     expect(payload.db.commitTransaction).toHaveBeenCalledWith(1)
     expect(updateTag).toHaveBeenCalledWith(QueryKeys.RESOURCES.ROOT)
     expect(updateTag).toHaveBeenCalledWith(QueryKeys.RESOURCES.ID(3))
@@ -142,10 +146,19 @@ describe("deleteResourceAndAttachments", () => {
     })
 
     expect(await deleteResourceAndAttachments({ resourceId: 3 })).toEqual({
-      formError: "This resource no longer exists. Reload the page.",
+      formError: "This resource or one of its files no longer exists. Reload the page.",
       ok: false,
     })
     expect(payload.db.rollbackTransaction).toHaveBeenCalledWith(1)
+  })
+
+  it("shows a hook's refusal as it is", async () => {
+    mockPayload({ delete: vi.fn().mockRejectedValue(new APIError("Forbidden", 403)) })
+
+    expect(await deleteResourceAndAttachments({ resourceId: 3 })).toEqual({
+      formError: "Forbidden",
+      ok: false,
+    })
   })
 
   it("rolls back, logs and gives the fallback message when a delete fails", async () => {
