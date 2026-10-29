@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test"
+import { SEED_ADMIN } from "./e2e/auth-state"
 
 const isCI = !!process.env.CI
 // Not 3000, so a run never reuses the dev server and its database by mistake.
@@ -10,6 +11,9 @@ export default defineConfig({
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
   reporter: isCI ? [["github"], ["html", { open: "never" }]] : "list",
+  // `next dev` compiles routes on first visit and slows under parallel tests; the CI build does not.
+  timeout: isCI ? 30_000 : 60_000,
+  expect: { timeout: isCI ? 5_000 : 15_000 },
   use: {
     baseURL: E2E_BASE_URL,
     trace: "on-first-retry",
@@ -38,6 +42,8 @@ export default defineConfig({
       // Empty values win over .env, so uploads stay on disk and emails only get logged.
       S3_BUCKET: "",
       SES_FROM_ADDRESS: "",
+      SEED_ADMIN_EMAIL: SEED_ADMIN.email,
+      SEED_ADMIN_PASSWORD: SEED_ADMIN.password,
     },
   },
 })

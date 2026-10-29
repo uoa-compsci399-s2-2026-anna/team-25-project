@@ -12,7 +12,9 @@ export const StartEditingOnLoad = () => {
     if (window.location.hash !== `#${EDIT_HASH}`) return
     startEditing()
     const { pathname, search } = window.location
-    window.history.replaceState(window.history.state, "", `${pathname}${search}`)
+    // Not `window.history.state`: Next.js skips its router sync for its own state, and
+    // the router then writes #edit back on its next update.
+    window.history.replaceState(null, "", `${pathname}${search}`)
   }, [startEditing])
 
   return null
