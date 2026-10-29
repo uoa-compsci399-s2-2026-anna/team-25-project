@@ -34,6 +34,9 @@ export const Routes = {
   PRIVACY: route("/privacy"),
   GUIDELINES: route("/guidelines"),
   PASSWORD: {
+    // With `email`, the form starts filled in, e.g. from what was typed on login.
+    FORGOT: (email?: string) =>
+      route(email ? `/forgot-password?email=${encodeURIComponent(email)}` : "/forgot-password"),
     /** Opened from the emailed reset link, which carries `?token=`. */
     RESET: route("/reset-password"),
   },

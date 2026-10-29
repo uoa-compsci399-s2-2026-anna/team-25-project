@@ -27,6 +27,7 @@ describe("safeRedirect", () => {
     Routes.LOGIN,
     Routes.REGISTER.ROOT,
     Routes.REGISTER.PROFILE,
+    Routes.PASSWORD.FORGOT(),
     Routes.PASSWORD.RESET,
     "/login?redirect=/login",
   ])("rejects auth page %s to avoid a loop", (value) => {

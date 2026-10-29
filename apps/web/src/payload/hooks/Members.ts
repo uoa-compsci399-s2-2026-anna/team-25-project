@@ -70,6 +70,8 @@ export const enforceInstitutionDomain: CollectionBeforeValidateHook<Member> = as
   data,
   req,
 }) => {
+  if (req.context.skipDomainCheck) return data
+
   // Payload's own field-level beforeValidate step already backfills any field
   // omitted from a partial update with its value from the existing document,
   // so data.email/data.institution are only genuinely absent here on create,

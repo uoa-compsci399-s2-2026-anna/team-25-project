@@ -90,6 +90,20 @@ describe("MemberContacts", () => {
     const { container } = await renderContacts()
     expect(container).toBeEmptyDOMElement()
   })
+  it("links the member to a password reset on their own profile only", async () => {
+    vi.mocked(getMemberDetailsCached).mockResolvedValue(member(false) as never)
+
+    await renderContacts()
+    expect(screen.queryByRole("link", { name: "Reset password" })).not.toBeInTheDocument()
+
+    cleanup()
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "members", user: { id: 7 } } as never)
+    await renderContacts()
+    expect(screen.getByRole("link", { name: "Reset password" })).toHaveAttribute(
+      "href",
+      "/forgot-password?email=anna.tui%40auckland.ac.nz",
+    )
+  })
 })
 
 describe("MemberContactsSkeleton", () => {
