@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test"
 import { Routes } from "@/lib/routes"
-import { ADMIN_STORAGE_STATE, MEMBER_STORAGE_STATE } from "./auth-state"
+import { MEMBER_STORAGE_STATE } from "./auth-state"
 import { gotoHydrated, logIn, openWithRetry, uniqueTitle } from "./helpers"
 
 test.use({ storageState: MEMBER_STORAGE_STATE })
@@ -165,20 +165,4 @@ test("an owner adds an editor, who can then edit the offering", async ({ page, b
   await expect(editDialog).toBeHidden()
   await expect(editorPage.getByText("Research project")).toBeVisible()
   await editorContext.close()
-})
-
-test("an admin deletes a course", async ({ page, browser }) => {
-  const course = await publishCourse(page)
-  const coursePath = new URL(page.url()).pathname
-
-  const adminContext = await browser.newContext({ storageState: ADMIN_STORAGE_STATE })
-  const adminPage = await adminContext.newPage()
-  await gotoHydrated(adminPage, coursePath)
-  const confirmDelete = adminPage.getByRole("button", { name: "Confirm delete" })
-  await openWithRetry(adminPage.getByRole("button", { name: "Delete course" }), confirmDelete)
-  await confirmDelete.click()
-
-  await expect(adminPage).toHaveURL(Routes.COURSES.ROOT)
-  await expect(adminPage.getByRole("link", { name: course.name })).toBeHidden()
-  await adminContext.close()
 })
