@@ -14,10 +14,10 @@ import type { ResourceCourseOption } from "../resources.queries"
 import { AddResourceForm } from "./AddResourceForm"
 
 /**
- * The button that opens the dialog, and what stands in for it while the course options load.
- * Every prop reaches the real `<Button>`, since `DialogTrigger` clones its click handling onto it.
+ * The button that opens the dialog. Every prop reaches the real `<Button>`, since
+ * `DialogTrigger` clones its click handling onto it.
  */
-export const AddResourceTriggerButton = (props: ComponentProps<typeof Button>) => (
+const AddResourceTriggerButton = (props: ComponentProps<typeof Button>) => (
   <Button className="font-bold" size="lg" type="button" variant="button-mauve" {...props}>
     + Contribute a resource
   </Button>

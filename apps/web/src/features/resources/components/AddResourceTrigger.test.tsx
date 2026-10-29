@@ -10,7 +10,6 @@ vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
 vi.mock("../resources.queries", () => ({ getEditableCourseOptions: vi.fn() }))
 vi.mock("./AddResourceDialog", () => ({
   AddResourceDialog: vi.fn(() => <button type="button">+ Contribute a resource</button>),
-  AddResourceTriggerButton: () => null,
 }))
 
 type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>
@@ -35,15 +34,13 @@ describe("AddResourceTriggerWithCourses", () => {
     expect(screen.getByRole("button", { name: "+ Contribute a resource" })).toBeInTheDocument()
   })
 
-  it("offers no courses to an admin, who cannot share a resource", async () => {
-    vi.mocked(getCurrentUser).mockResolvedValue({
-      collection: "admin",
-      user: { id: 1 },
-    } as unknown as CurrentUser)
+  it.each([
+    ["an admin, who cannot share a resource", { collection: "admin", user: { id: 1 } }],
+    ["a signed-out visitor", { collection: null, user: null }],
+  ])("hides the button from %s", async (_, current) => {
+    vi.mocked(getCurrentUser).mockResolvedValue(current as unknown as CurrentUser)
 
-    render(await AddResourceTriggerWithCourses())
-
+    expect(await AddResourceTriggerWithCourses()).toBeNull()
     expect(getEditableCourseOptions).not.toHaveBeenCalled()
-    expect(AddResourceDialog).toHaveBeenCalledWith({ courses: [] }, undefined)
   })
 })
