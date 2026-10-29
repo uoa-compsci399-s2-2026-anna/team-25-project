@@ -18,6 +18,7 @@ import {
   revalidateDeletedResource,
   revalidateResources,
 } from "../hooks/Resources"
+import { Admin } from "./Admin"
 import { Institutions } from "./Institutions"
 import { Members } from "./Members"
 import { Proposals } from "./Proposals"
@@ -50,6 +51,15 @@ describe("changed collection hooks", () => {
     expect(create({ context: {}, user: { collection: "members" } })).toBe(false)
     expect(create({ context: { registeringVerifiedMember: true } })).toBe(true)
     expect(create({ context: {}, user: { collection: "admin" } })).toBe(true)
+  })
+
+  it("lets only an admin unlock a member or admin account", () => {
+    for (const collection of [Members, Admin]) {
+      const unlock = (req: object) => collection.access?.unlock?.({ req } as never)
+      expect(unlock({})).toBe(false)
+      expect(unlock({ user: { collection: "members" } })).toBe(false)
+      expect(unlock({ user: { collection: "admin" } })).toBe(true)
+    }
   })
 
   it("registers proposal cache invalidation", () => {
