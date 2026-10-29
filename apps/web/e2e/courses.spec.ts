@@ -59,10 +59,14 @@ async function openNewDraftOffering(page: Page) {
   await addDialog.getByRole("textbox", { name: "Teaching period" }).fill(DRAFT_PERIOD)
   await addDialog.getByRole("button", { name: "Save draft" }).click()
   await expect(addDialog).toBeHidden()
-  // The "Draft saved" toast covers the draft dialog's buttons until it closes. It stays
-  // open while hovered, and the pointer is still where "Save draft" was.
-  await page.mouse.move(0, 0)
-  await expect(page.getByRole("heading", { name: "Draft saved" })).toBeHidden({ timeout: 10_000 })
+  // The "Draft saved" toast covers the draft dialog's buttons. Its close button needs a
+  // hover, and under `next dev` the devtools button covers it.
+  const toast = page
+    .getByRole("dialog")
+    .filter({ has: page.getByRole("heading", { name: "Draft saved" }) })
+  await toast.hover()
+  await toast.getByRole("button", { name: "Close toast" }).dispatchEvent("click")
+  await expect(toast).toBeHidden()
 
   await page.getByRole("button", { name: new RegExp(DRAFT_PERIOD) }).click()
   // The draft's dialog has no accessible name, and toasts are dialogs too.
@@ -93,6 +97,7 @@ test("a member deletes a draft course", async ({ page }) => {
   await draftDialog.getByRole("button", { name: "Confirm delete" }).click()
 
   await expect(page.getByText("Draft deleted")).toBeVisible()
+  await page.reload()
   await expect(page.getByRole("row", { name: new RegExp(course.code) })).toBeHidden()
 })
 
@@ -112,10 +117,12 @@ test("an owner adds, edits and deletes an offering", async ({ page }) => {
   await editDialog.getByRole("textbox", { name: "Project type" }).fill("Research project")
   await editDialog.getByRole("button", { name: "Save changes" }).click()
   await expect(editDialog).toBeHidden()
+  await page.reload()
   await expect(page.getByText("Research project")).toBeVisible()
 
-  await page.getByRole("button", { name: "Delete offering" }).click()
-  await page.getByRole("button", { name: "Confirm delete" }).click()
+  const confirmDelete = page.getByRole("button", { name: "Confirm delete" })
+  await openWithRetry(page.getByRole("button", { name: "Delete offering" }), confirmDelete)
+  await confirmDelete.click()
   await expect(page.getByText("Offering deleted")).toBeVisible()
   await page.reload()
   await expect(page.getByText("Research project")).toBeHidden()
@@ -138,6 +145,7 @@ test("an owner deletes a draft offering", async ({ page }) => {
   await draftDialog.getByRole("button", { name: "Confirm delete" }).click()
 
   await expect(page.getByText("Draft deleted")).toBeVisible()
+  await page.reload()
   await expect(page.getByRole("button", { name: new RegExp(DRAFT_PERIOD) })).toBeHidden()
 })
 
@@ -163,6 +171,7 @@ test("an owner adds an editor, who can then edit the offering", async ({ page, b
   await editDialog.getByRole("textbox", { name: "Project type" }).fill("Research project")
   await editDialog.getByRole("button", { name: "Save changes" }).click()
   await expect(editDialog).toBeHidden()
+  await editorPage.reload()
   await expect(editorPage.getByText("Research project")).toBeVisible()
   await editorContext.close()
 })

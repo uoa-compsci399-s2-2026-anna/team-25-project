@@ -27,14 +27,17 @@ test("a member adds, edits and deletes a publication", async ({ page }) => {
   await editDialog.getByRole("textbox", { name: "Title" }).fill(editedTitle)
   await editDialog.getByRole("button", { name: "Save changes" }).click()
   await expect(editDialog).toBeHidden()
+  await page.reload()
   await expect(page.getByRole("link", { name: editedTitle })).toBeVisible()
 
-  await page.getByRole("button", { name: `Actions for ${editedTitle}` }).click()
-  await page.getByRole("menuitem", { name: "Delete" }).click()
+  const deleteItem = page.getByRole("menuitem", { name: "Delete" })
+  await openWithRetry(page.getByRole("button", { name: `Actions for ${editedTitle}` }), deleteItem)
+  await deleteItem.click()
   await page.getByRole("button", { name: "Confirm delete" }).click()
   await expect(page.getByText("Publication deleted")).toBeVisible()
-  await page.reload()
-  await expect(page.getByRole("link", { name: editedTitle })).toBeHidden()
+  // Publications have no page of their own, so search for it rather than rely on page 1.
+  await page.goto(`${Routes.PUBLICATIONS}?q=${encodeURIComponent(editedTitle)}`)
+  await expect(page.getByText("No publications found")).toBeVisible()
 })
 
 test("a member imports a publication from BibTeX", async ({ page }) => {

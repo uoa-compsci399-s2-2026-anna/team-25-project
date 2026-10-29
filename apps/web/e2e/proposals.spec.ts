@@ -24,6 +24,7 @@ test("a member posts, edits and deletes a proposal", async ({ page }) => {
   await page.getByRole("textbox", { name: "Summary" }).fill("Does pairing help teams ship faster?")
   await page.getByRole("button", { name: "Done" }).click()
   await expect(page.getByRole("textbox", { name: "Summary" })).toBeHidden()
+  const proposalPath = new URL(page.url()).pathname
   await page.reload()
   await expect(page.getByText("Does pairing help teams ship faster?")).toBeVisible()
 
@@ -32,6 +33,6 @@ test("a member posts, edits and deletes a proposal", async ({ page }) => {
   await deleteItem.click()
   await page.getByRole("button", { name: "Confirm delete" }).click()
   await expect(page).toHaveURL(Routes.PROPOSALS.ROOT)
-  await page.reload()
-  await expect(page.getByRole("link", { name: title })).toBeHidden()
+  await page.goto(proposalPath)
+  await expect(page.getByText("This proposal is not available")).toBeVisible()
 })

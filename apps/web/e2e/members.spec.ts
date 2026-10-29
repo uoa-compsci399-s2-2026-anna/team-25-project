@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test"
 import { Routes } from "@/lib/routes"
 import { MEMBER_STORAGE_STATE } from "./auth-state"
-import { gotoHydrated, openWithRetry, uniqueTitle } from "./helpers"
+import { openWithRetry, uniqueTitle } from "./helpers"
 
 test("a guest opens a member profile from the members page", async ({ page }) => {
   await page.goto(Routes.MEMBERS.ROOT)
@@ -18,7 +18,12 @@ test.describe("as a member", () => {
 
   test("a member edits their own bio", async ({ page }) => {
     const bio = uniqueTitle("I run the capstone at Auckland.")
-    await gotoHydrated(page, Routes.MEMBERS.MEMBER(1))
+    await page.goto(`${Routes.MEMBERS.ROOT}?q=Arohan`)
+    await page
+      .getByRole("link", { name: /Arohan Patel/ })
+      .first()
+      .click()
+    await expect(page.getByRole("heading", { level: 1, name: /Arohan Patel/ })).toBeVisible()
 
     const about = page.getByRole("textbox", { name: "About" })
     await openWithRetry(page.getByRole("button", { name: "Edit" }), about)

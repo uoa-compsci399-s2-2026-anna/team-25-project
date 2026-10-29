@@ -24,23 +24,25 @@ test("a member shares, edits and deletes a resource", async ({ page }) => {
   await dialog.getByRole("button", { name: "Share resource" }).click()
   await expect(dialog).toBeHidden()
 
-  await page.getByRole("link", { name: title }).first().click()
-  await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible()
-  await expect(page.getByRole("heading", { name: "Attachments - 1" })).toBeVisible()
-
+  // The card's Edit opens the resource's page with #edit, which starts the editor.
   await page.getByRole("button", { name: `Actions for ${title}` }).click()
   await page.getByRole("menuitem", { name: "Edit" }).click()
+  await expect(page.getByRole("heading", { name: "Attachments - 1" })).toBeVisible()
   await page.getByRole("textbox", { name: "Title" }).fill(editedTitle)
   await page.getByRole("button", { name: "Done" }).click()
   await expect(page.getByRole("heading", { level: 1, name: editedTitle })).toBeVisible()
+  // If the save leaves #edit in the URL, a reload opens the editor again.
+  expect(new URL(page.url()).hash).toBe("")
+  const resourcePath = new URL(page.url()).pathname
   await page.reload()
   await expect(page.getByRole("heading", { level: 1, name: editedTitle })).toBeVisible()
+  await expect(page.getByRole("textbox", { name: "Title" })).toBeHidden()
 
   const deleteItem = page.getByRole("menuitem", { name: "Delete" })
   await openWithRetry(page.getByRole("button", { name: `Actions for ${editedTitle}` }), deleteItem)
   await deleteItem.click()
   await page.getByRole("button", { name: "Confirm delete" }).click()
   await expect(page).toHaveURL(Routes.RESOURCES.ROOT)
-  await page.reload()
-  await expect(page.getByRole("link", { name: editedTitle })).toBeHidden()
+  await page.goto(resourcePath)
+  await expect(page.getByText("This resource is not available")).toBeVisible()
 })
