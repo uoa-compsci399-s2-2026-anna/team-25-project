@@ -18,7 +18,7 @@ export interface PublicationCardActionsProps {
 
 /**
  * The publication card's Edit/Delete dropdown. Only rendered for the
- * publication's linked authors and admins (see `PublicationCardActionsServer`).
+ * publication's linked authors (see `PublicationCardActionsServer`).
  */
 export function PublicationCardActions({
   publicationId,

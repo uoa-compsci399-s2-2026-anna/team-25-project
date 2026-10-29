@@ -61,15 +61,15 @@ describe("PublicationCardActionsServer", () => {
     ).toBeInTheDocument()
   })
 
-  it("shows the dropdown to an admin who isn't a linked author", async () => {
+  // Admins manage publications from the admin dashboard - and their ids are their own,
+  // so one matching an author's is no claim to the publication.
+  it("hides the dropdown from an admin, even one sharing a linked author's id", async () => {
     vi.mocked(getAuthorCandidatesCached).mockResolvedValue([candidate])
-    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "admin", user: { id: 999 } } as never)
+    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "admin", user: { id: 10 } } as never)
 
-    render(await PublicationCardActionsServer({ publication: publication() }))
+    const { container } = render(await PublicationCardActionsServer({ publication: publication() }))
 
-    expect(
-      screen.getByRole("button", { name: "Actions for Peer assessment in capstones" }),
-    ).toBeInTheDocument()
+    expect(container).toBeEmptyDOMElement()
   })
 
   it("hides the dropdown from a signed-in member who isn't a linked author", async () => {
@@ -113,7 +113,10 @@ describe("PublicationCardActionsServer", () => {
 
   it("resolves a linked author to their full candidate, for the edit form's rows", async () => {
     vi.mocked(getAuthorCandidatesCached).mockResolvedValue([candidate])
-    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "admin", user: { id: 999 } } as never)
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      user: { id: 10 },
+    } as never)
 
     render(
       await PublicationCardActionsServer({
@@ -140,7 +143,10 @@ describe("PublicationCardActionsServer", () => {
     const warn = vi.fn()
     vi.mocked(getPayloadClient).mockResolvedValue({ logger: { warn } } as never)
     vi.mocked(getAuthorCandidatesCached).mockResolvedValue([])
-    vi.mocked(getCurrentUser).mockResolvedValue({ collection: "admin", user: { id: 999 } } as never)
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      collection: "members",
+      user: { id: 42 },
+    } as never)
 
     render(
       await PublicationCardActionsServer({

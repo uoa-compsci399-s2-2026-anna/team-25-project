@@ -102,8 +102,8 @@ export const PublicationCardActionsServer = async ({
 }) => {
   const { collection, user } = await getCurrentUser()
   const authorIds = publication.authors.map(authorMemberId)
-  const canManage =
-    collection === Slugs.Collections.ADMIN || (user !== null && authorIds.includes(user.id))
+  // Admins manage publications from the admin dashboard, so only authors get this.
+  const canManage = collection === Slugs.Collections.MEMBERS && authorIds.includes(user.id)
 
   if (!canManage) {
     return null
