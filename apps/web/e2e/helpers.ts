@@ -1,12 +1,23 @@
-import type { Page } from "@playwright/test"
+import { expect, type Locator, type Page } from "@playwright/test"
 import { Routes } from "@/lib/routes"
 
 /**
- * Opens a page and waits for hydration. Before it, clicks do nothing and hydration
- * resets controlled inputs, which wipes anything typed.
+ * Opens a page and waits until the network is idle, which is usually after hydration.
+ * Before hydration, clicks do nothing and hydration resets anything typed.
  */
 export async function gotoHydrated(page: Page, path: string) {
   await page.goto(path, { waitUntil: "networkidle" })
+}
+
+/**
+ * Clicks `trigger` until `opened` shows. `networkidle` does not prove that a Suspense
+ * boundary has hydrated, and a click before hydration does nothing.
+ */
+export async function openWithRetry(trigger: Locator, opened: Locator) {
+  await expect(async () => {
+    if (!(await opened.isVisible())) await trigger.click({ timeout: 1_000 })
+    await expect(opened).toBeVisible({ timeout: 1_000 })
+  }).toPass()
 }
 
 /** Logs in through the form. Seeded members all use the password "changeme". */

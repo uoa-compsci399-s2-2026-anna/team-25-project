@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test"
 import { Routes } from "@/lib/routes"
 import { MEMBER_STORAGE_STATE } from "./auth-state"
-import { gotoHydrated, uniqueTitle } from "./helpers"
+import { gotoHydrated, openWithRetry, uniqueTitle } from "./helpers"
 
 test.use({ storageState: MEMBER_STORAGE_STATE })
 
@@ -10,8 +10,8 @@ test("a member adds, edits and deletes a publication", async ({ page }) => {
   const editedTitle = `${title} (revised)`
   await gotoHydrated(page, Routes.PUBLICATIONS)
 
-  await page.getByRole("button", { name: "+ Add a publication" }).click()
   const addDialog = page.getByRole("dialog", { name: "Add a publication" })
+  await openWithRetry(page.getByRole("button", { name: "+ Add a publication" }), addDialog)
   await addDialog.getByRole("button", { name: "Manual entry" }).click()
   await addDialog.getByRole("textbox", { name: "Title" }).fill(title)
   await addDialog
@@ -32,6 +32,8 @@ test("a member adds, edits and deletes a publication", async ({ page }) => {
   await page.getByRole("button", { name: `Actions for ${editedTitle}` }).click()
   await page.getByRole("menuitem", { name: "Delete" }).click()
   await page.getByRole("button", { name: "Confirm delete" }).click()
+  await expect(page.getByText("Publication deleted")).toBeVisible()
+  await page.reload()
   await expect(page.getByRole("link", { name: editedTitle })).toBeHidden()
 })
 
@@ -41,8 +43,8 @@ test("a member imports a publication from BibTeX", async ({ page }) => {
   const citationKey = `patel${Date.now()}`
   await gotoHydrated(page, Routes.PUBLICATIONS)
 
-  await page.getByRole("button", { name: "+ Add a publication" }).click()
   const dialog = page.getByRole("dialog", { name: "Add a publication" })
+  await openWithRetry(page.getByRole("button", { name: "+ Add a publication" }), dialog)
   await dialog.getByRole("textbox", { name: "Paste a BibTeX entry" }).fill(
     `@article{${citationKey},
   title = {${title}},

@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test"
 import { Routes } from "@/lib/routes"
 import { ADMIN_STORAGE_STATE, MEMBER_STORAGE_STATE } from "./auth-state"
-import { gotoHydrated, uniqueTitle } from "./helpers"
+import { gotoHydrated, logIn, openWithRetry, uniqueTitle } from "./helpers"
 
 test.use({ storageState: MEMBER_STORAGE_STATE })
 
@@ -24,8 +24,8 @@ async function fillPublishFields(page: Page, dialog: Locator) {
 async function startCourse(page: Page) {
   const course = { name: uniqueTitle("Software Studio"), code: uniqueTitle("SOFTENG") }
   await gotoHydrated(page, Routes.COURSES.ROOT)
-  await page.getByRole("button", { name: "+ Add your course" }).click()
   const dialog = page.getByRole("dialog", { name: "Add a capstone course" })
+  await openWithRetry(page.getByRole("button", { name: "+ Add your course" }), dialog)
   await dialog.getByRole("textbox", { name: "Course name" }).fill(course.name)
   await dialog.getByRole("textbox", { name: "Course code" }).fill(course.code)
   return { course, dialog }
@@ -117,6 +117,8 @@ test("an owner adds, edits and deletes an offering", async ({ page }) => {
   await page.getByRole("button", { name: "Delete offering" }).click()
   await page.getByRole("button", { name: "Confirm delete" }).click()
   await expect(page.getByText("Offering deleted")).toBeVisible()
+  await page.reload()
+  await expect(page.getByText("Research project")).toBeHidden()
 })
 
 test("an owner saves an offering as a draft, then publishes it", async ({ page }) => {
@@ -126,6 +128,7 @@ test("an owner saves an offering as a draft, then publishes it", async ({ page }
   await draftDialog.getByRole("button", { name: "Publish" }).click()
 
   await expect(draftDialog).toBeHidden()
+  await expect(page.getByRole("link", { name: new RegExp(DRAFT_PERIOD) })).toBeVisible()
   await expect(page.getByRole("button", { name: new RegExp(DRAFT_PERIOD) })).toBeHidden()
 })
 
@@ -138,6 +141,32 @@ test("an owner deletes a draft offering", async ({ page }) => {
   await expect(page.getByRole("button", { name: new RegExp(DRAFT_PERIOD) })).toBeHidden()
 })
 
+test("an owner adds an editor, who can then edit the offering", async ({ page, browser }) => {
+  await publishCourse(page)
+  const coursePath = new URL(page.url()).pathname
+
+  await page.getByRole("button", { name: "Manage editors" }).click()
+  const editorsDialog = page.getByRole("dialog", { name: "Course editors" })
+  await editorsDialog.getByRole("combobox", { name: "Add an editor" }).fill("Hana")
+  await page.getByRole("option", { name: /Hana Rangi/ }).click()
+  await editorsDialog.getByRole("button", { name: "Save editors" }).click()
+  await expect(page.getByText("Editors saved")).toBeVisible()
+
+  // Starts logged out. A context made in a test otherwise takes the member's session.
+  const editorContext = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+  const editorPage = await editorContext.newPage()
+  await gotoHydrated(editorPage, Routes.LOGIN)
+  await logIn(editorPage, "hana.rangi@otago.ac.nz")
+  await gotoHydrated(editorPage, coursePath)
+  const editDialog = editorPage.getByRole("dialog", { name: "Edit offering" })
+  await openWithRetry(editorPage.getByRole("button", { name: "Edit offering" }), editDialog)
+  await editDialog.getByRole("textbox", { name: "Project type" }).fill("Research project")
+  await editDialog.getByRole("button", { name: "Save changes" }).click()
+  await expect(editDialog).toBeHidden()
+  await expect(editorPage.getByText("Research project")).toBeVisible()
+  await editorContext.close()
+})
+
 test("an admin deletes a course", async ({ page, browser }) => {
   const course = await publishCourse(page)
   const coursePath = new URL(page.url()).pathname
@@ -145,8 +174,9 @@ test("an admin deletes a course", async ({ page, browser }) => {
   const adminContext = await browser.newContext({ storageState: ADMIN_STORAGE_STATE })
   const adminPage = await adminContext.newPage()
   await gotoHydrated(adminPage, coursePath)
-  await adminPage.getByRole("button", { name: "Delete course" }).click()
-  await adminPage.getByRole("button", { name: "Confirm delete" }).click()
+  const confirmDelete = adminPage.getByRole("button", { name: "Confirm delete" })
+  await openWithRetry(adminPage.getByRole("button", { name: "Delete course" }), confirmDelete)
+  await confirmDelete.click()
 
   await expect(adminPage).toHaveURL(Routes.COURSES.ROOT)
   await expect(adminPage.getByRole("link", { name: course.name })).toBeHidden()
