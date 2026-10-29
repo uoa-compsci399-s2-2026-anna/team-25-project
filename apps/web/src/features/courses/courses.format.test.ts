@@ -8,6 +8,7 @@ import {
   deriveUniversity,
   findCurrentOffering,
   isCourseEditor,
+  isTeachingStaff,
   type MyCoursesInput,
   offeringTiming,
   selectOffering,
@@ -418,5 +419,20 @@ describe("toOfferingValues", () => {
       startDate: "2026-07-20",
       endDate: "2026-11-06",
     })
+  })
+})
+
+describe("isTeachingStaff", () => {
+  it("finds teaching staff by plain or populated member", () => {
+    const offering = version({
+      teachingTeam: [
+        { member: 3, role: "Tutor" },
+        { member: member({ id: 4 }), role: "Lecturer" },
+        { member: null, role: "Tutor" },
+      ],
+    })
+    expect(isTeachingStaff(offering, 3)).toBe(true)
+    expect(isTeachingStaff(offering, 4)).toBe(true)
+    expect(isTeachingStaff(offering, 5)).toBe(false)
   })
 })

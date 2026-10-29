@@ -3,6 +3,7 @@ import { Slugs } from "@/lib/payload/slugs"
 import {
   getToday,
   isCourseEditor,
+  isTeachingStaff,
   ownerIdOf,
   selectOffering,
   toNewOfferingValues,
@@ -17,6 +18,7 @@ import { AddOfferingDialog, EditOfferingDialog } from "./OfferingDialogs"
  * "Add offering" and "Edit offering" for the course's owner and editors. A new
  * offering is filled in from the current one; Edit corrects the one being viewed.
  * The owner can also delete the one being viewed, while the course has another.
+ * The viewed offering's teaching staff get Edit too.
  * Per-viewer, so the course page renders this in its own Suspense boundary.
  */
 export async function OfferingActions({
@@ -30,7 +32,7 @@ export async function OfferingActions({
   if (collection !== Slugs.Collections.MEMBERS) return null
 
   const course = await getPublishedCourseCached(courseId)
-  if (!course || !isCourseEditor(course, user.id)) return null
+  if (!course) return null
 
   const offerings = await getPublishedOfferingsCached(courseId)
   const { offering, primary } = selectOffering(
@@ -39,6 +41,9 @@ export async function OfferingActions({
     getToday(),
   )
   if (!offering || !primary) return null
+
+  const editor = isCourseEditor(course, user.id)
+  if (!editor && !isTeachingStaff(offering, user.id)) return null
 
   // The hooks refuse the last published offering, as that would leave the course empty.
   const canDelete = ownerIdOf(course) === user.id && offerings.length > 1
@@ -52,11 +57,13 @@ export async function OfferingActions({
         key={offering.id}
         offeringId={offering.id}
       />
-      <AddOfferingDialog
-        courseId={courseId}
-        initialValues={toNewOfferingValues(primary)}
-        sourceId={primary.id}
-      />
+      {editor && (
+        <AddOfferingDialog
+          courseId={courseId}
+          initialValues={toNewOfferingValues(primary)}
+          sourceId={primary.id}
+        />
+      )}
       {canDelete && (
         <DeleteOfferingButton
           courseId={courseId}

@@ -8,6 +8,7 @@ import type {
   PayloadRequest,
 } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
+import { canEditCourse } from "../access/Courses/Courses"
 import { relationID } from "../access/Courses/helpers"
 import { admin, member } from "../access/helpers"
 import { revalidateCourse } from "./Courses"
@@ -19,6 +20,7 @@ import {
   lockCourse,
   requireEditor,
   requireID,
+  requireOfferingEditor,
   VERSION_WRITE,
   type VersionMetadataKey,
   type VersionWrite,
@@ -57,14 +59,13 @@ const contentKeys = [
   "teachingTeam",
 ] as const
 
-// Array row IDs and populated relationship objects are not content changes.
+// Array row IDs and populated relationship objects are not changes.
+const teamOf = (version: Partial<CourseVersion> | undefined) =>
+  version?.teachingTeam?.map((row) => ({ member: relationID(row.member), role: row.role?.trim() }))
+
 function content(version: Partial<CourseVersion>) {
   return contentKeys.map((key) => {
-    if (key === "teachingTeam")
-      return version.teachingTeam?.map((row) => ({
-        member: relationID(row.member),
-        role: row.role?.trim(),
-      }))
+    if (key === "teachingTeam") return teamOf(version)
     if (key === "startDate" || key === "endDate")
       return version[key] ? new Date(version[key]).toISOString() : null
     return version[key] ?? null
@@ -248,13 +249,14 @@ export const prepareVersion: CollectionBeforeValidateHook<CourseVersion> = async
 
   const isCreate = operation === "create"
   const course = await lockCourse(req, relationID(isCreate ? data.course : originalDoc?.course))
-  requireEditor(req, course)
 
   // `latest` is the newest revision, draft included.
   const latest = isCreate ? undefined : originalDoc
-  if (!isCreate && !latest) fail("This offering was not found.", 404)
+  if (isCreate) requireEditor(req, course)
+  else if (!latest) fail("This offering was not found.", 404)
 
   const current = latest ? await readVersion(req, requireID(latest.id)) : undefined
+  if (current) requireOfferingEditor(req, course, current)
 
   // `published` is what the  public can read: the offering's publication, while it has one.
   const published = current && isPublished(current) ? current : undefined
@@ -281,6 +283,16 @@ export const prepareVersion: CollectionBeforeValidateHook<CourseVersion> = async
 
   data.course = course.id
   const next = mergeWithSaved(latest, data)
+
+  // The teaching team decides who else may edit, so only the course's editors set it.
+  // Rows whose member was deleted grant nothing, and the offering actions drop them.
+  const liveTeam = (version?: Partial<CourseVersion>) =>
+    (teamOf(version) ?? []).filter((row) => row.member)
+  if (!canEditCourse(req, course) && !isDeepStrictEqual(liveTeam(next), liveTeam(latest)))
+    fail("Only the course's owner or editors can change the teaching team.", 403)
+  const teamMembers = liveTeam(next).map((row) => row.member)
+  if (new Set(teamMembers).size !== teamMembers.length)
+    fail("Each member can be on the teaching team once.")
   if (!savingDraft) validatePeriod(next)
 
   // Publication is the only writer of the metadata. Dropping the keys otherwise
