@@ -3,7 +3,7 @@ import { Slugs } from "@/lib/payload/slugs"
 import { isSignedIn } from "../access"
 import { courseWrite } from "../access/Courses/Courses"
 import { admin } from "../access/helpers"
-import { isAdminOrOwner } from "../access/Resources"
+import { isAdminOrOwner, resourceDelete } from "../access/Resources"
 import {
   defaultResourceOwner,
   revalidateDeletedResource,
@@ -16,13 +16,17 @@ export const Resources: CollectionConfig = {
   admin: {
     useAsTitle: "title",
     defaultColumns: ["title", "owner", "course", "createdAt"],
+    components: {
+      edit: {
+        editMenuItems: ["/payload/components/DeleteWithContentsMenuItem#DeleteResourceMenuItem"],
+      },
+    },
   },
   access: {
     read: isSignedIn,
     create: isSignedIn,
     update: isAdminOrOwner,
-    // Matches update: a member who can change their resource can take it down too.
-    delete: isAdminOrOwner,
+    delete: resourceDelete,
   },
   hooks: {
     afterChange: [revalidateResources],

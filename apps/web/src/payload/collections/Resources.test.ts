@@ -1,7 +1,7 @@
 import type { PayloadRequest, RelationshipField } from "payload"
 import { describe, expect, it } from "vitest"
 import { Slugs } from "@/lib/payload/slugs"
-import { isAdminOrOwner } from "../access/Resources"
+import { isAdminOrOwner, resourceDelete } from "../access/Resources"
 import { validateResourceCourse } from "../validation/Resources"
 import { Resources } from "./Resources"
 
@@ -24,9 +24,9 @@ describe("Resources collection", () => {
     })
   })
 
-  it("lets the owner or an admin update and delete a resource", () => {
+  it("lets the owner or an admin update a resource, and leaves deletes to resourceDelete", () => {
     expect(Resources.access?.update).toBe(isAdminOrOwner)
-    expect(Resources.access?.delete).toBe(isAdminOrOwner)
+    expect(Resources.access?.delete).toBe(resourceDelete)
   })
 
   it("lets only admins transfer ownership", async () => {

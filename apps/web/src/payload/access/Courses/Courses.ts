@@ -13,9 +13,15 @@ export const courseRead = courseReadAccess("", { hasPublishedVersion: { equals: 
 
 export const courseWrite = courseWriteAccess("")
 
-// Members may delete only never-published courses they own.
+// Set by deleteCourse to the id of the course an admin is deleting, so its published
+// offerings can go with it. assertVersionDeletable only honours it for an admin and that
+// course, so published history stays permanent everywhere else.
+export const COURSE_DELETE = "courseDelete"
+
+// Admins delete only through deleteCourse, which takes the offerings with it, so the
+// panel's own Delete is hidden. Members may delete only never-published courses they own.
 export const courseDelete: Access = ({ req }) => {
-  if (admin(req)) return true
+  if (admin(req)) return req.context[COURSE_DELETE] !== undefined
   if (!member(req)) return false
   const ownDraft: Where = {
     and: [{ owner: { equals: req.user?.id } }, { hasPublishedVersion: { not_equals: true } }],

@@ -12,6 +12,8 @@ import { UnorderedListFeatureClient as UnorderedListFeatureClient_e70f5e05f09f93
 import { BlockquoteFeatureClient as BlockquoteFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { HeadingFeatureClient as HeadingFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { DeleteCourseMenuItem as DeleteCourseMenuItem_e1f6efeefa960b4a71ab96321e2c40ff } from '../../../payload/components/DeleteWithContentsMenuItem'
+import { DeleteResourceMenuItem as DeleteResourceMenuItem_e1f6efeefa960b4a71ab96321e2c40ff } from '../../../payload/components/DeleteWithContentsMenuItem'
 import { AdminIcon as AdminIcon_84a3924fa6975f815fe159e126e4ec9c } from '../../../payload/components/AdminIcon'
 import { AdminLogo as AdminLogo_564bf34304abb38917a0b375396d43e6 } from '../../../payload/components/AdminLogo'
 import { ReturnToSiteLoginLink as ReturnToSiteLoginLink_103e409816f0d6b62eac350097402c51 } from '../../../payload/components/ReturnToSite'
@@ -35,6 +37,8 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#BlockquoteFeatureClient": BlockquoteFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#HeadingFeatureClient": HeadingFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ParagraphFeatureClient": ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "/payload/components/DeleteWithContentsMenuItem#DeleteCourseMenuItem": DeleteCourseMenuItem_e1f6efeefa960b4a71ab96321e2c40ff,
+  "/payload/components/DeleteWithContentsMenuItem#DeleteResourceMenuItem": DeleteResourceMenuItem_e1f6efeefa960b4a71ab96321e2c40ff,
   "/payload/components/AdminIcon#AdminIcon": AdminIcon_84a3924fa6975f815fe159e126e4ec9c,
   "/payload/components/AdminLogo#AdminLogo": AdminLogo_564bf34304abb38917a0b375396d43e6,
   "/payload/components/ReturnToSite#ReturnToSiteLoginLink": ReturnToSiteLoginLink_103e409816f0d6b62eac350097402c51,

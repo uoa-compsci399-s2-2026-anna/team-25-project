@@ -3,7 +3,7 @@ import { updateTag } from "next/cache"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
-import { COURSE_DELETE } from "@/payload/hooks/helpers"
+import { COURSE_DELETE } from "@/payload/access/Courses/Courses"
 import { deleteCourse } from "./deleteCourse"
 
 const { APIError, ValidationError } = vi.hoisted(() => {

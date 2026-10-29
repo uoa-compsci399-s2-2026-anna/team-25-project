@@ -1,7 +1,7 @@
 import type { PayloadRequest } from "payload"
 import { describe, expect, it } from "vitest"
 import { Slugs } from "@/lib/payload/slugs"
-import { isAdminOrOwner } from "./Resources"
+import { isAdminOrOwner, RESOURCE_DELETE, resourceDelete } from "./Resources"
 
 describe("isAdminOrOwner", () => {
   it("denies anonymous requests", async () => {
@@ -24,5 +24,28 @@ describe("isAdminOrOwner", () => {
     expect(await isAdminOrOwner({ req, id: 100, data: { owner: 99 } })).toEqual({
       owner: { equals: 42 },
     })
+  })
+})
+
+describe("resourceDelete", () => {
+  const adminReq = { user: { id: 1, collection: Slugs.Collections.ADMIN } } as PayloadRequest
+
+  it("hides the plain delete from an admin", async () => {
+    expect(await resourceDelete({ req: { ...adminReq, context: {} } as PayloadRequest })).toBe(
+      false,
+    )
+  })
+
+  it("lets an admin delete through deleteResourceAndAttachments", async () => {
+    const req = { ...adminReq, context: { [RESOURCE_DELETE]: true } } as PayloadRequest
+    expect(await resourceDelete({ req })).toBe(true)
+  })
+
+  it("limits a member to resources they own", async () => {
+    const req = {
+      user: { id: 42, collection: Slugs.Collections.MEMBERS },
+      context: {},
+    } as PayloadRequest
+    expect(await resourceDelete({ req })).toEqual({ owner: { equals: 42 } })
   })
 })

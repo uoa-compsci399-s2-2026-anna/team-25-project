@@ -7,7 +7,7 @@ import type { ActionResult } from "@/features/auth/actions/types"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
-import { COURSE_DELETE } from "@/payload/hooks/helpers"
+import { COURSE_DELETE } from "@/payload/access/Courses/Courses"
 import { resultFromWriteError } from "./courseForm"
 
 const inputSchema = z.object({ courseId: z.number().int().positive() })
@@ -20,7 +20,8 @@ const FALLBACK_ERROR = "Could not delete this course. Try again."
  * and drafts have their own action (deleteDraftCourse).
  *
  * Offerings go first, as the hooks refuse a course that still has any, all in one
- * transaction. COURSE_DELETE is what lets assertVersionDeletable pass the published ones.
+ * transaction. COURSE_DELETE is what lets an admin past courseDelete, and what lets
+ * assertVersionDeletable pass the published offerings.
  * Resources linked to the course are kept, and just lose the link.
  */
 export const deleteCourse = async (input: unknown): Promise<ActionResult> => {

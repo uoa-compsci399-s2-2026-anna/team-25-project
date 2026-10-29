@@ -14,7 +14,15 @@ import {
 // in courseVersions.
 export const Courses: CollectionConfig = {
   slug: Slugs.Collections.COURSES,
-  admin: { useAsTitle: "code", defaultColumns: ["code", "institution", "owner"] },
+  admin: {
+    useAsTitle: "code",
+    defaultColumns: ["code", "institution", "owner"],
+    components: {
+      edit: {
+        editMenuItems: ["/payload/components/DeleteWithContentsMenuItem#DeleteCourseMenuItem"],
+      },
+    },
+  },
   access: {
     create: isSignedIn,
     read: courseRead,

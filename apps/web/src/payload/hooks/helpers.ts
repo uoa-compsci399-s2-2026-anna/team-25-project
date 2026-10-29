@@ -24,11 +24,6 @@ export type VersionMetadataKey = (typeof versionMetadataKeys)[number]
 // so a caller-supplied context value never survives to be read.
 export const VERSION_WRITE = "courseVersionWrite"
 
-// Set by deleteCourse to the id of the course an admin is deleting, so its published
-// offerings can go with it. assertVersionDeletable only honours it for an admin and that
-// course, so published history stays permanent everywhere else.
-export const COURSE_DELETE = "courseDelete"
-
 export type VersionWrite = {
   draft: boolean
   sentMetadataKeys: ReadonlySet<VersionMetadataKey>
