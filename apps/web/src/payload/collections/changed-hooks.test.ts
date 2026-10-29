@@ -53,6 +53,21 @@ describe("changed collection hooks", () => {
     expect(create({ context: {}, user: { collection: "admin" } })).toBe(true)
   })
 
+  it("lets only completeProfile or an admin set registrationCompletedAt", () => {
+    const field = Members.fields.find(
+      (candidate) => "name" in candidate && candidate.name === "registrationCompletedAt",
+    )
+    const access = field && "access" in field ? field.access : undefined
+    const update = (req: object) => access?.update?.({ req } as never)
+    expect(access?.create?.({ req: { context: {}, user: { collection: "admin" } } } as never)).toBe(
+      false,
+    )
+    expect(update({ context: {} })).toBe(false)
+    expect(update({ context: {}, user: { collection: "members" } })).toBe(false)
+    expect(update({ context: { completingRegistration: true } })).toBe(true)
+    expect(update({ context: {}, user: { collection: "admin" } })).toBe(true)
+  })
+
   it("lets only an admin unlock a member or admin account", () => {
     for (const collection of [Members, Admin]) {
       const unlock = (req: object) => collection.access?.unlock?.({ req } as never)
