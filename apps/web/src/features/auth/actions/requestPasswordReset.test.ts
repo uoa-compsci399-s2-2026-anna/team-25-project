@@ -1,8 +1,10 @@
+import { after } from "next/server"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { releaseRateLimit, takeRateLimit } from "../helpers/rateLimit"
 import { requestPasswordReset } from "./requestPasswordReset"
 
+vi.mock("next/server", () => ({ after: vi.fn() }))
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
 vi.mock("@/lib/siteUrl", () => ({ siteUrl: new URL("https://ccca.example") }))
 vi.mock("../helpers/rateLimit", () => ({ releaseRateLimit: vi.fn(), takeRateLimit: vi.fn() }))
@@ -20,6 +22,10 @@ const mockPayload = (overrides: Record<string, unknown> = {}) => {
   return payload
 }
 
+// Runs the work the action left for after the response.
+const runAfter = () =>
+  Promise.all(vi.mocked(after).mock.calls.map(([task]) => (task as () => Promise<void>)()))
+
 describe("requestPasswordReset", () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -35,6 +41,9 @@ describe("requestPasswordReset", () => {
     const payload = mockPayload()
 
     await expect(requestPasswordReset({ email: "a.tui@uni.ac.nz" })).resolves.toEqual({ ok: true })
+    // Nothing is sent until the response has gone.
+    expect(payload.forgotPassword).not.toHaveBeenCalled()
+    await runAfter()
     expect(payload.forgotPassword).toHaveBeenCalledWith(
       expect.objectContaining({
         context: { disableRevalidate: true, skipDomainCheck: true },
@@ -54,6 +63,7 @@ describe("requestPasswordReset", () => {
     await expect(requestPasswordReset({ email: "nobody@uni.ac.nz" })).resolves.toEqual({
       ok: true,
     })
+    await runAfter()
     expect(takeRateLimit).toHaveBeenCalledWith("reset:nobody@uni.ac.nz", expect.anything())
     expect(payload.sendEmail).not.toHaveBeenCalled()
   })
@@ -71,7 +81,7 @@ describe("requestPasswordReset", () => {
   })
 
   it("says how long to wait when the limit refuses, without sending", async () => {
-    const payload = mockPayload()
+    mockPayload()
     vi.mocked(takeRateLimit).mockResolvedValue({ ok: false, retryAfterSeconds: 95 })
 
     await expect(requestPasswordReset({ email: "a.tui@uni.ac.nz" })).resolves.toEqual({
@@ -79,18 +89,25 @@ describe("requestPasswordReset", () => {
       ok: false,
       retryAfterSeconds: 95,
     })
-    expect(payload.forgotPassword).not.toHaveBeenCalled()
+    expect(after).not.toHaveBeenCalled()
   })
 
-  it("gives the send back when the email fails, so the member can retry", async () => {
+  it("answers ok when the email fails, logging it and giving the send back", async () => {
     const payload = mockPayload({ sendEmail: vi.fn().mockRejectedValue(new Error("SES down")) })
 
-    await expect(requestPasswordReset({ email: "a.tui@uni.ac.nz" })).resolves.toEqual({
-      formError: "We couldn't send the email right now. Try again.",
-      ok: false,
-    })
+    await expect(requestPasswordReset({ email: "a.tui@uni.ac.nz" })).resolves.toEqual({ ok: true })
+    await runAfter()
     expect(releaseRateLimit).toHaveBeenCalledWith("reset:a.tui@uni.ac.nz")
     expect(payload.logger.error).toHaveBeenCalled()
+  })
+
+  it("keeps the send counted when the limit itself fails", async () => {
+    mockPayload()
+    vi.mocked(takeRateLimit).mockRejectedValue(new Error("db down"))
+
+    await expect(requestPasswordReset({ email: "a.tui@uni.ac.nz" })).rejects.toThrow("db down")
+    expect(releaseRateLimit).not.toHaveBeenCalled()
+    expect(after).not.toHaveBeenCalled()
   })
 
   it("rejects an invalid email before touching the limit", async () => {

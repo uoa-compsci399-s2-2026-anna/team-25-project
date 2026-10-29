@@ -7,6 +7,7 @@ import {
   RESET_EMAIL_RESEND_SECONDS,
   RESET_EMAIL_SEND_WINDOW_MINUTES,
 } from "@repo/shared/schemas/passwordReset"
+import { after } from "next/server"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
 import { Slugs } from "@/lib/payload/slugs"
 import { resetLink, sendResetEmail } from "../helpers/passwordResetEmail"
@@ -43,37 +44,39 @@ export const requestPasswordReset = async (input: ForgotPassword): Promise<SendC
     return { formError: SEND_FAILED, ok: false }
   }
 
-  try {
-    const limit = await takeRateLimit(limitKey, {
-      cooldownSeconds: RESET_EMAIL_RESEND_SECONDS,
-      max: RESET_EMAIL_MAX_SENDS,
-      windowMinutes: RESET_EMAIL_SEND_WINDOW_MINUTES,
-    })
-    if (!limit.ok) {
-      return {
-        formError: `You can ask for another email in ${formatWait(limit.retryAfterSeconds)}.`,
-        ok: false,
-        retryAfterSeconds: limit.retryAfterSeconds,
-      }
+  const limit = await takeRateLimit(limitKey, {
+    cooldownSeconds: RESET_EMAIL_RESEND_SECONDS,
+    max: RESET_EMAIL_MAX_SENDS,
+    windowMinutes: RESET_EMAIL_SEND_WINDOW_MINUTES,
+  })
+  if (!limit.ok) {
+    return {
+      formError: `You can ask for another email in ${formatWait(limit.retryAfterSeconds)}.`,
+      ok: false,
+      retryAfterSeconds: limit.retryAfterSeconds,
     }
-
-    // Creates and stores the token, or returns null for an unknown address.
-    // Payload's own email is off so ours can carry a plain-text part too.
-    // Only the token is written, so the profile caches and domain check stay out of it.
-    const token = await payload.forgotPassword({
-      collection: Slugs.Collections.MEMBERS,
-      context: { disableRevalidate: true, skipDomainCheck: true },
-      data: { email },
-      disableEmail: true,
-    })
-    if (token) await sendResetEmail(payload, email, resetLink(token))
-  } catch (error) {
-    // Without this, the member would be told to check an inbox that never
-    // gets the email, and the limit would stop them asking for another.
-    payload.logger.error({ err: error }, "requestPasswordReset failed")
-    await releaseRateLimit(limitKey).catch(() => {})
-    return { formError: SEND_FAILED, ok: false }
   }
+
+  // Sent after the response, so how long it takes can't show whether the
+  // account exists - and nor can a failure, which is only logged.
+  after(async () => {
+    try {
+      // Creates and stores the token, or returns null for an unknown address.
+      // Payload's own email is off so ours can carry a plain-text part too.
+      // Only the token is written, so the profile caches and domain check stay out of it.
+      const token = await payload.forgotPassword({
+        collection: Slugs.Collections.MEMBERS,
+        context: { disableRevalidate: true, skipDomainCheck: true },
+        data: { email },
+        disableEmail: true,
+      })
+      if (token) await sendResetEmail(payload, email, resetLink(token))
+    } catch (error) {
+      payload.logger.error({ err: error }, "requestPasswordReset failed")
+      // Lets the member ask again without the limit counting the lost email.
+      await releaseRateLimit(limitKey).catch(() => {})
+    }
+  })
 
   return { ok: true }
 }
