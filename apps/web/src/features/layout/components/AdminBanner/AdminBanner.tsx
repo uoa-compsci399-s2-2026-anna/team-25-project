@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { Slugs } from "@/lib/payload/slugs"
 import { Routes } from "@/lib/routes"
 
-// Reads the session, so the layout streams it in behind its own Suspense
+// Reads the session, so Navbar streams it in behind its own Suspense
 // boundary - members and guests get nothing, so there's no space to hold.
 export const AdminBanner = async () => {
   const { collection } = await getCurrentUser()

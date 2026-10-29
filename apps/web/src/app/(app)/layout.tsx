@@ -1,10 +1,8 @@
 import type { Metadata } from "next"
 import "@repo/ui/globals.css"
 import { cn } from "@repo/ui/lib/utils"
-import { Suspense } from "react"
-import { FallbackOnError } from "@/components/FallbackOnError"
 import { Providers } from "@/components/Providers"
-import { AdminBanner, Footer, Navbar } from "@/features/layout/components"
+import { Footer, Navbar } from "@/features/layout/components"
 import { fontMono, satoshi } from "@/lib/fonts"
 import { siteUrl } from "@/lib/siteUrl"
 
@@ -28,13 +26,6 @@ export default function RootLayout({
       <body className="flex min-h-dvh flex-col items-center overflow-x-clip">
         <Providers>
           <Navbar />
-          {/* Straight after the header, not inside it: MobileNavMenu inerts the
-              header's following siblings, so the open menu covers this too. */}
-          <FallbackOnError fallback={null}>
-            <Suspense>
-              <AdminBanner />
-            </Suspense>
-          </FallbackOnError>
           <div className="w-full flex-1">{children}</div>
           <Footer />
         </Providers>
