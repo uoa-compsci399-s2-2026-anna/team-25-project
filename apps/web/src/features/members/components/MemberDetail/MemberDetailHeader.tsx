@@ -1,5 +1,9 @@
 import { MemberTitleLabels } from "@repo/shared/enums/members"
-import { POSITION_MAX_LENGTH } from "@repo/shared/schemas/register"
+import {
+  DEPARTMENT_MAX_LENGTH,
+  FACULTY_MAX_LENGTH,
+  POSITION_MAX_LENGTH,
+} from "@repo/shared/schemas/register"
 import { initials } from "@repo/shared/utils/initials"
 import { toSelectOptions } from "@repo/shared/utils/select-options"
 import {
@@ -40,6 +44,8 @@ export const MemberHeader = async ({ params }: { params: MembersRouteParams }) =
       : member.institution
 
   const rest = [institution?.name, institution?.country].filter(Boolean).join(" - ")
+  const affiliation = [member.position, rest].filter(Boolean).join(" - ")
+  const academicUnit = [member.faculty, member.department].filter(Boolean).join(" - ")
   const avatarUrl = typeof member.avatar === "object" ? member.avatar?.url : null
   const memberInitials = initials(member.firstName, member.lastName)
   const fullName = [
@@ -89,16 +95,46 @@ export const MemberHeader = async ({ params }: { params: MembersRouteParams }) =
               />
             </div>
           </EditSwitch>
-          <div className="flex flex-row flex-wrap items-center gap-1 text-muted-foreground max-md:justify-center max-md:text-sm">
-            <MemberEdit.Input
-              className="max-w-xs"
-              label="Position"
-              maxLength={POSITION_MAX_LENGTH}
-              name="position"
-              value={member.position}
-              view={member.position && <span>{member.position}</span>}
-            />{" "}
-            {rest && <span>{member.position ? `- ${rest}` : rest}</span>}
+          <div className="flex flex-col gap-0.5 max-md:items-center">
+            <div className="flex flex-row flex-wrap items-center gap-1 text-muted-foreground max-md:justify-center max-md:text-sm">
+              <EditSwitch view={affiliation && <span>{affiliation}</span>}>
+                <MemberEdit.Input
+                  className="max-w-xs"
+                  label="Position"
+                  maxLength={POSITION_MAX_LENGTH}
+                  name="position"
+                  placeholder="Position"
+                  value={member.position}
+                />
+                {rest && <span>{rest}</span>}
+              </EditSwitch>
+            </div>
+            <EditSwitch
+              view={
+                academicUnit && (
+                  <span className="text-muted-foreground max-md:text-sm">{academicUnit}</span>
+                )
+              }
+            >
+              <div className="flex flex-row flex-wrap items-start gap-1 max-md:justify-center">
+                <MemberEdit.Input
+                  className="max-w-xs"
+                  label="Faculty"
+                  maxLength={FACULTY_MAX_LENGTH}
+                  name="faculty"
+                  placeholder="Faculty"
+                  value={member.faculty}
+                />
+                <MemberEdit.Input
+                  className="max-w-xs"
+                  label="Department"
+                  maxLength={DEPARTMENT_MAX_LENGTH}
+                  name="department"
+                  placeholder="Department"
+                  value={member.department}
+                />
+              </div>
+            </EditSwitch>
           </div>
           {/* A visual echo of the Research interests section further down, which is where
               they're read out and edited, so screen readers skip these. */}

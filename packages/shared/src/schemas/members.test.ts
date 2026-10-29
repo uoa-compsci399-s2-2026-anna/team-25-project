@@ -19,6 +19,12 @@ describe("memberProfileSchema", () => {
       "Keep your position under 100",
     ],
     ["a bio over 500 characters", { bio: "x".repeat(501) }, "Keep your bio under 500"],
+    [
+      "a department over 100 characters",
+      { department: "x".repeat(101) },
+      "Keep your department under 100",
+    ],
+    ["a faculty over 100 characters", { faculty: "x".repeat(101) }, "Keep your faculty under 100"],
   ])("rejects %s", (_, input, message) => {
     const result = memberProfileSchema.safeParse(input)
     expect(result.error?.issues[0]?.message).toContain(message)
@@ -55,6 +61,27 @@ describe("memberProfileSchema", () => {
       const result = memberProfileSchema.safeParse({ researchInterests })
       expect(result.error?.issues).toEqual([
         expect.objectContaining({ message, path: ["researchInterests"] }),
+      ])
+    })
+  })
+
+  describe("teachingInterests", () => {
+    it("drops blank and repeated interests", () => {
+      const result = memberProfileSchema.parse({
+        teachingInterests: [" Capstone ", "", "Capstone"],
+      })
+      expect(result.teachingInterests).toEqual(["Capstone"])
+    })
+
+    it("reports more than 10 interests on the list itself", () => {
+      const result = memberProfileSchema.safeParse({
+        teachingInterests: Array.from({ length: 11 }, (_, i) => `Interest ${i}`),
+      })
+      expect(result.error?.issues).toEqual([
+        expect.objectContaining({
+          message: "Add up to 10 teaching interests",
+          path: ["teachingInterests"],
+        }),
       ])
     })
   })

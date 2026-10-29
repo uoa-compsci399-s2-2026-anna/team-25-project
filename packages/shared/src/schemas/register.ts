@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { MemberTitle } from "../enums/members"
+import { normaliseInterests } from "../utils/interests"
 import { isHttpUrl } from "../utils/is-http-url"
-import { normaliseResearchInterests } from "../utils/research-interests"
 
 /**
  * Shared by the client form and the server action, so a field can never be
@@ -15,6 +15,10 @@ export const PASSWORD_MIN_LENGTH = 8
 export const POSITION_MAX_LENGTH = 100
 export const RESEARCH_INTERESTS_MAX = 10
 export const RESEARCH_INTEREST_MAX_LENGTH = 50
+export const TEACHING_INTERESTS_MAX = 10
+export const TEACHING_INTEREST_MAX_LENGTH = 50
+export const DEPARTMENT_MAX_LENGTH = 100
+export const FACULTY_MAX_LENGTH = 100
 export const LINKS_MAX = 5
 export const LINK_LABEL_MAX_LENGTH = 50
 
@@ -71,7 +75,37 @@ export const registerWithCodeSchema = registerDetailsSchema.extend({ code: verif
 export type RegisterWithCode = z.infer<typeof registerWithCodeSchema>
 
 // Deduplicated because each interest is also its React key when listed.
-const splitResearchInterests = (value: string) => normaliseResearchInterests(value.split(","))
+const splitInterests = (value: string) => normaliseInterests(value.split(","))
+
+/**
+ * Typed as one comma-separated line, stored as a list. Checked before the
+ * transform so every issue lands on the input itself - a per-item path like
+ * researchInterests[1] matches no form field and would never be shown.
+ */
+const commaSeparatedInterestsSchema = ({
+  kind,
+  max,
+  maxLength,
+}: {
+  kind: string
+  max: number
+  maxLength: number
+}) =>
+  z
+    .string()
+    .superRefine((value, ctx) => {
+      const interests = splitInterests(value)
+      if (interests.length > max) {
+        ctx.addIssue({ code: "custom", message: `Add up to ${max} ${kind} interests` })
+      }
+      if (interests.some((interest) => interest.length > maxLength)) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Keep each ${kind} interest under ${maxLength} characters`,
+        })
+      }
+    })
+    .transform(splitInterests)
 
 /**
  * Every profile field is skippable - the Figma frames this step as optional
@@ -80,28 +114,25 @@ const splitResearchInterests = (value: string) => normaliseResearchInterests(val
  * schema's input type line up.
  */
 export const registerProfileSchema = z.object({
-  bio: z.string().trim().max(500, "Keep your bio under 500 characters"),
-  // Typed as one comma-separated line, stored as a list. Checked before the
-  // transform so every issue lands on the input itself - a per-item path like
-  // researchInterests[1] matches no form field and would never be shown.
-  researchInterests: z
+  department: z
     .string()
-    .superRefine((value, ctx) => {
-      const interests = splitResearchInterests(value)
-      if (interests.length > RESEARCH_INTERESTS_MAX) {
-        ctx.addIssue({
-          code: "custom",
-          message: `Add up to ${RESEARCH_INTERESTS_MAX} research interests`,
-        })
-      }
-      if (interests.some((interest) => interest.length > RESEARCH_INTEREST_MAX_LENGTH)) {
-        ctx.addIssue({
-          code: "custom",
-          message: `Keep each research interest under ${RESEARCH_INTEREST_MAX_LENGTH} characters`,
-        })
-      }
-    })
-    .transform(splitResearchInterests),
+    .trim()
+    .max(DEPARTMENT_MAX_LENGTH, `Keep your department under ${DEPARTMENT_MAX_LENGTH} characters`),
+  faculty: z
+    .string()
+    .trim()
+    .max(FACULTY_MAX_LENGTH, `Keep your faculty under ${FACULTY_MAX_LENGTH} characters`),
+  bio: z.string().trim().max(500, "Keep your bio under 500 characters"),
+  researchInterests: commaSeparatedInterestsSchema({
+    kind: "research",
+    max: RESEARCH_INTERESTS_MAX,
+    maxLength: RESEARCH_INTEREST_MAX_LENGTH,
+  }),
+  teachingInterests: commaSeparatedInterestsSchema({
+    kind: "teaching",
+    max: TEACHING_INTERESTS_MAX,
+    maxLength: TEACHING_INTEREST_MAX_LENGTH,
+  }),
   links: z
     .array(
       z.object({

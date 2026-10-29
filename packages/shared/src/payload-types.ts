@@ -198,8 +198,11 @@ export interface Member {
   institution: number | Institution;
   title?: ('dr' | 'prof' | 'assocProf' | 'mr' | 'ms' | 'mrs' | 'mx') | null;
   position: string;
+  department?: string | null;
+  faculty?: string | null;
   bio?: string | null;
   researchInterests?: string[] | null;
+  teachingInterests?: string[] | null;
   links?:
     | {
         label: string;
@@ -725,8 +728,11 @@ export interface MembersSelect<T extends boolean = true> {
   institution?: T;
   title?: T;
   position?: T;
+  department?: T;
+  faculty?: T;
   bio?: T;
   researchInterests?: T;
+  teachingInterests?: T;
   links?:
     | T
     | {

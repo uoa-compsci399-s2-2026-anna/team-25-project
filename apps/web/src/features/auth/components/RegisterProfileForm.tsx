@@ -38,8 +38,11 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
   const form = useForm({
     defaultValues: {
       bio: "",
+      faculty: "",
+      department: "",
       links: [] as { label: string; url: string }[],
       researchInterests: "",
+      teachingInterests: "",
     },
     onSubmit: async ({ value }) => {
       setFieldErrors({})
@@ -51,8 +54,11 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
       }
 
       const formData = new FormData()
+      formData.set("faculty", value.faculty)
+      formData.set("department", value.department)
       formData.set("bio", value.bio)
       formData.set("researchInterests", value.researchInterests)
+      formData.set("teachingInterests", value.teachingInterests)
       formData.set("links", JSON.stringify(value.links))
       if (avatar) formData.set("avatar", avatar)
 
@@ -97,6 +103,42 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
       </div>
 
       <FieldGroup>
+        <form.Field name="faculty">
+          {(field) => (
+            <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+              <FieldLabel htmlFor={field.name}>Faculty</FieldLabel>
+              <Input
+                id={field.name}
+                name={field.name}
+                onBlur={field.handleBlur}
+                onChange={(event) => field.handleChange(event.target.value)}
+                placeholder="Faculty of Science"
+                value={field.state.value}
+              />
+              <FieldError errors={field.state.meta.errors} />
+              {fieldErrors.faculty && <FieldError>{fieldErrors.faculty}</FieldError>}
+            </Field>
+          )}
+        </form.Field>
+
+        <form.Field name="department">
+          {(field) => (
+            <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+              <FieldLabel htmlFor={field.name}>Department</FieldLabel>
+              <Input
+                id={field.name}
+                name={field.name}
+                onBlur={field.handleBlur}
+                onChange={(event) => field.handleChange(event.target.value)}
+                placeholder="School of Computer Science"
+                value={field.state.value}
+              />
+              <FieldError errors={field.state.meta.errors} />
+              {fieldErrors.department && <FieldError>{fieldErrors.department}</FieldError>}
+            </Field>
+          )}
+        </form.Field>
+
         <form.Field name="bio">
           {(field) => (
             <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
@@ -132,6 +174,27 @@ export const RegisterProfileForm = ({ initials }: { initials: string }) => {
               <FieldError errors={field.state.meta.errors} />
               {fieldErrors.researchInterests && (
                 <FieldError>{fieldErrors.researchInterests}</FieldError>
+              )}
+            </Field>
+          )}
+        </form.Field>
+
+        <form.Field name="teachingInterests">
+          {(field) => (
+            <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+              <FieldLabel htmlFor={field.name}>Teaching interests</FieldLabel>
+              <Input
+                id={field.name}
+                name={field.name}
+                onBlur={field.handleBlur}
+                onChange={(event) => field.handleChange(event.target.value)}
+                placeholder="Software engineering, Team projects, Assessment"
+                value={field.state.value}
+              />
+              <FieldDescription>Separate each interest with a comma.</FieldDescription>
+              <FieldError errors={field.state.meta.errors} />
+              {fieldErrors.teachingInterests && (
+                <FieldError>{fieldErrors.teachingInterests}</FieldError>
               )}
             </Field>
           )}
@@ -250,6 +313,18 @@ export const RegisterProfileSkeleton = () => (
     <FieldGroup>
       <Field>
         <FieldLabel className="invisible" htmlFor="skeleton">
+          Faculty
+        </FieldLabel>
+        <Skeleton className="h-8 w-full rounded-md" />
+      </Field>
+      <Field>
+        <FieldLabel className="invisible" htmlFor="skeleton">
+          Department
+        </FieldLabel>
+        <Skeleton className="h-8 w-full rounded-md" />
+      </Field>
+      <Field>
+        <FieldLabel className="invisible" htmlFor="skeleton">
           About you
         </FieldLabel>
         <Skeleton className="h-16 w-full rounded-md" />
@@ -260,6 +335,15 @@ export const RegisterProfileSkeleton = () => (
       <Field>
         <FieldLabel className="invisible" htmlFor="skeleton">
           Research interests
+        </FieldLabel>
+        <Skeleton className="h-8 w-full rounded-md" />
+        <FieldDescription className="invisible">
+          Separate each interest with a comma.
+        </FieldDescription>
+      </Field>
+      <Field>
+        <FieldLabel className="invisible" htmlFor="skeleton">
+          Teaching interests
         </FieldLabel>
         <Skeleton className="h-8 w-full rounded-md" />
         <FieldDescription className="invisible">

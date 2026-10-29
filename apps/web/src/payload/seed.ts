@@ -60,7 +60,10 @@ const members = [
     institution: "University of Auckland",
     title: MemberTitle.DR,
     position: "Senior Lecturer",
+    department: "School of Computer Science",
+    faculty: "Faculty of Science",
     researchInterests: ["Code review", "Generative AI"],
+    teachingInterests: ["Software engineering", "Capstone projects"],
     links: [
       { label: "Staff page", url: "https://profiles.auckland.ac.nz/arohan-patel" },
       { label: "GitHub", url: "https://github.com/arohan-patel" },
@@ -73,7 +76,10 @@ const members = [
     institution: "University of Auckland",
     title: MemberTitle.DR,
     position: "Lecturer",
+    department: "School of Computer Science",
+    faculty: "Faculty of Science",
     researchInterests: ["Belonging", "First-year programming"],
+    teachingInterests: ["Introductory programming"],
     links: [{ label: "ORCID", url: "https://orcid.org/0000-0002-1825-0097" }],
   },
   {
@@ -83,7 +89,10 @@ const members = [
     institution: "University of Otago",
     title: MemberTitle.ASSOC_PROF,
     position: "Associate Professor",
+    department: "School of Computing",
+    faculty: "Division of Sciences",
     researchInterests: ["Authentic assessment", "Industry partnerships"],
+    teachingInterests: ["Software engineering", "Work-integrated learning"],
     links: [{ label: "Staff page", url: "https://www.otago.ac.nz/staff/hana-rangi" }],
   },
   {
@@ -94,6 +103,7 @@ const members = [
     title: MemberTitle.MR,
     position: "Teaching Fellow",
     researchInterests: ["Teamwork"],
+    teachingInterests: ["Team projects"],
     links: [],
   },
   {
@@ -103,7 +113,10 @@ const members = [
     institution: "University of Melbourne",
     title: MemberTitle.DR,
     position: "Senior Lecturer",
+    department: "School of Computing and Information Systems",
+    faculty: "Faculty of Engineering and IT",
     researchInterests: ["Generative AI", "Assessment", "Qualitative methods"],
+    teachingInterests: ["Data science", "Assessment design"],
     links: [
       { label: "Staff page", url: "https://findanexpert.unimelb.edu.au/profile/priya-nair" },
       { label: "Website", url: "https://priyanair.example.com" },

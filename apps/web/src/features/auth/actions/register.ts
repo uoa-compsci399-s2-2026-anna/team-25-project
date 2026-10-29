@@ -274,8 +274,11 @@ export const completeProfile = async (formData: FormData): Promise<ActionResult>
 
   const parsed = registerProfileSchema.safeParse({
     bio: (formData.get("bio") as string | null) ?? "",
+    department: (formData.get("department") as string | null) ?? "",
+    faculty: (formData.get("faculty") as string | null) ?? "",
     links: parseLinks(formData.get("links")),
     researchInterests: (formData.get("researchInterests") as string | null) ?? "",
+    teachingInterests: (formData.get("teachingInterests") as string | null) ?? "",
   })
   if (!parsed.success) {
     return { fieldErrors: fieldErrorsFromIssues(parsed.error.issues), ok: false }
@@ -319,8 +322,11 @@ export const completeProfile = async (formData: FormData): Promise<ActionResult>
       data: {
         avatar: avatarId,
         bio: parsed.data.bio,
+        department: parsed.data.department,
+        faculty: parsed.data.faculty,
         links: parsed.data.links,
         researchInterests: parsed.data.researchInterests,
+        teachingInterests: parsed.data.teachingInterests,
         registrationCompletedAt: new Date().toISOString(),
       },
       id: user.id,

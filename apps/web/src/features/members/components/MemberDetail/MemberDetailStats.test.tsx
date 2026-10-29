@@ -61,31 +61,34 @@ describe("MemberStats", () => {
     expect(screen.getByText("No courses yet")).toBeInTheDocument()
   })
 
-  it("lists the member's research interests", async () => {
+  it("lists the member's research and teaching interests", async () => {
     vi.mocked(getMemberDetailsCached).mockResolvedValue({
       ...member,
       researchInterests: ["Code review", "Generative AI"],
+      teachingInterests: ["Capstone projects"],
     } as never)
     vi.mocked(getMemberCoursesCached).mockResolvedValue([])
 
     await renderStats()
     expect(screen.getByText("Code review")).toBeInTheDocument()
     expect(screen.getByText("Generative AI")).toBeInTheDocument()
+    expect(screen.getByText("Capstone projects")).toBeInTheDocument()
     expect(screen.queryByText("No interests yet")).not.toBeInTheDocument()
   })
 
-  it("shows the research interests filler when there are none", async () => {
+  it("shows a filler for each interest list that is empty", async () => {
     vi.mocked(getMemberDetailsCached).mockResolvedValue(member as never)
     vi.mocked(getMemberCoursesCached).mockResolvedValue([])
 
     await renderStats()
-    expect(screen.getByText("No interests yet")).toBeInTheDocument()
+    expect(screen.getAllByText("No interests yet")).toHaveLength(2)
   })
 
-  it("swaps the research interests for editable tags when editing", async () => {
+  it("swaps the interests for editable tags when editing", async () => {
     vi.mocked(getMemberDetailsCached).mockResolvedValue({
       ...member,
       researchInterests: ["Code review"],
+      teachingInterests: ["Capstone projects"],
     } as never)
     vi.mocked(getMemberCoursesCached).mockResolvedValue([])
     const user = userEvent.setup()
@@ -95,6 +98,10 @@ describe("MemberStats", () => {
 
     expect(screen.getByRole("textbox", { name: "research interest 1" })).toHaveValue("Code review")
     expect(screen.getByRole("button", { name: "Add research interest" })).toBeInTheDocument()
+    expect(screen.getByRole("textbox", { name: "teaching interest 1" })).toHaveValue(
+      "Capstone projects",
+    )
+    expect(screen.getByRole("button", { name: "Add teaching interest" })).toBeInTheDocument()
   })
 
   it("dates membership from registration completion when there is one", async () => {
@@ -139,7 +146,7 @@ describe("MemberStats", () => {
 describe("MemberStatsSkeleton", () => {
   it("renders a placeholder per card", () => {
     const { container } = render(<MemberStatsSkeleton />)
-    expect(container.firstElementChild?.children).toHaveLength(3)
+    expect(container.firstElementChild?.children).toHaveLength(4)
     cleanup()
   })
 })

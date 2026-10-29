@@ -305,7 +305,10 @@ describe("completeProfile", () => {
 
     const formData = new FormData()
     formData.set("bio", "  Teaches capstone.  ")
+    formData.set("department", " School of Computer Science ")
+    formData.set("faculty", "Faculty of Science")
     formData.set("researchInterests", " Code review, , Generative AI ")
+    formData.set("teachingInterests", "Capstone projects, Capstone projects")
     formData.set("links", JSON.stringify([{ label: " GitHub ", url: "https://github.com/anna" }]))
 
     const result = await completeProfile(formData)
@@ -316,8 +319,11 @@ describe("completeProfile", () => {
         collection: "members",
         data: expect.objectContaining({
           bio: "Teaches capstone.",
+          department: "School of Computer Science",
+          faculty: "Faculty of Science",
           // Blank entries between commas are dropped.
           researchInterests: ["Code review", "Generative AI"],
+          teachingInterests: ["Capstone projects"],
           links: [{ label: "GitHub", url: "https://github.com/anna" }],
         }),
         id: 7,
@@ -341,7 +347,13 @@ describe("completeProfile", () => {
     expect(result).toEqual({ ok: true })
     expect(payload.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ links: [], researchInterests: [] }),
+        data: expect.objectContaining({
+          department: "",
+          faculty: "",
+          links: [],
+          researchInterests: [],
+          teachingInterests: [],
+        }),
       }),
     )
   })
@@ -374,7 +386,7 @@ describe("completeProfile", () => {
       user: { firstName: "Anna", id: 7, lastName: "Tui" } as any,
     })
     // The Media collection's own paths (file, filename, alt) mean nothing to a
-    // form that only renders bio, so this must never surface as fieldErrors.
+    // form with no file field, so this must never surface as fieldErrors.
     mockPayload({
       create: vi
         .fn()
