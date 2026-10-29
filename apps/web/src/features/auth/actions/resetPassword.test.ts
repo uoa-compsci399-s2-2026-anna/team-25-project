@@ -148,14 +148,18 @@ describe("resetPassword", () => {
     expect(payload.logger.error).toHaveBeenCalled()
   })
 
-  it("still signs the member in when ending other sessions fails", async () => {
+  it("reports an error, without signing in, when ending other sessions fails", async () => {
     const payload = mockPayload({
       db: { updateOne: vi.fn().mockRejectedValue(new Error("db down")) },
     })
 
-    await expect(resetPassword(valid)).resolves.toEqual({ ok: true })
+    await expect(resetPassword(valid)).resolves.toEqual({
+      formError:
+        "Your password was changed, but we couldn't sign you out on your other devices. Log in with your new password.",
+      ok: false,
+    })
     expect(payload.logger.error).toHaveBeenCalled()
-    expect(setCookie).toHaveBeenCalled()
+    expect(setCookie).not.toHaveBeenCalled()
   })
 
   it("tells the member to log in when the session can't be started", async () => {

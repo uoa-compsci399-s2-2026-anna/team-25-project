@@ -86,9 +86,12 @@ export const resetPassword = async (input: ResetPassword): Promise<ResetPassword
   try {
     await secureAccount(payload, user as unknown as Member, token)
   } catch (error) {
-    // The password has already changed, so the member shouldn't be told the
-    // reset failed. Logged so the leftover sessions can be followed up.
     payload.logger.error({ err: error }, "ending other sessions after a password reset failed")
+    return {
+      formError:
+        "Your password was changed, but we couldn't sign you out on your other devices. Log in with your new password.",
+      ok: false,
+    }
   }
 
   try {
