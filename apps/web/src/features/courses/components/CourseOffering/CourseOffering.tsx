@@ -4,6 +4,7 @@ import { richTextHasText } from "@repo/shared/schemas/shared"
 import { initialsFromName } from "@repo/shared/utils/initials"
 import { Avatar, AvatarFallback, Badge, Heading, Separator, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
+import { connection } from "next/server"
 import { Suspense } from "react"
 import { RichTextContent } from "@/components/RichTextContent"
 import { Routes } from "@/lib/routes"
@@ -70,7 +71,8 @@ export const CourseOffering = async ({
   const courseId = await parseCourseId(params)
   const offeringId = await parseOfferingId(searchParams)
   const offerings = await getPublishedOfferingsCached(courseId)
-  // Read after the search params, so the date is the request's and not frozen into a prerender.
+  // Makes the date the request's, not one frozen into a prerender.
+  await connection()
   const { current, next, offering, primary } = selectOffering(offerings, offeringId, getToday())
 
   // The header 404s a course with nothing published, so this is only reachable

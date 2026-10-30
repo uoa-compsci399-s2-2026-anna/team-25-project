@@ -410,7 +410,9 @@ export const PostProposalForm = ({ onSuccess }: PostProposalFormProps) => {
           }}
         </form.Field>
 
-        <form.Field name="body" validators={{ onBlur: validateField(formShape.body) }}>
+        {/* No field validator: an empty body is still an object, so validateField would flag it
+            and a failing field stops the form-level schema, hiding the other required errors. */}
+        <form.Field name="body">
           {(field) => {
             const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
             return (

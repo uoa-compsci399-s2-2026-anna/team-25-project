@@ -1,6 +1,7 @@
 import { Badge, Skeleton } from "@repo/ui/components/ui"
 import { Info } from "lucide-react"
 import Link from "next/link"
+import { connection } from "next/server"
 import { Routes } from "@/lib/routes"
 import {
   formatDate,
@@ -39,7 +40,8 @@ export const CourseOfferingMeta = async ({
   const courseId = await parseCourseId(params)
   const offeringId = await parseOfferingId(searchParams)
   const offerings = await getPublishedOfferingsCached(courseId)
-  // Read after the search params, so the date is the request's and not frozen into a prerender.
+  // Makes the date the request's, not one frozen into a prerender.
+  await connection()
   const today = getToday()
   const { offering, primary, ...found } = selectOffering(offerings, offeringId, today)
   // The header 404s a course with nothing published, so this is only reachable
