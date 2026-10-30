@@ -59,3 +59,12 @@ test.describe("as a member", () => {
     expect(response.status()).toBe(403)
   })
 })
+
+test("responses carry the security headers", async ({ request }) => {
+  for (const path of ["/", `${API}/publications`]) {
+    const headers = (await request.get(path)).headers()
+    expect(headers["x-frame-options"]).toBe("SAMEORIGIN")
+    expect(headers["x-content-type-options"]).toBe("nosniff")
+    expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin")
+  }
+})

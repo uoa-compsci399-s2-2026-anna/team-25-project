@@ -19,6 +19,24 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "10mb",
     },
   },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          // Stops other sites framing the app to trick a signed-in member into clicking.
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          // Uploaded attachments are served from our origin, so browsers must not guess their type.
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          // Keeps reset tokens in URLs from reaching other sites.
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          ...(process.env.NODE_ENV === "production"
+            ? [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" }]
+            : []),
+        ],
+      },
+    ]
+  },
   images: {
     localPatterns: [
       {
