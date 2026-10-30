@@ -1,9 +1,9 @@
 import type { Course, CourseVersion, Member } from "@repo/shared/payload-types"
+import type { MemberOption } from "@repo/ui/components/composite"
 import type {
   AddCapstoneCourseDialogValues,
-  MemberOption,
   TeachingTeamRow,
-} from "@repo/ui/components/composite"
+} from "./components/AddCapstoneCourseDialog"
 import type { CourseTableRow } from "./components/CoursesTable"
 
 const asPopulated = <T>(value: number | T | null | undefined): T | undefined =>

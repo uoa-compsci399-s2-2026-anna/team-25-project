@@ -170,8 +170,8 @@ export const Larger: Story = {
 
 // Layout reference: a two-column form dialog with a title-row close action instead
 // of the corner icon, matching the "Add a capstone course" mock. Built from Dialog +
-// Field + Input directly — not the AddCapstoneCourseDialog composite, which is tracked
-// separately.
+// Field + Input directly — the real dialog is AddCapstoneCourseDialog in
+// apps/web/src/features/courses/components.
 export const LargeForm: Story = {
   render: () => {
     const courseCodeId = React.useId()

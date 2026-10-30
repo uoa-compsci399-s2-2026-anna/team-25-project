@@ -1,6 +1,15 @@
 "use client"
 
 import {
+  MemberLabel,
+  type MemberOption,
+  MemberPicker,
+  type MemberSearch,
+  memberName,
+  RichTextEditor,
+  type RichTextValue,
+} from "@repo/ui/components/composite"
+import {
   Button,
   Dialog,
   DialogClose,
@@ -24,14 +33,6 @@ import {
 } from "@repo/ui/components/ui"
 import { cn } from "@repo/ui/lib/utils"
 import * as React from "react"
-import {
-  MemberLabel,
-  type MemberOption,
-  MemberPicker,
-  type MemberSearch,
-  memberName,
-} from "../MemberPicker/member-picker"
-import { RichTextEditor, type RichTextValue } from "../RichTextEditor/rich-text-editor"
 
 export type AddCapstoneCourseDialogValues = {
   code: string

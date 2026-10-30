@@ -1,11 +1,6 @@
 "use client"
 
 import { CourseDeliveryFormat, CourseDeliveryFormatLabels } from "@repo/shared/enums/courses"
-import {
-  AddCapstoneCourseDialog,
-  type AddCapstoneCourseDialogValues,
-  type TeachingTeamRow,
-} from "@repo/ui/components/composite"
 import { Button, toast } from "@repo/ui/components/ui"
 import { type ReactElement, useState } from "react"
 import { createOffering } from "../actions/createOffering"
@@ -13,6 +8,11 @@ import { deleteDraftOffering } from "../actions/deleteDraftOffering"
 import { searchMembers } from "../actions/searchMembers"
 import { updateDraftOffering } from "../actions/updateDraftOffering"
 import { updateOffering } from "../actions/updateOffering"
+import {
+  AddCapstoneCourseDialog,
+  type AddCapstoneCourseDialogValues,
+  type TeachingTeamRow,
+} from "./AddCapstoneCourseDialog"
 import { useCourseForm } from "./useCourseForm"
 
 const deliveryFormatOptions = Object.values(CourseDeliveryFormat).map((value) => ({
