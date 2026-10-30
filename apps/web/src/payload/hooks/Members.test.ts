@@ -9,6 +9,7 @@ import {
   assertMemberDeletable,
   enforceInstitutionDomain,
   normaliseStoredInterests,
+  refuseIdentityChangesFromMembers,
   revalidateDeletedMemberProposals,
   revalidateMemberProposals,
 } from "./Members"
@@ -243,5 +244,37 @@ describe("allowPasswordResetsFromAppOnly", () => {
 
   it("leaves other operations alone", () => {
     expect(run("login", "REST")).toEqual({ data: {} })
+  })
+})
+
+describe("refuseIdentityChangesFromMembers", () => {
+  const update = (data: object, user: object | null, payloadAPI = "REST") =>
+    refuseIdentityChangesFromMembers({
+      args: { data },
+      operation: "update",
+      req: { payloadAPI, t: () => "", user },
+    } as never)
+
+  const memberUser = { id: 1, collection: "members" }
+
+  it.each([{ email: "a@auckland.ac.nz" }, { institution: 2 }])(
+    "refuses a member changing %o through REST",
+    (data) => {
+      expect(() => update(data, memberUser)).toThrow(Forbidden)
+    },
+  )
+
+  it("lets an admin change a member's email", () => {
+    const adminUser = { id: 1, collection: "admin" }
+    expect(update({ email: "a@auckland.ac.nz" }, adminUser)).toEqual({
+      data: { email: "a@auckland.ac.nz" },
+    })
+  })
+
+  it("leaves other updates and the app's own calls alone", () => {
+    expect(update({ bio: "hi" }, memberUser)).toEqual({ data: { bio: "hi" } })
+    expect(update({ email: "a@auckland.ac.nz" }, memberUser, "local")).toEqual({
+      data: { email: "a@auckland.ac.nz" },
+    })
   })
 })

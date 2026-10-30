@@ -12,6 +12,7 @@ import type {
 } from "payload"
 import { Forbidden, ValidationError } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
+import { admin } from "../access/helpers"
 import { fail } from "./helpers"
 
 // Cached proposal lists and details show each author's name, avatar and institution, and lists filter
@@ -64,8 +65,8 @@ const domainMatches = (emailDomain: string, allowedDomain: string) =>
   emailDomain === allowedDomain || emailDomain.endsWith(`.${allowedDomain}`)
 
 // Proves the submitted email's domain matches the selected institution's
-// whitelist - not that the registrant owns that mailbox. That gap is closed
-// by email verification, which is out of scope for now.
+// whitelist - not that the registrant owns that mailbox. The sign-up email
+// code proves that.
 export const enforceInstitutionDomain: CollectionBeforeValidateHook<Member> = async ({
   data,
   req,
@@ -146,5 +147,20 @@ export const allowPasswordResetsFromAppOnly: CollectionBeforeOperationHook = ({
   ) {
     throw new Forbidden(req.t)
   }
+  return args
+}
+
+/**
+ * Only admins can change a member's verified email or its institution. The field
+ * access rules drop the change and still report success, so refuse it with an error here.
+ */
+export const refuseIdentityChangesFromMembers: CollectionBeforeOperationHook = ({
+  args,
+  operation,
+  req,
+}) => {
+  if (operation !== "update" || req.payloadAPI === "local" || admin(req)) return args
+  const data: object | undefined = "data" in args ? args.data : undefined
+  if (data && ("email" in data || "institution" in data)) throw new Forbidden(req.t)
   return args
 }

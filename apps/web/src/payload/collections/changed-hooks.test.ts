@@ -4,6 +4,7 @@ import {
   allowPasswordResetsFromAppOnly,
   assertMemberDeletable,
   enforceInstitutionDomain,
+  refuseIdentityChangesFromMembers,
   revalidateDeletedMemberProposals,
   revalidateMemberProposals,
 } from "../hooks/Members"
@@ -41,7 +42,7 @@ describe("changed collection hooks", () => {
       afterChange: [revalidateMemberProposals],
       afterDelete: [revalidateDeletedMemberProposals],
       beforeDelete: [assertMemberDeletable],
-      beforeOperation: [allowPasswordResetsFromAppOnly],
+      beforeOperation: [allowPasswordResetsFromAppOnly, refuseIdentityChangesFromMembers],
       beforeValidate: [enforceInstitutionDomain],
     })
     expect(Members.access?.read?.({} as never)).toBe(true)
@@ -68,6 +69,14 @@ describe("changed collection hooks", () => {
     expect(update({ context: {}, user: { collection: "members" } })).toBe(false)
     expect(update({ context: { completingRegistration: true } })).toBe(true)
     expect(update({ context: {}, user: { collection: "admin" } })).toBe(true)
+  })
+
+  it.each(["email", "institution"])("lets only an admin change a member's %s", (name) => {
+    const field = Members.fields.find((candidate) => "name" in candidate && candidate.name === name)
+    const access = field && "access" in field ? field.access : undefined
+    const update = (req: object) => access?.update?.({ req } as never)
+    expect(update({ user: { collection: "members" } })).toBe(false)
+    expect(update({ user: { collection: "admin" } })).toBe(true)
   })
 
   it("lets only an admin unlock a member or admin account", () => {
