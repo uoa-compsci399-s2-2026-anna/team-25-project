@@ -18,7 +18,7 @@ vi.mock("./MobileNav", () => ({
   MobileNav: () => <div data-testid="mobile-nav" />,
   GuestMobileNav: () => null,
 }))
-vi.mock("@/features/layout/components/AdminBanner/AdminBanner", () => ({
+vi.mock("../AdminBanner/AdminBanner", () => ({
   AdminBanner: () => <div data-testid="admin-banner" />,
 }))
 

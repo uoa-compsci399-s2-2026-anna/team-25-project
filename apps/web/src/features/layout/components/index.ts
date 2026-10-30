@@ -1,4 +1,3 @@
-export * from "./AdminBanner/AdminBanner"
 export * from "./BackLink/BackLink"
 export * from "./Footer/Footer"
 export * from "./Navbar/Navbar"

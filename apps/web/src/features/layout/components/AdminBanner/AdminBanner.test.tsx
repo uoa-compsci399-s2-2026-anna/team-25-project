@@ -20,9 +20,8 @@ describe("AdminBanner", () => {
       user: { id: 1 } as any,
     })
     await renderAdminBanner()
-    expect(screen.getByRole("complementary", { name: "Admin mode" })).toHaveTextContent(
-      "You're signed in as an admin.",
-    )
+    expect(screen.getByText(/You're signed in as an admin\./)).toBeInTheDocument()
+    expect(screen.queryByRole("complementary")).not.toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Open the admin dashboard" })).toHaveAttribute(
       "href",
       Routes.ADMIN,

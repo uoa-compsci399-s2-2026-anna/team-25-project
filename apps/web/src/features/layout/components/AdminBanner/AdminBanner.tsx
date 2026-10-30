@@ -11,11 +11,10 @@ export const AdminBanner = async () => {
 
   if (collection !== Slugs.Collections.ADMIN) return null
 
+  // A plain div, not an aside: it's a notice rather than complementary content, and
+  // a complementary landmark can't sit inside the header's banner landmark.
   return (
-    <aside
-      aria-label="Admin mode"
-      className="flex w-full items-center justify-center gap-2 bg-brand-plum px-4 py-2 text-sm text-white md:px-8"
-    >
+    <div className="flex w-full items-center justify-center gap-2 bg-brand-plum px-4 py-2 text-sm text-white md:px-8">
       <ShieldCheck aria-hidden className="size-4 shrink-0" />
       <p>
         You&apos;re signed in as an admin.{" "}
@@ -23,6 +22,6 @@ export const AdminBanner = async () => {
           Open the admin dashboard
         </Link>
       </p>
-    </aside>
+    </div>
   )
 }
