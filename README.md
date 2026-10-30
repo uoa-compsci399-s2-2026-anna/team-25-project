@@ -178,6 +178,83 @@ New registrations for that institution must then use one of the listed domains. 
 
 Admins cannot add, edit or delete content on the website. They make all changes in the admin panel.
 
+## Structure
+
+| Path | Description |
+| --- | --- |
+| [`apps/web`](apps/web/README.md) | Full-stack Next.js app: product UI + Payload CMS (admin, REST API) on Postgres |
+| [`packages/ui`](packages/ui/README.md) | Shared shadcn/ui component library, with Storybook |
+| [`packages/shared`](packages/shared/README.md) | Shared types, schemas, enums, constants, and utils |
+| [`packages/test-config`](packages/test-config/README.md) | Shared Vitest configs and coverage tooling |
+| [`packages/typescript-config`](packages/typescript-config/README.md) | Shared `tsconfig.json` bases |
+
+## Important scripts
+
+Run from the repo root; Turborepo fans each one out to the workspaces that define it.
+
+| Command | Description |
+| --- | --- |
+| `pnpm dev` | Start the app's dev server, plus Storybook |
+| `pnpm dev:web` | Start only `apps/web` |
+| `pnpm dev:storybook` | Start only Storybook |
+| `pnpm build` | Build the app and Storybook |
+| `pnpm build:app` | Build apps only (`apps/*`) |
+| `pnpm types:check` | Type-check every workspace |
+| `pnpm test` | Run tests in every workspace |
+| `pnpm test:e2e` | Run the Playwright end-to-end tests |
+| `pnpm test:coverage:merge` | Merge per-workspace coverage reports |
+| `pnpm lint:check` | Check lint/format rules (Biome) across the repo |
+| `pnpm lint:fix` | Auto-fix lint/format issues across the repo |
+| `pnpm types:generate` | Regenerate Payload's generated types |
+| `pnpm db:seed` | Seed a fresh database with the admin user and development fixtures |
+
+Per-app scripts (migrations, Storybook builds, etc.) are documented in each workspace's own README, linked in [Structure](#structure) above.
+
+## IDE setup
+
+### VS Code
+
+The repo ships `.vscode/extensions.json`, `settings.json`, and `launch.json`. Opening the project in VS Code will prompt you to install the recommended extension (Biome), which then handles formatting for you.
+
+### Zed
+
+A `.zed/settings.json` is also included for Zed users.
+
+Other IDEs work too, feel free to add relevant config to the repository.
+
+## Type generation
+
+Payload CMS generates TypeScript types from the app's collections/globals config. They land in `packages/shared/src/payload-types.ts` and are exported as `@repo/shared/payload-types` for use anywhere in the monorepo.
+
+```bash
+pnpm types:generate
+```
+
+Never edit `payload-types.ts` by hand. It is regenerated automatically.
+
+## Testing
+
+| Workspace | How |
+| --- | --- |
+| `apps/web` | `pnpm --filter web test` (Vitest, with a `node` project for `*.test.ts` and a `jsdom` project for `*.test.tsx`) |
+| `packages/ui` | `pnpm --filter @repo/ui test` (Vitest, `jsdom`) |
+| `packages/shared` | `pnpm --filter @repo/shared test` (Vitest) |
+
+Or run everything at once from the root with `pnpm test`.
+
+To get coverage reports, run `pnpm test:coverage`, then `pnpm test:coverage:merge` to merge the reports from each workspace into one.
+
+### End-to-end tests
+
+`apps/web/e2e/` holds Playwright tests. They need the Postgres container running.
+
+```bash
+pnpm --filter web exec playwright install chromium   # once
+pnpm test:e2e
+```
+
+Each run resets and seeds a separate `ccca_e2e` database, so your dev data is safe. It then starts the app on port 3100: `next dev` locally, and a production build in CI. S3 and SES are turned off for the run. To use a different database, set `E2E_DATABASE_URL`.
+
 ## Tech stack
 
 Languages: **TypeScript** (7.0), **CSS** (Tailwind), **SQL** (PostgreSQL migrations) and **Shell**/**YAML** for CI and deployment.
@@ -267,3 +344,8 @@ The website is live at [https://cccacommunity.org](https://cccacommunity.org).
 - **More tests**: more end-to-end edge cases and unit tests.
 - **Infrastructure as code**: define the AWS resources in code, so that the environment is reproducible and a staging environment is possible.
 - **Route 53**: move the domain and DNS from Cloudflare to Amazon Route 53.
+
+## Contributing
+
+Commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/). Commitlint checks this on every commit.
+Use the issue templates in `.github/ISSUE_TEMPLATE/` and the PR template in `.github/pull_request_template.md` when opening issues and pull requests.
