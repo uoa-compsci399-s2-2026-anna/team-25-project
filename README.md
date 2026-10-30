@@ -1,12 +1,28 @@
-# CCCA
+# Computing Capstone Community Australasia (CCCA)
 
-Team 25's project for COMPSCI 399 (University of Auckland). A Turborepo monorepo with a full-stack Next.js + Payload CMS app on Postgres, and shared packages.
+COMPSCI 399 capstone project by Team 25, Cache Me Outside (University of Auckland).
+
+- **Live website**: [https://cccacommunity.org](https://cccacommunity.org)
+- **Project management**: [GitHub Project board](https://github.com/orgs/uoa-compsci399-s2-2026-anna/projects/1/views/1)
+
+## About the project
+
+CCCA is a website for academics and teaching staff who run computing capstone courses at universities in Australia and New Zealand. It gives this community one place to:
+
+- Keep a directory of capstone academics, their institutions and the courses they convene.
+- Record course data each year, so that members can compare course designs across institutions.
+- Share course resources and publications.
+- Post research proposals and find co-researchers.
+
+Members sign up with an institutional email address. Admins manage institutions and members through the Payload CMS admin panel.
+
+The repository is a Turborepo monorepo. It holds a full-stack Next.js and Payload CMS app on PostgreSQL (`apps/web`), plus shared packages (`packages/*`).
 
 ## Prerequisites
 
-- **Node.js** — version pinned in `.nvmrc` / `package.json`'s `volta.node`
-- **pnpm** — version pinned in `package.json`'s `packageManager`
-- **Docker** — runs the local Postgres database via `docker compose` (or bring your
+- **Node.js**: version pinned in `.nvmrc` / `package.json`'s `volta.node`
+- **pnpm**: version pinned in `package.json`'s `packageManager`
+- **Docker**: runs the local Postgres database via `docker compose` (or bring your
   own PostgreSQL instance, local or cloud)
 
 ### Node.js installation
@@ -39,8 +55,7 @@ pnpm install
 
 ### 2. Environment setup
 
-Copy the app's env template and keep the defaults — they match the local Postgres
-container:
+Copy the app's env template and keep the defaults (they match the local Postgres container):
 
 ```bash
 cp apps/web/.env.example apps/web/.env
@@ -50,6 +65,46 @@ cp apps/web/.env.example apps/web/.env
 | --- | --- |
 | `DATABASE_URL` | Postgres connection string (`postgres://ccca:ccca@localhost:5432/ccca` for the container) |
 | `PAYLOAD_SECRET` | Secret used by Payload to sign/encrypt data |
+| `NEXT_PUBLIC_URL` | Public URL of the site (`http://localhost:3000` locally) |
+| `S3_BUCKET`, `S3_REGION` | Optional. S3 bucket for uploaded files. Leave empty to store files on the local disk |
+| `AWS_PROFILE`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | Optional. AWS credentials for S3 and SES |
+| `SES_FROM_ADDRESS` | Optional. Sender address for Amazon SES email. Leave empty to log emails to the server console |
+| `SES_REGION` | Optional. AWS region for SES. Leave empty to use the region of your AWS profile |
+
+#### AWS credentials (optional)
+
+You need AWS credentials only if you set `S3_BUCKET` or `SES_FROM_ADDRESS`. The team's AWS account uses the University of Auckland's AWS IAM Identity Center (SSO).
+
+1. Install the [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
+2. Configure an SSO profile. Use any profile name you like:
+
+   ```bash
+   aws configure sso
+   ```
+
+   When the CLI asks, enter these values:
+
+   | Prompt | Value |
+   | --- | --- |
+   | SSO session name | Any name |
+   | SSO start URL | `https://uoa-sso.awsapps.com/start` |
+   | SSO region | `ap-southeast-2` |
+   | SSO registration scopes | `sso:account:access` |
+
+   A browser window opens. Sign in with your university account, then select the team's account and the `StudentCoursePermissionSet` role. Set the default region to `ap-southeast-2`.
+
+3. Set `AWS_PROFILE` in `apps/web/.env` to the profile name that you chose. Leave `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` empty.
+4. Make sure that the login works:
+
+   ```bash
+   aws sts get-caller-identity --profile <your-profile>
+   ```
+
+SSO sessions expire after some hours. If S3 uploads or emails fail with an expired token error, sign in again and restart the dev server:
+
+```bash
+aws sso login --profile <your-profile>
+```
 
 ### 3. Start the local database
 
@@ -73,6 +128,56 @@ Once running with the default ports:
 
 - **App**: [http://localhost:3000](http://localhost:3000)
 - **Payload admin**: [http://localhost:3000/admin](http://localhost:3000/admin)
+- **Storybook**: [http://localhost:6006](http://localhost:6006)
+
+To run only the Application (not Storybook), use:
+
+```bash
+pnpm dev:app
+```
+
+## Usage examples
+
+After you seed the database, you can sign in with these accounts:
+
+| Account | Email | Password |
+| --- | --- | --- |
+| Admin | `admin@example.com` (or `SEED_ADMIN_EMAIL`) | `changeme` (or `SEED_ADMIN_PASSWORD`) |
+| Member | `arohan.patel@auckland.ac.nz` (and other seeded members) | `changeme` |
+
+Guests can browse `/members`, `/courses`, `/resources`, `/publications` and `/proposals`.
+
+### Register and verify an email (guest)
+
+1. Open `/register`. Enter your name, email and password, and select an institution, for example "University of Auckland" with an `@auckland.ac.nz` address.
+2. Enter the six-digit code from the email. Locally, the code is in the server console.
+3. Complete the profile step, or skip it and complete it later.
+
+If the email domain is not accepted by the institution, the site shows an error and does not send a code. A code expires after 15 minutes, or after five wrong attempts.
+
+### Add and publish a course offering (member)
+
+1. Sign in as a member and open `/courses`.
+2. Add a course. Enter the course code and name, delivery format, project type, learning outcomes, assessments, teaching period and teaching team.
+3. Publish the offering. All signed-in members can then see it.
+
+You can also save it as a draft. A draft can be incomplete, and only the course's owner, its editors and admins can see it.
+
+### Correct a published offering (owner or editor)
+
+1. Open a course that you own or edit, and edit the offering.
+2. Publish the changes.
+
+The site saves the changes as a new version and keeps the earlier versions in the offering's history. If nothing changed, the site refuses the correction.
+
+### Manage an institution's email domains (admin)
+
+1. Sign in at `/admin` and open **Institutions**.
+2. Open an institution, add or remove an accepted email domain, and save.
+
+New registrations for that institution must then use one of the listed domains. To add a new university, create an institution with its name, location, logo and email domains.
+
+Admins cannot add, edit or delete content on the website. They make all changes in the admin panel.
 
 ## Structure
 
@@ -106,17 +211,6 @@ Run from the repo root; Turborepo fans each one out to the workspaces that defin
 
 Per-app scripts (migrations, Storybook builds, etc.) are documented in each workspace's own README, linked in [Structure](#structure) above.
 
-## Linting & formatting
-
-This project uses **[Biome](https://biomejs.dev/)** for linting and formatting.
-
-```bash
-pnpm lint:check   # check for issues
-pnpm lint:fix     # auto-fix what can be fixed
-```
-
-Lefthook runs Biome against staged files automatically before every commit, so you should rarely need to run these by hand.
-
 ## IDE setup
 
 ### VS Code
@@ -137,17 +231,19 @@ Payload CMS generates TypeScript types from the app's collections/globals config
 pnpm types:generate
 ```
 
-Never edit `payload-types.ts` by hand — it's regenerated automatically.
+Never edit `payload-types.ts` by hand. It is regenerated automatically.
 
 ## Testing
 
 | Workspace | How |
 | --- | --- |
-| `apps/web` | `pnpm --filter web test` — Vitest (`node` project for `*.test.ts`, `jsdom` project for `*.test.tsx`) |
-| `packages/ui` | `pnpm --filter @repo/ui test` — Vitest (`jsdom`) |
-| `packages/shared` | `pnpm --filter @repo/shared test` — Vitest |
+| `apps/web` | `pnpm --filter web test` (Vitest, with a `node` project for `*.test.ts` and a `jsdom` project for `*.test.tsx`) |
+| `packages/ui` | `pnpm --filter @repo/ui test` (Vitest, `jsdom`) |
+| `packages/shared` | `pnpm --filter @repo/shared test` (Vitest) |
 
 Or run everything at once from the root with `pnpm test`.
+
+To get coverage reports, run `pnpm test:coverage`, then `pnpm test:coverage:merge` to merge the reports from each workspace into one.
 
 ### End-to-end tests
 
@@ -162,44 +258,95 @@ Each run resets and seeds a separate `ccca_e2e` database, so your dev data is sa
 
 ## Tech stack
 
-### Core
+Languages: **TypeScript** (7.0), **CSS** (Tailwind), **SQL** (PostgreSQL migrations) and **Shell**/**YAML** for CI and deployment.
 
-- **[Next.js](https://nextjs.org/)** 16 (App Router), with Cache Components
-- **[React](https://react.dev/)** 19, with the React Compiler enabled
-- **[TypeScript](https://www.typescriptlang.org/)** 7
+### Runtime and package management
 
-### Content management
+| Tool | Version |
+| --- | --- |
+| [Node.js](https://nodejs.org/) | 26.5.1 (`>=24`) |
+| [pnpm](https://pnpm.io/) | 11.18.0 |
+| [PostgreSQL](https://www.postgresql.org/) | 18 (Docker image `postgres:18`) |
+| [Docker](https://www.docker.com/) | Any recent version, for the local database |
 
-- **[Payload CMS](https://payloadcms.com/)** 3 — headless CMS with an admin panel, mounted in `apps/web`
-- **[PostgreSQL](https://www.postgresql.org/)** via `@payloadcms/db-postgres`
+### App (`apps/web`)
 
-### Styling & UI
+| Library | Version | Purpose |
+| --- | --- | --- |
+| [Next.js](https://nextjs.org/) | 16.4.2 | App Router framework, with Cache Components |
+| [React](https://react.dev/) / React DOM | 19.3.0 | UI, with the React Compiler (`babel-plugin-react-compiler` ^1.0.0) |
+| [Payload CMS](https://payloadcms.com/) | 3.87.1 | Headless CMS, admin panel and REST API |
+| `@payloadcms/db-postgres` | 3.87.1 | PostgreSQL adapter |
+| `@payloadcms/richtext-lexical` | 3.87.1 | Rich text editor |
+| `@payloadcms/storage-s3` | 3.87.1 | File uploads to Amazon S3 |
+| `@payloadcms/email-nodemailer` / [Nodemailer](https://nodemailer.com/) | 3.87.1 / ^9.1.1 | Email |
+| `@aws-sdk/client-sesv2` | ^3.1152.0 | Amazon SES email sending |
+| [TanStack Form](https://tanstack.com/form) | ^1.33.5 | Forms |
+| [TanStack Table](https://tanstack.com/table) | ^9.2.4 | Data tables |
+| [TanStack Pacer](https://tanstack.com/pacer) | ^0.24.0 | Debounce and throttle |
+| [dnd kit](https://dndkit.com/) | core ^6.3.1, sortable ^10.0.0 | Drag-and-drop ordering |
+| [nuqs](https://nuqs.dev/) | ^2.10.1 | URL search parameter state |
+| [Zod](https://zod.dev/) | ^4.4.3 | Schema validation |
+| [cobe](https://cobe.vercel.app/) | ^2.0.1 | Home page globe |
+| [Lucide](https://lucide.dev/) | ^1.28.0 | Icons |
+| [sharp](https://sharp.pixelplumbing.com/) | 0.34.2 | Image processing |
 
-- **[Tailwind CSS](https://tailwindcss.com/)** v4
-- **[shadcn/ui](https://ui.shadcn.com/)** + **[Base UI](https://base-ui.com/)** primitives, in `packages/ui`
-- **[Zod](https://zod.dev/)** for schema validation
+### UI library (`packages/ui`)
 
-### Monorepo & tooling
+| Library | Version | Purpose |
+| --- | --- | --- |
+| [Tailwind CSS](https://tailwindcss.com/) | ^4 (4.3.0) | Styling |
+| [shadcn/ui](https://ui.shadcn.com/) | ^4.16.1 | Component library |
+| [Base UI](https://base-ui.com/) | ^1.6.0 | Accessible UI primitives |
+| [Lexical](https://lexical.dev/) | 0.41.0 | Rich text rendering and editing |
+| `class-variance-authority`, `clsx`, `tailwind-merge` | ^0.7.1, ^2.1.1, ^3.6.0 | Class name helpers |
+| `tw-animate-css` | ^1.4.0 | Animations |
+| `react-fast-marquee` | 1.6.4 | Institutions ticker |
 
-- **[Turborepo](https://turborepo.com/)** — task orchestration and caching
-- **[pnpm](https://pnpm.io/)** workspaces — package management
-- **[Biome](https://biomejs.dev/)** — linting and formatting
-- **[Lefthook](https://lefthook.dev/)** — Git hooks
-- **[Commitlint](https://commitlint.js.org/)** — Conventional Commits enforcement
-- **[Storybook](https://storybook.js.org/)** — component development for `packages/ui`
-- **[Vitest](https://vitest.dev/)** — testing
+### Shared code (`packages/shared`)
 
-## Learn more
+| Library | Version | Purpose |
+| --- | --- | --- |
+| `@retorquere/bibtex-parser` | ^11.0.0 | BibTeX import for publications |
+| [Zod](https://zod.dev/)  | ^4.4.3 | Shared schemas |
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Payload CMS Documentation](https://payloadcms.com/docs)
-- [Turborepo Documentation](https://turborepo.com/docs)
-- [Tailwind CSS Docs](https://tailwindcss.com/docs)
-- [Storybook Docs](https://storybook.js.org/docs)
-- [Biome Documentation](https://biomejs.dev/guides/getting-started/)
-- [Lefthook Documentation](https://lefthook.dev/)
+### Tooling and testing
+
+| Tool | Version | Purpose |
+| --- | --- | --- |
+| [Turborepo](https://turborepo.com/) | ^2.9.18 | Task orchestration and caching |
+| [Biome](https://biomejs.dev/) | ^2.5.8 | Linting and formatting |
+| [Lefthook](https://lefthook.dev/) | ^2.1.10 | Git hooks |
+| [Commitlint](https://commitlint.js.org/) | ^21.2.1 | Conventional Commits checks |
+| [Storybook](https://storybook.js.org/) | ^10.5.5 | Component development for `packages/ui` |
+| [Vitest](https://vitest.dev/) | 4.1.10 | Unit and component tests |
+| [Testing Library](https://testing-library.com/) | React 16.3.0, DOM 10.4.1 | Component tests |
+| [Playwright](https://playwright.dev/) | ^1.64.1 | End-to-end tests |
+| [tsx](https://tsx.is/) | 4.22.4 | Runs TypeScript scripts (seed, migrations) |
+
+### Hosting
+
+The production site runs on AWS (`ap-southeast-2`): a Docker container on Amazon ECS, Amazon RDS for PostgreSQL, Amazon S3 for uploads and Amazon SES for email. GitHub Actions runs CI on every pull request. It deploys when someone pushes a `v*` tag on a commit on `main` that passed CI.
+
+## Deployment
+
+The website is live at [https://cccacommunity.org](https://cccacommunity.org).
+
+## Future plan
+
+- **Course review reminders**: a scheduled job that emails members, through Amazon SES, to review out-of-date course details.
+- **News page**: a news collection. This was moved out of scope with the client.
+- **Profile-based feature locks**: grey out features until a member completes their profile.
+- **Richer course resources**: link resources to course offerings, group them into folders and version them.
+- **Better course descriptions**: inline links to resources and optional reflection prompts.
+- **Personal dashboard**: one page for a member's courses, proposals, publications, resources and drafts.
+- **Collaboration**: an expression-of-interest action on proposals, and discussion threads with moderation tools.
+- **Single accounts for admins**: make admin a role on member accounts, not a separate account.
+- **More tests**: more end-to-end edge cases and unit tests.
+- **Infrastructure as code**: define the AWS resources in code, so that the environment is reproducible and a staging environment is possible.
+- **Route 53**: move the domain and DNS from Cloudflare to Amazon Route 53.
 
 ## Contributing
 
-Commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/) — Commitlint checks this on every commit.
+Commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/). Commitlint checks this on every commit. Before each commit, Lefthook also runs Biome on the staged files and stages the fixes.
 Use the issue templates in `.github/ISSUE_TEMPLATE/` and the PR template in `.github/pull_request_template.md` when opening issues and pull requests.
