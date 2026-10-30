@@ -27,4 +27,15 @@ test.describe("as a member", () => {
     expect(member.email).toBe(user.email)
     expect(member.institution).toBe(user.institution)
   })
+
+  test("a member cannot set a password through the API", async ({ page }) => {
+    const me = await page.request.get(`${API}/members/me?depth=0`)
+    const { user } = (await me.json()) as { user: Member }
+
+    // The seeded password, so a broken guard does not lock out other tests.
+    const response = await page.request.patch(`${API}/members/${user.id}`, {
+      data: { password: "changeme" },
+    })
+    expect(response.status()).toBe(403)
+  })
 })

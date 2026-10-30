@@ -5,7 +5,7 @@ import { Forbidden, type PayloadRequest, ValidationError } from "payload"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { Slugs } from "@/lib/payload/slugs"
 import {
-  allowPasswordResetsFromAppOnly,
+  allowPasswordChangesFromAppOnly,
   assertMemberDeletable,
   enforceInstitutionDomain,
   normaliseStoredInterests,
@@ -222,9 +222,9 @@ describe("assertMemberDeletable", () => {
   })
 })
 
-describe("allowPasswordResetsFromAppOnly", () => {
+describe("allowPasswordChangesFromAppOnly", () => {
   const run = (operation: string, payloadAPI: PayloadRequest["payloadAPI"]) =>
-    allowPasswordResetsFromAppOnly({
+    allowPasswordChangesFromAppOnly({
       args: { data: {} },
       operation,
       req: { payloadAPI, t: () => "" },
@@ -244,6 +244,28 @@ describe("allowPasswordResetsFromAppOnly", () => {
 
   it("leaves other operations alone", () => {
     expect(run("login", "REST")).toEqual({ data: {} })
+  })
+
+  const update = (data: object, user: object | null, payloadAPI: PayloadRequest["payloadAPI"]) =>
+    allowPasswordChangesFromAppOnly({
+      args: { data },
+      operation: "update",
+      req: { payloadAPI, t: () => "", user },
+    } as never)
+
+  const memberUser = { id: 1, collection: "members" }
+
+  it("refuses a member setting a password through REST, which needs no old password", () => {
+    expect(() => update({ password: "new" }, memberUser, "REST")).toThrow(Forbidden)
+  })
+
+  it("lets an admin set a member's password from the admin panel", () => {
+    const adminUser = { id: 1, collection: "admin" }
+    expect(update({ password: "new" }, adminUser, "REST")).toEqual({ data: { password: "new" } })
+  })
+
+  it("leaves updates without a password alone", () => {
+    expect(update({ bio: "hi" }, memberUser, "REST")).toEqual({ data: { bio: "hi" } })
   })
 })
 

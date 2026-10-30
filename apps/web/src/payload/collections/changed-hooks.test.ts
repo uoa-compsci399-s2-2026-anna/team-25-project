@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { revalidateDeletedInstitution, revalidateInstitutions } from "../hooks/Institutions"
 import {
-  allowPasswordResetsFromAppOnly,
+  allowPasswordChangesFromAppOnly,
   assertMemberDeletable,
   enforceInstitutionDomain,
   refuseIdentityChangesFromMembers,
@@ -42,7 +42,7 @@ describe("changed collection hooks", () => {
       afterChange: [revalidateMemberProposals],
       afterDelete: [revalidateDeletedMemberProposals],
       beforeDelete: [assertMemberDeletable],
-      beforeOperation: [allowPasswordResetsFromAppOnly, refuseIdentityChangesFromMembers],
+      beforeOperation: [allowPasswordChangesFromAppOnly, refuseIdentityChangesFromMembers],
       beforeValidate: [enforceInstitutionDomain],
     })
     expect(Members.access?.read?.({} as never)).toBe(true)

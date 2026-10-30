@@ -131,22 +131,21 @@ export const normaliseStoredInterests: FieldHook<Member, string[] | null | undef
 }) => (Array.isArray(value) ? normaliseInterests(value) : value)
 
 /**
- * Password resets only go through the app's own pages: their server actions
- * rate-limit the email and end other sessions after a reset. Payload's REST
- * endpoints for both would skip that, so they're closed - the actions call the
- * local API, which this lets through.
+ * Members change a password only through the app's reset pages, which limit emails
+ * and end other sessions. REST resets are closed to all callers. REST password
+ * updates are closed to all except admins, because they need no old password.
  */
-export const allowPasswordResetsFromAppOnly: CollectionBeforeOperationHook = ({
+export const allowPasswordChangesFromAppOnly: CollectionBeforeOperationHook = ({
   args,
   operation,
   req,
 }) => {
-  if (
-    (operation === "forgotPassword" || operation === "resetPassword") &&
-    req.payloadAPI !== "local"
-  ) {
-    throw new Forbidden(req.t)
-  }
+  if (req.payloadAPI === "local") return args
+  const isReset = operation === "forgotPassword" || operation === "resetPassword"
+  const data: object | undefined = "data" in args ? args.data : undefined
+  const isPasswordUpdate =
+    operation === "update" && !admin(req) && Boolean(data && "password" in data && data.password)
+  if (isReset || isPasswordUpdate) throw new Forbidden(req.t)
   return args
 }
 
