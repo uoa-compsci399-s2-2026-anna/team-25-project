@@ -5,7 +5,7 @@ import type { SearchParams } from "nuqs/server"
 import { EmptyState } from "@/components/EmptyState"
 import { StringHrefLink } from "@/components/StringHrefLink"
 import { Routes } from "@/lib/routes"
-import { countMembers, getMembers, MEMBERS_PAGE_SIZE } from "../../members.queries"
+import { loadMemberCount, loadMembersPage, MEMBERS_PAGE_SIZE } from "../../members.queries"
 import {
   loadMemberSearchParams,
   serializeMemberSearchParams,
@@ -22,7 +22,7 @@ const skeletonCardIds = Array.from({ length: MEMBERS_PAGE_SIZE }, (_, i) => `mem
 export const MembersList = async ({ searchParams }: { searchParams: Promise<SearchParams> }) => {
   const params = await loadMemberSearchParams(searchParams)
   const filters = toMemberFilters(params)
-  const { docs: members, totalPages } = await getMembers(filters, {
+  const { docs: members, totalPages } = await loadMembersPage(filters, {
     limit: MEMBERS_PAGE_SIZE,
     page: params.page,
   })
@@ -37,7 +37,7 @@ export const MembersList = async ({ searchParams }: { searchParams: Promise<Sear
   if (members.length === 0) {
     // find() reports no totals past the end of a relationship-filtered query, so both
     // the empty state and the page to recover to come from a count instead.
-    const matches = await countMembers(filters)
+    const matches = await loadMemberCount(filters)
 
     if (matches > 0) {
       return (

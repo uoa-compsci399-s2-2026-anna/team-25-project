@@ -58,12 +58,8 @@ const memberFiltersToWhere = (filters: MemberFilters): Where => {
   return where
 }
 
-/**
- * connection() because filtering on `institution` opens a Payload transaction, whose
- * randomUUID() id cacheComponents refuses to prerender. depth 1 resolves the card's data.
- */
+/** depth 1 resolves the card's data. */
 export const getMembers = async (filters: MemberFilters, pagination: Pagination) => {
-  await connection()
   const payload = await getPayloadClient()
   return payload.find({
     collection: Slugs.Collections.MEMBERS,
@@ -86,13 +82,52 @@ export const getMembers = async (filters: MemberFilters, pagination: Pagination)
 
 /** Counting stays accurate where find() reports no totals, so page counts derive from this. */
 export const countMembers = async (filters: MemberFilters) => {
-  await connection()
   const payload = await getPayloadClient()
   const { totalDocs } = await payload.count({
     collection: Slugs.Collections.MEMBERS,
     where: memberFiltersToWhere(filters),
   })
   return totalDocs
+}
+
+// The cards show each member's institution, so the list goes stale with the institutions too.
+export const getMembersCached = async (filters: MemberFilters, pagination: Pagination) => {
+  "use cache"
+  cacheLife("max")
+  cacheTag(QueryKeys.MEMBERS.ROOT, QueryKeys.INSTITUTIONS)
+  return getMembers(filters, pagination)
+}
+
+// The country filter matches on the institution, so counts go stale with the institutions too.
+export const countMembersCached = async (filters: MemberFilters) => {
+  "use cache"
+  cacheLife("max")
+  cacheTag(QueryKeys.MEMBERS.ROOT, QueryKeys.INSTITUTIONS)
+  return countMembers(filters)
+}
+
+// Search and interests take any text from the URL, so their keys are unbounded and few repeat.
+// Only views without them are cached.
+const hasFreeText = (filters: Pick<MemberFilters, "search" | "researchInterests">) =>
+  Boolean(filters.search?.trim() || filters.researchInterests?.length)
+
+/** Loads one page of members, cached unless the filters include a search or interests. */
+export const loadMembersPage = async (filters: MemberFilters, pagination: Pagination) => {
+  if (!hasFreeText(filters)) return getMembersCached(filters, pagination)
+
+  // connection() because filtering on interests or country joins under a randomUUID() alias, which
+  // cacheComponents refuses to prerender. It stays out of getMembers, which "use cache" also runs.
+  await connection()
+  return getMembers(filters, pagination)
+}
+
+/** Counts members, cached unless the filters include a search or interests. */
+export const loadMemberCount = async (filters: MemberFilters) => {
+  if (!hasFreeText(filters)) return countMembersCached(filters)
+
+  // connection() for the same reason as in loadMembersPage.
+  await connection()
+  return countMembers(filters)
 }
 
 export type ResearchInterestOption = { value: string; label: string }
@@ -126,7 +161,7 @@ export const getResearchInterestOptionsCached = async () => {
 
 /** What the header reports: how many members these filters leave, out of the whole directory. */
 export const getMemberCounts = async (filters: MemberFilters) => {
-  const [shown, total] = await Promise.all([countMembers(filters), countMembers({})])
+  const [shown, total] = await Promise.all([loadMemberCount(filters), countMembersCached({})])
   return { shown, total }
 }
 

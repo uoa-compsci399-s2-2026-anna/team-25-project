@@ -1,19 +1,19 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { countMembers, getMembers } from "../../members.queries"
+import { loadMemberCount, loadMembersPage } from "../../members.queries"
 import { MembersList, MembersListSkeleton } from "./MembersList"
 
 vi.mock("../../members.queries", () => ({
-  countMembers: vi.fn(),
-  getMembers: vi.fn(),
+  loadMemberCount: vi.fn(),
+  loadMembersPage: vi.fn(),
   MEMBERS_PAGE_SIZE: 12,
 }))
 
-type MembersPage = Awaited<ReturnType<typeof getMembers>>
+type MembersPage = Awaited<ReturnType<typeof loadMembersPage>>
 
 /** Past the end of a relationship-filtered query, Payload reports no totals at all. */
 const emptyPage = (totalPages = 0) =>
-  vi.mocked(getMembers).mockResolvedValue({
+  vi.mocked(loadMembersPage).mockResolvedValue({
     docs: [],
     totalDocs: 0,
     totalPages,
@@ -30,7 +30,7 @@ describe("MembersList empty states", () => {
 
   it("says nothing matches when the filters match no one", async () => {
     emptyPage()
-    vi.mocked(countMembers).mockResolvedValue(0)
+    vi.mocked(loadMemberCount).mockResolvedValue(0)
 
     render(await renderAt("4", { q: "zzzz" }))
 
@@ -40,7 +40,7 @@ describe("MembersList empty states", () => {
 
   it("has no clear link when no filter is set", async () => {
     emptyPage()
-    vi.mocked(countMembers).mockResolvedValue(0)
+    vi.mocked(loadMemberCount).mockResolvedValue(0)
 
     render(await MembersList({ searchParams: Promise.resolve({}) }))
 
@@ -49,7 +49,7 @@ describe("MembersList empty states", () => {
 
   it("offers the last page when the page overshoots results that do exist", async () => {
     emptyPage()
-    vi.mocked(countMembers).mockResolvedValue(13)
+    vi.mocked(loadMemberCount).mockResolvedValue(13)
 
     render(await renderAt("9", { country: "NZ" }))
 
@@ -64,7 +64,7 @@ describe("MembersList empty states", () => {
 
   it("keeps every active filter on the recovery link", async () => {
     emptyPage()
-    vi.mocked(countMembers).mockResolvedValue(40)
+    vi.mocked(loadMemberCount).mockResolvedValue(40)
 
     render(await renderAt("9", { country: "NZ", institution: "2", q: "tui" }))
 
@@ -76,11 +76,11 @@ describe("MembersList empty states", () => {
 
   it("counts through the same filters the list queried", async () => {
     emptyPage()
-    vi.mocked(countMembers).mockResolvedValue(0)
+    vi.mocked(loadMemberCount).mockResolvedValue(0)
 
     render(await renderAt("2", { country: "NZ" }))
 
-    expect(countMembers).toHaveBeenCalledWith(expect.objectContaining({ country: "NZ" }))
+    expect(loadMemberCount).toHaveBeenCalledWith(expect.objectContaining({ country: "NZ" }))
   })
 })
 
@@ -91,7 +91,7 @@ describe("MembersList cards", () => {
   })
 
   it("links each card to that member's profile", async () => {
-    vi.mocked(getMembers).mockResolvedValue({
+    vi.mocked(loadMembersPage).mockResolvedValue({
       docs: [
         { id: 3, firstName: "Anna", lastName: "Tui", institution: 1 },
         { id: 8, firstName: "Priya", lastName: "Nair", institution: 1 },

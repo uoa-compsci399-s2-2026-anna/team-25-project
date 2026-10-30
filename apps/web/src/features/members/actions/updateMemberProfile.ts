@@ -111,6 +111,8 @@ export const updateMemberProfile = async (formData: FormData): Promise<ActionRes
   }
 
   updateTag(QueryKeys.MEMBERS.ID(user.id))
+  // The hook's revalidateTag serves the old directory card once more; this shows the edit at once.
+  updateTag(QueryKeys.MEMBERS.ROOT)
 
   return { ok: true }
 }
