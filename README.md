@@ -68,11 +68,12 @@ cp apps/web/.env.example apps/web/.env
 | `NEXT_PUBLIC_URL` | Public URL of the site (`http://localhost:3000` locally) |
 | `S3_BUCKET`, `S3_REGION` | Optional. S3 bucket for uploaded files. Leave empty to store files on the local disk |
 | `AWS_PROFILE`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | Optional. AWS credentials for S3 and SES |
-| `SES_REGION`, `SES_FROM_ADDRESS` | Optional. Amazon SES settings for email. Leave empty to log emails to the server console |
+| `SES_FROM_ADDRESS` | Optional. Sender address for Amazon SES email. Leave empty to log emails to the server console |
+| `SES_REGION` | Optional. AWS region for SES. Leave empty to use the region of your AWS profile |
 
 #### AWS credentials (optional)
 
-You need AWS credentials only if you set `S3_BUCKET` or `SES_REGION`. The team's AWS account uses the University of Auckland's AWS IAM Identity Center (SSO).
+You need AWS credentials only if you set `S3_BUCKET` or `SES_FROM_ADDRESS`. The team's AWS account uses the University of Auckland's AWS IAM Identity Center (SSO).
 
 1. Install the [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
 2. Configure an SSO profile. Use any profile name you like:
