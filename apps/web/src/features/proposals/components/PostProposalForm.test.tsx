@@ -93,6 +93,29 @@ describe("PostProposalForm", () => {
     })
   })
 
+  it("shows every required error when submitted empty", async () => {
+    const user = renderForm()
+
+    await submit(user)
+
+    expect(await screen.findByText("Title is required")).toBeVisible()
+    expect(screen.getByText("Summary is required")).toBeVisible()
+    expect(screen.getByText("Body is required")).toBeVisible()
+    expect(postProposal).not.toHaveBeenCalled()
+  })
+
+  it("posts once the fields are filled after an empty submit", async () => {
+    vi.mocked(postProposal).mockResolvedValue({ ok: true })
+    const user = renderForm()
+
+    await submit(user)
+    await screen.findByText("Body is required")
+    await fillRequired(user)
+    await submit(user)
+
+    await waitFor(() => expect(postProposal).toHaveBeenCalledOnce())
+  })
+
   it("refuses an end year before the start year", async () => {
     const user = renderForm()
 
