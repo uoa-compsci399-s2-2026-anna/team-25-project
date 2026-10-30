@@ -174,6 +174,8 @@ describe("updateMemberProfile", () => {
         overrideAccess: false,
       })
       expect(updateTag).toHaveBeenCalledWith(QueryKeys.MEMBERS.ID(7))
+      // The directory card shows the edit on the member's next visit, not one after.
+      expect(updateTag).toHaveBeenCalledWith(QueryKeys.MEMBERS.ROOT)
     })
 
     it("uploads a new photo and points the member at it in the same update", async () => {

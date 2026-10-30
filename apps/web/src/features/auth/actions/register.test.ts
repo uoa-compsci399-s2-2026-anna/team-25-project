@@ -1,4 +1,5 @@
-import { refresh } from "next/cache"
+import { QueryKeys } from "@repo/shared/constants/query-keys"
+import { refresh, updateTag } from "next/cache"
 import { cookies } from "next/headers"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
@@ -31,7 +32,7 @@ vi.mock("payload/shared", () => ({
     value: "signed-token",
   }),
 }))
-vi.mock("next/cache", () => ({ refresh: vi.fn() }))
+vi.mock("next/cache", () => ({ refresh: vi.fn(), updateTag: vi.fn() }))
 vi.mock("next/headers", () => ({ cookies: vi.fn() }))
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
 vi.mock("@/lib/payload/getCurrentUser", () => ({ getCurrentUser: vi.fn() }))
@@ -164,6 +165,7 @@ describe("registerMember", () => {
     await registerMember(validRegistration)
 
     expect(consumeCode).not.toHaveBeenCalled()
+    expect(updateTag).not.toHaveBeenCalled()
   })
 
   it("still signs the member in when the used code can't be removed", async () => {
@@ -232,6 +234,7 @@ describe("registerMember", () => {
     )
     expect(payload.login).toHaveBeenCalled()
     expect(setCookie).toHaveBeenCalledWith("payload-token", "signed-token", expect.anything())
+    expect(updateTag).toHaveBeenCalledWith(QueryKeys.MEMBERS.ROOT)
   })
 
   it("surfaces a Payload validation error against the field it names", async () => {
@@ -345,6 +348,7 @@ describe("completeProfile", () => {
         overrideAccess: false,
       }),
     )
+    expect(updateTag).toHaveBeenCalledWith(QueryKeys.MEMBERS.ROOT)
     expect(refresh).toHaveBeenCalled()
   })
 

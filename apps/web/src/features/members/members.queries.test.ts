@@ -20,6 +20,8 @@ import {
   getMemberSitemapEntriesCached,
   getMembers,
   getResearchInterestOptions,
+  loadMemberCount,
+  loadMembersPage,
 } from "./members.queries"
 
 vi.mock("@/lib/payload/getPayloadClient", () => ({ getPayloadClient: vi.fn() }))
@@ -48,17 +50,44 @@ beforeEach(() => {
     ReturnType<typeof getPayloadClient>
   >)
 })
-describe("request-time deferral", () => {
-  // Without it, cacheComponents prerenders the query and trips over Payload's transaction id.
-  it("defers to request time before querying", async () => {
-    count.mockResolvedValue({ totalDocs: 0 })
+describe("loadMembersPage", () => {
+  it("serves a view without free text from the cache, tagged with the members and institutions", async () => {
+    // The page always sends interests, as [] when none are picked.
+    await loadMembersPage(
+      { country: InstitutionCountry.NZ, researchInterests: [] },
+      { limit: 12, page: 1 },
+    )
 
-    await getMembers({ country: InstitutionCountry.NZ }, { limit: 12, page: 1 })
-    expect(connection).toHaveBeenCalledOnce()
+    expect(cacheTag).toHaveBeenCalledWith("members", "institutions")
+    expect(connection).not.toHaveBeenCalled()
+  })
 
-    vi.mocked(connection).mockClear()
-    await countMembers({})
+  // Without connection(), cacheComponents prerenders the query and trips over Payload's random join alias.
+  it.each([{ search: "anna" }, { researchInterests: ["Generative AI"] }])(
+    "defers %o to request time and skips the cache",
+    async (filters) => {
+      await loadMembersPage(filters, { limit: 12, page: 1 })
+
+      expect(connection).toHaveBeenCalledOnce()
+      expect(cacheTag).not.toHaveBeenCalled()
+      expect(find).toHaveBeenCalledOnce()
+    },
+  )
+})
+
+describe("loadMemberCount", () => {
+  it("serves a count without free text from the cache", async () => {
+    await loadMemberCount({ institutionId: 2, researchInterests: [] })
+
+    expect(cacheTag).toHaveBeenCalledWith("members", "institutions")
+    expect(connection).not.toHaveBeenCalled()
+  })
+
+  it("defers a searched count to request time and skips the cache", async () => {
+    await loadMemberCount({ search: "anna" })
+
     expect(connection).toHaveBeenCalledOnce()
+    expect(cacheTag).not.toHaveBeenCalled()
   })
 })
 
@@ -250,6 +279,14 @@ describe("getMemberCounts", () => {
     count.mockResolvedValue({ totalDocs: 124 })
 
     await expect(getMemberCounts({})).resolves.toEqual({ shown: 124, total: 124 })
+  })
+
+  it("counts a search at request time but still takes the total from the cache", async () => {
+    await getMemberCounts({ search: "anna" })
+
+    expect(connection).toHaveBeenCalledOnce()
+    expect(cacheTag).toHaveBeenCalledOnce()
+    expect(cacheTag).toHaveBeenCalledWith("members", "institutions")
   })
 })
 
