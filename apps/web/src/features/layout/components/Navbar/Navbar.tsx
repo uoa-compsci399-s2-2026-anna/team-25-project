@@ -1,8 +1,10 @@
 import { AnimatedSuspense, Heading, Skeleton } from "@repo/ui/components/ui"
 import Link from "next/link"
+import { Suspense } from "react"
 import { FallbackOnError } from "@/components/FallbackOnError"
 import { Logo } from "@/components/Logo"
 import { Routes } from "@/lib/routes"
+import { AdminBanner } from "../AdminBanner/AdminBanner"
 import { GuestMobileNav, MobileNav } from "./MobileNav"
 import { NavAuthStatus } from "./NavAuthStatus"
 import { NavGuestLinks } from "./NavGuestLinks"
@@ -10,62 +12,72 @@ import { GuestNavLinks, NavLinks } from "./NavLinks"
 
 export const Navbar = () => {
   return (
-    <header className="sticky top-0 z-50 flex w-full items-center gap-4 border-border border-b bg-brand-blush/60 px-4 py-4 backdrop-blur-sm md:px-8">
-      {/* flex-1 on both this and the auth-status slot keeps nav mathematically
+    <header className="sticky top-0 z-50 flex w-full flex-col border-border border-b bg-brand-blush/60 backdrop-blur-sm">
+      <div className="flex w-full items-center gap-4 px-4 py-4 md:px-8">
+        {/* flex-1 on both this and the auth-status slot keeps nav mathematically
           centered regardless of either side's content width - signed-in,
           signed-out and the skeleton are all different widths, and none of
           them should be able to nudge the links left or right. */}
-      <Link className="flex flex-1 items-center gap-2" href={Routes.HOME}>
-        <Logo className="w-10 shrink-0" />
-        <Heading level="h4">CCCA</Heading>
-      </Link>
+        <Link className="flex flex-1 items-center gap-2" href={Routes.HOME}>
+          <Logo className="w-10 shrink-0" />
+          <Heading level="h4">CCCA</Heading>
+        </Link>
 
-      {/* Replaced by MobileNav below md. */}
-      <nav aria-label="Main" className="hidden items-center gap-5 md:flex">
-        <FallbackOnError fallback={<GuestNavLinks />}>
-          <AnimatedSuspense
-            fallback={
-              // One bar per guest link - the signed-in set is longer, but the
-              // flex-1 sides keep the nav centered as it grows.
-              <>
-                <Skeleton className="h-6 w-12 rounded-full" />
-                <Skeleton className="h-6 w-16 rounded-full" />
-                <Skeleton className="h-6 w-18 rounded-full" />
-                <Skeleton className="h-6 w-10 rounded-full" />
-              </>
-            }
-          >
-            <NavLinks />
-          </AnimatedSuspense>
-        </FallbackOnError>
-      </nav>
+        {/* Replaced by MobileNav below md. */}
+        <nav aria-label="Main" className="hidden items-center gap-5 md:flex">
+          <FallbackOnError fallback={<GuestNavLinks />}>
+            <AnimatedSuspense
+              fallback={
+                // One bar per guest link - the signed-in set is longer, but the
+                // flex-1 sides keep the nav centered as it grows.
+                <>
+                  <Skeleton className="h-6 w-12 rounded-full" />
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                  <Skeleton className="h-6 w-18 rounded-full" />
+                  <Skeleton className="h-6 w-10 rounded-full" />
+                </>
+              }
+            >
+              <NavLinks />
+            </AnimatedSuspense>
+          </FallbackOnError>
+        </nav>
 
-      <div className="hidden flex-1 justify-end md:flex">
-        <FallbackOnError fallback={<NavGuestLinks />}>
-          <AnimatedSuspense
-            fallback={
-              // Matches NavGuestLinks's layout exactly (same
-              // container, same gap-4) so nothing shifts vertically once the
-              // real content streams in - both bars share the real Join CCCA
-              // button's h-6 height for a uniform placeholder.
-              <div className="flex items-center gap-4">
-                <Skeleton className="h-6 w-12 rounded-full" />
-                <Skeleton className="h-6 w-20 rounded-full" />
-              </div>
-            }
-          >
-            <NavAuthStatus />
-          </AnimatedSuspense>
-        </FallbackOnError>
+        <div className="hidden flex-1 justify-end md:flex">
+          <FallbackOnError fallback={<NavGuestLinks />}>
+            <AnimatedSuspense
+              fallback={
+                // Matches NavGuestLinks's layout exactly (same
+                // container, same gap-4) so nothing shifts vertically once the
+                // real content streams in - both bars share the real Join CCCA
+                // button's h-6 height for a uniform placeholder.
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-6 w-12 rounded-full" />
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                </div>
+              }
+            >
+              <NavAuthStatus />
+            </AnimatedSuspense>
+          </FallbackOnError>
+        </div>
+
+        <div className="flex md:hidden">
+          <FallbackOnError fallback={<GuestMobileNav />}>
+            <AnimatedSuspense fallback={<Skeleton className="size-6 rounded-md" />}>
+              <MobileNav />
+            </AnimatedSuspense>
+          </FallbackOnError>
+        </div>
       </div>
 
-      <div className="flex md:hidden">
-        <FallbackOnError fallback={<GuestMobileNav />}>
-          <AnimatedSuspense fallback={<Skeleton className="size-6 rounded-md" />}>
-            <MobileNav />
-          </AnimatedSuspense>
-        </FallbackOnError>
-      </div>
+      {/* Inside the header so it sticks with it. MobileNavMenu's sheet sits below
+          the whole header, so the banner stays in view while the menu is open. */}
+      <FallbackOnError fallback={null}>
+        <Suspense>
+          <AdminBanner />
+        </Suspense>
+      </FallbackOnError>
     </header>
   )
 }

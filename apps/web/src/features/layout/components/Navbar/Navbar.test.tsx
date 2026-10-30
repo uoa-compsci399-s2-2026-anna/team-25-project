@@ -18,6 +18,9 @@ vi.mock("./MobileNav", () => ({
   MobileNav: () => <div data-testid="mobile-nav" />,
   GuestMobileNav: () => null,
 }))
+vi.mock("../AdminBanner/AdminBanner", () => ({
+  AdminBanner: () => <div data-testid="admin-banner" />,
+}))
 
 describe("Navbar", () => {
   afterEach(() => {
@@ -49,6 +52,12 @@ describe("Navbar", () => {
   it("renders MobileNav", () => {
     render(<Navbar />)
     expect(screen.getByTestId("mobile-nav")).toBeInTheDocument()
+  })
+
+  it("renders AdminBanner inside the sticky header, so it stays in view", () => {
+    render(<Navbar />)
+    expect(screen.getByRole("banner")).toHaveClass("sticky")
+    expect(screen.getByRole("banner")).toContainElement(screen.getByTestId("admin-banner"))
   })
 
   it("hides the desktop links and account below md, and MobileNav from md up", () => {
