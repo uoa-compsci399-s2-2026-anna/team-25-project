@@ -1,5 +1,6 @@
 "use server"
 
+import { QueryKeys } from "@repo/shared/constants/query-keys"
 import {
   ALLOWED_AVATAR_MIME_TYPES,
   type RegisterDetails,
@@ -8,7 +9,7 @@ import {
   registerProfileSchema,
   registerWithCodeSchema,
 } from "@repo/shared/schemas/register"
-import { refresh } from "next/cache"
+import { refresh, updateTag } from "next/cache"
 import { type Payload, ValidationError } from "payload"
 import { getCurrentUser } from "@/lib/payload/getCurrentUser"
 import { getPayloadClient } from "@/lib/payload/getPayloadClient"
@@ -222,6 +223,9 @@ export const registerMember = async (input: RegisterWithCode): Promise<ActionRes
     return { formError: "Could not create your account. Try again.", ok: false }
   }
 
+  // The hook's revalidateTag serves the old directory once more; this shows the new member at once.
+  updateTag(QueryKeys.MEMBERS.ROOT)
+
   // The account exists now, so a leftover code only means one stale row - it
   // expires on its own and must not fail the sign-up.
   await consumeCode(email).catch((error) =>
@@ -326,6 +330,8 @@ export const completeProfile = async (formData: FormData): Promise<ActionResult>
     return { formError: "Could not save your profile. Try again.", ok: false }
   }
 
+  // The hook's revalidateTag serves the old directory card once more; this shows the profile at once.
+  updateTag(QueryKeys.MEMBERS.ROOT)
   refresh()
 
   return { ok: true }
