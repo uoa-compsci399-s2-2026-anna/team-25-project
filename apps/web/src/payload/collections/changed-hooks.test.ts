@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest"
 import { revalidateDeletedInstitution, revalidateInstitutions } from "../hooks/Institutions"
 import {
-  allowPasswordResetsFromAppOnly,
+  allowPasswordChangesFromAppOnly,
   assertMemberDeletable,
   enforceInstitutionDomain,
+  refuseIdentityChangesFromMembers,
+  refuseSortByEmail,
   revalidateDeletedMemberProposals,
   revalidateMemberProposals,
 } from "../hooks/Members"
@@ -41,7 +43,11 @@ describe("changed collection hooks", () => {
       afterChange: [revalidateMemberProposals],
       afterDelete: [revalidateDeletedMemberProposals],
       beforeDelete: [assertMemberDeletable],
-      beforeOperation: [allowPasswordResetsFromAppOnly],
+      beforeOperation: [
+        allowPasswordChangesFromAppOnly,
+        refuseIdentityChangesFromMembers,
+        refuseSortByEmail,
+      ],
       beforeValidate: [enforceInstitutionDomain],
     })
     expect(Members.access?.read?.({} as never)).toBe(true)
@@ -70,6 +76,14 @@ describe("changed collection hooks", () => {
     expect(update({ context: {}, user: { collection: "admin" } })).toBe(true)
   })
 
+  it.each(["email", "institution"])("lets only an admin change a member's %s", (name) => {
+    const field = Members.fields.find((candidate) => "name" in candidate && candidate.name === name)
+    const access = field && "access" in field ? field.access : undefined
+    const update = (req: object) => access?.update?.({ req } as never)
+    expect(update({ user: { collection: "members" } })).toBe(false)
+    expect(update({ user: { collection: "admin" } })).toBe(true)
+  })
+
   it("lets only an admin unlock a member or admin account", () => {
     for (const collection of [Members, Admin]) {
       const unlock = (req: object) => collection.access?.unlock?.({ req } as never)
@@ -91,6 +105,7 @@ describe("changed collection hooks", () => {
       afterChange: [revalidatePublications],
       afterDelete: [revalidateDeletedPublication],
       beforeChange: [requireLinkedAuthor],
+      beforeOperation: [refuseSortByEmail],
     })
   })
 

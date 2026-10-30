@@ -5,10 +5,12 @@ import { Forbidden, type PayloadRequest, ValidationError } from "payload"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { Slugs } from "@/lib/payload/slugs"
 import {
-  allowPasswordResetsFromAppOnly,
+  allowPasswordChangesFromAppOnly,
   assertMemberDeletable,
   enforceInstitutionDomain,
   normaliseStoredInterests,
+  refuseIdentityChangesFromMembers,
+  refuseSortByEmail,
   revalidateDeletedMemberProposals,
   revalidateMemberProposals,
 } from "./Members"
@@ -221,9 +223,9 @@ describe("assertMemberDeletable", () => {
   })
 })
 
-describe("allowPasswordResetsFromAppOnly", () => {
+describe("allowPasswordChangesFromAppOnly", () => {
   const run = (operation: string, payloadAPI: PayloadRequest["payloadAPI"]) =>
-    allowPasswordResetsFromAppOnly({
+    allowPasswordChangesFromAppOnly({
       args: { data: {} },
       operation,
       req: { payloadAPI, t: () => "" },
@@ -243,5 +245,96 @@ describe("allowPasswordResetsFromAppOnly", () => {
 
   it("leaves other operations alone", () => {
     expect(run("login", "REST")).toEqual({ data: {} })
+  })
+
+  const update = (data: object, user: object | null, payloadAPI: PayloadRequest["payloadAPI"]) =>
+    allowPasswordChangesFromAppOnly({
+      args: { data },
+      operation: "update",
+      req: { payloadAPI, t: () => "", user },
+    } as never)
+
+  const memberUser = { id: 1, collection: "members" }
+
+  it("refuses a member setting a password through REST, which needs no old password", () => {
+    expect(() => update({ password: "new" }, memberUser, "REST")).toThrow(Forbidden)
+  })
+
+  it("lets an admin set a member's password from the admin panel", () => {
+    const adminUser = { id: 1, collection: "admin" }
+    expect(update({ password: "new" }, adminUser, "REST")).toEqual({ data: { password: "new" } })
+  })
+
+  it("leaves updates without a password alone", () => {
+    expect(update({ bio: "hi" }, memberUser, "REST")).toEqual({ data: { bio: "hi" } })
+  })
+})
+
+describe("refuseIdentityChangesFromMembers", () => {
+  const update = (data: object, user: object | null, payloadAPI = "REST") =>
+    refuseIdentityChangesFromMembers({
+      args: { data },
+      operation: "update",
+      req: { payloadAPI, t: () => "", user },
+    } as never)
+
+  const memberUser = { id: 1, collection: "members" }
+
+  it.each([{ email: "a@auckland.ac.nz" }, { institution: 2 }])(
+    "refuses a member changing %o through REST",
+    (data) => {
+      expect(() => update(data, memberUser)).toThrow(Forbidden)
+    },
+  )
+
+  it("lets an admin change a member's email", () => {
+    const adminUser = { id: 1, collection: "admin" }
+    expect(update({ email: "a@auckland.ac.nz" }, adminUser)).toEqual({
+      data: { email: "a@auckland.ac.nz" },
+    })
+  })
+
+  it("leaves other updates and the app's own calls alone", () => {
+    expect(update({ bio: "hi" }, memberUser)).toEqual({ data: { bio: "hi" } })
+    expect(update({ email: "a@auckland.ac.nz" }, memberUser, "local")).toEqual({
+      data: { email: "a@auckland.ac.nz" },
+    })
+  })
+})
+
+describe("refuseSortByEmail", () => {
+  const run = (sort: unknown, user: object | null = null, payloadAPI = "REST") =>
+    refuseSortByEmail({
+      args: { sort },
+      operation: "read",
+      req: { payloadAPI, user },
+    } as never)
+
+  it.each([
+    "email",
+    "-email",
+    "firstName,email",
+    "authors.member.email",
+    "authors__member__email",
+    "-authors__member__email",
+    ["lastName", "-email"],
+  ])("refuses a REST sort by email: %s", (sort) => {
+    expect(() => run(sort)).toThrow("Sorting by email is not allowed.")
+  })
+
+  it("refuses a signed-in member too", () => {
+    expect(() => run("email", { id: 1, collection: "members" })).toThrow(
+      "Sorting by email is not allowed.",
+    )
+  })
+
+  it("lets an admin and the app's own queries sort by email", () => {
+    expect(run("email", { id: 1, collection: "admin" })).toEqual({ sort: "email" })
+    expect(run("email", null, "local")).toEqual({ sort: "email" })
+  })
+
+  it("leaves other sorts alone", () => {
+    expect(run("-lastName,emailOptIn")).toEqual({ sort: "-lastName,emailOptIn" })
+    expect(run(undefined)).toEqual({ sort: undefined })
   })
 })

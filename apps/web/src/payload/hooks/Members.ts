@@ -12,6 +12,7 @@ import type {
 } from "payload"
 import { Forbidden, ValidationError } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
+import { admin } from "../access/helpers"
 import { fail } from "./helpers"
 
 // Cached proposal lists and details show each author's name, avatar and institution, and lists filter
@@ -64,8 +65,8 @@ const domainMatches = (emailDomain: string, allowedDomain: string) =>
   emailDomain === allowedDomain || emailDomain.endsWith(`.${allowedDomain}`)
 
 // Proves the submitted email's domain matches the selected institution's
-// whitelist - not that the registrant owns that mailbox. That gap is closed
-// by email verification, which is out of scope for now.
+// whitelist - not that the registrant owns that mailbox. The sign-up email
+// code proves that.
 export const enforceInstitutionDomain: CollectionBeforeValidateHook<Member> = async ({
   data,
   req,
@@ -130,21 +131,53 @@ export const normaliseStoredInterests: FieldHook<Member, string[] | null | undef
 }) => (Array.isArray(value) ? normaliseInterests(value) : value)
 
 /**
- * Password resets only go through the app's own pages: their server actions
- * rate-limit the email and end other sessions after a reset. Payload's REST
- * endpoints for both would skip that, so they're closed - the actions call the
- * local API, which this lets through.
+ * Members change a password only through the app's reset pages, which limit emails
+ * and end other sessions. REST resets are closed to all callers. REST password
+ * updates are closed to all except admins, because they need no old password.
  */
-export const allowPasswordResetsFromAppOnly: CollectionBeforeOperationHook = ({
+export const allowPasswordChangesFromAppOnly: CollectionBeforeOperationHook = ({
   args,
   operation,
   req,
 }) => {
-  if (
-    (operation === "forgotPassword" || operation === "resetPassword") &&
-    req.payloadAPI !== "local"
-  ) {
-    throw new Forbidden(req.t)
-  }
+  if (req.payloadAPI === "local") return args
+  const isReset = operation === "forgotPassword" || operation === "resetPassword"
+  const data: object | undefined = "data" in args ? args.data : undefined
+  const isPasswordUpdate =
+    operation === "update" && !admin(req) && Boolean(data && "password" in data && data.password)
+  if (isReset || isPasswordUpdate) throw new Forbidden(req.t)
+  return args
+}
+
+/**
+ * Only admins can change a member's verified email or its institution. The field
+ * access rules drop the change and still report success, so refuse it with an error here.
+ */
+export const refuseIdentityChangesFromMembers: CollectionBeforeOperationHook = ({
+  args,
+  operation,
+  req,
+}) => {
+  if (operation !== "update" || req.payloadAPI === "local" || admin(req)) return args
+  const data: object | undefined = "data" in args ? args.data : undefined
+  if (data && ("email" in data || "institution" in data)) throw new Forbidden(req.t)
+  return args
+}
+
+/**
+ * Payload checks read access on `where` but not on `sort`, so a guest could learn
+ * the order of the hidden emails. Add this hook to each guest-readable collection
+ * that links to members.
+ */
+export const refuseSortByEmail: CollectionBeforeOperationHook = ({ args, operation, req }) => {
+  if (operation !== "read" || req.payloadAPI === "local" || admin(req)) return args
+  const sort: unknown = "sort" in args ? args.sort : undefined
+  const terms = [sort]
+    .flat()
+    .filter((term) => typeof term === "string")
+    .flatMap((term) => term.split(","))
+  // The database adapter reads `__` as `.`, so `authors__member__email` is the same path.
+  const paths = terms.map((term) => term.trim().replace(/^-/, "").replace(/__/g, ".").split("."))
+  if (paths.some((path) => path.includes("email"))) fail("Sorting by email is not allowed.")
   return args
 }

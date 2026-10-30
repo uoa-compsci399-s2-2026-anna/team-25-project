@@ -4,6 +4,7 @@ import type { CollectionConfig } from "payload"
 import { Slugs } from "@/lib/payload/slugs"
 import { isSignedIn } from "../access"
 import { isAdminOrLinkedAuthor } from "../access/Publications"
+import { refuseSortByEmail } from "../hooks/Members"
 import {
   blankToNull,
   requireLinkedAuthor,
@@ -19,6 +20,7 @@ export const Publications: CollectionConfig = {
     defaultColumns: ["title", "type", "year", "doi"],
   },
   hooks: {
+    beforeOperation: [refuseSortByEmail],
     afterChange: [revalidatePublications],
     afterDelete: [revalidateDeletedPublication],
     beforeChange: [requireLinkedAuthor],

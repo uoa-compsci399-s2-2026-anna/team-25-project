@@ -16,10 +16,12 @@ import { Slugs } from "@/lib/payload/slugs"
 import { canReadEmail, isAdmin, isAdminOrSelf } from "../access"
 import { admin } from "../access/helpers"
 import {
-  allowPasswordResetsFromAppOnly,
+  allowPasswordChangesFromAppOnly,
   assertMemberDeletable,
   enforceInstitutionDomain,
   normaliseStoredInterests,
+  refuseIdentityChangesFromMembers,
+  refuseSortByEmail,
   revalidateDeletedMemberProposals,
   revalidateMemberProposals,
 } from "../hooks/Members"
@@ -31,7 +33,11 @@ export const Members: CollectionConfig = {
     useAsTitle: "email",
   },
   hooks: {
-    beforeOperation: [allowPasswordResetsFromAppOnly],
+    beforeOperation: [
+      allowPasswordChangesFromAppOnly,
+      refuseIdentityChangesFromMembers,
+      refuseSortByEmail,
+    ],
     beforeValidate: [enforceInstitutionDomain],
     afterChange: [revalidateMemberProposals],
     afterDelete: [revalidateDeletedMemberProposals],
@@ -63,6 +69,8 @@ export const Members: CollectionConfig = {
       type: "email",
       access: {
         read: canReadEmail,
+        // Sign-up verifies the address. A later change would skip that check.
+        update: ({ req }) => admin(req),
       },
     },
     { name: "firstName", type: "text", required: true },
@@ -72,6 +80,8 @@ export const Members: CollectionConfig = {
       type: "relationship",
       relationTo: Slugs.Collections.INSTITUTIONS,
       required: true,
+      // Must match the verified email's domain.
+      access: { update: ({ req }) => admin(req) },
     },
     {
       name: "title",
