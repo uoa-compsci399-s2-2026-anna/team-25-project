@@ -5,6 +5,7 @@ import {
   assertMemberDeletable,
   enforceInstitutionDomain,
   refuseIdentityChangesFromMembers,
+  refuseSortByEmail,
   revalidateDeletedMemberProposals,
   revalidateMemberProposals,
 } from "../hooks/Members"
@@ -42,7 +43,11 @@ describe("changed collection hooks", () => {
       afterChange: [revalidateMemberProposals],
       afterDelete: [revalidateDeletedMemberProposals],
       beforeDelete: [assertMemberDeletable],
-      beforeOperation: [allowPasswordChangesFromAppOnly, refuseIdentityChangesFromMembers],
+      beforeOperation: [
+        allowPasswordChangesFromAppOnly,
+        refuseIdentityChangesFromMembers,
+        refuseSortByEmail,
+      ],
       beforeValidate: [enforceInstitutionDomain],
     })
     expect(Members.access?.read?.({} as never)).toBe(true)
@@ -100,6 +105,7 @@ describe("changed collection hooks", () => {
       afterChange: [revalidatePublications],
       afterDelete: [revalidateDeletedPublication],
       beforeChange: [requireLinkedAuthor],
+      beforeOperation: [refuseSortByEmail],
     })
   })
 

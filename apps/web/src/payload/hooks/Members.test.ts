@@ -10,6 +10,7 @@ import {
   enforceInstitutionDomain,
   normaliseStoredInterests,
   refuseIdentityChangesFromMembers,
+  refuseSortByEmail,
   revalidateDeletedMemberProposals,
   revalidateMemberProposals,
 } from "./Members"
@@ -298,5 +299,42 @@ describe("refuseIdentityChangesFromMembers", () => {
     expect(update({ email: "a@auckland.ac.nz" }, memberUser, "local")).toEqual({
       data: { email: "a@auckland.ac.nz" },
     })
+  })
+})
+
+describe("refuseSortByEmail", () => {
+  const run = (sort: unknown, user: object | null = null, payloadAPI = "REST") =>
+    refuseSortByEmail({
+      args: { sort },
+      operation: "read",
+      req: { payloadAPI, user },
+    } as never)
+
+  it.each([
+    "email",
+    "-email",
+    "firstName,email",
+    "authors.member.email",
+    "authors__member__email",
+    "-authors__member__email",
+    ["lastName", "-email"],
+  ])("refuses a REST sort by email: %s", (sort) => {
+    expect(() => run(sort)).toThrow("Sorting by email is not allowed.")
+  })
+
+  it("refuses a signed-in member too", () => {
+    expect(() => run("email", { id: 1, collection: "members" })).toThrow(
+      "Sorting by email is not allowed.",
+    )
+  })
+
+  it("lets an admin and the app's own queries sort by email", () => {
+    expect(run("email", { id: 1, collection: "admin" })).toEqual({ sort: "email" })
+    expect(run("email", null, "local")).toEqual({ sort: "email" })
+  })
+
+  it("leaves other sorts alone", () => {
+    expect(run("-lastName,emailOptIn")).toEqual({ sort: "-lastName,emailOptIn" })
+    expect(run(undefined)).toEqual({ sort: undefined })
   })
 })

@@ -4,6 +4,26 @@ import { MEMBER_STORAGE_STATE } from "./auth-state"
 
 const API = "/payload/api"
 
+test.describe("sorting by email", () => {
+  for (const path of [
+    "members?sort=email",
+    "members?sort=-email",
+    "members?sort[0]=lastName&sort[1]=email",
+    "publications?sort=authors.member.email",
+    "publications?sort=authors__member__email",
+  ]) {
+    test(`a guest cannot sort ${path}`, async ({ request }) => {
+      const response = await request.get(`${API}/${path}`)
+      expect(response.status()).toBe(400)
+    })
+  }
+
+  test("a guest can still sort by other fields", async ({ request }) => {
+    const response = await request.get(`${API}/members?sort=lastName`)
+    expect(response.ok()).toBe(true)
+  })
+})
+
 test.describe("as a member", () => {
   test.use({ storageState: MEMBER_STORAGE_STATE })
 

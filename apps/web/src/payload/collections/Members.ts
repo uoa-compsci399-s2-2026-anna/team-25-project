@@ -21,6 +21,7 @@ import {
   enforceInstitutionDomain,
   normaliseStoredInterests,
   refuseIdentityChangesFromMembers,
+  refuseSortByEmail,
   revalidateDeletedMemberProposals,
   revalidateMemberProposals,
 } from "../hooks/Members"
@@ -32,7 +33,11 @@ export const Members: CollectionConfig = {
     useAsTitle: "email",
   },
   hooks: {
-    beforeOperation: [allowPasswordChangesFromAppOnly, refuseIdentityChangesFromMembers],
+    beforeOperation: [
+      allowPasswordChangesFromAppOnly,
+      refuseIdentityChangesFromMembers,
+      refuseSortByEmail,
+    ],
     beforeValidate: [enforceInstitutionDomain],
     afterChange: [revalidateMemberProposals],
     afterDelete: [revalidateDeletedMemberProposals],

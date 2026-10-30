@@ -163,3 +163,21 @@ export const refuseIdentityChangesFromMembers: CollectionBeforeOperationHook = (
   if (data && ("email" in data || "institution" in data)) throw new Forbidden(req.t)
   return args
 }
+
+/**
+ * Payload checks read access on `where` but not on `sort`, so a guest could learn
+ * the order of the hidden emails. Add this hook to each guest-readable collection
+ * that links to members.
+ */
+export const refuseSortByEmail: CollectionBeforeOperationHook = ({ args, operation, req }) => {
+  if (operation !== "read" || req.payloadAPI === "local" || admin(req)) return args
+  const sort: unknown = "sort" in args ? args.sort : undefined
+  const terms = [sort]
+    .flat()
+    .filter((term) => typeof term === "string")
+    .flatMap((term) => term.split(","))
+  // The database adapter reads `__` as `.`, so `authors__member__email` is the same path.
+  const paths = terms.map((term) => term.trim().replace(/^-/, "").replace(/__/g, ".").split("."))
+  if (paths.some((path) => path.includes("email"))) fail("Sorting by email is not allowed.")
+  return args
+}
