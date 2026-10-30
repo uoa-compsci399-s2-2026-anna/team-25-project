@@ -348,5 +348,5 @@ The website is live at [https://cccacommunity.org](https://cccacommunity.org).
 
 ## Contributing
 
-Commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/). Commitlint checks this on every commit.
+Commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/). Commitlint checks this on every commit. Before each commit, Lefthook also runs Biome on the staged files and stages the fixes.
 Use the issue templates in `.github/ISSUE_TEMPLATE/` and the PR template in `.github/pull_request_template.md` when opening issues and pull requests.
